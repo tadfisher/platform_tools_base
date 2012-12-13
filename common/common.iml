@@ -10,7 +10,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="inheritedJdk" />
     <orderEntry type="library" exported="" name="guava-tools" level="project" />
-    <orderEntry type="library" scope="TEST" name="junit3" level="project" />
+    <orderEntry type="library" scope="TEST" name="junit3-tools" level="project" />
   </component>
 </module>
 

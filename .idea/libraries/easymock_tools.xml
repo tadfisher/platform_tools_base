@@ -1,5 +1,5 @@
 <component name="libraryTable">
-  <library name="easymock">
+  <library name="easymock-tools">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/easymock-tools/easymock-3.1.jar!/" />
     </CLASSES>
