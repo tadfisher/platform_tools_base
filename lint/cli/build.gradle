@@ -57,8 +57,8 @@ uploadArchives {
                 }
 
                 scm {
-                    url "https://android.googlesource.com/platform/sdk"
-                    connection "git://android.googlesource.com/platform/sdk.git"
+                    url "https://android.googlesource.com/platform/tools/base"
+                    connection "git://android.googlesource.com/platform/tools/base.git"
                 }
                 developers {
                     developer {
