@@ -29,6 +29,8 @@ public interface IDevice {
     public static final String PROP_BUILD_VERSION = "ro.build.version.release";
     public static final String PROP_BUILD_API_LEVEL = "ro.build.version.sdk";
     public static final String PROP_BUILD_CODENAME = "ro.build.version.codename";
+    public static final String DEVICE_MODEL_PROPERTY = "ro.product.model";
+    public static final String DEVICE_MANUFACTURER_PROPERTY = "ro.product.manufacturer";
 
     public static final String PROP_DEBUGGABLE = "ro.debuggable";
 
