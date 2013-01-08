@@ -4,6 +4,8 @@ subprojects {
     apply plugin: 'signing'
     apply from:'https://raw.github.com/breskeby/gradleplugins/master/emmaPlugin/emma.gradle'
 
+    buildDir = project.file("$rootDir/../../out/host/common/tools/base/$project.name")
+
     repositories {
         mavenCentral()
     }
@@ -56,6 +58,8 @@ subprojects {
     }
 }
 
+buildDir = project.file("../../out/host/common/tools/base/build")
+
 // delay evaluation of this project before all subprojects have been evaluated.
 subprojects.each { subproject -> evaluationDependsOn(subproject.name) }
 
@@ -63,12 +67,12 @@ def testTasks = subprojects.collect { it.tasks.withType(Test) }.flatten()
 
 task aggregateResults(type: Copy) {
     from { testTasks*.testResultsDir }
-    into { file("build/results") }
+    into { file("$project.buildDir/results") }
 }
 aggregateResults.dependsOn testTasks
 
 task makeAggregateReport(dependsOn: aggregateResults) {
-    def report = new org.gradle.api.internal.tasks.testing.junit.report.DefaultTestReport(testReportDir: file("build/reports/tests"), testResultsDir: file("build/results"))
+    def report = new org.gradle.api.internal.tasks.testing.junit.report.DefaultTestReport(testReportDir: file("$project.buildDir/reports/tests"), testResultsDir: file("$project.buildDir/results"))
     report.generateReport()
 }
 
@@ -76,8 +80,3 @@ task check {
     //nothing
 }
 check.dependsOn makeAggregateReport
-
-allprojects.each { project ->
-  project.buildDir = project.file("$project.rootDir/../../out/host/common/tools/base/$project.name")
-}
-
