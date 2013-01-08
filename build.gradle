@@ -76,3 +76,9 @@ task check {
     //nothing
 }
 check.dependsOn makeAggregateReport
+
+allprojects.each { project ->
+  project.buildDir = new File(project.rootDir,
+      "../../out/host/common/tools/base/" + project.name)
+}
+
