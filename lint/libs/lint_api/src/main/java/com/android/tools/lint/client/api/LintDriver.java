@@ -171,6 +171,14 @@ public class LintDriver {
         return mClient;
     }
 
+    @NonNull
+    public LintClient getOriginalClient() {
+        if (mClient instanceof LintClientWrapper) {
+            return ((LintClientWrapper) mClient).mDelegate;
+        }
+        return mClient;
+    }
+
     /**
      * Returns the current phase number. The first pass is numbered 1. Only one pass
      * will be performed, unless a {@link Detector} calls {@link #requestRepeat}.
@@ -545,6 +553,13 @@ public class LintDriver {
                     assert detector instanceof Detector.ClassScanner : detector;
                 }
             }
+
+            List<Detector> otherDetectors = mScopeDetectors.get(Scope.OTHER_SCOPE);
+            if (otherDetectors != null) {
+                for (Detector detector : otherDetectors) {
+                    assert detector instanceof Detector.OtherFileScanner : detector;
+                }
+            }
         }
     }
 
@@ -880,6 +895,14 @@ public class LintDriver {
             checkClasses(project, main);
         }
 
+        if (mScope.contains(Scope.OTHER)) {
+            List<Detector> checks = mScopeDetectors.get(Scope.OTHER);
+            if (checks != null) {
+                OtherFileVisitor visitor = new OtherFileVisitor(checks);
+                visitor.scan(this, project, main);
+            }
+        }
+
         if (mCanceled) {
             return;
         }
@@ -888,6 +911,7 @@ public class LintDriver {
             checkProGuard(project, main);
         }
     }
+
     private void checkProGuard(Project project, Project main) {
         List<Detector> detectors = mScopeDetectors.get(Scope.PROGUARD_FILE);
         if (detectors != null) {
@@ -932,6 +956,11 @@ public class LintDriver {
                 }
             }
         }
+    }
+
+    /** True if execution has been canceled */
+    boolean isCanceled() {
+        return mCanceled;
     }
 
     /**
