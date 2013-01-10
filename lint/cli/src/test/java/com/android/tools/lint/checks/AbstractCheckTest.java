@@ -439,6 +439,13 @@ public abstract class AbstractCheckTest extends SdkTestCase {
                     if (lint.exists() && new File(lint, "cli").exists()) { //$NON-NLS-1$
                         return dir.getParentFile().getParentFile();
                     }
+
+                    if (dir.getName().equals("tools")) {
+                        File base = new File(dir, "base");  //$NON-NLS-1$
+                        if (base.exists()) {
+                            return dir.getParentFile();
+                        }
+                    }
                     dir = dir.getParentFile();
                 }
 
