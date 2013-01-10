@@ -18,6 +18,7 @@ package com.android.tools.lint.checks;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.Context;
@@ -269,7 +270,7 @@ public class CleanupDetector extends Detector implements ClassScanner {
 
     /** Computes an error message for a missing recycle of the given type */
     private static String getErrorMessage(String owner) {
-        if (FRAGMENT_MANAGER_CLS.equals(owner)) {
+        if (FRAGMENT_TRANSACTION_CLS.equals(owner) || FRAGMENT_TRANSACTION_V4_CLS.equals(owner)) {
             return "This transaction should be completed with a commit() call";
         }
         String className = owner.substring(owner.lastIndexOf('/') + 1);
@@ -306,6 +307,23 @@ public class CleanupDetector extends Detector implements ClassScanner {
         }
 
         return false;
+    }
+
+    @VisibleForTesting
+    static boolean hasReturnType(String owner, String desc) {
+        int descLen = desc.length();
+        int ownerLen = owner.length();
+        if (descLen < ownerLen + 3) {
+            return false;
+        }
+        if (desc.charAt(descLen - 1) != ';') {
+            return false;
+        }
+        int typeBegin = descLen - 2 - ownerLen;
+        if (desc.charAt(typeBegin - 1) != ')' || desc.charAt(typeBegin) != 'L') {
+            return false;
+        }
+        return desc.regionMatches(typeBegin + 1, owner, 0, ownerLen);
     }
 
     /**
@@ -434,6 +452,13 @@ public class CleanupDetector extends Detector implements ClassScanner {
                             mIsCleanedUp = true;
                             return INSTANCE;
                         }
+                    } else if (call.owner.equals(mRecycleOwner)
+                            && hasReturnType(mRecycleOwner, call.desc)) {
+                        // Called method which returns self. This helps handle cases where you call
+                        //   createTransaction().method1().method2().method3().commit() -- if
+                        // method1, 2 and 3 all return "this" then the commit call is really
+                        // called on the createTransaction instance
+                        return INSTANCE;
                     }
                 }
             }

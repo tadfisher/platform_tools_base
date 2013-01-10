@@ -19,7 +19,7 @@ package com.android.tools.lint.checks;
 import com.android.tools.lint.detector.api.Detector;
 
 @SuppressWarnings("javadoc")
-public class RecycleDetectorTest extends AbstractCheckTest {
+public class CleanupDetectorTest extends AbstractCheckTest {
     @Override
     protected Detector getDetector() {
         return new CleanupDetector();
@@ -75,20 +75,20 @@ public class RecycleDetectorTest extends AbstractCheckTest {
     }
 
     public void testCommit() throws Exception {
-        assertEquals(""
-                + "src/test/pkg/CommitTest.java:24: Warning: This FragmentTransaction should be recycled after use with #recycle() [CommitTransaction]\n"
-                + "        getFragmentManager().beginTransaction(); // Missing commit\n"
-                + "                             ~~~~~~~~~~~~~~~~\n"
-                + "src/test/pkg/CommitTest.java:29: Warning: This FragmentTransaction should be recycled after use with #recycle() [CommitTransaction]\n"
-                + "        FragmentTransaction transaction2 = getFragmentManager().beginTransaction(); // Missing commit\n"
-                + "                                                                ~~~~~~~~~~~~~~~~\n"
-                + "src/test/pkg/CommitTest.java:38: Warning: This FragmentTransaction should be recycled after use with #recycle() [CommitTransaction]\n"
-                + "        getFragmentManager().beginTransaction(); // Missing commit\n"
-                + "                             ~~~~~~~~~~~~~~~~\n"
-                + "src/test/pkg/CommitTest.java:64: Warning: This FragmentTransaction should be recycled after use with #recycle() [Recycle]\n"
-                + "        getSupportFragmentManager().beginTransaction();\n"
-                + "                                    ~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 4 warnings\n",
+        assertEquals("" +
+            "src/test/pkg/CommitTest.java:25: Warning: This transaction should be completed with a commit() call [CommitTransaction]\n" +
+            "        getFragmentManager().beginTransaction(); // Missing commit\n" +
+            "                             ~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/CommitTest.java:30: Warning: This transaction should be completed with a commit() call [CommitTransaction]\n" +
+            "        FragmentTransaction transaction2 = getFragmentManager().beginTransaction(); // Missing commit\n" +
+            "                                                                ~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/CommitTest.java:39: Warning: This transaction should be completed with a commit() call [CommitTransaction]\n" +
+            "        getFragmentManager().beginTransaction(); // Missing commit\n" +
+            "                             ~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/CommitTest.java:65: Warning: This transaction should be completed with a commit() call [Recycle]\n" +
+            "        getSupportFragmentManager().beginTransaction();\n" +
+            "                                    ~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 4 warnings\n",
 
             lintProject(
                     "apicheck/classpath=>.classpath",
@@ -109,5 +109,18 @@ public class RecycleDetectorTest extends AbstractCheckTest {
                         "project.properties1=>project.properties",
                         "bytecode/DialogFragment.class.data=>bin/classes/test/pkg/DialogFragment.class"
                 ));
+    }
+
+    public void testHasReturnType() throws Exception {
+        assertTrue(CleanupDetector.hasReturnType("android/app/FragmentTransaction",
+                "(Landroid/app/Fragment;)Landroid/app/FragmentTransaction;"));
+        assertTrue(CleanupDetector.hasReturnType("android/app/FragmentTransaction",
+                "()Landroid/app/FragmentTransaction;"));
+        assertFalse(CleanupDetector.hasReturnType("android/app/FragmentTransaction",
+                "()Landroid/app/FragmentTransactions;"));
+        assertFalse(CleanupDetector.hasReturnType("android/app/FragmentTransaction",
+                "()Landroid/app/FragmentTransactions"));
+        assertFalse(CleanupDetector.hasReturnType("android/app/FragmentTransaction",
+                "()android/app/FragmentTransaction;"));
     }
 }
