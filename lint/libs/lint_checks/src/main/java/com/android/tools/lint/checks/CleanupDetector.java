@@ -269,7 +269,7 @@ public class CleanupDetector extends Detector implements ClassScanner {
 
     /** Computes an error message for a missing recycle of the given type */
     private static String getErrorMessage(String owner) {
-        if (FRAGMENT_MANAGER_CLS.equals(owner)) {
+        if (FRAGMENT_TRANSACTION_CLS.equals(owner) || FRAGMENT_TRANSACTION_V4_CLS.equals(owner)) {
             return "This transaction should be completed with a commit() call";
         }
         String className = owner.substring(owner.lastIndexOf('/') + 1);
