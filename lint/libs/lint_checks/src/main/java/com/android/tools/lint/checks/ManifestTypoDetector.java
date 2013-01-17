@@ -22,30 +22,21 @@ import static com.android.SdkConstants.TAG_USES_LIBRARY;
 import static com.android.SdkConstants.TAG_USES_PERMISSION;
 import static com.android.SdkConstants.TAG_USES_SDK;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
+import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
-import com.google.common.collect.Maps;
 
-import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -75,6 +66,7 @@ public class ManifestTypoDetector extends Detector implements Detector.XmlScanne
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
             "ManifestTypo", //$NON-NLS-1$
+            "Typos in manifest tags",
             "Checks for manifest typos",
 
             "This check looks through the manifest, and if it finds any tags " +
@@ -82,8 +74,9 @@ public class ManifestTypoDetector extends Detector implements Detector.XmlScanne
             Category.CORRECTNESS,
             5,
             Severity.WARNING,
-            ManifestTypoDetector.class,
-            Scope.MANIFEST_SCOPE);
+            new Implementation(
+                    ManifestTypoDetector.class,
+                    Scope.MANIFEST_SCOPE));
 
     /** Constructs a new {@link ManifestTypoDetector} check */
     public ManifestTypoDetector() {
