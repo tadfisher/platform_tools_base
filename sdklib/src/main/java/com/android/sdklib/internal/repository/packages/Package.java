@@ -60,7 +60,7 @@ import java.util.Properties;
 public abstract class Package implements IDescription, Comparable<Package> {
 
     private final String mObsolete;
-    private final String mLicense;
+    private final License mLicense;
     private final String mDescription;
     private final String mDescUrl;
     private final String mReleaseNote;
@@ -74,6 +74,37 @@ public abstract class Package implements IDescription, Comparable<Package> {
                 SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_DARWIN ||
                 SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_LINUX;
 
+    /** License text, with an optional license XML reference. */
+    public static class License {
+        private final String mLicense;
+        private final String mLicenseRef;
+
+        public License(@NonNull String license) {
+            mLicense = license;
+            mLicenseRef = null;
+        }
+
+        public License(@NonNull String license, @Nullable String licenseRef) {
+            mLicense = license;
+            mLicenseRef = licenseRef;
+        }
+
+        /** Returns the license text. Never null. */
+        @NonNull
+        public String getLicense() {
+            return mLicense;
+        }
+
+        /**
+         * Returns the license XML reference.
+         * Could be null, e.g. in tests or synthetic packages
+         * recreated from local source.properties.
+         */
+        @Nullable
+        public String getLicenseRef() {
+            return mLicenseRef;
+        }
+    }
 
     /**
      * Enum for the result of {@link Package#canBeUpdatedBy(Package)}. This used so that we can
@@ -115,8 +146,8 @@ public abstract class Package implements IDescription, Comparable<Package> {
         mObsolete    =
             PackageParserUtils.getOptionalXmlString(packageNode, SdkRepoConstants.NODE_OBSOLETE);
 
-        mLicense  = parseLicense(packageNode, licenses);
-        mArchives = parseArchives(
+        mLicense = parseLicense(packageNode, licenses);
+        mArchives   = parseArchives(
                 PackageParserUtils.findChildElement(packageNode, SdkRepoConstants.NODE_ARCHIVES));
     }
 
@@ -147,7 +178,8 @@ public abstract class Package implements IDescription, Comparable<Package> {
             descUrl = "";
         }
 
-        mLicense     = getProperty(props, PkgProps.PKG_LICENSE,      license);
+        mLicense     = new License(getProperty(props, PkgProps.PKG_LICENSE, license),
+                                   getProperty(props, PkgProps.PKG_LICENSE_REF, null));
         mDescription = getProperty(props, PkgProps.PKG_DESC,         description);
         mDescUrl     = getProperty(props, PkgProps.PKG_DESC_URL,     descUrl);
         mReleaseNote = getProperty(props, PkgProps.PKG_RELEASE_NOTE, "");       //$NON-NLS-1$
@@ -252,8 +284,15 @@ public abstract class Package implements IDescription, Comparable<Package> {
      * These properties will later be give the constructor that takes a {@link Properties} object.
      */
     public void saveProperties(Properties props) {
-        if (mLicense != null && mLicense.length() > 0) {
-            props.setProperty(PkgProps.PKG_LICENSE, mLicense);
+        if (mLicense != null) {
+            String license = mLicense.getLicense();
+            if (license != null && license.length() > 0) {
+                props.setProperty(PkgProps.PKG_LICENSE, license);
+            }
+            String licenseRef = mLicense.getLicenseRef();
+            if (licenseRef != null && licenseRef.length() > 0) {
+                props.setProperty(PkgProps.PKG_LICENSE_REF, licenseRef);
+            }
         }
         if (mDescription != null && mDescription.length() > 0) {
             props.setProperty(PkgProps.PKG_DESC, mDescription);
@@ -281,14 +320,14 @@ public abstract class Package implements IDescription, Comparable<Package> {
      * definition if there's one. Returns null if there's no uses-license element or no
      * license of this name defined.
      */
-    private String parseLicense(Node packageNode, Map<String, String> licenses) {
+    private License parseLicense(Node packageNode, Map<String, String> licenses) {
         Node usesLicense =
             PackageParserUtils.findChildElement(packageNode, SdkRepoConstants.NODE_USES_LICENSE);
         if (usesLicense != null) {
             Node ref = usesLicense.getAttributes().getNamedItem(SdkRepoConstants.ATTR_REF);
             if (ref != null) {
                 String licenseRef = ref.getNodeValue();
-                return licenses.get(licenseRef);
+                return new License(licenses.get(licenseRef), licenseRef);
             }
         }
         return null;
@@ -361,7 +400,7 @@ public abstract class Package implements IDescription, Comparable<Package> {
      * Returns the optional description for all packages (platform, add-on, tool, doc) or
      * for a lib. It is null if the element has not been specified in the repository XML.
      */
-    public String getLicense() {
+    public License getLicense() {
         return mLicense;
     }
 
