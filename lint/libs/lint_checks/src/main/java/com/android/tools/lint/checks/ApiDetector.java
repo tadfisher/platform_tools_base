@@ -311,6 +311,9 @@ public class ApiDetector extends ResourceXmlDetector
                 if (name.indexOf('.') != -1) {
                     name = name.replace('.', '_');
                 }
+            } else if (value.startsWith(ANDROID_THEME_PREFIX)) {
+                owner = "android/R$attr";  //$NON-NLS-1$
+                name = value.substring(ANDROID_THEME_PREFIX.length());
             } else {
                 return;
             }
