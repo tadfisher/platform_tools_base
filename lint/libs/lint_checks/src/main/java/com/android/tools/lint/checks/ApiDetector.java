@@ -460,12 +460,10 @@ public class ApiDetector extends ResourceXmlDetector
             while (owner != null) {
                 // For virtual dispatch, walk up the inheritance chain checking
                 // each inherited method
-                if (owner.startsWith("android/support/")) { //$NON-NLS-1$
-                    // Continue
-                } else if ((owner.startsWith("android/")                //$NON-NLS-1$
+                if ((owner.startsWith("android/")                       //$NON-NLS-1$
                             && !owner.startsWith("android/support/"))   //$NON-NLS-1$
                         || owner.startsWith("java/")                    //$NON-NLS-1$
-                        || owner.startsWith("javax/")) {                 //$NON-NLS-1$
+                        || owner.startsWith("javax/")) {                //$NON-NLS-1$
                     frameworkParent = owner;
                     break;
                 }
