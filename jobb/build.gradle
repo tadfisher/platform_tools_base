@@ -2,15 +2,6 @@ dependencies {
     compile project(':fat32lib')
 }
 
-def getVersion() {
-    if (project.has("release")) {
-        return project.ext.baseVersion
-    }
-
-    return project.ext.baseVersion + '-SNAPSHOT'
-}
-
-version = getVersion()
 group = 'com.android.tools.build'
 archivesBaseName = 'jobb'
 
