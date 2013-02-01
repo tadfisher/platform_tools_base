@@ -29,7 +29,7 @@ package com.android.sdklib.internal.repository.packages;
 public interface IFullRevisionProvider {
 
     /**
-     * Returns whether the give package represents the same item as the current package.
+     * Returns whether the given package represents the same item as the current package.
      * <p/>
      * Two packages are considered the same if they represent the same thing, except for the
      * revision number.

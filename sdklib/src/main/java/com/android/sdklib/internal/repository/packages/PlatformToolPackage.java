@@ -95,10 +95,19 @@ public class PlatformToolPackage extends FullRevisionPackage {
                 for (File file : files) {
                     names.add(file.getName());
                 }
-                for (String name : new String[] { SdkConstants.FN_ADB,
-                                                  SdkConstants.FN_AAPT,
-                                                  SdkConstants.FN_AIDL,
-                                                  SdkConstants.FN_DX } ) {
+
+                // Package-tools revision 17+ matches sdk-repository-8 and above
+                // and only requires adb. The other (aapt, aidl, dx) should be in
+                // the build-tools package.
+                String[] expected = new String[] { SdkConstants.FN_ADB };
+                if (ptp.getRevision().getMajor() < 17) {
+                    expected = new String[] { SdkConstants.FN_ADB,
+                                              SdkConstants.FN_AAPT,
+                                              SdkConstants.FN_AIDL,
+                                              SdkConstants.FN_DX };
+                }
+
+                for (String name : expected) {
                     if (!names.contains(name)) {
                         if (error == null) {
                             error = "platform-tools folder is missing ";
@@ -211,7 +220,8 @@ public class PlatformToolPackage extends FullRevisionPackage {
      * Computes a potential installation folder if an archive of this package were
      * to be installed right away in the given SDK root.
      * <p/>
-     * A "tool" package should always be located in SDK/tools.
+     * A "platform-tool" package should always be located in SDK/platform-tools.
+     * There can be only installed at once.
      *
      * @param osSdkRoot The OS path of the SDK root folder.
      * @param sdkManager An existing SDK manager to list current platforms and addons.

@@ -28,7 +28,6 @@ import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.archives.Archive;
 import com.android.sdklib.internal.repository.archives.Archive.Arch;
 import com.android.sdklib.internal.repository.archives.Archive.Os;
-import com.android.sdklib.internal.repository.packages.Package.License;
 import com.android.sdklib.internal.repository.sources.SdkAddonSource;
 import com.android.sdklib.internal.repository.sources.SdkRepoSource;
 import com.android.sdklib.internal.repository.sources.SdkSource;
@@ -758,6 +757,7 @@ public abstract class Package implements IDescription, Comparable<Package> {
      * Returns an ordering <b>suitable for display</b> like this: <br/>
      * - Tools <br/>
      * - Platform-Tools <br/>
+     * - Built-Tools <br/>
      * - Docs. <br/>
      * - Platform n preview <br/>
      * - Platform n <br/>
@@ -819,16 +819,18 @@ public abstract class Package implements IDescription, Comparable<Package> {
             sb.append(0);
         } else if (this instanceof PlatformToolPackage) {
             sb.append(1);
-        } else if (this instanceof DocPackage) {
+        } else if (this instanceof BuildToolPackage) {
             sb.append(2);
-        } else if (this instanceof PlatformPackage) {
+        } else if (this instanceof DocPackage) {
             sb.append(3);
-        } else if (this instanceof SamplePackage) {
+        } else if (this instanceof PlatformPackage) {
             sb.append(4);
-        } else if (this instanceof SystemImagePackage) {
+        } else if (this instanceof SamplePackage) {
             sb.append(5);
-        } else if (this instanceof AddonPackage) {
+        } else if (this instanceof SystemImagePackage) {
             sb.append(6);
+        } else if (this instanceof AddonPackage) {
+            sb.append(7);
         } else {
             // extras and everything else
             sb.append(9);
@@ -853,9 +855,10 @@ public abstract class Package implements IDescription, Comparable<Package> {
         // Append revision number
         sb.append("|r:");                                                       //$NON-NLS-1$
         FullRevision rev = getRevision();
-        sb.append(rev.getMajor()).append('.')
-          .append(rev.getMinor()).append('.')
-          .append(rev.getMicro()).append('.');
+        sb.append(String.format("%1$04d.%2$04d.%3$04d.",                        //$NON-NLS-1$
+                                rev.getMajor(),
+                                rev.getMinor(),
+                                rev.getMicro()));
         // Hack: When comparing packages for installation purposes, we want to treat
         // "final releases" packages as more important than rc/preview packages.
         // However like for the API level above, when sorting for list display purposes

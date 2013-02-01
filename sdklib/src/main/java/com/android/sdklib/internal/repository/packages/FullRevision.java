@@ -241,9 +241,29 @@ public class FullRevision implements Comparable<FullRevision> {
      * lack of preview number was "+inf":
      * "18.1.2 rc5" => "18.1.2.5" so its less than "18.1.2.+INF" but more than "18.1.1.0"
      * and more than "18.1.2.4"
+     *
+     * @param rhs The right-hand side {@link FullRevision} to compare with.
+     * @return &lt;0 if lhs &lt; rhs; 0 if lhs==rhs; &gt;0 if lhs &gt; rhs.
      */
     @Override
     public int compareTo(FullRevision rhs) {
+        return compareTo(rhs, false /*ignorePreview*/);
+    }
+
+    /**
+     * Trivial comparison of a version, e.g 17.1.2 < 18.0.0.
+     *
+     * Note that preview/release candidate are released before their final version,
+     * so "18.0.0 rc1" comes below "18.0.0". The best way to think of it as if the
+     * lack of preview number was "+inf":
+     * "18.1.2 rc5" => "18.1.2.5" so its less than "18.1.2.+INF" but more than "18.1.1.0"
+     * and more than "18.1.2.4"
+     *
+     * @param rhs The right-hand side {@link FullRevision} to compare with.
+     * @param ignorePreview If true, the preview value is ignored.
+     * @return &lt;0 if lhs &lt; rhs; 0 if lhs==rhs; &gt;0 if lhs &gt; rhs.
+     */
+    public int compareTo(FullRevision rhs, boolean ignorePreview) {
         int delta = mMajor - rhs.mMajor;
         if (delta != 0) {
             return delta;
@@ -259,9 +279,11 @@ public class FullRevision implements Comparable<FullRevision> {
             return delta;
         }
 
-        int p1 = mPreview == NOT_A_PREVIEW ? Integer.MAX_VALUE : mPreview;
-        int p2 = rhs.mPreview == NOT_A_PREVIEW ? Integer.MAX_VALUE : rhs.mPreview;
-        delta = p1 - p2;
+        if (!ignorePreview) {
+            int p1 = mPreview == NOT_A_PREVIEW ? Integer.MAX_VALUE : mPreview;
+            int p2 = rhs.mPreview == NOT_A_PREVIEW ? Integer.MAX_VALUE : rhs.mPreview;
+            delta = p1 - p2;
+        }
         return delta;
     }
 
