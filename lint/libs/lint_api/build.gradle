@@ -18,7 +18,6 @@ def getVersion() {
     return project.ext.baseVersion + '-SNAPSHOT'
 }
 
-version = getVersion()
 group = 'com.android.tools.lint'
 archivesBaseName = 'lint-api'
 
@@ -26,6 +25,39 @@ sourceSets {
     main.resources.srcDir 'src/main/java'
     test.resources.srcDir 'src/test/java'
 }
+
+def getClassPath() {
+    String classPath = ""
+    project.configurations.runtime.files.each { file ->
+         String name = file.name
+         String suffix = "-" + getVersion() + ".jar"
+         if (name.endsWith(suffix)) {
+             name = name.substring(0, name.size() - suffix.size()) + ".jar"
+         }
+         classPath = classPath + " " + name
+    }
+
+    return classPath
+}
+
+task prebuiltJar(type: Jar) {
+    from(sourceSets.main.output)
+    manifest {
+        attributes("Class-Path": getClassPath())
+    }
+}
+
+task distZip(type: Zip) {
+    from(prebuiltJar) {
+        rename "(.*)-${version}.jar", '$1.jar'
+    }
+    from(project.configurations.runtime) {
+        rename "(.*)-${version}.jar", '$1.jar'
+    }
+
+    archiveName archivesBaseName + ".zip"
+}
+
 
 uploadArchives {
     repositories {

@@ -7,7 +7,17 @@ ext.androidRootDir = file(new File(ext.androidHostOut, "../../../"))
 // rootProject.buildDir is specific to this gradle build.
 buildDir = new File(file(ext.androidHostOut), "tools/base/build")
 
-subprojects {
+
+def getVersion(Project p, String baseVersion) {
+    if (p.has("release")) {
+        return baseVersion
+    }
+
+    return baseVersion + '-SNAPSHOT'
+}
+
+
+subprojects { Project project ->
     // Change buildDir first so that all plugins pick up the new value.
     project.buildDir = project.file("$project.parent.buildDir/../$project.name")
 
@@ -22,7 +32,7 @@ subprojects {
     dependencies {
     }
 
-    project.ext.baseVersion = '22.0'
+    version = getVersion(project, '22.0')
 
     project.ext.sonatypeUsername = project.hasProperty('sonatypeUsername') ? sonatypeUsername : ""
     project.ext.sonatypePassword = project.hasProperty('sonatypePassword') ? sonatypePassword : ""
