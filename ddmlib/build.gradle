@@ -14,7 +14,6 @@ def getVersion() {
     return project.ext.baseVersion + '-SNAPSHOT'
 }
 
-version = getVersion()
 group = 'com.android.tools'
 archivesBaseName = 'ddmlib'
 
