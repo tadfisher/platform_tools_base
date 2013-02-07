@@ -1,6 +1,8 @@
 dependencies {
     compile project(':common')
+
     compile 'kxml2:kxml2:2.3.0'
+    compile 'com.google.guava:guava:13.0.1'
 
     testCompile 'org.easymock:easymock:3.1'
     testCompile 'junit:junit:3.8.1'
