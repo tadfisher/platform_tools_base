@@ -20,10 +20,15 @@ package com.android.sdklib;
 import com.android.SdkConstants;
 import com.android.sdklib.ISystemImage.LocationType;
 import com.android.sdklib.SdkManager.LayoutlibVersion;
+import com.android.sdklib.repository.FullRevision;
+import com.google.common.collect.Sets;
 
 import java.util.Arrays;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 
+/** Setup will build an SDK Manager local install matching the latest repository-N.xsd. */
 public class SdkManagerTest extends SdkManagerTestCase {
 
     @SuppressWarnings("deprecation")
@@ -39,6 +44,47 @@ public class SdkManagerTest extends SdkManagerTestCase {
         assertEquals(2, lv.getRevision());
 
         assertSame(lv, sdkman.getMaxLayoutlibVersion());
+    }
+
+    public void testSdkManager_getBuildTools() {
+        SdkManager sdkman = getSdkManager();
+
+        Set<FullRevision> v = sdkman.getBuildTools();
+        // Make sure we get a stable set -- hashmap order isn't stable and can't be used in tests.
+        if (!(v instanceof TreeSet<?>)) {
+            v = Sets.newTreeSet(v);
+        }
+
+        assertEquals("[]", getLog().toString());  // no errors in the logger
+        assertEquals("[3.0.0, 3.0.1, 12.3.4 rc5]", Arrays.toString(v.toArray()));
+
+        // Get infos, first one that doesn't exit returns null.
+        assertNull(sdkman.getBuildTool(new FullRevision(1)));
+
+        // Now some that exist.
+        BuildToolInfo i = sdkman.getBuildTool(new FullRevision(3, 0, 0));
+        assertEquals(
+                "<BuildToolInfo rev=3.0.0, " +
+                "mPath=$SDK/build-tools/3.0.0, " +
+                "mPaths={" +
+                    "AAPT=$SDK/build-tools/3.0.0/aapt.exe, " +
+                    "AIDL=$SDK/build-tools/3.0.0/aidl.exe, " +
+                    "DX=$SDK/build-tools/3.0.0/dx.bat, " +
+                    "DX_JAR=$SDK/build-tools/3.0.0/dx.jar, " +
+                    "ANT=$SDK/build-tools/3.0.0/ant/}>",
+                cleanPath(sdkman, i.toString()));
+
+        i = sdkman.getBuildTool(new FullRevision(12, 3, 4, 5));
+        assertEquals(
+                "<BuildToolInfo rev=12.3.4 rc5, " +
+                "mPath=$SDK/build-tools/12.3.4 rc5, " +
+                "mPaths={" +
+                    "AAPT=$SDK/build-tools/12.3.4 rc5/aapt.exe, " +
+                    "AIDL=$SDK/build-tools/12.3.4 rc5/aidl.exe, " +
+                    "DX=$SDK/build-tools/12.3.4 rc5/dx.bat, " +
+                    "DX_JAR=$SDK/build-tools/12.3.4 rc5/dx.jar, " +
+                    "ANT=$SDK/build-tools/12.3.4 rc5/ant/}>",
+                cleanPath(sdkman, i.toString()));
     }
 
     public void testSdkManager_SystemImage() throws Exception {
