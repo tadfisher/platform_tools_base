@@ -256,6 +256,8 @@ public class SdkManagerTestCase extends TestCase {
             new File(buildToolsDir, SdkConstants.FN_AAPT).createNewFile();
             new File(buildToolsDir, SdkConstants.FN_AIDL).createNewFile();
             new File(buildToolsDir, SdkConstants.FN_DX).createNewFile();
+            new File(buildToolsDir, SdkConstants.FN_DX_JAR).createNewFile();
+            new File(buildToolsDir, SdkConstants.FD_ANT).mkdir();
         }
     }
 

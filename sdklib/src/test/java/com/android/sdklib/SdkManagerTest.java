@@ -20,8 +20,12 @@ package com.android.sdklib;
 import com.android.SdkConstants;
 import com.android.sdklib.ISystemImage.LocationType;
 import com.android.sdklib.SdkManager.LayoutlibVersion;
+import com.android.sdklib.repository.FullRevision;
+import com.google.common.collect.Sets;
 
 import java.util.Arrays;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 public class SdkManagerTest extends SdkManagerTestCase {
@@ -39,6 +43,37 @@ public class SdkManagerTest extends SdkManagerTestCase {
         assertEquals(2, lv.getRevision());
 
         assertSame(lv, sdkman.getMaxLayoutlibVersion());
+    }
+
+    public void testSdkManager_getBuildTools() {
+        SdkManager sdkman = getSdkManager();
+
+        Set<FullRevision> v = sdkman.getBuildTools();
+        // Make sure we get a stable set -- hashmap order isn't stable and can't be used in tests.
+        if (!(v instanceof TreeSet<?>)) {
+            v = Sets.newTreeSet(v);
+        }
+
+        assertEquals("[]", getLog().toString());  // no errors in the logger
+        assertEquals("[3.0.0, 3.0.1, 12.3.4 rc5]", Arrays.toString(v.toArray()));
+
+        // Get infos, first one that doesn't exit returns null.
+        assertNull(sdkman.getBuildTool(new FullRevision(1)));
+
+        // Now some that exist.
+        BuildToolInfo i = sdkman.getBuildTool(new FullRevision(3, 0, 0));
+        assertEquals(
+                "<BuildToolInfo rev=3.0.0, " +
+                "mPath=.../3.0.0, " +
+                "mPaths=(AAPT: .../aapt.exe, AIDL: .../aidl.exe, DX: .../dx.bat, DX_JAR: .../dx.jar, ANT: .../ant)>",
+                i.toString());
+
+        i = sdkman.getBuildTool(new FullRevision(12, 3, 4, 5));
+        assertEquals(
+                "<BuildToolInfo rev=12.3.4 rc5, " +
+                "mPath=.../12.3.4 rc5, " +
+                "mPaths=(AAPT: .../aapt.exe, AIDL: .../aidl.exe, DX: .../dx.bat, DX_JAR: .../dx.jar, ANT: .../ant)>",
+                i.toString());
     }
 
     public void testSdkManager_SystemImage() throws Exception {
