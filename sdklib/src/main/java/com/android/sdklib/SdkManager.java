@@ -33,10 +33,14 @@ import com.android.sdklib.internal.repository.archives.Archive;
 import com.android.sdklib.internal.repository.packages.ExtraPackage;
 import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.internal.repository.packages.PlatformToolPackage;
+import com.android.sdklib.io.FileOp;
+import com.android.sdklib.repository.FullRevision;
 import com.android.sdklib.repository.PkgProps;
 import com.android.utils.ILogger;
 import com.android.utils.NullLogger;
 import com.android.utils.Pair;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -106,8 +110,11 @@ public class SdkManager {
     private final String mOsSdkPath;
     /** Valid targets that have been loaded. Can be empty but not null. */
     private IAndroidTarget[] mTargets = new IAndroidTarget[0];
+    /** Valid build-tool folders that have been loaded. Can be empty but not null. */
+    private Map<FullRevision, BuildToolInfo> mBuildTools = Maps.newHashMap();
     /** A map to keep information on directories to see if they change later. */
-    private final Map<File, DirInfo> mTargetDirs = new HashMap<File, SdkManager.DirInfo>();
+    private final Map<File, DirInfo> mVisistedDirs = new HashMap<File, SdkManager.DirInfo>();
+
 
     /**
      * Create a new {@link SdkManager} instance.
@@ -146,10 +153,12 @@ public class SdkManager {
      */
     public void reloadSdk(ILogger log) {
         // get the current target list.
-        mTargetDirs.clear();
-        ArrayList<IAndroidTarget> targets = new ArrayList<IAndroidTarget>();
-        loadPlatforms(mOsSdkPath, targets, mTargetDirs, log);
-        loadAddOns(mOsSdkPath, targets, mTargetDirs, log);
+        mVisistedDirs.clear();
+        ArrayList<IAndroidTarget> targets = Lists.newArrayList();
+        loadPlatforms(mOsSdkPath, targets, mVisistedDirs, log);
+        loadAddOns(mOsSdkPath, targets, mVisistedDirs, log);
+        Map<FullRevision, BuildToolInfo> buildTools = Maps.newHashMap();
+        loadBuildTools(mOsSdkPath, buildTools, mVisistedDirs, log);
 
         // For now replace the old list with the new one.
         // In the future we may want to keep the current objects, so that ADT doesn't have to deal
@@ -158,13 +167,14 @@ public class SdkManager {
         // sort the targets/add-ons
         Collections.sort(targets);
         setTargets(targets.toArray(new IAndroidTarget[targets.size()]));
+        setBuildTools(buildTools);
 
         // load the samples, after the targets have been set.
         initializeSamplePaths(log);
     }
 
     /**
-     * Checks whether any of the SDK platforms/add-ons have changed on-disk
+     * Checks whether any of the SDK platforms/add-ons/build-tools have changed on-disk
      * since we last loaded the SDK. This does not reload the SDK nor does it
      * change the underlying targets.
      *
@@ -174,16 +184,22 @@ public class SdkManager {
         Set<File> visited = new HashSet<File>();
         boolean changed = false;
 
-        File platformFolder = new File(mOsSdkPath, SdkConstants.FD_PLATFORMS);
-        if (platformFolder.isDirectory()) {
-            File[] platforms  = platformFolder.listFiles();
-            if (platforms != null) {
-                for (File platform : platforms) {
-                    if (!platform.isDirectory()) {
+        for (String dirName : new String[] { SdkConstants.FD_PLATFORMS,
+                                             SdkConstants.FD_ADDONS,
+                                             SdkConstants.FD_BUILD_TOOLS }) {
+
+            File folder = new File(mOsSdkPath, dirName);
+            if (folder.isDirectory()) {
+                File[] subFolders = folder.listFiles();
+                if (subFolders == null) {
+                    continue;
+                }
+                for (File subFolder : subFolders) {
+                    if (!subFolder.isDirectory()) {
                         continue;
                     }
-                    visited.add(platform);
-                    DirInfo dirInfo = mTargetDirs.get(platform);
+                    visited.add(subFolder);
+                    DirInfo dirInfo = mVisistedDirs.get(subFolder);
                     if (dirInfo == null) {
                         // This is a new platform directory.
                         changed = true;
@@ -193,43 +209,18 @@ public class SdkManager {
                     if (changed) {
                         if (DEBUG) {
                             System.out.println("SDK changed due to " +              //$NON-NLS-1$
-                                (dirInfo != null ? dirInfo.toString() : platform.getPath()));
+                                (dirInfo != null ? dirInfo.toString() : subFolder.getPath()));
                         }
+                        break;
                     }
                 }
             }
         }
 
-        File addonFolder = new File(mOsSdkPath, SdkConstants.FD_ADDONS);
-
-        if (!changed && addonFolder.isDirectory()) {
-            File[] addons  = addonFolder.listFiles();
-            if (addons != null) {
-                for (File addon : addons) {
-                    if (!addon.isDirectory()) {
-                        continue;
-                    }
-                    visited.add(addon);
-                    DirInfo dirInfo = mTargetDirs.get(addon);
-                    if (dirInfo == null) {
-                        // This is a new add-on directory.
-                        changed = true;
-                    } else {
-                        changed = dirInfo.hasChanged();
-                    }
-                    if (changed) {
-                        if (DEBUG) {
-                            System.out.println("SDK changed due to " +              //$NON-NLS-1$
-                                (dirInfo != null ? dirInfo.toString() : addon.getPath()));
-                        }
-                    }
-                }
-            }
-        }
 
         if (!changed) {
             // Check whether some pre-existing target directories have vanished.
-            for (File previousDir : mTargetDirs.keySet()) {
+            for (File previousDir : mVisistedDirs.keySet()) {
                 if (!visited.contains(previousDir)) {
                     // This directory is no longer present.
                     changed = true;
@@ -270,6 +261,29 @@ public class SdkManager {
     protected void setTargets(IAndroidTarget[] targets) {
         assert targets != null;
         mTargets = targets;
+    }
+
+    private void setBuildTools(Map<FullRevision, BuildToolInfo> buildTools) {
+        assert buildTools != null;
+        mBuildTools = buildTools;
+    }
+
+    /** Returns the set of known build-tools revisions. Can be empty but not null. */
+    @NonNull
+    public Set<FullRevision> getBuildTools() {
+        return mBuildTools.keySet();
+    }
+
+    /**
+     * Returns the {@link BuildToolInfo} for the given revision.
+     *
+     * @param revision The requested revision.
+     * @return A {@link BuildToolInfo}. Can be null if {@code revision} is null or is
+     *  not part of the known set returned by {@link #getBuildTools()}.
+     */
+    @Nullable
+    public BuildToolInfo getBuildTool(@Nullable FullRevision revision) {
+        return mBuildTools.get(revision);
     }
 
     /**
@@ -461,7 +475,8 @@ public class SdkManager {
     private static void loadPlatforms(
             String sdkOsPath,
             ArrayList<IAndroidTarget> targets,
-            Map<File, DirInfo> dirInfos, ILogger log) {
+            Map<File, DirInfo> dirInfos,
+            ILogger log) {
         File platformFolder = new File(sdkOsPath, SdkConstants.FD_PLATFORMS);
 
         if (platformFolder.isDirectory()) {
@@ -801,7 +816,8 @@ public class SdkManager {
     private static void loadAddOns(
             String osSdkPath,
             ArrayList<IAndroidTarget> targets,
-            Map<File, DirInfo> dirInfos, ILogger log) {
+            Map<File, DirInfo> dirInfos,
+            ILogger log) {
         File addonFolder = new File(osSdkPath, SdkConstants.FD_ADDONS);
 
         if (addonFolder.isDirectory()) {
@@ -1225,6 +1241,95 @@ public class SdkManager {
         } catch (AndroidVersionException e) {
             log.warning("Ignoring sample '%1$s': no android version found in %2$s.",   //$NON-NLS-1$
                     folder.getName(), SdkConstants.FN_SOURCE_PROP);
+        }
+
+        return null;
+    }
+
+    /**
+     * Loads the build-tools from the SDK.
+     * Creates the "build-tools" folder if necessary.
+     *
+     * @param sdkOsPath Location of the SDK
+     * @param infos the list to fill with the build-tools.
+     * @param dirInfos a map to keep information on directories to see if they change later.
+     * @param log the ILogger object receiving warning/error from the parsing. Cannot be null.
+     * @throws RuntimeException when the "platforms" folder is missing and cannot be created.
+     */
+    private static void loadBuildTools(
+            String sdkOsPath,
+            Map<FullRevision, BuildToolInfo> infos,
+            Map<File, DirInfo> dirInfos,
+            ILogger log) {
+        File buildToolsFolder = new File(sdkOsPath, SdkConstants.FD_BUILD_TOOLS);
+
+        if (buildToolsFolder.isDirectory()) {
+            File[] folders  = buildToolsFolder.listFiles();
+
+            for (File subFolder : folders) {
+                PlatformTarget target = null;
+                if (subFolder.isDirectory()) {
+                    BuildToolInfo info = loadBuildTool(sdkOsPath, subFolder, log);
+                    if (info != null) {
+                        infos.put(info.getRevision(), info);
+                    }
+                    // Remember we visited this file/directory,
+                    // even if we failed to load anything from it.
+                    dirInfos.put(subFolder, new DirInfo(subFolder));
+                } else {
+                    log.warning("Ignoring build-tool '%1$s', not a folder.", subFolder.getName());
+                }
+            }
+
+            return;
+        }
+
+        // Try to create it or complain if something else is in the way.
+        if (!buildToolsFolder.exists()) {
+            if (!buildToolsFolder.mkdir()) {
+                throw new RuntimeException(
+                        String.format("Failed to create %1$s.",
+                                buildToolsFolder.getAbsolutePath()));
+            }
+        } else {
+            throw new RuntimeException(
+                    String.format("%1$s is not a folder.",
+                            buildToolsFolder.getAbsolutePath()));
+        }
+    }
+
+    /**
+     * Loads a specific Platform at a given location.
+     * @param sdkOsPath Location of the SDK
+     * @param folder the root folder of the platform.
+     * @param log the ILogger object receiving warning/error from the parsing. Cannot be null.
+     */
+    private static BuildToolInfo loadBuildTool(
+            String sdkOsPath,
+            File folder,
+            ILogger log) {
+        FileOp f = new FileOp();
+
+        File sourcePropFile = new File(folder, SdkConstants.FN_SOURCE_PROP);
+        if (!f.isFile(sourcePropFile)) {
+            log.warning("Ignoring build-tool '%1$s': missing file %2$s",
+                    folder.getName(), SdkConstants.FN_SOURCE_PROP);
+        } else {
+            Properties props = f.loadProperties(sourcePropFile);
+            String revStr = props.getProperty(PkgProps.PKG_REVISION);
+
+            try {
+                FullRevision rev =
+                    FullRevision.parseRevision(props.getProperty(PkgProps.PKG_REVISION));
+
+                BuildToolInfo info = new BuildToolInfo(rev, folder);
+                return info.isValid(log) ? info : null;
+
+            } catch (NumberFormatException e) {
+                log.warning("Ignoring build-tool '%1$s': invalid revision '%2$s'",
+                        folder.getName(), revStr);
+            }
+
         }
 
         return null;
