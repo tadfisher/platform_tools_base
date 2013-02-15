@@ -34,6 +34,10 @@ import com.android.sdklib.internal.repository.packages.ExtraPackage;
 import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.internal.repository.packages.PlatformToolPackage;
 import com.android.sdklib.io.FileOp;
+import com.android.sdklib.local.LocalPkgInfo;
+import com.android.sdklib.local.LocalPkgInfo.ExtraInfo;
+import com.android.sdklib.local.LocalPkgInfo.PlatformInfo;
+import com.android.sdklib.local.LocalSdk;
 import com.android.sdklib.repository.FullRevision;
 import com.android.sdklib.repository.PkgProps;
 import com.android.utils.ILogger;
@@ -41,6 +45,7 @@ import com.android.utils.NullLogger;
 import com.android.utils.Pair;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -51,6 +56,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -108,12 +114,16 @@ public class SdkManager {
 
     /** The location of the SDK as an OS path */
     private final String mOsSdkPath;
-    /** Valid targets that have been loaded. Can be empty but not null. */
-    private IAndroidTarget[] mTargets = new IAndroidTarget[0];
-    /** Valid build-tool folders that have been loaded. Can be empty but not null. */
-    private Map<FullRevision, BuildToolInfo> mBuildTools = Maps.newTreeMap();
+    /** Cached targets that have been loaded. */
+    private IAndroidTarget[] mTargets = null;
+    /** Cached build-tool folders that have been loaded. */
+    private Map<FullRevision, BuildToolInfo> mBuildTools = null;
     /** A map to keep information on directories to see if they change later. */
     private final Map<File, DirInfo> mVisistedDirs = new HashMap<File, SdkManager.DirInfo>();
+
+    /** Embedded reference to the new local SDK object.
+     * TODO: once LocalSdk is finished, SdkManager will be replaced by LocalSdk. */
+    private final LocalSdk mLocalSdk;
 
 
     /**
@@ -125,6 +135,7 @@ public class SdkManager {
     @VisibleForTesting(visibility=Visibility.PRIVATE)
     protected SdkManager(@NonNull String osSdkPath) {
         mOsSdkPath = osSdkPath;
+        mLocalSdk = new LocalSdk(new File(mOsSdkPath));
     }
 
     /**
@@ -155,6 +166,12 @@ public class SdkManager {
      * @param log the ILogger object receiving warning/error from the parsing.
      */
     public void reloadSdk(@NonNull ILogger log) {
+
+        mLocalSdk.trackVisitedDirs(LocalSdk.PKG_ALL);
+        mTargets = null;
+        mBuildTools = null;
+
+//--DEPRECATED---
         // get the current target list.
         mVisistedDirs.clear();
         ArrayList<IAndroidTarget> targets = Lists.newArrayList();
@@ -184,6 +201,12 @@ public class SdkManager {
      * @return True if at least one directory or source.prop has changed.
      */
     public boolean hasChanged() {
+        return mLocalSdk.visitedDirsHaveChanged(
+                LocalSdk.PKG_PLATFORMS |
+                LocalSdk.PKG_ADDONS |
+                LocalSdk.PKG_BUILD_TOOLS);
+
+  //--DEPRECATED---
         Set<File> visited = new HashSet<File>();
         boolean changed = false;
 
@@ -244,7 +267,12 @@ public class SdkManager {
      */
     @NonNull
     public String getLocation() {
-        return mOsSdkPath;
+        File f = mLocalSdk.getLocation();
+        // The LocalSdk is created with a file path, so we know the location won't be null.
+        assert f != null;
+        return f.getPath();
+//--DEPRECATED---
+        //--return mOsSdkPath;
     }
 
     /**
@@ -254,6 +282,21 @@ public class SdkManager {
      */
     @NonNull
     public IAndroidTarget[] getTargets() {
+        if (mTargets == null) {
+            LocalPkgInfo[] pkgsInfos = mLocalSdk.getPkgsInfos(
+                    LocalSdk.PKG_PLATFORMS |
+                    LocalSdk.PKG_ADDONS);
+            int n = pkgsInfos.length;
+            List<IAndroidTarget> targets = new ArrayList<IAndroidTarget>(n);
+            for (int i = 0; i < n; i++) {
+                LocalPkgInfo info = pkgsInfos[i];
+                assert info instanceof LocalPkgInfo.PlatformInfo;
+                if (info instanceof LocalPkgInfo.PlatformInfo) {
+                    targets.add(((PlatformInfo) info).getAndroidTarget());
+                }
+            }
+            mTargets = targets.toArray(new IAndroidTarget[targets.size()]);
+        }
         return mTargets;
     }
 
@@ -262,13 +305,17 @@ public class SdkManager {
      * <p/>
      * The array can be empty but not null.
      */
+    @Deprecated
     @VisibleForTesting(visibility=Visibility.PRIVATE)
     protected void setTargets(@NonNull IAndroidTarget[] targets) {
+//--DEPRECATED---
         assert targets != null;
         mTargets = targets;
     }
 
+    @Deprecated
     private void setBuildTools(@NonNull Map<FullRevision, BuildToolInfo> buildTools) {
+//--DEPRECATED---
         assert buildTools != null;
         mBuildTools = buildTools;
     }
@@ -276,6 +323,10 @@ public class SdkManager {
     /** Returns an unmodifiable set of known build-tools revisions. Can be empty but not null. */
     @NonNull
     public Set<FullRevision> getBuildTools() {
+        if (mBuildTools == null) {
+            // lazily load build tools
+            getBuildTool(null);
+        }
         return Collections.unmodifiableSet(mBuildTools.keySet());
     }
 
@@ -288,6 +339,19 @@ public class SdkManager {
      */
     @Nullable
     public BuildToolInfo getBuildTool(@Nullable FullRevision revision) {
+        if (mBuildTools == null) {
+            LocalPkgInfo[] pkgsInfos = mLocalSdk.getPkgsInfos(LocalSdk.PKG_BUILD_TOOLS);
+            mBuildTools = Maps.newTreeMap();
+            for (LocalPkgInfo info : pkgsInfos) {
+                if (info.hasFullRevision()) {
+                    assert info instanceof LocalPkgInfo.BuildToolInfo;
+                    if (info instanceof LocalPkgInfo.BuildToolInfo) {
+                        mBuildTools.put(info.getFullRevision(),
+                                ((LocalPkgInfo.BuildToolInfo) info).getBuildToolInfo());
+                    }
+                }
+            }
+        }
         return mBuildTools.get(revision);
     }
 
@@ -300,7 +364,7 @@ public class SdkManager {
     @Nullable
     public IAndroidTarget getTargetFromHashString(@Nullable String hash) {
         if (hash != null) {
-            for (IAndroidTarget target : mTargets) {
+            for (IAndroidTarget target : getTargets()) {
                 if (hash.equals(target.hashString())) {
                     return target;
                 }
@@ -386,32 +450,25 @@ public class SdkManager {
      */
     @NonNull
     public Map<File, String> getExtraSamples() {
-        LocalSdkParser parser = new LocalSdkParser();
-        Package[] packages = parser.parseSdk(mOsSdkPath,
-                                             this,
-                                             LocalSdkParser.PARSE_EXTRAS,
-                                             new NullTaskMonitor(NullLogger.getLogger()));
 
+        LocalPkgInfo[] pkgsInfos = mLocalSdk.getPkgsInfos(LocalSdk.PKG_EXTRAS);
         Map<File, String> samples = new HashMap<File, String>();
 
-        for (Package pkg : packages) {
-            if (pkg instanceof ExtraPackage && pkg.isLocal()) {
-                // isLocal()==true implies there's a single locally-installed archive.
-                assert pkg.getArchives() != null && pkg.getArchives().length == 1;
-                Archive a = pkg.getArchives()[0];
-                assert a != null;
-                File path = new File(a.getLocalOsPath(), SdkConstants.FD_SAMPLES);
-                if (path.isDirectory()) {
-                    samples.put(path, pkg.getListDescription());
-                    continue;
-                }
-                // Some old-style extras simply have a single "sample" directory.
-                // Accept it if it contains an AndroidManifest.xml.
-                path = new File(a.getLocalOsPath(), SdkConstants.FD_SAMPLE);
-                if (path.isDirectory() &&
-                        new File(path, SdkConstants.FN_ANDROID_MANIFEST_XML).isFile()) {
-                    samples.put(path, pkg.getListDescription());
-                }
+        for (LocalPkgInfo info : pkgsInfos) {
+            assert info instanceof LocalPkgInfo.ExtraInfo;
+
+            File root = info.getLocation();
+            File path = new File(root, SdkConstants.FD_SAMPLES);
+            if (path.isDirectory()) {
+                samples.put(path, info.getListDescription());
+                continue;
+            }
+            // Some old-style extras simply have a single "sample" directory.
+            // Accept it if it contains an AndroidManifest.xml.
+            path = new File(root, SdkConstants.FD_SAMPLE);
+            if (path.isDirectory() &&
+                    new File(path, SdkConstants.FN_ANDROID_MANIFEST_XML).isFile()) {
+                samples.put(path, info.getListDescription());
             }
         }
 
@@ -428,20 +485,16 @@ public class SdkManager {
      */
     @NonNull
     public Map<String, Integer> getExtrasVersions() {
-        LocalSdkParser parser = new LocalSdkParser();
-        Package[] packages = parser.parseSdk(mOsSdkPath,
-                                             this,
-                                             LocalSdkParser.PARSE_EXTRAS,
-                                             new NullTaskMonitor(NullLogger.getLogger()));
-
+        LocalPkgInfo[] pkgsInfos = mLocalSdk.getPkgsInfos(LocalSdk.PKG_EXTRAS);
         Map<String, Integer> extraVersions = new TreeMap<String, Integer>();
 
-        for (Package pkg : packages) {
-            if (pkg instanceof ExtraPackage && pkg.isLocal()) {
-                ExtraPackage ep = (ExtraPackage) pkg;
-                String vendor = ep.getVendorId();
-                String path = ep.getPath();
-                int majorRev = ep.getRevision().getMajor();
+        for (LocalPkgInfo info : pkgsInfos) {
+            assert info instanceof LocalPkgInfo.ExtraInfo;
+            if (info instanceof LocalPkgInfo.ExtraInfo) {
+                ExtraInfo ei = (LocalPkgInfo.ExtraInfo) info;
+                String vendor = ei.getVendorId();
+                String path   = ei.getExtraPath();
+                int majorRev  = ei.getMajorRevision().getMajor();
 
                 extraVersions.put(vendor + '/' + path, majorRev);
             }
@@ -453,14 +506,9 @@ public class SdkManager {
     /** Returns the platform tools version if installed, null otherwise. */
     @Nullable
     public String getPlatformToolsVersion() {
-        LocalSdkParser parser = new LocalSdkParser();
-        Package[] packages = parser.parseSdk(mOsSdkPath, this, LocalSdkParser.PARSE_PLATFORM_TOOLS,
-                new NullTaskMonitor(NullLogger.getLogger()));
-
-        for (Package pkg : packages) {
-            if (pkg instanceof PlatformToolPackage && pkg.isLocal()) {
-                return pkg.getRevision().toShortString();
-            }
+        LocalPkgInfo info = mLocalSdk.getPkgInfo(LocalSdk.PKG_PLATFORM_TOOLS);
+        if (info != null && info.hasFullRevision()) {
+            return info.getFullRevision().toShortString();
         }
 
         return null;
