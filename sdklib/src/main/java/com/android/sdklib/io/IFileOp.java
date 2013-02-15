@@ -19,9 +19,11 @@ package com.android.sdklib.io;
 import com.android.annotations.NonNull;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Properties;
 
@@ -106,14 +108,22 @@ public interface IFileOp {
     /** Invokes {@link File#mkdirs()} on the given {@code file}. */
     public abstract boolean mkdirs(File file);
 
-    /** Invokes {@link File#listFiles()} on the given {@code file}. */
+    /**
+     * Invokes {@link File#listFiles()} on the given {@code file}.
+     * Contrary to the Java API, this returns an empty array instead of null when the
+     * directory does not exist.
+     */
+    @NonNull
     public abstract File[] listFiles(File file);
 
     /** Invokes {@link File#renameTo(File)} on the given files. */
     public abstract boolean renameTo(File oldDir, File newDir);
 
-    /** Creates a new {@link FileOutputStream} for the given {@code file}. */
+    /** Creates a new {@link OutputStream} for the given {@code file}. */
     public abstract OutputStream newFileOutputStream(File file) throws FileNotFoundException;
+
+    /** Creates a new {@link InputStream} for the given {@code file}. */
+    public abstract InputStream newFileInputStream(File file) throws FileNotFoundException;
 
     /**
      * Load {@link Properties} from a file. Returns an empty property set on error.
@@ -137,4 +147,6 @@ public interface IFileOp {
             @NonNull File file,
             @NonNull Properties props,
             @NonNull String comments);
+
+    long lastModified(@NonNull File file);
 }

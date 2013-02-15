@@ -299,6 +299,7 @@ public class MockFileOp implements IFileOp {
     /**
      * Invokes {@link File#listFiles()} on the given {@code file}.
      * The returned list is sorted by alphabetic absolute path string.
+     * Might return an empty array but never null.
      */
     @Override
     public File[] listFiles(File file) {
