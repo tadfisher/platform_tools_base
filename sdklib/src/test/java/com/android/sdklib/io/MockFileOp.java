@@ -18,17 +18,25 @@ package com.android.sdklib.io;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.google.common.base.Charsets;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
@@ -49,8 +57,8 @@ import java.util.regex.Pattern;
  */
 public class MockFileOp implements IFileOp {
 
-    private final Set<String> mExistinfFiles = new TreeSet<String>();
-    private final Set<String> mExistinfFolders = new TreeSet<String>();
+    private final Map<String, FileInfo> mExistingFiles = Maps.newTreeMap();
+    private final Set<String> mExistingFolders = Sets.newTreeSet();
     private final List<StringOutputStream> mOutputStreams = new ArrayList<StringOutputStream>();
 
     public MockFileOp() {
@@ -58,15 +66,15 @@ public class MockFileOp implements IFileOp {
 
     /** Resets the internal state, as if the object had been newly created. */
     public void reset() {
-        mExistinfFiles.clear();
-        mExistinfFolders.clear();
+        mExistingFiles.clear();
+        mExistingFolders.clear();
     }
 
-    public String getAgnosticAbsPath(File file) {
+    public String getAgnosticAbsPath(@NonNull File file) {
         return getAgnosticAbsPath(file.getAbsolutePath());
     }
 
-    public String getAgnosticAbsPath(String path) {
+    public String getAgnosticAbsPath(@NonNull String path) {
         if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
             // Try to convert the windows-looking path to a unix-looking one
             path = path.replace('\\', '/');
@@ -79,8 +87,8 @@ public class MockFileOp implements IFileOp {
      * Records a new absolute file path.
      * Parent folders are not automatically created.
      */
-    public void recordExistingFile(File file) {
-        mExistinfFiles.add(getAgnosticAbsPath(file));
+    public void recordExistingFile(@NonNull File file) {
+        recordExistingFile(getAgnosticAbsPath(file), 0, null);
     }
 
     /**
@@ -91,8 +99,52 @@ public class MockFileOp implements IFileOp {
      * On Windows that means you'll want to use {@link #getAgnosticAbsPath(File)}.
      * @param absFilePath A unix-like file path, e.g. "/dir/file"
      */
-    public void recordExistingFile(String absFilePath) {
-        mExistinfFiles.add(absFilePath);
+    public void recordExistingFile(@NonNull String absFilePath) {
+        recordExistingFile(absFilePath, 0, null);
+    }
+
+    /**
+     * Records a new absolute file path & its input stream content.
+     * Parent folders are not automatically created.
+     * <p/>
+     * The syntax should always look "unix-like", e.g. "/dir/file".
+     * On Windows that means you'll want to use {@link #getAgnosticAbsPath(File)}.
+     * @param absFilePath A unix-like file path, e.g. "/dir/file"
+     * @param inputStream A non-null byte array of content to return
+     *                    via {@link #newFileInputStream(File)}.
+     */
+    public void recordExistingFile(@NonNull String absFilePath, @Nullable byte[] inputStream) {
+        recordExistingFile(absFilePath, 0, inputStream);
+    }
+
+    /**
+     * Records a new absolute file path & its input stream content.
+     * Parent folders are not automatically created.
+     * <p/>
+     * The syntax should always look "unix-like", e.g. "/dir/file".
+     * On Windows that means you'll want to use {@link #getAgnosticAbsPath(File)}.
+     * @param absFilePath A unix-like file path, e.g. "/dir/file"
+     * @param content A non-null UTF-8 content string to return
+     *                    via {@link #newFileInputStream(File)}.
+     */
+    public void recordExistingFile(@NonNull String absFilePath, @NonNull String content) {
+        recordExistingFile(absFilePath, 0, content.getBytes(Charsets.UTF_8));
+    }
+
+    /**
+     * Records a new absolute file path & its input stream content.
+     * Parent folders are not automatically created.
+     * <p/>
+     * The syntax should always look "unix-like", e.g. "/dir/file".
+     * On Windows that means you'll want to use {@link #getAgnosticAbsPath(File)}.
+     * @param absFilePath A unix-like file path, e.g. "/dir/file"
+     * @param inputStream A non-null byte array of content to return
+     *                    via {@link #newFileInputStream(File)}.
+     */
+    public void recordExistingFile(@NonNull String absFilePath,
+                                   long lastModified,
+                                   @Nullable byte[] inputStream) {
+        mExistingFiles.put(absFilePath, new FileInfo(lastModified, inputStream));
     }
 
     /**
@@ -100,7 +152,7 @@ public class MockFileOp implements IFileOp {
      * Parent folders are not automatically created.
      */
     public void recordExistingFolder(File folder) {
-        mExistinfFolders.add(getAgnosticAbsPath(folder));
+        mExistingFolders.add(getAgnosticAbsPath(folder));
     }
 
     /**
@@ -112,7 +164,7 @@ public class MockFileOp implements IFileOp {
      * @param absFolderPath A unix-like folder path, e.g. "/dir/file"
      */
     public void recordExistingFolder(String absFolderPath) {
-        mExistinfFolders.add(absFolderPath);
+        mExistingFolders.add(absFolderPath);
     }
 
     /**
@@ -122,7 +174,8 @@ public class MockFileOp implements IFileOp {
      * The returned list is sorted by alphabetic absolute path string.
      */
     public String[] getExistingFiles() {
-        return mExistinfFiles.toArray(new String[mExistinfFiles.size()]);
+        Set<String> files = mExistingFiles.keySet();
+        return files.toArray(new String[files.size()]);
     }
 
     /**
@@ -132,7 +185,7 @@ public class MockFileOp implements IFileOp {
      * The returned list is sorted by alphabetic absolute path string.
      */
     public String[] getExistingFolders() {
-        return mExistinfFolders.toArray(new String[mExistinfFolders.size()]);
+        return mExistingFolders.toArray(new String[mExistingFolders.size()]);
     }
 
     /**
@@ -195,33 +248,61 @@ public class MockFileOp implements IFileOp {
     @Override
     public void copyFile(File source, File dest) throws IOException {
         // pass
+        throw new UnsupportedOperationException("MockFileUtils.copyFile is not supported."); //$NON-NLS-1$
     }
 
     /**
      * Checks whether 2 binary files are the same.
      *
-     * @param source the source file to copy
-     * @param destination the destination file to write
+     * @param file1 the source file to copy
+     * @param file2 the destination file to write
      * @throws FileNotFoundException if the source files don't exist.
      * @throws IOException if there's a problem reading the files.
      */
     @Override
-    public boolean isSameFile(File source, File destination) throws IOException {
-        throw new UnsupportedOperationException("MockFileUtils.isSameFile is not supported."); //$NON-NLS-1$
+    public boolean isSameFile(File file1, File file2) throws IOException {
+        String path1 = getAgnosticAbsPath(file1);
+        String path2 = getAgnosticAbsPath(file2);
+        FileInfo fi1 = mExistingFiles.get(path1);
+        FileInfo fi2 = mExistingFiles.get(path2);
+
+        if (fi1 == null) {
+            throw new FileNotFoundException("[isSameFile] Mock file not defined: " + path1);
+        }
+
+        if (fi1 == fi2) {
+            return true;
+        }
+
+        if (fi2 == null) {
+            throw new FileNotFoundException("[isSameFile] Mock file not defined: " + path2);
+        }
+
+        byte[] content1 = fi1.getContent();
+        byte[] content2 = fi2.getContent();
+
+        if (content1 == null) {
+            throw new IOException("[isSameFile] Mock file has no content: " + path1);
+        }
+        if (content2 == null) {
+            throw new IOException("[isSameFile] Mock file has no content: " + path2);
+        }
+
+        return Arrays.equals(content1, content2);
     }
 
     /** Invokes {@link File#isFile()} on the given {@code file}. */
     @Override
     public boolean isFile(File file) {
         String path = getAgnosticAbsPath(file);
-        return mExistinfFiles.contains(path);
+        return mExistingFiles.containsKey(path);
     }
 
     /** Invokes {@link File#isDirectory()} on the given {@code file}. */
     @Override
     public boolean isDirectory(File file) {
         String path = getAgnosticAbsPath(file);
-        if (mExistinfFolders.contains(path)) {
+        if (mExistingFolders.contains(path)) {
             return true;
         }
 
@@ -231,12 +312,12 @@ public class MockFileOp implements IFileOp {
                 Pattern.quote(path + (path.endsWith("/") ? "" : '/')) +  //$NON-NLS-1$ //$NON-NLS-2$
                 ".*");                                                   //$NON-NLS-1$
 
-        for (String folder : mExistinfFolders) {
+        for (String folder : mExistingFolders) {
             if (pathRE.matcher(folder).matches()) {
                 return true;
             }
         }
-        for (String filePath : mExistinfFiles) {
+        for (String filePath : mExistingFiles.keySet()) {
             if (pathRE.matcher(filePath).matches()) {
                 return true;
             }
@@ -261,12 +342,12 @@ public class MockFileOp implements IFileOp {
     public boolean delete(File file) {
         String path = getAgnosticAbsPath(file);
 
-        if (mExistinfFiles.remove(path)) {
+        if (mExistingFiles.remove(path) != null) {
             return true;
         }
 
         boolean hasSubfiles = false;
-        for (String folder : mExistinfFolders) {
+        for (String folder : mExistingFolders) {
             if (folder.startsWith(path) && !folder.equals(path)) {
                 // the File.delete operation is not recursive and would fail to remove
                 // a root dir that is not empty.
@@ -274,7 +355,7 @@ public class MockFileOp implements IFileOp {
             }
         }
         if (!hasSubfiles) {
-            for (String filePath : mExistinfFiles) {
+            for (String filePath : mExistingFiles.keySet()) {
                 if (filePath.startsWith(path) && !filePath.equals(path)) {
                     // the File.delete operation is not recursive and would fail to remove
                     // a root dir that is not empty.
@@ -283,7 +364,7 @@ public class MockFileOp implements IFileOp {
             }
         }
 
-        return mExistinfFolders.remove(path);
+        return mExistingFolders.remove(path);
     }
 
     /** Invokes {@link File#mkdirs()} on the given {@code file}. */
@@ -291,7 +372,7 @@ public class MockFileOp implements IFileOp {
     public boolean mkdirs(File file) {
         for (; file != null; file = file.getParentFile()) {
             String path = getAgnosticAbsPath(file);
-            mExistinfFolders.add(path);
+            mExistingFolders.add(path);
         }
         return true;
     }
@@ -299,6 +380,7 @@ public class MockFileOp implements IFileOp {
     /**
      * Invokes {@link File#listFiles()} on the given {@code file}.
      * The returned list is sorted by alphabetic absolute path string.
+     * Might return an empty array but never null.
      */
     @Override
     public File[] listFiles(File file) {
@@ -309,12 +391,12 @@ public class MockFileOp implements IFileOp {
                 Pattern.quote(path + (path.endsWith("/") ? "" : '/')) +  //$NON-NLS-1$ //$NON-NLS-2$
                 ".*");                                                   //$NON-NLS-1$
 
-        for (String folder : mExistinfFolders) {
+        for (String folder : mExistingFolders) {
             if (pathRE.matcher(folder).matches()) {
                 files.add(new File(folder));
             }
         }
-        for (String filePath : mExistinfFiles) {
+        for (String filePath : mExistingFiles.keySet()) {
             if (pathRE.matcher(filePath).matches()) {
                 files.add(new File(filePath));
             }
@@ -333,31 +415,34 @@ public class MockFileOp implements IFileOp {
                 "^(" + Pattern.quote(oldPath) + //$NON-NLS-1$
                 ")($|/.*)");                    //$NON-NLS-1$
 
-        Set<String> newStrings = new HashSet<String>();
-        for (Iterator<String> it = mExistinfFolders.iterator(); it.hasNext(); ) {
+        Set<String> newFolders = Sets.newTreeSet();
+        for (Iterator<String> it = mExistingFolders.iterator(); it.hasNext(); ) {
             String folder = it.next();
             Matcher m = pathRE.matcher(folder);
             if (m.matches()) {
                 it.remove();
                 String newFolder = newPath + m.group(2);
-                newStrings.add(newFolder);
+                newFolders.add(newFolder);
                 renamed = true;
             }
         }
-        mExistinfFolders.addAll(newStrings);
-        newStrings.clear();
+        mExistingFolders.addAll(newFolders);
+        newFolders.clear();
 
-        for (Iterator<String> it = mExistinfFiles.iterator(); it.hasNext(); ) {
-            String filePath = it.next();
+        Map<String, FileInfo> newFiles = Maps.newTreeMap();
+        for (Iterator<Entry<String, FileInfo>> it = mExistingFiles.entrySet().iterator();
+                it.hasNext(); ) {
+            Entry<String, FileInfo> entry = it.next();
+            String filePath = entry.getKey();
             Matcher m = pathRE.matcher(filePath);
             if (m.matches()) {
                 it.remove();
                 String newFilePath = newPath + m.group(2);
-                newStrings.add(newFilePath);
+                newFiles.put(newFilePath, entry.getValue());
                 renamed = true;
             }
         }
-        mExistinfFiles.addAll(newStrings);
+        mExistingFiles.putAll(newFiles);
 
         return renamed;
     }
@@ -465,5 +550,48 @@ public class MockFileOp implements IFileOp {
             }
             return sb.toString();
         }
+    }
+
+    @Override
+    public InputStream newFileInputStream(File file) throws FileNotFoundException {
+        FileInfo fi = mExistingFiles.get(getAgnosticAbsPath(file));
+        if (fi != null) {
+            byte[] content = fi.getContent();
+            if (content != null) {
+                return new ByteArrayInputStream(content);
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public long lastModified(File file) {
+        FileInfo fi = mExistingFiles.get(getAgnosticAbsPath(file));
+        if (fi != null) {
+            return fi.getLastModified();
+        }
+        return 0;
+    }
+
+    // -----
+
+    private static class FileInfo {
+        private long mLastModified;
+        private byte[] mContent;
+
+        public FileInfo(long lastModified, @Nullable byte[] content) {
+            mLastModified = lastModified;
+            mContent = content;
+        }
+
+        public long getLastModified() {
+            return mLastModified;
+        }
+
+        @Nullable
+        public byte[] getContent() {
+            return mContent;
+        }
+
     }
 }
