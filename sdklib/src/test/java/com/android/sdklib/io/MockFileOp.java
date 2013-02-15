@@ -18,17 +18,21 @@ package com.android.sdklib.io;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.google.common.collect.Maps;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
@@ -51,6 +55,7 @@ public class MockFileOp implements IFileOp {
 
     private final Set<String> mExistinfFiles = new TreeSet<String>();
     private final Set<String> mExistinfFolders = new TreeSet<String>();
+    private final Map<String, byte[]> mInputStreams = Maps.newHashMap();
     private final List<StringOutputStream> mOutputStreams = new ArrayList<StringOutputStream>();
 
     public MockFileOp() {
@@ -62,11 +67,11 @@ public class MockFileOp implements IFileOp {
         mExistinfFolders.clear();
     }
 
-    public String getAgnosticAbsPath(File file) {
+    public String getAgnosticAbsPath(@NonNull File file) {
         return getAgnosticAbsPath(file.getAbsolutePath());
     }
 
-    public String getAgnosticAbsPath(String path) {
+    public String getAgnosticAbsPath(@NonNull String path) {
         if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
             // Try to convert the windows-looking path to a unix-looking one
             path = path.replace('\\', '/');
@@ -79,7 +84,7 @@ public class MockFileOp implements IFileOp {
      * Records a new absolute file path.
      * Parent folders are not automatically created.
      */
-    public void recordExistingFile(File file) {
+    public void recordExistingFile(@NonNull File file) {
         mExistinfFiles.add(getAgnosticAbsPath(file));
     }
 
@@ -91,8 +96,23 @@ public class MockFileOp implements IFileOp {
      * On Windows that means you'll want to use {@link #getAgnosticAbsPath(File)}.
      * @param absFilePath A unix-like file path, e.g. "/dir/file"
      */
-    public void recordExistingFile(String absFilePath) {
+    public void recordExistingFile(@NonNull String absFilePath) {
         mExistinfFiles.add(absFilePath);
+    }
+
+    /**
+     * Records a new absolute file path & its input stream content.
+     * Parent folders are not automatically created.
+     * <p/>
+     * The syntax should always look "unix-like", e.g. "/dir/file".
+     * On Windows that means you'll want to use {@link #getAgnosticAbsPath(File)}.
+     * @param absFilePath A unix-like file path, e.g. "/dir/file"
+     * @param inputStream A non-null byte array of content to return
+     *                    via {@link #newFileInputStream(File)}.
+     */
+    public void recordExistingFile(@NonNull String absFilePath, @NonNull byte[] inputStream) {
+        mExistinfFiles.add(absFilePath);
+        mInputStreams.put(absFilePath, inputStream);
     }
 
     /**
@@ -299,6 +319,7 @@ public class MockFileOp implements IFileOp {
     /**
      * Invokes {@link File#listFiles()} on the given {@code file}.
      * The returned list is sorted by alphabetic absolute path string.
+     * Might return an empty array but never null.
      */
     @Override
     public File[] listFiles(File file) {
@@ -465,5 +486,34 @@ public class MockFileOp implements IFileOp {
             }
             return sb.toString();
         }
+    }
+
+    @Override
+    public String getName(File file) {
+        return file.getName();
+    }
+
+    @Override
+    public String getPath(File file) {
+        return file.getPath();
+    }
+
+    @Override
+    public String getAbsolutePath(File file) {
+        return file.getAbsolutePath();
+    }
+
+    @Override
+    public InputStream newFileInputStream(File file) throws FileNotFoundException {
+        String p = getAgnosticAbsPath(file);
+        if (mInputStreams.containsKey(p)) {
+            return new ByteArrayInputStream(mInputStreams.get(p));
+        }
+        return null;
+    }
+
+    @Override
+    public long lastModified(File file) {
+        return file.lastModified();
     }
 }

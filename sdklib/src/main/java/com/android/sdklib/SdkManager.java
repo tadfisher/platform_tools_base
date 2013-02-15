@@ -27,17 +27,15 @@ import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.AndroidVersion.AndroidVersionException;
 import com.android.sdklib.ISystemImage.LocationType;
 import com.android.sdklib.internal.project.ProjectProperties;
-import com.android.sdklib.internal.repository.LocalSdkParser;
-import com.android.sdklib.internal.repository.NullTaskMonitor;
-import com.android.sdklib.internal.repository.archives.Archive;
-import com.android.sdklib.internal.repository.packages.ExtraPackage;
-import com.android.sdklib.internal.repository.packages.Package;
-import com.android.sdklib.internal.repository.packages.PlatformToolPackage;
 import com.android.sdklib.io.FileOp;
+import com.android.sdklib.local.LocalBuildToolPkgInfo;
+import com.android.sdklib.local.LocalExtraPkgInfo;
+import com.android.sdklib.local.LocalPkgInfo;
+import com.android.sdklib.local.LocalPlatformPkgInfo;
+import com.android.sdklib.local.LocalSdk;
 import com.android.sdklib.repository.FullRevision;
 import com.android.sdklib.repository.PkgProps;
 import com.android.utils.ILogger;
-import com.android.utils.NullLogger;
 import com.android.utils.Pair;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -51,6 +49,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -69,30 +68,45 @@ public class SdkManager {
 
     private static final boolean DEBUG = System.getenv("SDKMAN_DEBUG") != null;        //$NON-NLS-1$
 
+    @Deprecated // moved to local
     public static final String PROP_VERSION_SDK = "ro.build.version.sdk";              //$NON-NLS-1$
+    @Deprecated // moved to local
     public static final String PROP_VERSION_CODENAME = "ro.build.version.codename";    //$NON-NLS-1$
+    @Deprecated // moved to local
     public static final String PROP_VERSION_RELEASE = "ro.build.version.release";      //$NON-NLS-1$
 
+    @Deprecated // moved to local
     public static final String ADDON_NAME = "name";                                    //$NON-NLS-1$
+    @Deprecated // moved to local
     public static final String ADDON_VENDOR = "vendor";                                //$NON-NLS-1$
+    @Deprecated // moved to local
     public static final String ADDON_API = "api";                                      //$NON-NLS-1$
+    @Deprecated // moved to local
     public static final String ADDON_DESCRIPTION = "description";                      //$NON-NLS-1$
+    @Deprecated // moved to local
     public static final String ADDON_LIBRARIES = "libraries";                          //$NON-NLS-1$
+    @Deprecated // moved to local
     public static final String ADDON_DEFAULT_SKIN = "skin";                            //$NON-NLS-1$
+    @Deprecated // moved to local
     public static final String ADDON_USB_VENDOR = "usb-vendor";                        //$NON-NLS-1$
+    @Deprecated // moved to local
     public static final String ADDON_REVISION = "revision";                            //$NON-NLS-1$
+    @Deprecated // moved to local
     public static final String ADDON_REVISION_OLD = "version";                         //$NON-NLS-1$
 
 
+    @Deprecated // moved to local
     private static final Pattern PATTERN_LIB_DATA = Pattern.compile(
             "^([a-zA-Z0-9._-]+\\.jar);(.*)$", Pattern.CASE_INSENSITIVE);               //$NON-NLS-1$
 
      // usb ids are 16-bit hexadecimal values.
-     private static final Pattern PATTERN_USB_IDS = Pattern.compile(
+    @Deprecated // moved to local
+    private static final Pattern PATTERN_USB_IDS = Pattern.compile(
             "^0x[a-f0-9]{4}$", Pattern.CASE_INSENSITIVE);                              //$NON-NLS-1$
 
     /** List of items in the platform to check when parsing it. These paths are relative to the
      * platform root folder. */
+    @Deprecated // moved to local
     private static final String[] sPlatformContentList = new String[] {
         SdkConstants.FN_FRAMEWORK_LIBRARY,
         SdkConstants.FN_FRAMEWORK_AIDL,
@@ -106,15 +120,11 @@ public class SdkManager {
         "# USE 'android update adb' TO GENERATE.\n" +                                  //$NON-NLS-1$
         "# 1 USB VENDOR ID PER LINE.\n";                                               //$NON-NLS-1$
 
-    /** The location of the SDK as an OS path */
-    private final String mOsSdkPath;
-    /** Valid targets that have been loaded. Can be empty but not null. */
-    private IAndroidTarget[] mTargets = new IAndroidTarget[0];
-    /** Valid build-tool folders that have been loaded. Can be empty but not null. */
-    private Map<FullRevision, BuildToolInfo> mBuildTools = Maps.newTreeMap();
-    /** A map to keep information on directories to see if they change later. */
-    private final Map<File, DirInfo> mVisistedDirs = new HashMap<File, SdkManager.DirInfo>();
+    /** Embedded reference to the new local SDK object. */
+    private final LocalSdk mLocalSdk;
 
+    /** Cache of targets from local sdk. See {@link #getTargets()}. */
+    private IAndroidTarget[] mCachedTargets;
 
     /**
      * Create a new {@link SdkManager} instance.
@@ -124,7 +134,7 @@ public class SdkManager {
      */
     @VisibleForTesting(visibility=Visibility.PRIVATE)
     protected SdkManager(@NonNull String osSdkPath) {
-        mOsSdkPath = osSdkPath;
+        mLocalSdk = new LocalSdk(new File(osSdkPath));
     }
 
     /**
@@ -155,67 +165,7 @@ public class SdkManager {
      * @param log the ILogger object receiving warning/error from the parsing.
      */
     public void reloadSdk(@NonNull ILogger log) {
-        // get the current target list.
-        mVisistedDirs.clear();
-
-        // load the buildtools
-        Map<FullRevision, BuildToolInfo> buildTools = Maps.newHashMap();
-        loadBuildTools(mOsSdkPath, buildTools, mVisistedDirs, log);
-        setBuildTools(buildTools);
-
-        BuildToolInfo latestBuildTools = getLatestBuildTool();
-        if (latestBuildTools == null) {
-            // no build tools? Check version of platform-tools. if <17 and lower this means
-            // an older SDK (while this code is used in an external tool) and so we go in
-            // compatibility mode with a BuildToolInfo mapping the path to the platform-tools.
-            // If platform-tools is newer, then we fail with a broken SDK.
-            String platformToolsVersion = getPlatformToolsVersion();
-            if (platformToolsVersion == null) {
-                log.error(null, "Missing platform-tools");
-            } else {
-                FullRevision fullRevision = FullRevision.parseRevision(platformToolsVersion);
-                if (fullRevision.compareTo(new FullRevision(17)) < 0) {
-                    // older SDK, create a compatible buildtools
-                    latestBuildTools = getCompatibilityBuildTools(fullRevision);
-                }
-            }
-        }
-
-        ArrayList<IAndroidTarget> targets = Lists.newArrayList();
-        loadPlatforms(mOsSdkPath, targets, mVisistedDirs, latestBuildTools, log);
-        loadAddOns(mOsSdkPath, targets, mVisistedDirs, log);
-
-        // For now replace the old list with the new one.
-        // In the future we may want to keep the current objects, so that ADT doesn't have to deal
-        // with new IAndroidTarget objects when a target didn't actually change.
-
-        // sort the targets/add-ons
-        Collections.sort(targets);
-        setTargets(targets.toArray(new IAndroidTarget[targets.size()]));
-
-        // load the samples, after the targets have been set.
-        initializeSamplePaths(log);
-    }
-
-    private BuildToolInfo getCompatibilityBuildTools(FullRevision fullRevision) {
-        File platformTools = new File(mOsSdkPath, SdkConstants.FD_PLATFORM_TOOLS);
-        File platformToolsLib = new File(platformTools, SdkConstants.FD_LIB);
-        File platformToolsRs = new File(platformTools, SdkConstants.FN_FRAMEWORK_RENDERSCRIPT);
-
-        return new BuildToolInfo(
-                fullRevision,
-                platformTools,
-                new File(platformTools, SdkConstants.FN_AAPT),
-                new File(platformTools, SdkConstants.FN_AIDL),
-                new File(platformTools, SdkConstants.FN_DX),
-                new File(platformToolsLib, SdkConstants.FN_DX_JAR),
-                new File(platformTools, SdkConstants.FN_RENDERSCRIPT),
-                new File(platformToolsRs, SdkConstants.FN_FRAMEWORK_INCLUDE),
-                new File(platformToolsRs, SdkConstants.FN_FRAMEWORK_INCLUDE_CLANG),
-                null,
-                null,
-                null,
-                null);
+        mLocalSdk.clearLocalPkg(LocalSdk.PKG_ALL);
     }
 
     /**
@@ -238,70 +188,9 @@ public class SdkManager {
      * @return True if at least one directory or source.prop has changed.
      */
     public boolean hasChanged(@Nullable ILogger log) {
-        Set<File> visited = new HashSet<File>();
-        boolean changed = false;
-
-        for (String dirName : new String[] { SdkConstants.FD_PLATFORMS,
-                                             SdkConstants.FD_ADDONS,
-                                             SdkConstants.FD_BUILD_TOOLS }) {
-
-            File folder = new File(mOsSdkPath, dirName);
-            if (folder.isDirectory()) {
-                File[] subFolders = folder.listFiles();
-                if (subFolders == null) {
-                    continue;
-                }
-                for (File subFolder : subFolders) {
-                    if (!subFolder.isDirectory()) {
-                        continue;
-                    }
-                    visited.add(subFolder);
-                    DirInfo dirInfo = mVisistedDirs.get(subFolder);
-                    if (dirInfo == null) {
-                        // This is a new platform directory.
-                        changed = true;
-                    } else {
-                        changed = changed || dirInfo.hasChanged();
-                    }
-                    if (changed) {
-                        String s = "SDK changed due to " +                          //$NON-NLS-1$
-                                (dirInfo != null ? dirInfo.toString() : subFolder.getPath());
-
-                        if (log != null) {
-                            log.verbose("%s", s);                                   //$NON-NLS-1$
-                        }
-                        if (DEBUG) {
-                            System.out.println(s);
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-
-
-        if (!changed) {
-            // Check whether some pre-existing target directories have vanished.
-            for (File previousDir : mVisistedDirs.keySet()) {
-                if (!visited.contains(previousDir)) {
-                    // This directory is no longer present.
-                    changed = true;
-
-                    String s = String.format("SDK changed: %s removed",             //$NON-NLS-1$
-                                             previousDir.getPath());
-
-                    if (log != null) {
-                        log.verbose("%s", s);                                       //$NON-NLS-1$
-                    }
-                    if (DEBUG) {
-                        System.out.println(s);
-                    }
-                    break;
-                }
-            }
-        }
-
-        return changed;
+        return mLocalSdk.hasChanged(LocalSdk.PKG_PLATFORMS |
+                                    LocalSdk.PKG_ADDONS |
+                                    LocalSdk.PKG_BUILD_TOOLS);
     }
 
     /**
@@ -309,39 +198,53 @@ public class SdkManager {
      */
     @NonNull
     public String getLocation() {
-        return mOsSdkPath;
+        File f = mLocalSdk.getLocation();
+        // Our LocalSdk is created with a file path, so we know the location won't be null.
+        assert f != null;
+        return f.getPath();
     }
 
     /**
-     * Returns the targets that are available in the SDK.
+     * Returns the targets (platforms & addons) that are available in the SDK.
+     * The target list is created on demand the first time then cached.
+     * It will not refreshed unless {@link #reloadSdk(ILogger)} is called.
      * <p/>
      * The array can be empty but not null.
      */
     @NonNull
     public IAndroidTarget[] getTargets() {
-        return mTargets;
+        if (mCachedTargets == null) {
+            LocalPkgInfo[] pkgsInfos = mLocalSdk.getPkgsInfos(LocalSdk.PKG_PLATFORMS |
+                                                              LocalSdk.PKG_ADDONS);
+            int n = pkgsInfos.length;
+            List<IAndroidTarget> targets = new ArrayList<IAndroidTarget>(n);
+            for (int i = 0; i < n; i++) {
+                LocalPkgInfo info = pkgsInfos[i];
+                assert info instanceof LocalPlatformPkgInfo;
+                if (info instanceof LocalPlatformPkgInfo) {
+                    targets.add(((LocalPlatformPkgInfo) info).getAndroidTarget());
+                }
+            }
+            mCachedTargets = targets.toArray(new IAndroidTarget[targets.size()]);
+        }
+        return mCachedTargets;
     }
 
     /**
-     * Sets the targets that are available in the SDK.
-     * <p/>
-     * The array can be empty but not null.
+     * Returns an unmodifiable set of known build-tools revisions. Can be empty but not null.
+     * Deprecated. I don't think anything uses this.
      */
-    @VisibleForTesting(visibility=Visibility.PRIVATE)
-    protected void setTargets(@NonNull IAndroidTarget[] targets) {
-        assert targets != null;
-        mTargets = targets;
-    }
-
-    private void setBuildTools(@NonNull Map<FullRevision, BuildToolInfo> buildTools) {
-        assert buildTools != null;
-        mBuildTools = buildTools;
-    }
-
-    /** Returns an unmodifiable set of known build-tools revisions. Can be empty but not null. */
+    @Deprecated
     @NonNull
     public Set<FullRevision> getBuildTools() {
-        return Collections.unmodifiableSet(mBuildTools.keySet());
+        LocalPkgInfo[] pkgs = mLocalSdk.getPkgsInfos(LocalSdk.PKG_BUILD_TOOLS);
+        TreeSet<FullRevision> bt = new TreeSet<FullRevision>();
+        for (LocalPkgInfo pkg : pkgs) {
+            if (pkg.hasFullRevision()) {
+                bt.add(pkg.getFullRevision());
+            }
+        }
+        return Collections.unmodifiableSet(bt);
     }
 
     /**
@@ -351,17 +254,7 @@ public class SdkManager {
      */
     @Nullable
     public BuildToolInfo getLatestBuildTool() {
-        if (mBuildTools.isEmpty()) {
-            return null;
-        }
-
-        FullRevision max = null;
-        for (FullRevision r : mBuildTools.keySet()) {
-            if (max == null || r.compareTo(max) > 0) {
-                max = r;
-            }
-        }
-        return mBuildTools.get(max);
+        return mLocalSdk.getLatestBuildTool();
     }
 
     /**
@@ -373,7 +266,7 @@ public class SdkManager {
      */
     @Nullable
     public BuildToolInfo getBuildTool(@Nullable FullRevision revision) {
-        return mBuildTools.get(revision);
+        return mLocalSdk.getBuildTool(revision);
     }
 
     /**
@@ -384,15 +277,7 @@ public class SdkManager {
      */
     @Nullable
     public IAndroidTarget getTargetFromHashString(@Nullable String hash) {
-        if (hash != null) {
-            for (IAndroidTarget target : mTargets) {
-                if (hash.equals(target.hashString())) {
-                    return target;
-                }
-            }
-        }
-
-        return null;
+        return mLocalSdk.getTargetFromHashString(hash);
     }
 
     /**
@@ -471,32 +356,25 @@ public class SdkManager {
      */
     @NonNull
     public Map<File, String> getExtraSamples() {
-        LocalSdkParser parser = new LocalSdkParser();
-        Package[] packages = parser.parseSdk(mOsSdkPath,
-                                             this,
-                                             LocalSdkParser.PARSE_EXTRAS,
-                                             new NullTaskMonitor(NullLogger.getLogger()));
 
+        LocalPkgInfo[] pkgsInfos = mLocalSdk.getPkgsInfos(LocalSdk.PKG_EXTRAS);
         Map<File, String> samples = new HashMap<File, String>();
 
-        for (Package pkg : packages) {
-            if (pkg instanceof ExtraPackage && pkg.isLocal()) {
-                // isLocal()==true implies there's a single locally-installed archive.
-                assert pkg.getArchives() != null && pkg.getArchives().length == 1;
-                Archive a = pkg.getArchives()[0];
-                assert a != null;
-                File path = new File(a.getLocalOsPath(), SdkConstants.FD_SAMPLES);
-                if (path.isDirectory()) {
-                    samples.put(path, pkg.getListDescription());
-                    continue;
-                }
-                // Some old-style extras simply have a single "sample" directory.
-                // Accept it if it contains an AndroidManifest.xml.
-                path = new File(a.getLocalOsPath(), SdkConstants.FD_SAMPLE);
-                if (path.isDirectory() &&
-                        new File(path, SdkConstants.FN_ANDROID_MANIFEST_XML).isFile()) {
-                    samples.put(path, pkg.getListDescription());
-                }
+        for (LocalPkgInfo info : pkgsInfos) {
+            assert info instanceof LocalExtraPkgInfo;
+
+            File root = info.getLocalDir();
+            File path = new File(root, SdkConstants.FD_SAMPLES);
+            if (path.isDirectory()) {
+                samples.put(path, info.getListDescription());
+                continue;
+            }
+            // Some old-style extras simply have a single "sample" directory.
+            // Accept it if it contains an AndroidManifest.xml.
+            path = new File(root, SdkConstants.FD_SAMPLE);
+            if (path.isDirectory() &&
+                    new File(path, SdkConstants.FN_ANDROID_MANIFEST_XML).isFile()) {
+                samples.put(path, info.getListDescription());
             }
         }
 
@@ -513,20 +391,16 @@ public class SdkManager {
      */
     @NonNull
     public Map<String, Integer> getExtrasVersions() {
-        LocalSdkParser parser = new LocalSdkParser();
-        Package[] packages = parser.parseSdk(mOsSdkPath,
-                                             this,
-                                             LocalSdkParser.PARSE_EXTRAS,
-                                             new NullTaskMonitor(NullLogger.getLogger()));
-
+        LocalPkgInfo[] pkgsInfos = mLocalSdk.getPkgsInfos(LocalSdk.PKG_EXTRAS);
         Map<String, Integer> extraVersions = new TreeMap<String, Integer>();
 
-        for (Package pkg : packages) {
-            if (pkg instanceof ExtraPackage && pkg.isLocal()) {
-                ExtraPackage ep = (ExtraPackage) pkg;
-                String vendor = ep.getVendorId();
-                String path = ep.getPath();
-                int majorRev = ep.getRevision().getMajor();
+        for (LocalPkgInfo info : pkgsInfos) {
+            assert info instanceof LocalExtraPkgInfo;
+            if (info instanceof LocalExtraPkgInfo) {
+                LocalExtraPkgInfo ei = (LocalExtraPkgInfo) info;
+                String vendor = ei.getVendorId();
+                String path   = ei.getExtraPath();
+                int majorRev  = ei.getMajorRevision().getMajor();
 
                 extraVersions.put(vendor + '/' + path, majorRev);
             }
@@ -538,14 +412,9 @@ public class SdkManager {
     /** Returns the platform tools version if installed, null otherwise. */
     @Nullable
     public String getPlatformToolsVersion() {
-        LocalSdkParser parser = new LocalSdkParser();
-        Package[] packages = parser.parseSdk(mOsSdkPath, this, LocalSdkParser.PARSE_PLATFORM_TOOLS,
-                new NullTaskMonitor(NullLogger.getLogger()));
-
-        for (Package pkg : packages) {
-            if (pkg instanceof PlatformToolPackage && pkg.isLocal()) {
-                return pkg.getRevision().toShortString();
-            }
+        LocalPkgInfo info = mLocalSdk.getPkgInfo(LocalSdk.PKG_PLATFORM_TOOLS);
+        if (info != null && info.hasFullRevision()) {
+            return info.getFullRevision().toShortString();
         }
 
         return null;
@@ -565,6 +434,7 @@ public class SdkManager {
      * @param log the ILogger object receiving warning/error from the parsing.
      * @throws RuntimeException when the "platforms" folder is missing and cannot be created.
      */
+    @Deprecated // moved to local
     private static void loadPlatforms(
             @NonNull String sdkOsPath,
             @NonNull ArrayList<IAndroidTarget> targets,
@@ -617,6 +487,7 @@ public class SdkManager {
      * @param latestBuildTools the latestBuildTools
      * @param log the ILogger object receiving warning/error from the parsing.
      */
+    @Deprecated // moved to local
     @Nullable
     private static PlatformTarget loadPlatform(
             @NonNull String sdkOsPath,
@@ -764,6 +635,7 @@ public class SdkManager {
      * @return an array of ISystemImage containing all the system images for the target.
      *              The list can be empty but not null.
     */
+    @Deprecated // moved to local
     @NonNull
     private static ISystemImage[] getAddonSystemImages(@NonNull File root) {
         Set<ISystemImage> found = new TreeSet<ISystemImage>();
@@ -813,6 +685,7 @@ public class SdkManager {
      * @return an array of ISystemImage containing all the system images for the target.
      *              The list can be empty but not null.
      */
+    @Deprecated // moved to local
     @NonNull
     private static ISystemImage[] getPlatformSystemImages(
             @NonNull String sdkOsPath,
@@ -914,6 +787,7 @@ public class SdkManager {
      * @param log the ILogger object receiving warning/error from the parsing.
      * @throws RuntimeException when the "add-ons" folder is missing and cannot be created.
      */
+    @Deprecated // moved to local
     private static void loadAddOns(
             @NonNull String osSdkPath,
             @NonNull ArrayList<IAndroidTarget> targets,
@@ -965,6 +839,7 @@ public class SdkManager {
      * @param targetList The list of Android target that were already loaded from the SDK.
      * @param log the ILogger object receiving warning/error from the parsing.
      */
+    @Deprecated // moved to local
     @Nullable
     private static AddOnTarget loadAddon(
             @NonNull File addonDir,
@@ -1115,8 +990,10 @@ public class SdkManager {
      *  same time. If a non-null error is present then the property map must be ignored. The error
      *  should be translatable as it might show up in the SdkManager UI.
      */
+    @Deprecated // moved to local
     @NonNull
-    public static Pair<Map<String, String>, String> parseAddonProperties(
+    public
+    static Pair<Map<String, String>, String> parseAddonProperties(
             @NonNull File addonDir,
             @NonNull IAndroidTarget[] targetList,
             @NonNull ILogger log) {
@@ -1153,13 +1030,14 @@ public class SdkManager {
             }
 
             String api = propertyMap.get(ADDON_API);
-            PlatformTarget baseTarget = null;
+            PlatformTarget plat = null;
             if (api == null) {
                 error = addonManifestWarning(ADDON_API);
                 break;
             }
 
             // Look for a platform that has a matching api level or codename.
+            PlatformTarget baseTarget = null;
             for (IAndroidTarget target : targetList) {
                 if (target.isPlatform() && target.getVersion().equals(api)) {
                     baseTarget = (PlatformTarget)target;
@@ -1198,6 +1076,7 @@ public class SdkManager {
      * @param value the string to convert.
      * @return the int value, or {@link IAndroidTarget#NO_USB_ID} if the conversion failed.
      */
+    @Deprecated // moved to local
     private static int convertId(@Nullable String value) {
         if (value != null && value.length() > 0) {
             if (PATTERN_USB_IDS.matcher(value).matches()) {
@@ -1220,6 +1099,7 @@ public class SdkManager {
      *
      * @param valueName The missing manifest value, for display.
      */
+    @Deprecated // moved to local
     @NonNull
     private static String addonManifestWarning(@NonNull String valueName) {
         return String.format("'%1$s' is missing from %2$s.",
@@ -1235,6 +1115,7 @@ public class SdkManager {
      * @param platform The folder containing the platform.
      * @param log Logger.
      */
+    @Deprecated // moved to local
     private static boolean checkPlatformContent(
             @NonNull File platform,
             @NonNull ILogger log) {
@@ -1251,11 +1132,11 @@ public class SdkManager {
     }
 
 
-
     /**
      * Parses the skin folder and builds the skin list.
      * @param osPath The path of the skin root folder.
      */
+    @Deprecated // moved to local
     @NonNull
     private static String[] parseSkinFolder(@NonNull String osPath) {
         File skinRootFolder = new File(osPath);
@@ -1285,45 +1166,13 @@ public class SdkManager {
     }
 
     /**
-     * Initialize the sample folders for all known targets (platforms and addons).
-     * <p/>
-     * Samples used to be located at SDK/Target/samples. We then changed this to
-     * have a separate SDK/samples/samples-API directory. This parses either directories
-     * and sets the targets' sample path accordingly.
-     *
-     * @param log Logger.
-     */
-    private void initializeSamplePaths(@NonNull ILogger log) {
-        File sampleFolder = new File(mOsSdkPath, SdkConstants.FD_SAMPLES);
-        if (sampleFolder.isDirectory()) {
-            File[] platforms  = sampleFolder.listFiles();
-
-            for (File platform : platforms) {
-                if (platform.isDirectory()) {
-                    // load the source.properties file and get an AndroidVersion object from it.
-                    AndroidVersion version = getSamplesVersion(platform, log);
-
-                    if (version != null) {
-                        // locate the platform matching this version
-                        for (IAndroidTarget target : mTargets) {
-                            if (target.isPlatform() && target.getVersion().equals(version)) {
-                                ((PlatformTarget)target).setSamplesPath(platform.getAbsolutePath());
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    /**
      * Returns the {@link AndroidVersion} of the sample in the given folder.
      *
      * @param folder The sample's folder.
      * @param log Logger for errors.
      * @return An {@link AndroidVersion} or null on error.
      */
+    @Deprecated // moved to local
     @Nullable
     private AndroidVersion getSamplesVersion(
             @NonNull File folder,
@@ -1366,6 +1215,7 @@ public class SdkManager {
      * @param log the ILogger object receiving warning/error from the parsing.
      * @throws RuntimeException when the "platforms" folder is missing and cannot be created.
      */
+    @Deprecated // moved to local
     private static void loadBuildTools(
             @NonNull String sdkOsPath,
             @NonNull Map<FullRevision, BuildToolInfo> infos,
@@ -1415,6 +1265,7 @@ public class SdkManager {
      * @param folder the root folder of the platform.
      * @param log the ILogger object receiving warning/error from the parsing.
      */
+    @Deprecated // moved to local
     @Nullable
     private static BuildToolInfo loadBuildTool(
             @NonNull String sdkOsPath,
@@ -1479,6 +1330,7 @@ public class SdkManager {
 
     // -------------
 
+    @Deprecated // moved to local
     private static class DirInfo {
         @NonNull
         private final File mDir;
