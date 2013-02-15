@@ -25,6 +25,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -338,10 +339,16 @@ public class FileOp implements IFileOp {
         return oldFile.renameTo(newFile);
     }
 
-    /** Creates a new {@link FileOutputStream} for the given {@code file}. */
+    /** Creates a new {@link OutputStream} for the given {@code file}. */
     @Override
-    public OutputStream newFileOutputStream(File file) throws FileNotFoundException {
+    public OutputStream newFileOutputStream(@NonNull File file) throws FileNotFoundException {
         return new FileOutputStream(file);
+    }
+
+    /** Creates a new {@link InputStream} for the given {@code file}. */
+    @Override
+    public InputStream newFileInputStream(@NonNull File file) throws FileNotFoundException {
+        return new FileInputStream(file);
     }
 
     @NonNull
@@ -376,5 +383,10 @@ public class FileOp implements IFileOp {
         }
 
         return false;
+    }
+
+    @Override
+    public long lastModified(@NonNull File file) {
+        return file.lastModified();
     }
 }
