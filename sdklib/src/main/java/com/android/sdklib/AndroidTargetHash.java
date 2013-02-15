@@ -53,7 +53,6 @@ public abstract class AndroidTargetHash {
         return String.format(AndroidTargetHash.PLATFORM_HASH, version.getApiString());
     }
 
-
     /**
      * Returns the hash string for a given add-on.
      *
