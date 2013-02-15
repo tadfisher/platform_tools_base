@@ -32,7 +32,7 @@ import java.util.Map.Entry;
  * Represents an add-on target in the SDK.
  * An add-on extends a standard {@link PlatformTarget}.
  */
-final class AddOnTarget implements IAndroidTarget {
+public final class AddOnTarget implements IAndroidTarget {
 
     private static final class OptionalLibrary implements IOptionalLibrary {
         private final String mJarName;

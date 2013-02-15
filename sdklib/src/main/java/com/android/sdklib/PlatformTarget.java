@@ -30,7 +30,7 @@ import java.util.Map;
 /**
  * Represents a platform target in the SDK.
  */
-final class PlatformTarget implements IAndroidTarget {
+public final class PlatformTarget implements IAndroidTarget {
 
     private static final String PLATFORM_VENDOR = "Android Open Source Project";
 
