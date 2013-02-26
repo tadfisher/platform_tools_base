@@ -1,3 +1,12 @@
+buildscript {
+    repositories {
+        maven { url "$rootDir/../../prebuilts/tools/common/clone-artifacts" }
+    }
+    dependencies {
+        classpath 'com.android.tools.internal:clone-artifacts:1.0'
+    }
+}
+
 // ext.androidHostOut is shared by all tools/{base,build,swt} gradle projects/
 ext.androidHostOut = file("$rootDir/../../out/host/gradle")
 ext.androidRootDir = file(new File(ext.androidHostOut, "../../../"))
@@ -16,13 +25,28 @@ subprojects { Project project ->
     // Change buildDir first so that all plugins pick up the new value.
     project.buildDir = project.file("$project.parent.buildDir/../$project.name")
 
+    apply plugin: 'clone-artifacts'
     apply plugin: 'java'
     apply plugin: 'maven'
     apply plugin: 'signing'
     apply plugin: 'findbugs'
 
+    cloneArtifacts {
+        mainRepo = "$rootDir/../../prebuilts/tools/common/maven/main"
+        secondaryRepo = "$rootDir/../../prebuilts/tools/common/maven/misc"
+    }
+
+    configurations {
+        cloneArtifact
+    }
+
     repositories {
-        mavenCentral()
+        maven { url = uri(cloneArtifacts.mainRepo) }
+        maven { url = uri(cloneArtifacts.secondaryRepo) }
+    }
+
+    dependencies {
+        cloneArtifact "com.google.code.findbugs:findbugs:2.0.1"
     }
 
     version = getVersion(project, '22.0')
