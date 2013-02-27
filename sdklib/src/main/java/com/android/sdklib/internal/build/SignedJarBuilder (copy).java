@@ -70,20 +70,18 @@ public class SignedJarBuilder {
     private static final String DIGEST_ATTR = "SHA1-Digest";
     private static final String DIGEST_MANIFEST_ATTR = "SHA1-Digest-Manifest";
 
-    /** Write to another stream and track how many bytes have been
-     *  written.
-     */
-    private static class CountOutputStream extends FilterOutputStream {
+    /** Write to another stream and also feed it to the Signature object. */
+    private static class CountOutputStream extends FilterOutputStream {        
         private int mCount = 0;
-
+ 
         public CountOutputStream(OutputStream out) {
             super(out);
             mCount = 0;
         }
 
         @Override
-        public void write(int b) throws IOException {
-            super.write(b);
+        public void write(int b) throws IOException {            
+        	super.write(b);                            
             mCount++;
         }
 
@@ -106,7 +104,7 @@ public class SignedJarBuilder {
     private MessageDigest mMessageDigest;
 
     private byte[] mBuffer = new byte[4096];
-
+    
     /**
      * Classes which implement this interface provides a method to check whether a file should
      * be added to a Jar file.
@@ -270,7 +268,7 @@ public class SignedJarBuilder {
             mOutputJar.write(signedData);
 
             // CERT.*
-            mOutputJar.putNextEntry(new JarEntry("META-INF/CERT." + mKey.getAlgorithm()));
+            mOutputJar.putNextEntry(new JarEntry("META-INF/CERT." + mKey.getAlgorithm()));            
             writeSignatureBlock(new CMSProcessableByteArray(signedData), mCertificate, mKey);
         }
 
@@ -377,28 +375,24 @@ public class SignedJarBuilder {
     /** Write the certificate file with a digital signature. */
     private void writeSignatureBlock(CMSTypedData data, X509Certificate publicKey,
             PrivateKey privateKey)
-                        throws IOException,
-                        CertificateEncodingException,
-                        OperatorCreationException,
-                        CMSException {
+            		throws IOException,
+            		CertificateEncodingException,
+            		OperatorCreationException,
+            		CMSException { 
 
-        ArrayList<X509Certificate> certList = new ArrayList<X509Certificate>();
-        certList.add(publicKey);
-        JcaCertStore certs = new JcaCertStore(certList);
+    	ArrayList<X509Certificate> certList = new ArrayList<X509Certificate>();
+    	certList.add(publicKey);
+    	JcaCertStore certs = new JcaCertStore(certList);
+    	
+    	CMSSignedDataGenerator gen = new CMSSignedDataGenerator();
+    	ContentSigner sha1Signer = new JcaContentSignerBuilder("SHA1withRSA").build(privateKey);			    	
+    	gen.addSignerInfoGenerator(new JcaSignerInfoGeneratorBuilder(new JcaDigestCalculatorProviderBuilder().build()).setDirectSignature(true).build(sha1Signer, publicKey));
+    	gen.addCertificates(certs);    	
+    	    	
+    	CMSSignedData sigData = gen.generate(data, false);
 
-        CMSSignedDataGenerator gen = new CMSSignedDataGenerator();
-        ContentSigner sha1Signer = new JcaContentSignerBuilder("SHA1withRSA").build(privateKey);
-        gen.addSignerInfoGenerator(
-            new JcaSignerInfoGeneratorBuilder(
-                new JcaDigestCalculatorProviderBuilder()
-                .build())
-            .setDirectSignature(true)
-            .build(sha1Signer, publicKey));
-        gen.addCertificates(certs);
-        CMSSignedData sigData = gen.generate(data, false);
-
-        ASN1InputStream asn1 = new ASN1InputStream(sigData.getEncoded());
-        DEROutputStream dos = new DEROutputStream(mOutputJar);
-        dos.writeObject(asn1.readObject());
+    	ASN1InputStream asn1 = new ASN1InputStream(sigData.getEncoded());
+    	DEROutputStream dos = new DEROutputStream(mOutputJar);
+    	dos.writeObject(asn1.readObject());
     }
 }
