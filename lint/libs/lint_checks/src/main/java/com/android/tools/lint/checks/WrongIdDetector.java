@@ -105,6 +105,20 @@ public class WrongIdDetector extends LayoutDetector {
                     WrongIdDetector.class,
                     Scope.ALL_RESOURCES_SCOPE));
 
+    /** Reference to an unknown id */
+    public static final Issue NOT_SIBLING = Issue.create(
+            "NotSibling", //$NON-NLS-1$
+            "RelativeLayout Invalid Constraints",
+            "Checks for id references in RelativeLayouts that are not referencing a sibling",
+            "Layout constraints in a given `RelativeLayout` should reference other views " +
+            "within the same relative layout.",
+            Category.CORRECTNESS,
+            6,
+            Severity.ERROR,
+            new Implementation(
+                    WrongIdDetector.class,
+                    Scope.RESOURCE_FILE_SCOPE));
+
     /** Reference to an id that is not in the current layout */
     public static final Issue UNKNOWN_ID_LAYOUT = Issue.create(
             "UnknownIdInLayout", //$NON-NLS-1$
@@ -168,13 +182,15 @@ public class WrongIdDetector extends LayoutDetector {
             }
 
             for (Element layout : mRelativeLayouts) {
-                NodeList children = layout.getChildNodes();
-                for (int j = 0, childCount = children.getLength(); j < childCount; j++) {
-                    Node child = children.item(j);
-                    if (child.getNodeType() != Node.ELEMENT_NODE) {
-                        continue;
+                List<Element> children = LintUtils.getChildren(layout);
+                Set<String> ids = Sets.newHashSetWithExpectedSize(children.size());
+                for (Element child : children) {
+                    String id = child.getAttributeNS(ANDROID_URI, ATTR_ID);
+                    if (id != null && !id.isEmpty()) {
+                        ids.add(id);
                     }
-                    Element element = (Element) child;
+                }
+                for (Element element : children) {
                     NamedNodeMap attributes = element.getAttributes();
                     for (int i = 0, n = attributes.getLength(); i < n; i++) {
                         Attr attr = (Attr) attributes.item(i);
@@ -197,6 +213,29 @@ public class WrongIdDetector extends LayoutDetector {
                                     mHandles = new ArrayList<Pair<String,Handle>>();
                                 }
                                 mHandles.add(Pair.of(value, handle));
+                            } else {
+                                // Check siblings
+                                if (ids.contains(value)) {
+                                    continue;
+                                }
+                                if (value.startsWith(NEW_ID_PREFIX)) {
+                                    if (ids.contains(ID_PREFIX + LintUtils.stripIdPrefix(value))) {
+                                        continue;
+                                    }
+                                } else {
+                                    assert value.startsWith(ID_PREFIX) : value;
+                                    if (ids.contains(NEW_ID_PREFIX + LintUtils.stripIdPrefix(value))) {
+                                        continue;
+                                    }
+                                }
+                                if (context.isEnabled(NOT_SIBLING)) {
+                                    XmlContext xmlContext = (XmlContext) context;
+                                    String message = String.format(
+                                            "%1$s is not a sibling in the same RelativeLayout",
+                                            value);
+                                    xmlContext.report(NOT_SIBLING, attr, xmlContext.getLocation(attr),
+                                            message, null);
+                                }
                             }
                         }
                     }
