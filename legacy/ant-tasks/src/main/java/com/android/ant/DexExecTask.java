@@ -79,7 +79,7 @@ public class DexExecTask extends SingleDependencyTask {
 
     /**
      * Sets the value of the "nolocals" attribute.
-     * @param verbose the value.
+     * @param nolocals the value.
      */
     public void setNoLocals(boolean nolocals) {
         mNoLocals = nolocals;
@@ -235,6 +235,7 @@ public class DexExecTask extends SingleDependencyTask {
     }
 
     private void runDx(Collection<File> inputs, String output, boolean showInputs) {
+        System.out.println("DEX.JAR: " );
         ExecTask task = new ExecTask();
         task.setProject(getProject());
         task.setOwningTarget(getOwningTarget());
