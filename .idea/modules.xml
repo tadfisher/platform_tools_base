@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/adt.iml" filepath="$PROJECT_DIR$/adt.iml" />
+      <module fileurl="file://$PROJECT_DIR$/legacy/anttasks/anttasks.iml" filepath="$PROJECT_DIR$/legacy/anttasks/anttasks.iml" />
       <module fileurl="file://$PROJECT_DIR$/assetstudio/assetstudio.iml" filepath="$PROJECT_DIR$/assetstudio/assetstudio.iml" />
       <module fileurl="file://$PROJECT_DIR$/lint/cli/cli.iml" filepath="$PROJECT_DIR$/lint/cli/cli.iml" />
       <module fileurl="file://$PROJECT_DIR$/common/common.iml" filepath="$PROJECT_DIR$/common/common.iml" />
