@@ -15,3 +15,5 @@ javadoc {
     enabled = false
     dependsOn = []
 }
+
+cloneArtifacts.isShipped = false
