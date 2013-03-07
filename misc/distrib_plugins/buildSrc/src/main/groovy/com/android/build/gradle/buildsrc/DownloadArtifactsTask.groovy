@@ -131,7 +131,7 @@ class DownloadArtifactsTask extends DefaultTask {
     private void pullArtifact(ModuleVersionIdentifier artifact, File rootDestination,
                               Set<ModuleVersionIdentifier> downloadedSet) {
         // ignore all android artifacts and already downloaded artifacts
-        if (artifact.group.startsWith("com.android.tools") || artifact.group == "base") {
+        if (artifact.group.startsWith("com.android") || artifact.group == "base") {
             return
         }
 
