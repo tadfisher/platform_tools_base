@@ -1,6 +1,8 @@
+group = 'com.android.tools.build'
+archivesBaseName = 'ninepatch'
+
 dependencies {
-    compile project(':common')
-    compile 'junit:junit:3.8.1'
+    testCompile 'junit:junit:3.8.1'
 }
 
 sourceSets {
