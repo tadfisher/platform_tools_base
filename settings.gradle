@@ -11,10 +11,12 @@ include 'lint'
 include 'lint_api'
 include 'lint_checks'
 include 'manifmerger'
+include 'ninepatch'
+include 'rule_api'
 include 'screenshot2'
+include 'sdk_common'
 include 'sdklib'
 include 'sdklib-test'
-include 'sdk_common'
 include 'testutils'
 
 project(':anttasks').projectDir = new File('legacy/anttasks')
@@ -24,5 +26,7 @@ project(':fat32lib').projectDir = new File('../external/fat32lib')
 project(':lint').projectDir = new File('lint/cli')
 project(':lint_api').projectDir = new File('lint/libs/lint_api')
 project(':lint_checks').projectDir = new File('lint/libs/lint_checks')
-project(':sdklib-test').projectDir = new File('sdklib')
+project(':ninepatch').projectDir = new File('legacy/ninepatch')
+project(':rule_api').projectDir = new File('legacy/rule_api')
 project(':sdklib-test').buildFileName = 'test.gradle'
+project(':sdklib-test').projectDir = new File('sdklib')
