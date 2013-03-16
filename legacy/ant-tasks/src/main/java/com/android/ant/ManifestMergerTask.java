@@ -113,7 +113,7 @@ public class ManifestMergerTask extends SingleDependencyTask {
 
         System.out.println("Merging AndroidManifest files into one.");
 
-        if (mEnabled == false || libraries.size() == 0) {
+        if (mEnabled == false || libraries.isEmpty()) {
             if (mEnabled == false) {
                 System.out.println("Manifest merger disabled. Using project manifest only.");
             } else {
@@ -153,7 +153,8 @@ public class ManifestMergerTask extends SingleDependencyTask {
                     new File(mOutManifest),
                     appManifestFile,
                     libraries.toArray(new File[libraries.size()]),
-                    null /*injectAttributes*/) == false) {
+                    null /*injectAttributes*/,
+                    null /*packageOverride*/) == false) {
                 throw new BuildException();
             }
         }
