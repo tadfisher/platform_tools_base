@@ -10,8 +10,8 @@
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="inheritedJdk" />
-    <orderEntry type="library" scope="TEST" name="JUnit3" level="project" />
-    <orderEntry type="module" module-name="sdklib" />
+    <orderEntry type="library" exported="" scope="TEST" name="JUnit3" level="project" />
+    <orderEntry type="module" module-name="sdklib" exported="" />
   </component>
 </module>
 
