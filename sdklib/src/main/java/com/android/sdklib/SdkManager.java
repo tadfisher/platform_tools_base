@@ -39,8 +39,12 @@ import com.android.sdklib.repository.PkgProps;
 import com.android.utils.ILogger;
 import com.android.utils.NullLogger;
 import com.android.utils.Pair;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.UnmodifiableIterator;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -277,6 +281,43 @@ public class SdkManager {
     @NonNull
     public Set<FullRevision> getBuildTools() {
         return Collections.unmodifiableSet(mBuildTools.keySet());
+    }
+
+    /**
+     * Returns the highest build-tools revisions known. Can be null.
+     *
+     * @param isPreview True if it should be a preview version, false if it should NOT be a preview.
+     * @return The highest build-tool revision known, or null.
+     */
+    @Nullable
+    public BuildToolInfo getLatestBuildTools(final boolean isPreview) {
+        if (mBuildTools.size() == 1) {
+            BuildToolInfo v = mBuildTools.values().iterator().next();
+            if (v.getRevision().isPreview() == isPreview) {
+                return v;
+            }
+
+        } else if (!mBuildTools.isEmpty()) {
+            Set<FullRevision> keys = mBuildTools.keySet();
+            UnmodifiableIterator<FullRevision> it = Iterators.filter(keys.iterator(),
+                new Predicate<FullRevision>() {
+                    @Override
+                    public boolean apply(FullRevision input) {
+                        return input.isPreview() == isPreview;
+                    }
+                });
+
+            Ordering<FullRevision> o = new Ordering<FullRevision>() {
+                @Override
+                public int compare(FullRevision left, FullRevision right) {
+                    return left.compareTo(right);
+                }
+            };
+
+            FullRevision m = o.max(it);
+            return mBuildTools.get(m);
+        }
+        return null;
     }
 
     /**
