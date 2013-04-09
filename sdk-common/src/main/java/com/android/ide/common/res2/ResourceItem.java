@@ -17,9 +17,21 @@
 package com.android.ide.common.res2;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.ide.common.rendering.api.AttrResourceValue;
+import com.android.ide.common.rendering.api.DeclareStyleableResourceValue;
+import com.android.ide.common.rendering.api.ResourceValue;
+import com.android.ide.common.rendering.api.StyleResourceValue;
+import com.android.ide.common.resources.configuration.Configurable;
+import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.resources.ResourceType;
+import com.google.common.base.Splitter;
+
+import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * A resource.
@@ -28,13 +40,19 @@ import org.w3c.dom.Node;
  * in case of a resource coming from a value file.
  *
  */
-class ResourceItem extends DataItem<ResourceFile> {
+class ResourceItem extends DataItem<ResourceFile> implements Configurable  {
+
+    private static final String NODE_ITEM = "item";
+    private static final String ATTR_NAME = "name";
+    private static final String ATTR_PARENT = "parent";
+    private static final String ATTR_VALUE = "value";
 
     private static final String ATTR_TYPE = "type";
 
-
     private final ResourceType mType;
     private Node mValue;
+
+    private ResourceValue mResourceValue;
 
     /**
      * Constructs the object with a name, type and optional value.
@@ -77,6 +95,24 @@ class ResourceItem extends DataItem<ResourceFile> {
         setTouched();
     }
 
+    @Override
+    public FolderConfiguration getConfiguration() {
+        assert getSource() != null;
+
+        String qualifier = getSource().getQualifiers();
+        if (qualifier.isEmpty()) {
+            return new FolderConfiguration();
+        }
+
+        FolderConfiguration folderConfig = FolderConfiguration.getConfigFromQualifiers(
+                Splitter.on('-').split(qualifier));
+        if (folderConfig == null) {
+            System.err.println("EMPTY FOLDER CONFIG FOR: " + qualifier);
+        }
+
+        return folderConfig;
+    }
+
     /**
      * Returns a key for this resource. They key uniquely identifies this resource by combining
      * resource type, qualifiers, and name.
@@ -95,7 +131,7 @@ class ResourceItem extends DataItem<ResourceFile> {
                     "ResourceItem.getKey called on object with no ResourceFile: " + this);
         }
         String qualifiers = getSource().getQualifiers();
-        if (qualifiers != null && qualifiers.length() > 0) {
+        if (!qualifiers.isEmpty()) {
             return mType.getName() + "-" + qualifiers + "/" + getName();
         }
 
@@ -110,6 +146,37 @@ class ResourceItem extends DataItem<ResourceFile> {
     @Override
     Node getAdoptedNode(Document document) {
         return NodeUtils.adoptNode(document, mValue);
+    }
+
+    @Override
+    protected void wasTouched() {
+        mResourceValue = null;
+    }
+
+    ResourceValue getResourceValue(boolean isFrameworks) {
+        if (mResourceValue == null) {
+            if (mValue == null) {
+                mResourceValue = new ResourceValue(mType, getName(),
+                        getSource().getFile().getAbsolutePath(), isFrameworks);
+            } else {
+                mResourceValue = parseXmlToResourceValue(isFrameworks);
+            }
+        }
+
+        return mResourceValue;
+    }
+
+    /**
+     * Returns a formatted string usable in an XML to use for the {@link ResourceItem}.
+     * @param system Whether this is a system resource or a project resource.
+     * @return a string in the format @[type]/[name]
+     */
+    public String getXmlString(ResourceType type, boolean system) {
+        if (type == ResourceType.ID /* && isDeclaredInline()*/) {
+            return (system ? "@android:" : "@+") + type.getName() + "/" + getName();
+        }
+
+        return (system ? "@android:" : "@") + type.getName() + "/" + getName();
     }
 
     /**
@@ -152,5 +219,99 @@ class ResourceItem extends DataItem<ResourceFile> {
         int result = super.hashCode();
         result = 31 * result + mType.hashCode();
         return result;
+    }
+
+    private ResourceValue parseXmlToResourceValue(boolean isFrameworks) {
+        assert mValue != null;
+
+        NamedNodeMap attributes = mValue.getAttributes();
+        ResourceType type = getType(mValue.getLocalName(), attributes);
+        if (type == null) {
+            return null;
+        }
+
+        ResourceValue value = null;
+        String name = getName();
+
+        switch (type) {
+            case STYLE:
+                String parent = getAttributeValue(attributes, ATTR_PARENT);
+                value = parseStyle(new StyleResourceValue(type, name, parent, isFrameworks));
+                break;
+            case DECLARE_STYLEABLE:
+                value = new DeclareStyleableResourceValue(
+                        type, name, isFrameworks);
+                break;
+            case ATTR:
+                value = new AttrResourceValue(type, name, isFrameworks);
+                break;
+            default:
+                value = parseValue(new ResourceValue(type, name, isFrameworks));
+                break;
+        }
+
+        return value;
+    }
+
+    @Nullable
+    private ResourceType getType(String qName, NamedNodeMap attributes) {
+        String typeValue;
+
+        // if the node is <item>, we get the type from the attribute "type"
+        if (NODE_ITEM.equals(qName)) {
+            typeValue = getAttributeValue(attributes, ATTR_TYPE);
+        } else {
+            // the type is the name of the node.
+            typeValue = qName;
+        }
+
+        return ResourceType.getEnum(typeValue);
+    }
+
+    @Nullable
+    private static String getAttributeValue(NamedNodeMap attributes, String attributeName) {
+        Attr attribute = (Attr) attributes.getNamedItem(attributeName);
+        if (attribute != null) {
+            return attribute.getValue();
+        }
+
+        return null;
+    }
+
+    @NonNull
+    private ResourceValue parseStyle(@NonNull StyleResourceValue value) {
+
+        return value;
+    }
+
+    @NonNull
+    private ResourceValue parseValue(@NonNull ResourceValue value) {
+        // TODO: unescape
+        value.setValue(getTextNode(mValue));
+        return value;
+    }
+
+    @NonNull
+    private static String getTextNode(Node node) {
+        StringBuilder sb = new StringBuilder();
+
+        NodeList children = node.getChildNodes();
+        for (int i = 0, n = children.getLength(); i < n; i++) {
+            Node child = children.item(i);
+
+            short nodeType = child.getNodeType();
+
+            switch (nodeType) {
+                case Node.ELEMENT_NODE:
+                    String str = getTextNode(child);
+                    sb.append(str);
+                    break;
+                case Node.TEXT_NODE:
+                    sb.append(child.getNodeValue().trim());
+                    break;
+            }
+        }
+
+        return sb.toString();
     }
 }
