@@ -18,12 +18,12 @@ package com.android.ide.common.res2;
 
 import com.android.annotations.NonNull;
 import com.google.common.collect.Maps;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 import java.io.File;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -41,25 +41,7 @@ abstract class DataFile<I extends DataItem> {
 
     private final FileType mType;
     private final File mFile;
-    private final Map<String, I> mItems;
-
-    /**
-     * Creates a data file with a single data item.
-     *
-     * The source file is set on the item with {@link DataItem#setSource(DataFile)}
-     *
-     * The type of the DataFile will by {@link FileType#SINGLE}.
-     *
-     * @param file the File
-     * @param item the data item
-     */
-    DataFile(@NonNull File file, @NonNull I item) {
-        mType = FileType.SINGLE;
-        mFile = file;
-
-        item.setSource(this);
-        mItems = Collections.singletonMap(item.getKey(), item);
-    }
+    private final Map<String, I> mItems = Maps.newHashMap();
 
     /**
      * Creates a data file with a list of data items.
@@ -69,13 +51,18 @@ abstract class DataFile<I extends DataItem> {
      * The type of the DataFile will by {@link FileType#MULTI}.
      *
      * @param file the File
-     * @param items the data items
      */
-    DataFile(@NonNull File file, @NonNull List<I> items) {
-        mType = FileType.MULTI;
+    DataFile(@NonNull File file, FileType fileType) {
+        mType = fileType;
         mFile = file;
+    }
 
-        mItems = Maps.newHashMapWithExpectedSize(items.size());
+    protected void init(@NonNull I item) {
+        item.setSource(this);
+        mItems.put(item.getKey(), item);
+    }
+
+    protected void init(@NonNull List<I> items) {
         for (I item : items) {
             item.setSource(this);
             mItems.put(item.getKey(), item);
@@ -116,5 +103,12 @@ abstract class DataFile<I extends DataItem> {
 
     void addExtraAttributes(Document document, Node node, String namespaceUri) {
         // nothing
+    }
+
+    @Override
+    public String toString() {
+        return "DataFile{" +
+                "mFile=" + mFile +
+                '}';
     }
 }

@@ -17,8 +17,7 @@
 package com.android.ide.common.res2;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import org.w3c.dom.Attr;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
@@ -44,7 +43,7 @@ class ResourceFile extends DataFile<ResourceItem> {
     /**
      * Creates a resource file with a single resource item.
      *
-     * The source file is set on the item with {@link ResourceItem#setSource(ResourceFile)}
+     * The source file is set on the item with {@link ResourceItem#setSource(DataFile)}
      *
      * The type of the ResourceFile will by {@link FileType#SINGLE}.
      *
@@ -52,15 +51,16 @@ class ResourceFile extends DataFile<ResourceItem> {
      * @param item the resource item
      * @param qualifiers the qualifiers.
      */
-    ResourceFile(@NonNull File file, @NonNull ResourceItem item, @Nullable String qualifiers) {
-        super(file, item);
+    ResourceFile(@NonNull File file, @NonNull ResourceItem item, @NonNull String qualifiers) {
+        super(file, FileType.SINGLE);
         mQualifiers = qualifiers;
+        init(item);
     }
 
     /**
      * Creates a resource file with a list of resource items.
      *
-     * The source file is set on the items with {@link ResourceItem#setSource(ResourceFile)}
+     * The source file is set on the items with {@link ResourceItem#setSource(DataFile)}
      *
      * The type of the ResourceFile will by {@link FileType#MULTI}.
      *
@@ -69,11 +69,13 @@ class ResourceFile extends DataFile<ResourceItem> {
      * @param qualifiers the qualifiers.
      */
     ResourceFile(@NonNull File file, @NonNull List<ResourceItem> items,
-                 @Nullable String qualifiers) {
-        super(file, items);
+                 @NonNull String qualifiers) {
+        super(file, FileType.MULTI);
         mQualifiers = qualifiers;
+        init(items);
     }
-    @Nullable
+
+    @NonNull
     String getQualifiers() {
         return mQualifiers;
     }
@@ -82,5 +84,13 @@ class ResourceFile extends DataFile<ResourceItem> {
     void addExtraAttributes(Document document, Node node, String namespaceUri) {
         NodeUtils.addAttribute(document, node, namespaceUri, ATTR_QUALIFIER,
                 getQualifiers());
+    }
+
+    @Override
+    public String toString() {
+        return "ResourceFile{" +
+                "mFile='" + getFile() + '\'' +
+                ", mQualifiers='" + mQualifiers + '\'' +
+                '}';
     }
 }
