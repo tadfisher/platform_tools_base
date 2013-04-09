@@ -95,7 +95,7 @@ class ResourceItem extends DataItem<ResourceFile> {
                     "ResourceItem.getKey called on object with no ResourceFile: " + this);
         }
         String qualifiers = getSource().getQualifiers();
-        if (qualifiers != null && qualifiers.length() > 0) {
+        if (qualifiers != null && !qualifiers.isEmpty()) {
             return mType.getName() + "-" + qualifiers + "/" + getName();
         }
 
