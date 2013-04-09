@@ -32,7 +32,7 @@ public class MergedAssetWriter extends MergeWriter<AssetItem> {
     }
 
     @Override
-    public void addItem(final AssetItem item) throws ConsumerException {
+    public void addItem(@NonNull final AssetItem item) throws ConsumerException {
         // Only write it if the state is TOUCHED.
         if (item.isTouched()) {
             getExecutor().execute(new Callable<Void>() {
@@ -59,7 +59,7 @@ public class MergedAssetWriter extends MergeWriter<AssetItem> {
     }
 
     @Override
-    public void removeItem(AssetItem removedItem, AssetItem replacedBy)
+    public void removeItem(@NonNull AssetItem removedItem, AssetItem replacedBy)
             throws ConsumerException {
         if (replacedBy == null) {
             File removedFile = new File(getRootFolder(), removedItem.getName());

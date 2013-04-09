@@ -67,7 +67,7 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
     @Override
     protected ResourceFile createFileAndItems(File file, Node fileNode) {
         Attr qualifierAttr = (Attr) fileNode.getAttributes().getNamedItem(ATTR_QUALIFIER);
-        String qualifier = qualifierAttr != null ? qualifierAttr.getValue() : null;
+        String qualifier = qualifierAttr != null ? qualifierAttr.getValue() : "";
 
         Attr typeAttr = (Attr) fileNode.getAttributes().getNamedItem(ATTR_TYPE);
         if (typeAttr == null) {
@@ -256,7 +256,7 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
      * temp structure containing a qualifier string and a {@link com.android.resources.ResourceType}.
      */
     private static class FolderData {
-        String qualifiers = null;
+        String qualifiers = "";
         ResourceType type = null;
         ResourceFolderType folderType = null;
     }

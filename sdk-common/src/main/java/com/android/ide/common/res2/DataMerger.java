@@ -141,11 +141,12 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
      * Merges the data into a given consumer.
      *
      * @param consumer the consumer of the merge.
+     * @param doCleanUp
      * @throws java.io.IOException
      * @throws DuplicateDataException
      * @throws MergeConsumer.ConsumerException
      */
-    public void mergeData(@NonNull MergeConsumer<I> consumer)
+    public void mergeData(@NonNull MergeConsumer<I> consumer, boolean doCleanUp)
             throws IOException, DuplicateDataException, MergeConsumer.ConsumerException {
 
         consumer.start();
@@ -222,10 +223,8 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
             } else {
                 // replacement of a resource by another.
 
-                // first force the writing of the new one.
+                // force write the new value
                 toWrite.setTouched();
-
-                // write the new value
                 consumer.addItem(toWrite);
                 // and remove the old one
                 consumer.removeItem(previouslyWritten, toWrite);
@@ -233,6 +232,13 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
         }
 
         consumer.end();
+
+        if (doCleanUp) {
+            // reset all states. We can't just reset the toWrite and previouslyWritten objects
+            // since overlayed items might have been touched as well.
+            // Should also clean (remove) objects that are removed.
+            setItemsToWritten();
+        }
     }
 
     /**
@@ -241,7 +247,7 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
      * @param blobRootFolder the root folder where blobs are store.
      * @throws IOException
      *
-     * @see #loadFromBlob(File)
+     * @see #loadFromBlob(File, boolean)
      */
     public void writeBlobTo(File blobRootFolder) throws IOException {
         // write "compact" blob
@@ -277,13 +283,24 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
     /**
      * Loads the merger state from a blob file.
      *
+     * This can be loaded into two different ways that differ only by the state on the
+     * {@link DataItem} objects.
+     *
+     * If <var>incrementalState</var> is <code>true</code> then the items that are on disk are
+     * marked as written ({@link DataItem#isWritten()} returning <code>true</code>.
+     * This is to be used by {@link MergeWriter} to update a merged res folder.
+     *
+     * If <code>false</code>, the items are marked as touched, and this can be used to feed a new
+     * {@link ResourceRepository} object.
+     *
      * @param blobRootFolder the folder containing the blob.
+     * @param incrementalState whether to load into an incremental state or a new state.
      * @return true if the blob was loaded.
      * @throws IOException
      *
      * @see #writeBlobTo(File)
      */
-    public boolean loadFromBlob(File blobRootFolder) throws IOException {
+    public boolean loadFromBlob(File blobRootFolder, boolean incrementalState) throws IOException {
         File file = new File(blobRootFolder, FN_MERGER_XML);
         if (!file.isFile()) {
             return false;
@@ -322,7 +339,11 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
                 }
             }
 
-            setItemsToWritten();
+            if (incrementalState) {
+                setItemsToWritten();
+            } else {
+                setItemsToTouched();
+            }
 
             return true;
         } catch (FileNotFoundException e) {
@@ -361,7 +382,36 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
 
         for (String key : itemMap.keySet()) {
             List<I> itemList = itemMap.get(key);
-            itemList.get(itemList.size() - 1).resetStatusToWritten();
+            final int count = itemList.size();
+            for (int i = 0 ; i < count - 1 ; i++) {
+                itemList.get(i).resetStatus();
+            }
+            itemList.get(count - 1).resetStatusToWritten();
+        }
+    }
+
+    /**
+     * Sets all existing items to have their state be TOUCHED.
+     *
+     * @see DataItem#isTouched()
+     */
+    private void setItemsToTouched() {
+        ListMultimap<String, I> itemMap = ArrayListMultimap.create();
+
+        for (S dataSet : mDataSets) {
+            ListMultimap<String, I> map = dataSet.getDataMap();
+            for (Map.Entry<String, Collection<I>> entry : map.asMap().entrySet()) {
+                itemMap.putAll(entry.getKey(), entry.getValue());
+            }
+        }
+
+        for (String key : itemMap.keySet()) {
+            List<I> itemList = itemMap.get(key);
+            final int count = itemList.size();
+            for (int i = 0 ; i < count - 1 ; i++) {
+                itemList.get(i).resetStatus();
+            }
+            itemList.get(count - 1).resetStatusToTouched();
         }
     }
 

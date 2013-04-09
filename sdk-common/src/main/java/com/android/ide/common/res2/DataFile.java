@@ -117,4 +117,11 @@ abstract class DataFile<I extends DataItem> {
     void addExtraAttributes(Document document, Node node, String namespaceUri) {
         // nothing
     }
+
+    @Override
+    public String toString() {
+        return "DataFile{" +
+                "mFile=" + mFile +
+                '}';
+    }
 }
