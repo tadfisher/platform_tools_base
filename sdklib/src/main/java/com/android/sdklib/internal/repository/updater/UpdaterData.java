@@ -34,6 +34,7 @@ import com.android.sdklib.internal.repository.archives.Archive;
 import com.android.sdklib.internal.repository.archives.ArchiveInstaller;
 import com.android.sdklib.internal.repository.packages.AddonPackage;
 import com.android.sdklib.internal.repository.packages.Package;
+import com.android.sdklib.internal.repository.packages.Package.License;
 import com.android.sdklib.internal.repository.packages.PlatformToolPackage;
 import com.android.sdklib.internal.repository.packages.ToolPackage;
 import com.android.sdklib.internal.repository.sources.SdkRepoSource;
@@ -47,10 +48,14 @@ import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.sdklib.util.LineUtil;
 import com.android.sdklib.util.SparseIntArray;
 import com.android.utils.ILogger;
+import com.android.utils.IReaderLogger;
+import com.google.common.base.Charsets;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -58,8 +63,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
  * Data shared by the SDK Manager updaters.
@@ -789,12 +797,14 @@ public class UpdaterData implements IUpdaterData {
      * @param includeAll True to list and install all packages, including obsolete ones.
      * @param dryMode True to check what would be updated/installed but do not actually
      *   download or install anything.
+     * @param acceptLicense SDK licenses to automatically accept.
      * @return A list of archives that have been installed. Can be null if nothing was done.
      */
     public List<Archive> updateOrInstallAll_NoGUI(
             Collection<String> pkgFilter,
             boolean includeAll,
-            boolean dryMode) {
+            boolean dryMode,
+            String acceptLicense) {
 
         List<ArchiveInfo> archives = getRemoteArchives_NoGUI(includeAll);
 
@@ -904,10 +914,154 @@ public class UpdaterData implements IUpdaterData {
                 }
                 mSdkLog.info("\nDry mode is on so nothing is actually being installed.\n");
             } else {
-                return installArchives(archives, NO_TOOLS_MSG);
+                if (acceptLicense(archives, acceptLicense, 100 /* numRetries */)) {
+                    return installArchives(archives, NO_TOOLS_MSG);
+                }
             }
         } else {
             mSdkLog.info("There is nothing to install or update.\n");
+        }
+
+        return null;
+    }
+
+    /**
+     * Validates that all archive licenses are accepted.
+     * <p/>
+     * There are 2 cases: <br/>
+     * - When {@code acceptLicenses} is given, the licenses specified are automatically
+     *   accepted and all those not specified are automatically rejected. <br/>
+     * - When {@code acceptLicenses} is empty or null, licenses are collected and there's
+     *   an input prompt on StdOut to ask a yes/no question. To output, this uses the
+     *   current {@link #mSdkLog} which should be configured to send
+     *   {@link ILogger#info(String, Object...)} directly to {@link System#out}. <br/>
+     *
+     * Finally only accepted licenses are kept in the archive list.
+     *
+     * @param archives The archives to validate.
+     * @param acceptLicenses A comma-separated list of licenses already approved.
+     * @param numRetries The number of times the command-line will ask to accept a given
+     *              license when the input doesn't match the expected y/n/yes/no answer.
+     *              Use 0 for infinite. Useful for unit-tests. Once the number of retries
+     *              is reached, the license is assumed as rejected.
+     * @return True if there are any archives left to install.
+     */
+    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    boolean acceptLicense(List<ArchiveInfo> archives, String acceptLicenses, final int numRetries) {
+        TreeSet<String> acceptedRefs = new TreeSet<String>();
+        if (acceptLicenses != null) {
+            acceptedRefs.addAll(Arrays.asList(acceptLicenses.split(",")));  //$NON-NLS-1$
+        }
+        boolean automated = !acceptedRefs.isEmpty();
+
+        TreeSet<String> rejectedRefs = new TreeSet<String>();
+        TreeMap<String, License> toAccept = new TreeMap<String, License>();
+
+        // Find the licenses needed. Include those already accepted.
+        for (ArchiveInfo ai : archives) {
+            License lic = getArchiveInfoLicense(ai);
+            if (lic == null) {
+                continue;
+            }
+            String ref = lic.getLicenseRef();
+            if (!acceptedRefs.contains(ref)) {
+                if (automated) {
+                    // Automatically reject those not already accepted
+                    rejectedRefs.add(ref);
+                } else {
+                    // Queue it to ask for it to be accepted
+                    toAccept.put(ref, lic);
+                }
+            }
+        }
+
+        // Ask for each license that needs to be asked manually for confirmation
+        nextEntry: for (Map.Entry<String, License> entry : toAccept.entrySet()) {
+            String ref = entry.getKey();
+            License lic = entry.getValue();
+            mSdkLog.info(
+                    "-------------------------------\n" +
+                    "License '%1$s':\n" +
+                    "-------------------------------\n" +
+                    "%2$s\n" +
+                    "\n",
+                ref, lic.getLicense());
+
+            int retries = numRetries;
+            tryAgain: while(true) {
+                try {
+                    mSdkLog.info("Do you accept the license '%1$s' [y/n]: ", ref);
+
+                    byte[] buffer = new byte[256];
+                    if (mSdkLog instanceof IReaderLogger) {
+                        ((IReaderLogger) mSdkLog).readLine(buffer);
+                    } else {
+                        System.in.read(buffer);
+                    }
+                    mSdkLog.info("\n");
+
+                    String reply = new String(buffer, Charsets.UTF_8);
+                    reply = reply.trim().toLowerCase(Locale.US);
+
+                    if ("y".equals(reply) || "yes".equals(reply)) {
+                        acceptedRefs.add(ref);
+                        continue nextEntry;
+
+                    } else if ("n".equals(reply) || "no".equals(reply)) {
+                        break tryAgain;
+
+                    } else {
+                        mSdkLog.info("Unknown response '%1$s'.\n", reply);
+                        if (--retries == 0) {
+                            mSdkLog.info("Max number of retries exceeded. Rejecting '%1$s'\n", ref);
+                            break tryAgain;
+                        }
+                        continue tryAgain;
+                    }
+
+                } catch (IOException e) {
+                    // Panic. Don't install anything.
+                    e.printStackTrace();
+                    return false;
+                }
+            }
+            rejectedRefs.add(ref);
+        }
+
+        // Finally remove all archive which license is rejected or not accepted.
+        for (Iterator<ArchiveInfo> it = archives.iterator(); it.hasNext(); ) {
+            ArchiveInfo ai = it.next();
+            License lic = getArchiveInfoLicense(ai);
+            if (lic == null) {
+                continue;
+            }
+            String ref = lic.getLicenseRef();
+            if (rejectedRefs.contains(ref) || !acceptedRefs.contains(ref)) {
+                mSdkLog.info("Package %1$s not installed due to rejected license '%2$s'.\n",
+                        ai.getShortDescription(),
+                        ref);
+                it.remove();
+            }
+        }
+
+
+        return !archives.isEmpty();
+    }
+
+    private License getArchiveInfoLicense(ArchiveInfo ai) {
+        Archive a = ai.getNewArchive();
+        if (a != null) {
+            Package p = a.getParentPackage();
+            if (p != null) {
+                License lic = p.getLicense();
+                if (lic != null &&
+                        lic.getLicenseRef() != null &&
+                        lic.getLicense().length() > 0 &&
+                        lic.getLicense() != null &&
+                        lic.getLicense().length() > 0) {
+                    return lic;
+                }
+            }
         }
 
         return null;
