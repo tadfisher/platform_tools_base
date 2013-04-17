@@ -7,8 +7,6 @@ dependencies {
 
 shipping {
     launcherScripts = ['etc/screenshot2']
-    isShipping = false
+    isShipping = true
 }
-
-
 
