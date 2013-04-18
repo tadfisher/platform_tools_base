@@ -40,7 +40,7 @@ subprojects { Project project ->
     project.buildDir = project.file("$project.parent.buildDir/../$project.name")
 
     apply plugin: 'java'
-    apply plugin: 'maven'
+    apply plugin: 'maven-publish'
     apply plugin: 'signing'
     apply plugin: 'findbugs'
     apply plugin: 'distrib'
@@ -78,30 +78,63 @@ subprojects { Project project ->
     }
 
     // custom tasks for creating source/javadoc jars
-    task sourcesJar(type: Jar, dependsOn:classes) {
-        classifier = 'sources'
-        from sourceSets.main.allSource
+    task sourceJar(type: Jar) {
+        from sourceSets.main.allJava
     }
 
     task javadocJar(type: Jar, dependsOn:javadoc) {
-        classifier = 'javadoc'
         from javadoc.destinationDir
     }
 
-    // add javadoc/source jar tasks as artifacts
-    artifacts {
-        archives jar
+    project.ext.pomName = ''
+    project.ext.pomDescription = ''
 
-        archives sourcesJar
-        archives javadocJar
-    }
+    publishing {
+        publications {
+            maven(MavenPublication) {
+                from components.java
 
-    task publishLocal(type: Upload) {
-        configuration = configurations.archives
-        repositories {
-            mavenDeployer {
-                repository(url: uri("$rootProject.ext.androidHostOut/repo"))
+                artifact sourceJar {
+                    classifier "sources"
+                }
+                artifact javadocJar {
+                    classifier "javadoc"
+                }
+
+                pom.withXml {
+                    def projectNode = asNode()
+                    projectNode.appendNode('name', project.ext.pomName)
+                    projectNode.appendNode('description', project.ext.pomDescription)
+                    projectNode.appendNode('url', 'http://tools.android.com')
+                    projectNode.appendNode('inceptionYear', '2007')
+
+                    def licenseNode = projectNode.appendNode('licenses').appendNode('license')
+                    licenseNode.appendNode('name', 'The Apache Software License, Version 2.0')
+                    licenseNode.appendNode('url', 'http://www.apache.org/licenses/LICENSE-2.0.txt')
+
+                    def scmNode = projectNode.appendNode('scm')
+                    scmNode.appendNode('url', 'https://android.googlesource.com/platform/tools/base')
+                    scmNode.appendNode('connection', 'git://android.googlesource.com/platform/toos/base.git')
+
+                    projectNode.appendNode('developers').appendNode('developer').appendNode('name', 'The Android Open Source Project')
+                }
             }
+        }
+
+        repositories {
+            maven {
+                name 'out'
+                url uri("$rootProject.ext.androidHostOut/repo")
+            }
+            maven {
+                name 'central'
+                url "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+
+            }
+        }
+
+        generatePomFileForMavenPublication {
+            destination = file("$buildDir/generated-pom.xml")
         }
     }
 
