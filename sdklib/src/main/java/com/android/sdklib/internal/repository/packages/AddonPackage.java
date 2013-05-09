@@ -46,7 +46,7 @@ import java.util.Properties;
  * Represents an add-on XML node in an SDK repository.
  */
 public class AddonPackage extends MajorRevisionPackage
-        implements IAndroidVersionProvider, IPlatformDependency,
+        implements IAndroidVersionProvider, ISystemImageDependency,
                    IExactApiLevelDependency, ILayoutlibVersion {
 
     private final String mVendorId;
@@ -437,6 +437,26 @@ public class AddonPackage extends MajorRevisionPackage
     @Override @NonNull
     public AndroidVersion getAndroidVersion() {
         return mVersion;
+    }
+
+    /**
+     * Returns the ABIs of the system-image(s) this addons depends on.
+     * Cannot be null. May be empty.
+     */
+    @Override
+    public String[] getAbis() {
+        // FIXME: neither the addon source.prop nor the manifest.ini currently indicates which
+        // ABIs are supported/required as a dependency by this addon.
+        // For legacy purposes we'll force an ARM v7a dependency on all addons with API >= 14
+        // (which is when we introduced arm-v7a as a separate platform system-image download.)
+        // Addon packages before API 14 required the presence of the matching platform,
+        // which is done by the IPlatformDependecy.
+
+        if (mVersion.getApiLevel() >= 14) {
+            return new String[] { SdkConstants.ABI_ARMEABI_V7A };
+        } else {
+            return new String[0];
+        }
     }
 
     /** Returns the libs defined in this add-on. Can be an empty array but not null. */

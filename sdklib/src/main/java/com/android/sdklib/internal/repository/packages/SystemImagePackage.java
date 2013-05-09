@@ -47,7 +47,12 @@ public class SystemImagePackage extends MajorRevisionPackage
     /** The package version, for platform, add-on and doc packages. */
     private final AndroidVersion mVersion;
 
-    /** The ABI of the system-image. Must not be null nor empty. */
+    /**
+     * The ABI of the system-image. Must not be null nor empty.
+     * <p/>
+     * Current possible ABIs are defined in {@link SdkConstants} by various {@code ABI_...} strings
+     * such as {@link SdkConstants#ABI_ARMEABI_V7A}.
+     */
     private final String mAbi;
 
     /**
@@ -197,7 +202,12 @@ public class SystemImagePackage extends MajorRevisionPackage
         props.setProperty(PkgProps.SYS_IMG_ABI, mAbi);
     }
 
-    /** Returns the ABI of the system-image. Cannot be null nor empty. */
+    /**
+     * Returns the ABI of the system-image. Cannot be null nor empty.
+     * <p/>
+     * Current possible ABIs are defined in {@link SdkConstants} by various {@code ABI_...} strings,
+     * such as {@link SdkConstants#ABI_ARMEABI_V7A}.
+     */
     public String getAbi() {
         return mAbi;
     }
