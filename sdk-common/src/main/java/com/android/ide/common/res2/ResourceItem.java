@@ -313,7 +313,35 @@ public class ResourceItem extends DataItem<ResourceFile> implements Configurable
                     boolean isFrameworkAttr = styleValue.isFramework();
                     if (name.startsWith(ANDROID_NS_NAME_PREFIX)) {
                         name = name.substring(DEFAULT_NS_PREFIX_LEN);
-                        isFrameworkAttr = true;
+
+                        // Disabled; check with Xav how to handle this:
+                        //isFrameworkAttr = true;
+                        //
+                        // In the Ultimate Stopwatch source base for example, there is a
+                        // custom theme like this:
+                        //  <style name="Theme.theme_usw" parent="@style/Theme.Sherlock.Light">
+                        //    ...
+                        //    <item name="android:actionBarStyle">@style/theme_usw_solid_ActionBar</item>
+                        //    ...
+                        // The above code would process this attribute, android:actionBarStyle,
+                        // strip off the android prefix and store it as a resource value
+                        // with name="actionBarStyle", isFrameworkAttr=true, and
+                        // value="@style/theme_usw_solid_ActionBar".
+                        // However, the ResourceResolver will then (when resolving the value
+                        // for @style/theme_usw_solid_ActionBar) look at isFramework=true,
+                        // and only look in the framework resource repository for the definition
+                        // of theme_usw_solid_ActionBar, which doesn't live there, so it fails.
+                        //
+                        // The question is really whether the ResourceResolver is misinterpreting
+                        // what the framework attribute for a resource value should mean
+                        // (is it referring to the value, or the name?) or whether we're setting
+                        // it to the wrong value here. (Note that with the previous resource
+                        // repository (prior to res2) this attribute would be initialized by
+                        // the ValueResourceParser and isFrameworkAttr was set to false.)
+                        // I have an alternate patch, slightly longer, which modifies the
+                        // ResourceResolver to search more thoroughly instead (it basically doesn't
+                        // assume that isFrameworkAttr implies to only look in the framework
+                        // resources.)
                     }
 
                     ResourceValue resValue = new ResourceValue(null, name, isFrameworkAttr);
