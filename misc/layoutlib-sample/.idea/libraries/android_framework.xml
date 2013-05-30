@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="android-framework">
+    <CLASSES>
+      <root url="jar://$ANDROID_PLAT$/out/host/common/obj/JAVA_LIBRARIES/temp_layoutlib_intermediates/javalib.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="file://$ANDROID_PLAT$/frameworks/base/core/java" />
+    </SOURCES>
+  </library>
+</component>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/../../common/common.iml" filepath="$PROJECT_DIR$/../../common/common.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../../device_validator/dvlib/dvlib.iml" filepath="$PROJECT_DIR$/../../device_validator/dvlib/dvlib.iml" />
+      <module fileurl="file://$ANDROID_PLAT$/frameworks/base/tools/layoutlib/bridge/layoutlib.iml" filepath="$ANDROID_PLAT$/frameworks/base/tools/layoutlib/bridge/layoutlib.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../../layoutlib-api/layoutlib-api.iml" filepath="$PROJECT_DIR$/../../layoutlib-api/layoutlib-api.iml" />
+      <module fileurl="file://$PROJECT_DIR$/layoutlib-sample.iml" filepath="$PROJECT_DIR$/layoutlib-sample.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../../ninepatch/ninepatch.iml" filepath="$PROJECT_DIR$/../../ninepatch/ninepatch.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../../sdk-common/sdk-common.iml" filepath="$PROJECT_DIR$/../../sdk-common/sdk-common.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../../sdklib/sdklib.iml" filepath="$PROJECT_DIR$/../../sdklib/sdklib.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../../testutils/testutils.iml" filepath="$PROJECT_DIR$/../../testutils/testutils.iml" />
+    </modules>
+  </component>
+</project>
+
