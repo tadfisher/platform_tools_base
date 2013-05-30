@@ -316,7 +316,8 @@ public class ResourceItem extends DataItem<ResourceFile> implements Configurable
                         isFrameworkAttr = true;
                     }
 
-                    ResourceValue resValue = new ResourceValue(null, name, isFrameworkAttr);
+                    ResourceValue resValue = new ResourceValue(null, name,
+                            styleValue.isFramework());
                     resValue.setValue(
                             ValueXmlHelper.unescapeResourceString(getTextNode(child), false, true));
                     styleValue.addValue(resValue, isFrameworkAttr);
