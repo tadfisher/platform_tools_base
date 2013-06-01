@@ -61,6 +61,8 @@ public final class SdkConstants {
 
     /** An SDK Project's build.xml file */
     public static final String FN_BUILD_XML = "build.xml";                            //$NON-NLS-1$
+    /** An SDK Project's build.gradle file */
+    public static final String FN_BUILD_GRADLE = "build.gradle";                      //$NON-NLS-1$
 
     /** Name of the framework library, i.e. "android.jar" */
     public static final String FN_FRAMEWORK_LIBRARY = "android.jar";                  //$NON-NLS-1$
@@ -190,6 +192,12 @@ public final class SdkConstants {
      * Note: this is not the same as {@link #FD_PKG_SOURCES}
      * which is an SDK sources folder for packages. */
     public static final String FD_SOURCES = "src";                      //$NON-NLS-1$
+    /** Default main source set folder name, i.e. "main" */
+    public static final String FD_MAIN = "main";                        //$NON-NLS-1$
+    /** Default test source set folder name, i.e. "instrumentTest" */
+    public static final String FD_TEST = "instrumentTest";              //$NON-NLS-1$
+    /** Default java code folder name, i.e. "java" */
+    public static final String FD_JAVA = "java";                        //$NON-NLS-1$
     /** Default generated source folder name, i.e. "gen" */
     public static final String FD_GEN_SOURCES = "gen";                  //$NON-NLS-1$
     /** Default native library folder name inside the project, i.e. "libs"
