@@ -45,9 +45,9 @@ public interface IShellEnabledDevice {
      * @param receiver the {@link IShellOutputReceiver} that will receives the output of the shell
      *            command
      * @param maxTimeToOutputResponse the maximum amount of time during which the command is allowed
-     *            to not output any response. A value of 0 means the method will wait forever
-     *            (until the <var>receiver</var> cancels the execution) for command output and
-     *            never throw.
+     *            to not output any response (in milliseconds). A value of 0 means the method will
+     *            wait forever (until the <var>receiver</var> cancels the execution) for command
+     *            output and never throw.
      * @throws TimeoutException in case of timeout on the connection when sending the command.
      * @throws AdbCommandRejectedException if adb rejects the command.
      * @throws ShellCommandUnresponsiveException in case the shell command doesn't send any output
@@ -57,7 +57,7 @@ public interface IShellEnabledDevice {
      * @see DdmPreferences#getTimeOut()
      */
     public void executeShellCommand(String command, IShellOutputReceiver receiver,
-            int maxTimeToOutputResponse)
+            long maxTimeToOutputResponse)
             throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
             IOException;
 }

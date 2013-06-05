@@ -438,7 +438,7 @@ final class Device implements IDevice {
 
     @Override
     public void executeShellCommand(String command, IShellOutputReceiver receiver,
-            int maxTimeToOutputResponse)
+            long maxTimeToOutputResponse)
             throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
             IOException {
         AdbHelper.executeRemoteCommand(AndroidDebugBridge.getSocketAddress(), command, this,

@@ -174,7 +174,7 @@ public interface IRemoteAndroidTestRunner {
 
     /**
      * Sets the maximum time allowed between output of the shell command running the tests on
-     * the devices.
+     * the devices (in milliseconds).
      * <p/>
      * This allows setting a timeout in case the tests can become stuck and never finish. This is
      * different from the normal timeout on the connection.
@@ -183,7 +183,7 @@ public interface IRemoteAndroidTestRunner {
      *
      * @see IDevice#executeShellCommand(String, com.android.ddmlib.IShellOutputReceiver, int)
      */
-    public void setMaxtimeToOutputResponse(int maxTimeToOutputResponse);
+    public void setMaxtimeToOutputResponse(long maxTimeToOutputResponse);
 
     /**
      * Set a custom run name to be reported to the {@link ITestRunListener} on {@link #run}

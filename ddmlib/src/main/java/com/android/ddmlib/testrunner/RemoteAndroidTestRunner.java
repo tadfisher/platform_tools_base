@@ -39,7 +39,7 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
     private final String mRunnerName;
     private IShellEnabledDevice mRemoteDevice;
     // default to no timeout
-    private int mMaxTimeToOutputResponse = 0;
+    private long mMaxTimeToOutputResponse = 0;
     private String mRunName = null;
 
     /** map of name-value instrumentation argument pairs */
@@ -180,7 +180,7 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
     }
 
     @Override
-    public void setMaxtimeToOutputResponse(int maxTimeToOutputResponse) {
+    public void setMaxtimeToOutputResponse(long maxTimeToOutputResponse) {
         mMaxTimeToOutputResponse = maxTimeToOutputResponse;
     }
 
