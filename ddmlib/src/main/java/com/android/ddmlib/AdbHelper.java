@@ -344,8 +344,8 @@ final class AdbHelper {
      * @param device the {@link IDevice} on which to execute the command.
      * @param rcvr the {@link IShellOutputReceiver} that will receives the output of the shell
      *            command
-     * @param maxTimeToOutputResponse max time between command output. If more time passes
-     *            between command output, the method will throw
+     * @param maxTimeToOutputResponse max time between command output (in milliseconds). If more
+     *            time passes between command output, the method will throw
      *            {@link ShellCommandUnresponsiveException}. A value of 0 means the method will
      *            wait forever for command output and never throw.
      * @throws TimeoutException in case of timeout on the connection when sending the command.
@@ -357,7 +357,7 @@ final class AdbHelper {
      * @see DdmPreferences#getTimeOut()
      */
     static void executeRemoteCommand(InetSocketAddress adbSockAddr,
-            String command, IDevice device, IShellOutputReceiver rcvr, int maxTimeToOutputResponse)
+            String command, IDevice device, IShellOutputReceiver rcvr, long maxTimeToOutputResponse)
             throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
             IOException {
         Log.v("ddms", "execute: running " + command);
@@ -383,7 +383,7 @@ final class AdbHelper {
 
             byte[] data = new byte[16384];
             ByteBuffer buf = ByteBuffer.wrap(data);
-            int timeToResponseCount = 0;
+            long timeToResponseCount = 0;
             while (true) {
                 int count;
 
