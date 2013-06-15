@@ -26,6 +26,7 @@ import java.io.File;
 import lombok.ast.ConstructorDeclaration;
 import lombok.ast.MethodDeclaration;
 import lombok.ast.Node;
+import lombok.ast.Position;
 
 /**
  * A {@link Context} used when checking Java files.
@@ -78,7 +79,7 @@ public class JavaContext extends Context {
     @Override
     public void report(@NonNull Issue issue, @Nullable Location location,
             @NonNull String message, @Nullable Object data) {
-        if (mDriver.isSuppressed(issue, compilationUnit)) {
+        if (mDriver.isSuppressed(this, issue, compilationUnit)) {
             return;
         }
         super.report(issue, location, message, data);
@@ -102,7 +103,7 @@ public class JavaContext extends Context {
             @Nullable Location location,
             @NonNull String message,
             @Nullable Object data) {
-        if (scope != null && mDriver.isSuppressed(issue, scope)) {
+        if (scope != null && mDriver.isSuppressed(this, issue, scope)) {
             return;
         }
         super.report(issue, location, message, data);
@@ -123,5 +124,24 @@ public class JavaContext extends Context {
         }
 
         return null;
+    }
+
+    @Override
+    @Nullable
+    protected String getSuppressCommentPrefix() {
+        return "//noinspection AndroidLint"; //$NON-NLS-1$
+    }
+
+    public boolean isSuppressed(@NonNull Node scope, @NonNull Issue issue) {
+        // Check whether there is a comment marker
+        String contents = getContents();
+        assert contents != null; // otherwise we wouldn't be here
+        Position position = scope.getPosition();
+        if (position == null) {
+            return false;
+        }
+
+        int start = position.getStart();
+        return isSuppressedWithComment(start, issue);
     }
 }
