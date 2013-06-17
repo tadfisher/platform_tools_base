@@ -27,10 +27,35 @@ import java.io.InputStream;
 public class SdkAddonConstants extends RepoConstants {
 
     /**
+     * The latest version of the sdk-addon XML Schema.
+     * Valid version numbers are between 1 and this number, included.
+     */
+    public static final int NS_LATEST_VERSION = 6;
+
+    /**
+     * The min version of the sdk-repository XML Schema we'll try to load.
+     * When looking for a repository-N.xml on the server, we'll check from
+     * {@link #NS_LATEST_VERSION} down to this revision.
+     * We only introduced the "addon-N.xml" pattern start with revision
+     * 5, so we know that <em>our</em> server will never contain a repository
+     * XML with a schema version lower than this one.
+     */
+    public static final int NS_SERVER_MIN_VERSION = 6;
+
+    /**
      * The default name looked for by {@link SdkSource} when trying to load an
      * sdk-addon XML if the URL doesn't match an existing resource.
      */
     public static final String URL_DEFAULT_FILENAME = "addon.xml";         //$NON-NLS-1$
+
+    /**
+     * The pattern name looked by {@link SdkSource} when trying to load
+     * an sdk-addon XML that is specific to a given XSD revision.
+     * <p/>
+     * This must be used with {@link String#format(String, Object...)} with
+     * one integer parameter between 1 and {@link #NS_LATEST_VERSION}.
+     */
+    public static final String URL_FILENAME_PATTERN = "addon-%1$d.xml";     //$NON-NLS-1$
 
     /** The base of our sdk-addon XML namespace. */
     private static final String NS_BASE =
@@ -41,12 +66,6 @@ public class SdkAddonConstants extends RepoConstants {
      * Matcher's group(1) is the schema version (integer).
      */
     public static final String NS_PATTERN = NS_BASE + "([1-9][0-9]*)";     //$NON-NLS-1$
-
-    /**
-     * The latest version of the sdk-addon XML Schema.
-     * Valid version numbers are between 1 and this number, included.
-     */
-    public static final int NS_LATEST_VERSION = 5;
 
     /** The XML namespace of the latest sdk-addon XML. */
     public static final String NS_URI = getSchemaUri(NS_LATEST_VERSION);

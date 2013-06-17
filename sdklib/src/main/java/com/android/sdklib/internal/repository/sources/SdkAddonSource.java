@@ -59,10 +59,25 @@ public class SdkAddonSource extends SdkSource {
         return false;
     }
 
+    private static String[] sDefaults = null; // lazily allocated in getDefaultXmlFileUrls
 
     @Override
     protected String[] getDefaultXmlFileUrls() {
-        return new String[] { SdkAddonConstants.URL_DEFAULT_FILENAME };
+        if (sDefaults == null) {
+            sDefaults = new String[SdkAddonConstants.NS_LATEST_VERSION
+                                   - SdkAddonConstants.NS_SERVER_MIN_VERSION
+                                   + 2];
+            int k = 0;
+            for (int i  = SdkAddonConstants.NS_LATEST_VERSION;
+                     i >= SdkAddonConstants.NS_SERVER_MIN_VERSION;
+                     i--) {
+                sDefaults[k++] = String.format(SdkAddonConstants.URL_FILENAME_PATTERN, i);
+            }
+            sDefaults[k++] = SdkAddonConstants.URL_DEFAULT_FILENAME;
+            assert k == sDefaults.length;
+        }
+
+        return sDefaults;
     }
 
     @Override
