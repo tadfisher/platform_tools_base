@@ -100,7 +100,6 @@ public class ResourceMergerTest extends BaseTestCase {
         ResourceMerger merger = getResourceMerger();
         ListMultimap<String, ResourceItem> mergedMap = merger.getDataMap();
 
-
         List<ResourceItem> values = mergedMap.get("layout/alias_replaced_by_file");
 
         // the overlay means there's 2 versions of this resource.
@@ -684,6 +683,20 @@ public class ResourceMergerTest extends BaseTestCase {
         });
 
         assertFalse(merger1.checkValidUpdate(merger2.getDataSets()));
+    }
+
+    public void testChangedIgnoredFile() throws Exception {
+        ResourceSet res = ResourceSetTest.getBaseResourceSet();
+
+        ResourceMerger resourceMerger = new ResourceMerger();
+        resourceMerger.addDataSet(res);
+
+        File root = TestUtils.getRoot("resources", "baseSet");
+        DataMerger.IncData<ResourceSet> incData = new DataMerger.IncData<ResourceSet>();
+        File changedCVSFoo = new File(root, "CVS/foo.txt");
+        resourceMerger.getDataSetContaining(changedCVSFoo, incData);
+
+        assertEquals(DataMerger.IncDataStatus.IGNORED_FILE, incData.status);
     }
 
     /**
