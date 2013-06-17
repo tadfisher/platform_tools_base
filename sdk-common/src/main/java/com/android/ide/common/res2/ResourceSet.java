@@ -127,10 +127,15 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
     }
 
     @Override
-    protected boolean isValidSourceFile(File sourceFolder, File file) {
+    protected boolean isValidSourceFile(@NonNull File sourceFolder, @NonNull File file) {
+        if (!super.isValidSourceFile(sourceFolder, file)) {
+            return false;
+        }
+
         File resFolder = file.getParentFile();
         // valid files are right under a resource folder under the source folder
         return resFolder.getParentFile().equals(sourceFolder) &&
+                PackagingUtils.checkFolderForPackaging(resFolder.getName()) &&
                 ResourceFolderType.getFolderType(resFolder.getName()) != null;
     }
 
@@ -283,6 +288,10 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
             fd.qualifiers = folderName.substring(pos + 1);
         } else {
             fd.folderType = ResourceFolderType.getTypeByName(folderName);
+        }
+
+        if (fd.folderType == null) {
+            throw new IllegalArgumentException("unable to find type for folder: " + folderName);
         }
 
         if (fd.folderType != ResourceFolderType.VALUES) {

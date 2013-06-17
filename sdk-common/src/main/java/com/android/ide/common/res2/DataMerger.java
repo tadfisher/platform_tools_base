@@ -19,7 +19,6 @@ package com.android.ide.common.res2;
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.xml.XmlPrettyPrinter;
-import com.android.utils.Pair;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -513,23 +512,44 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
     }
 
     /**
-     * Returns a DataSet that contains a given file.
+     * Returns a {@link FileValidity} that contains information about the changed file including:
+     * - is it from an known set, is it an ignored file, or is it unknown?
+     * - what data set does it belong to
+     * - what source folder does it belong to.
      *
-     * "contains" means that the DataSet has a source file/folder that is the root folder
+     * "belong" means that the DataSet has a source file/folder that is the root folder
      * of this file. The folder and/or file doesn't have to exist.
      *
      * @param file the file to check
-     * @return a pair containing the ResourceSet and its source file that contains the file.
+     * @param fileValidity the FileValidity object that gets
      */
-    public Pair<S, File> getDataSetContaining(File file) {
+    public void getDataSetContaining(@NonNull File file, @NonNull FileValidity<S> fileValidity) {
+        if (mDataSets.isEmpty()) {
+            fileValidity.status = FileValidity.FileStatus.UNKNOWN_FILE;
+            return;
+        }
+
+        // get the first dataset to check on the file if it's part of a IGNORED_FILE.
+        // This is mostly a work-around for the fact that the method is on data sets.
+        S tempDataSet = mDataSets.get(0);
+        if (!tempDataSet.checkFileForAndroidRes(file)) {
+            fileValidity.status = FileValidity.FileStatus.IGNORED_FILE;
+            return;
+        }
+
         for (S dataSet : mDataSets) {
             File sourceFile = dataSet.findMatchingSourceFile(file);
+
             if (sourceFile != null) {
-                return Pair.of(dataSet, sourceFile);
+                fileValidity.dataSet = dataSet;
+                fileValidity.sourceFile = sourceFile;
+                fileValidity.status = dataSet.isValidSourceFile(sourceFile, file) ?
+                        FileValidity.FileStatus.VALID_FILE : FileValidity.FileStatus.IGNORED_FILE;
+                return;
             }
         }
 
-        return null;
+        fileValidity.status = FileValidity.FileStatus.UNKNOWN_FILE;
     }
 
     protected synchronized void createDir(File folder) throws IOException {
