@@ -380,10 +380,7 @@ abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>> implements 
             throws IOException {
         switch (fileStatus) {
             case NEW:
-                if (isValidSourceFile(sourceFolder, changedFile)) {
-                    return handleNewFile(sourceFolder, changedFile, logger);
-                }
-                return true;
+                return handleNewFile(sourceFolder, changedFile, logger);
             case CHANGED:
                 return handleChangedFile(sourceFolder, changedFile);
             case REMOVED:
@@ -399,7 +396,9 @@ abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>> implements 
         return false;
     }
 
-    protected abstract boolean isValidSourceFile(File sourceFolder, File changedFile);
+    protected boolean isValidSourceFile(@NonNull File sourceFolder, @NonNull File file) {
+        return checkFileForAndroidRes(file);
+    }
 
     protected boolean handleNewFile(File sourceFolder, File file, ILogger logger)
             throws IOException {
@@ -462,6 +461,7 @@ abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>> implements 
      */
     protected boolean checkFileForAndroidRes(File file) {
         // TODO: use the aapt ignore pattern value.
+        // We should move this somewhere else when introduce aapt pattern
 
         String name = file.getName();
         int pos = name.lastIndexOf('.');
