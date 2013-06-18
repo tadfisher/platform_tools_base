@@ -49,7 +49,6 @@ import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -151,14 +150,20 @@ public class LayoutLibrary {
                     log.error(null, "layoutlib.jar is missing!"); //$NON-NLS-1$
                 }
             } else {
-                URI uri = f.toURI();
-                URL url = uri.toURL();
+                URL[] url;
+                File icu4j = new File(f.getParent().concat("/icu4j.jar"));
+                if (icu4j.isFile()) {
+                    url = new URL[2];
+                    url[1] = icu4j.toURI().toURL();
+                } else {
+                    url = new URL[1];
+                }
+                url[0] = f.toURI().toURL();
 
                 // create a class loader. Because this jar reference interfaces
                 // that are in the editors plugin, it's important to provide
                 // a parent class loader.
-                classLoader = new URLClassLoader(
-                        new URL[] { url },
+                classLoader = new URLClassLoader(url,
                         LayoutLibrary.class.getClassLoader());
 
                 // load the class
