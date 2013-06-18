@@ -89,6 +89,7 @@ public final class AndroidManifest {
     public static final String ATTRIBUTE_THEME = "theme";
     public static final String ATTRIBUTE_BACKUP_AGENT = "backupAgent";
     public static final String ATTRIBUTE_PARENT_ACTIVITY_NAME = "parentActivityName";
+    public static final String ATTRIBUTE_SUPPORTS_RTL = "supportsRtl";
 
     /**
      * Returns an {@link IAbstractFile} object representing the manifest for the given project.
