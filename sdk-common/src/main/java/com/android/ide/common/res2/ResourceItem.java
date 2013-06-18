@@ -18,9 +18,11 @@ package com.android.ide.common.res2;
 
 import static com.android.SdkConstants.ANDROID_NEW_ID_PREFIX;
 import static com.android.SdkConstants.ANDROID_NS_NAME_PREFIX;
+import static com.android.SdkConstants.ANDROID_NS_NAME_PREFIX_LEN;
 import static com.android.SdkConstants.ANDROID_PREFIX;
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_PARENT;
+import static com.android.SdkConstants.ATTR_QUANTITY;
 import static com.android.SdkConstants.ATTR_TYPE;
 import static com.android.SdkConstants.ATTR_VALUE;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
@@ -29,8 +31,10 @@ import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.rendering.api.ArrayResourceValue;
 import com.android.ide.common.rendering.api.AttrResourceValue;
 import com.android.ide.common.rendering.api.DeclareStyleableResourceValue;
+import com.android.ide.common.rendering.api.PluralsResourceValue;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.StyleResourceValue;
 import com.android.ide.common.resources.configuration.Configurable;
@@ -52,8 +56,6 @@ import org.w3c.dom.NodeList;
  *
  */
 public class ResourceItem extends DataItem<ResourceFile> implements Configurable, Comparable<ResourceItem>  {
-
-    private static final int DEFAULT_NS_PREFIX_LEN = ANDROID_NS_NAME_PREFIX.length();
 
     private final ResourceType mType;
     private Node mValue;
@@ -263,6 +265,12 @@ public class ResourceItem extends DataItem<ResourceFile> implements Configurable
                 value = parseDeclareStyleable(new DeclareStyleableResourceValue(type, name,
                         isFrameworks));
                 break;
+            case ARRAY:
+                value = parseArrayValue(new ArrayResourceValue(name, isFrameworks));
+                break;
+            case PLURALS:
+                value = parsePluralsValue(new PluralsResourceValue(name, isFrameworks));
+                break;
             case ATTR:
                 value = parseAttrValue(new AttrResourceValue(type, name, isFrameworks));
                 break;
@@ -313,7 +321,7 @@ public class ResourceItem extends DataItem<ResourceFile> implements Configurable
                     // is the attribute in the android namespace?
                     boolean isFrameworkAttr = styleValue.isFramework();
                     if (name.startsWith(ANDROID_NS_NAME_PREFIX)) {
-                        name = name.substring(DEFAULT_NS_PREFIX_LEN);
+                        name = name.substring(ANDROID_NS_NAME_PREFIX_LEN);
                         isFrameworkAttr = true;
                     }
 
@@ -362,6 +370,40 @@ public class ResourceItem extends DataItem<ResourceFile> implements Configurable
         return attrValue;
     }
 
+    private ResourceValue parseArrayValue(ArrayResourceValue arrayValue) {
+        NodeList children = mValue.getChildNodes();
+        for (int i = 0, n = children.getLength(); i < n; i++) {
+            Node child = children.item(i);
+
+            if (child.getNodeType() == Node.ELEMENT_NODE) {
+                String text = getTextNode(child);
+                text = ValueXmlHelper.unescapeResourceString(text, false, true);
+                arrayValue.addElement(text);
+            }
+        }
+
+        return arrayValue;
+    }
+
+    private ResourceValue parsePluralsValue(PluralsResourceValue value) {
+        NodeList children = mValue.getChildNodes();
+        for (int i = 0, n = children.getLength(); i < n; i++) {
+            Node child = children.item(i);
+
+            if (child.getNodeType() == Node.ELEMENT_NODE) {
+                NamedNodeMap attributes = child.getAttributes();
+                String quantity = getAttributeValue(attributes, ATTR_QUANTITY);
+                if (quantity != null) {
+                    String text = getTextNode(child);
+                    text = ValueXmlHelper.unescapeResourceString(text, false, true);
+                    value.addPlural(quantity, text);
+                }
+            }
+        }
+
+        return value;
+    }
+
     @SuppressWarnings("deprecation") // support for deprecated (but supported) API
     @NonNull
     private ResourceValue parseDeclareStyleable(
@@ -377,7 +419,7 @@ public class ResourceItem extends DataItem<ResourceFile> implements Configurable
                     // is the attribute in the android namespace?
                     boolean isFrameworkAttr = declareStyleable.isFramework();
                     if (name.startsWith(ANDROID_NS_NAME_PREFIX)) {
-                        name = name.substring(DEFAULT_NS_PREFIX_LEN);
+                        name = name.substring(ANDROID_NS_NAME_PREFIX_LEN);
                         isFrameworkAttr = true;
                     }
 
