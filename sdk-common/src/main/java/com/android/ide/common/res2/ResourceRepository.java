@@ -73,7 +73,7 @@ public class ResourceRepository {
         }
     }
 
-    private final Map<ResourceType, ListMultimap<String, ResourceItem>> mItems = Maps.newEnumMap(
+    protected final Map<ResourceType, ListMultimap<String, ResourceItem>> mItems = Maps.newEnumMap(
             ResourceType.class);
     private final RepositoryMerger mConsumer = new RepositoryMerger();
 
