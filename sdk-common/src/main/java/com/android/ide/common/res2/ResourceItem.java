@@ -71,7 +71,7 @@ public class ResourceItem extends DataItem<ResourceFile> implements Configurable
      * @param type the type of the resource
      * @param value an optional Node that represents the resource value.
      */
-    ResourceItem(@NonNull String name, @NonNull ResourceType type, Node value) {
+    public ResourceItem(@NonNull String name, @NonNull ResourceType type, Node value) {
         super(name);
         mType = type;
         mValue = value;
@@ -115,7 +115,7 @@ public class ResourceItem extends DataItem<ResourceFile> implements Configurable
 
     @Override
     public FolderConfiguration getConfiguration() {
-        assert getSource() != null;
+        assert getSource() != null : this;
 
         String qualifier = getSource().getQualifiers();
         if (qualifier.isEmpty()) {
@@ -137,7 +137,7 @@ public class ResourceItem extends DataItem<ResourceFile> implements Configurable
      * @throws IllegalStateException if the resource is not added to a ResourceFile
      */
     @Override
-    String getKey() {
+    public String getKey() {
         if (getSource() == null) {
             throw new IllegalStateException(
                     "ResourceItem.getKey called on object with no ResourceFile: " + this);
