@@ -34,6 +34,8 @@ import static com.android.SdkConstants.TAG_PATH_PERMISSION;
 import static com.android.SdkConstants.TAG_PROVIDER;
 import static com.android.SdkConstants.TAG_RECEIVER;
 import static com.android.SdkConstants.TAG_SERVICE;
+import static com.android.xml.AndroidManifest.NODE_ACTION;
+import static com.android.xml.AndroidManifest.NODE_METADATA;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -170,6 +172,27 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
             Severity.WARNING,
             IMPLEMENTATION_JAVA);
 
+    /** Device Admin can't be uninstalled */
+    public static final Issue DEVICE_ADMIN = Issue.create(
+            "DeviceAdmin", //$NON-NLS-1$
+            "Device Admin cannot be deactivated",
+            "Ensures that device admins can be deactivated/uninstalled",
+            "If you register a broadcast receiver which acts as a device admin, you must also " +
+            "register an `<intent-filter>` for the action " +
+            "`android.app.action.DEVICE_ADMIN_ENABLED` such that the device admin can be " +
+            "deactivated or uninstalled.\n" +
+            "\n" +
+            "To do this, add\n" +
+            "`<intent-filter>`\n" +
+            "    `<action android:name=\"com.strain.admin.DEVICE_ADMIN_ENABLED\" />`\n" +
+            "`</intent-filter>`\n" +
+            "to your `<service>`.",
+            Category.SECURITY,
+            7,
+            Severity.WARNING,
+            IMPLEMENTATION_MANIFEST);
+
+
     /** Constructs a new {@link SecurityDetector} check */
     public SecurityDetector() {
     }
@@ -282,6 +305,40 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
             // No declared permission for this exported receiver: complain
             context.report(EXPORTED_RECEIVER, element, context.getLocation(element),
                            "Exported receiver does not require permission", null);
+        }
+
+        List<Element> children = LintUtils.getChildren(element);
+        boolean haveEnableAction = false;
+        boolean isDeviceAdmin = false;
+        Attr locationNode = null;
+        for (Element child : children) {
+            String tagName = child.getTagName();
+            if (tagName.equals(TAG_INTENT_FILTER)) {
+                for (Element action : LintUtils.getChildren(child)) {
+                    if (action.getTagName().equals(NODE_ACTION)) {
+                        String name = action.getAttributeNS(ANDROID_URI, ATTR_NAME);
+                        if (name.equals("android.app.action.DEVICE_ADMIN_ENABLED")) { //$NON-NLS-1$
+                            haveEnableAction = true;
+                            break;
+                        }
+                    }
+                }
+            } else if (tagName.equals(NODE_METADATA)) {
+                Attr valueNode = child.getAttributeNodeNS(ANDROID_URI, ATTR_NAME);
+                if (valueNode != null) {
+                    String name = valueNode.getValue();
+                    if (name.equals("android.app.device_admin")) { //$NON-NLS-1$
+                        isDeviceAdmin = true;
+                        locationNode = valueNode;
+                    }
+                }
+            }
+        }
+
+        if (isDeviceAdmin && !haveEnableAction && context.isEnabled(DEVICE_ADMIN)) {
+            context.report(DEVICE_ADMIN, locationNode, context.getLocation(locationNode),
+                "You must add android.app.action.DEVICE_ADMIN_ENABLED as an intent filter action",
+                null);
         }
     }
 

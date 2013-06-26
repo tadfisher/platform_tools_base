@@ -210,4 +210,16 @@ public class SecurityDetectorTest extends AbstractCheckTest {
             "No warnings.",
             lintProject("exportreceiver6.xml=>AndroidManifest.xml"));
     }
+
+    public void testDeviceAdmin() throws Exception {
+        assertEquals(""
+                + "AndroidManifest.xml:31: Warning: You must add android.app.action.DEVICE_ADMIN_ENABLED as an intent filter action [DeviceAdmin]\n"
+                + "            <meta-data android:name=\"android.app.device_admin\"\n"
+                + "                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "AndroidManifest.xml:43: Warning: You must add android.app.action.DEVICE_ADMIN_ENABLED as an intent filter action [DeviceAdmin]\n"
+                + "            <meta-data android:name=\"android.app.device_admin\"\n"
+                + "                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 2 warnings\n",
+                lintProject("deviceadmin.xml=>AndroidManifest.xml"));
+    }
 }
