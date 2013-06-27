@@ -54,6 +54,9 @@ import javax.xml.parsers.ParserConfigurationException;
  */
 class ValueResourceParser2 {
 
+    private static final String DEFAULT_NS_PREFIX = "android:";
+    private static final int DEFAULT_NS_PREFIX_LEN = DEFAULT_NS_PREFIX.length();
+
     private final File mFile;
 
     /**
@@ -227,7 +230,12 @@ class ValueResourceParser2 {
             ResourceItem resource = getResource(node);
             if (resource != null) {
                 assert resource.getType() == ResourceType.ATTR;
-                list.add(resource);
+
+                // is the attribute in the android namespace?
+                if (!resource.getName().startsWith(DEFAULT_NS_PREFIX)) {
+                    resource.setIgnoredFromDiskMerge(true);
+                    list.add(resource);
+                }
             }
         }
     }
