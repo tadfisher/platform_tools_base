@@ -479,6 +479,12 @@ public class ResourceMergerTest extends BaseTestCase {
 
         // deleted values-en/values.xml
         assertFalse(new File(resFolder, "values-en" + File.separator + "values.xml").isFile());
+
+        // Check path map
+        File pathMap = new File(resFolder, ".pathmap.txt");
+        assertTrue(pathMap.exists());
+        String contents = Files.toString(pathMap, Charsets.UTF_8);
+        assertTrue(contents.length() > 20);
     }
 
     public void testUpdateWithBasicValues2() throws Exception {
@@ -820,6 +826,7 @@ public class ResourceMergerTest extends BaseTestCase {
         File folder = Files.createTempDir();
 
         MergedResourceWriter writer = new MergedResourceWriter(folder, null /*aaptRunner*/);
+        writer.setWritePathMap(true);
         resourceMerger.mergeData(writer, false /*doCleanUp*/);
 
         return folder;

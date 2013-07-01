@@ -28,16 +28,22 @@ import com.android.resources.ResourceFolderType;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -50,8 +56,13 @@ import javax.xml.parsers.DocumentBuilderFactory;
 public class MergedResourceWriter extends MergeWriter<ResourceItem> {
     /** Filename to save the merged file as */
     public static final String FN_VALUES_XML = "values.xml";
+    /** Filename to save a file map in (which records the original origin of files) */
+    public static final String FN_PATH_MAP = ".pathmap.txt";
     /** Prefix in comments which mark the source locations for merge results */
     public static final String FILENAME_PREFIX = "From: ";
+
+    private boolean mWritePathMap;
+    private Map<File,File> mFileMap = Maps.newHashMap();
 
     @Nullable
     private final AaptRunner mAaptRunner;
@@ -107,24 +118,29 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
             // This is a single value file.
             // Only write it if the state is TOUCHED.
             if (item.isTouched()) {
+                ResourceFile resourceFile = item.getSource();
+                final File file = resourceFile.getFile();
+
+                final String filename = file.getName();
+                String folderName = item.getType().getName();
+                String qualifiers = resourceFile.getQualifiers();
+                if (!qualifiers.isEmpty()) {
+                    folderName = folderName + RES_QUALIFIER_SEP + qualifiers;
+                }
+
+                File typeFolder = new File(getRootFolder(), folderName);
+                try {
+                    createDir(typeFolder);
+                } catch (IOException e) {
+                    throw new ConsumerException(e);
+                }
+
+                final File outFile = new File(typeFolder, filename);
+                mFileMap.put(outFile, file);
+
                 getExecutor().execute(new Callable<Void>() {
                     @Override
                     public Void call() throws Exception {
-                        ResourceFile resourceFile = item.getSource();
-                        File file = resourceFile.getFile();
-
-                        String filename = file.getName();
-                        String folderName = item.getType().getName();
-                        String qualifiers = resourceFile.getQualifiers();
-                        if (!qualifiers.isEmpty()) {
-                            folderName = folderName + RES_QUALIFIER_SEP + qualifiers;
-                        }
-
-                        File typeFolder = new File(getRootFolder(), folderName);
-                        createDir(typeFolder);
-
-                        File outFile = new File(typeFolder, filename);
-
                         if (mAaptRunner != null && filename.endsWith(DOT_PNG)) {
                             // run aapt in single crunch mode on the original file to write the
                             // destination file.
@@ -249,8 +265,39 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
 
             removeOutFile(folderName, FN_VALUES_XML);
         }
+
+        // finally write the file map
+        if (mWritePathMap && !mFileMap.isEmpty()) {
+            writePathMap();
+        }
     }
 
+    public boolean getWritePathMap() {
+        return mWritePathMap;
+    }
+
+    public void setWritePathMap(boolean writePathMap) {
+        mWritePathMap = writePathMap;
+    }
+
+    private void writePathMap() throws ConsumerException {
+        try {
+            File file = new File(getRootFolder(), FN_PATH_MAP);
+            Writer writer = new BufferedWriter(new FileWriter(file));
+            writer.write("# File which maps from copied resource files to their source locations");
+            for (Map.Entry<File, File> entry : mFileMap.entrySet()) {
+                File from = entry.getKey();
+                File to = entry.getValue();
+                writer.write(from.isAbsolute() ? from.getPath() : from.getAbsolutePath());
+                writer.write(" ");
+                writer.write(to.isAbsolute() ? to.getPath() : to.getAbsolutePath());
+                writer.write("\n");
+            }
+            Closeables.close(writer, true);
+        } catch (Throwable t) {
+            throw new ConsumerException(t);
+        }
+    }
 
     /**
      * Removes a file that already exists in the out res folder. This has to be a non value file.
