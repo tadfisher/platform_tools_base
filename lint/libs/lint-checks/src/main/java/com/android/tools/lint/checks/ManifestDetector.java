@@ -65,6 +65,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.EnumSet;
 
 /**
  * Checks for issues in AndroidManifest files such as declaring elements in the
@@ -303,6 +304,20 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
             Severity.WARNING,
             IMPLEMENTATION).addMoreInfo(
             "http://developer.android.com/tools/publishing/preparing.html#publishing-configure"); //$NON-NLS-1$
+
+    public static final Issue ALLOW_CLEAR_USER_DATA = Issue.create(
+            "ProtectedAttributes", //$NON-NLS-1$
+            "Using system app attribute",
+            "Looks for attribute that are only usable by system apps",
+            "This attribute is usable only by applications included in the system image." +
+            " Third-party apps cannot use it.",
+
+            Category.CORRECTNESS,
+            5,
+            Severity.ERROR,
+            new Implementation(
+                    SystemPermissionsDetector.class,
+                    EnumSet.of(Scope.MANIFEST)));
 
     /** Malformed Device Admin */
     public static final Issue DEVICE_ADMIN = Issue.create(
@@ -611,6 +626,14 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
             if (!element.hasAttributeNS(ANDROID_URI, SdkConstants.ATTR_ICON)) {
                 context.report(APPLICATION_ICON, element, context.getLocation(element),
                             "Should explicitly set android:icon, there is no default", null);
+            }
+
+            if (element.hasAttributeNS(ANDROID_URI, SdkConstants.ATTR_ALLOW_CLEAR_USER_DATA)) {
+                Attr nameNode = element.getAttributeNodeNS(ANDROID_URI,
+                        SdkConstants.ATTR_ALLOW_CLEAR_USER_DATA);
+                context.report(ALLOW_CLEAR_USER_DATA, element, context.getLocation(nameNode),
+                            "This attribute is usable only by system apps."
+                            + " Third-party apps cannot use it.", null);
             }
         } else if (mSeenApplication) {
             if (context.isEnabled(ORDER)) {

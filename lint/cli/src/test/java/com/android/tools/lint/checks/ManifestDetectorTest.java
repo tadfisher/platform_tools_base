@@ -363,6 +363,27 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 "res/values/strings.xml"));
     }
 
+    public void testAllowClearUserData() throws Exception {
+        mEnabled = Collections.singleton(ManifestDetector.ALLOW_CLEAR_USER_DATA);
+        assertEquals(
+            "AndroidManifest.xml:11: Error: This attribute is usable only by system apps. Third-party apps cannot use it. [ProtectedAttributes]\n" +
+            "        android:allowClearUserData=\"true\"\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "1 errors, 0 warnings",
+            lintProject(
+                "protectedattributes.xml=>AndroidManifest.xml",
+                "res/values/strings.xml"));
+    }
+
+    public void testAllowClearUserDataOk() throws Exception {
+        mEnabled = Collections.singleton(ManifestDetector.ALLOW_CLEAR_USER_DATA);
+        assertEquals(
+            "No warnings.",
+            lintProject(
+                "AndroidManifest.xml",
+                "res/values/strings.xml"));
+    }
+
     public void testDeviceAdmin() throws Exception {
         mEnabled = Collections.singleton(ManifestDetector.DEVICE_ADMIN);
         assertEquals(""
