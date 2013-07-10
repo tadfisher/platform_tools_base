@@ -145,6 +145,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(ManifestDetector.ILLEGAL_REFERENCE);
         issues.add(ManifestDetector.DUPLICATE_USES_FEATURE);
         issues.add(ManifestDetector.APPLICATION_ICON);
+        issues.add(ManifestDetector.ALLOW_CLEAR_USER_DATA);
         issues.add(ManifestDetector.DEVICE_ADMIN);
         issues.add(ManifestTypoDetector.ISSUE);
         issues.add(SecurityDetector.EXPORTED_PROVIDER);
