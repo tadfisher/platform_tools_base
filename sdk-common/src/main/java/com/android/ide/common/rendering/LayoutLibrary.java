@@ -421,6 +421,15 @@ public class LayoutLibrary {
         return getViewIndexReflection(viewObject);
     }
 
+    /**
+     * Returns the character orientation of the locale.
+     * @param locale
+     * @return Returns 0 for LTR and 1 for RTL.
+     */
+    public int getLocaleCharacterOrientation(String locale) {
+        return supports(Capability.RTL) ? mBridge.getLocaleCharacterOrientation(locale) : 0;
+    }
+
     // ------ Implementation
 
     private LayoutLibrary(Bridge bridge, ILayoutBridge legacyBridge, ClassLoader classLoader,
