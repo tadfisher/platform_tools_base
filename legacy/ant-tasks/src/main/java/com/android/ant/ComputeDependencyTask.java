@@ -16,6 +16,8 @@
 
 package com.android.ant;
 
+import static com.android.SdkConstants.FN_RENDERSCRIPT_V8_JAR;
+
 import com.android.SdkConstants;
 import com.android.ant.DependencyHelper.JarProcessor;
 import com.android.io.FileWrapper;
@@ -62,6 +64,8 @@ public class ComputeDependencyTask extends GetLibraryPathTask {
     private String mLibraryRFilePathOut;
     private int mTargetApi = -1;
     private boolean mVerbose = false;
+    private boolean mRenderscriptSupportMode;
+    private String mBuildToolsFolder;
 
     public void setLibraryManifestFilePathOut(String libraryManifestFilePathOut) {
         mLibraryManifestFilePathOut = libraryManifestFilePathOut;
@@ -95,6 +99,14 @@ public class ComputeDependencyTask extends GetLibraryPathTask {
         mTargetApi = targetApi;
     }
 
+    public void setRenderscriptSupportMode(boolean renderscriptSupportMode) {
+        mRenderscriptSupportMode = renderscriptSupportMode;
+    }
+
+    public void setBuildToolsFolder(String folder) {
+        mBuildToolsFolder = folder;
+    }
+
     @Override
     public void execute() throws BuildException {
         if (mLibraryManifestFilePathOut == null) {
@@ -120,6 +132,9 @@ public class ComputeDependencyTask extends GetLibraryPathTask {
         }
         if (mTargetApi == -1) {
             throw new BuildException("Missing attribute targetApi");
+        }
+        if (mBuildToolsFolder == null) {
+            throw new BuildException("Missing attribute buildToolsFolder");
         }
 
         final Project antProject = getProject();
@@ -214,16 +229,24 @@ public class ComputeDependencyTask extends GetLibraryPathTask {
             }
         }
 
-        boolean hasLibraries = jars.size() > 0;
+        boolean hasLibraries = !jars.isEmpty();
+
+        System.out.println("\n------------------");
 
         if (mTargetApi <= 15) {
-            System.out.println("\n------------------");
             System.out.println("API<=15: Adding annotations.jar to the classpath.");
 
             jars.add(new File(sdkDir, SdkConstants.FD_TOOLS +
                     '/' + SdkConstants.FD_SUPPORT +
                     '/' + SdkConstants.FN_ANNOTATIONS_JAR));
 
+        }
+
+        if (mRenderscriptSupportMode) {
+            System.out.println(
+                    "Renderscript support mode: Adding " + FN_RENDERSCRIPT_V8_JAR + " to the classpath.");
+            jars.add(
+                    new File(mBuildToolsFolder, "lib" + File.pathSeparator + FN_RENDERSCRIPT_V8_JAR));
         }
 
         // even with no libraries, always setup these so that various tasks in Ant don't complain
