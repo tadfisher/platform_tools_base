@@ -211,7 +211,8 @@ public class SdkManager {
                 new File(platformToolsLib, SdkConstants.FN_DX_JAR),
                 new File(platformTools, SdkConstants.FN_RENDERSCRIPT),
                 new File(platformToolsRs, SdkConstants.FN_FRAMEWORK_INCLUDE),
-                new File(platformToolsRs, SdkConstants.FN_FRAMEWORK_INCLUDE_CLANG)
+                new File(platformToolsRs, SdkConstants.FN_FRAMEWORK_INCLUDE_CLANG),
+                new File(platformTools, SdkConstants.FN_BCC_COMPAT)
                 );
     }
 
