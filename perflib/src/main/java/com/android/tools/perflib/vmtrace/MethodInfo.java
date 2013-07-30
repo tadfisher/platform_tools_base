@@ -26,6 +26,8 @@ public class MethodInfo {
     public final String srcPath;
     public final int srcLineNumber;
 
+    private String mFullName;
+
     public MethodInfo(long id, String className, String methodName, String signature, String srcPath,
             int srcLineNumber) {
         this.id = id;
@@ -36,7 +38,10 @@ public class MethodInfo {
         this.srcLineNumber = srcLineNumber;
     }
 
-    public String getName() {
-        return String.format(Locale.US, "%s.%s: %s", className, methodName, signature);
+    public String getFullName() {
+        if (mFullName == null) {
+            mFullName = String.format(Locale.US, "%s.%s: %s", className, methodName, signature);
+        }
+        return mFullName;
     }
 }
