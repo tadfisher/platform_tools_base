@@ -69,6 +69,14 @@ public class Call {
         mDepth = depth;
     }
 
+    public int getEntryThreadTime() {
+        return mEntryThreadTime;
+    }
+
+    public int getExitThreadTime() {
+        return mExitThreadTime;
+    }
+
     /**
      * Formats this call and all its call hierarchy using the given {@link com.android.tools.perflib.vmtrace.Call.Formatter} to
      * print the details for each method.
