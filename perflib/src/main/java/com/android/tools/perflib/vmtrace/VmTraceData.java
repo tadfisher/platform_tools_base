@@ -17,13 +17,11 @@
 package com.android.tools.perflib.vmtrace;
 
 import com.android.utils.SparseArray;
-import com.google.common.base.Joiner;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The {@link VmTraceData} class stores all the information from a Dalvik method trace file.
@@ -52,6 +50,12 @@ public class VmTraceData {
     /** Map from thread id to list of call stacks invoked in that thread */
     private final SparseArray<List<Call>> mCalls;
 
+    /** Lowest method entry time seen across all threads */
+    private final int mLowestEntryTime;
+
+    /** Highest method exit time seen across all threads */
+    private final int mHighestExitTime;
+
     private VmTraceData(Builder b) {
         mVersion = b.mVersion;
         mDataFileOverflow = b.mDataFileOverflow;
@@ -61,6 +65,39 @@ public class VmTraceData {
         mThreads = b.mThreads;
         mMethods = b.mMethods;
         mCalls = b.mCalls;
+
+        mLowestEntryTime = findMinTime();
+        mHighestExitTime = findMaxTime();
+    }
+
+    private int findMinTime() {
+        int min = Integer.MAX_VALUE;
+        for (int i = 0; i < mCalls.size(); i++) {
+            List<Call> calls = mCalls.valueAt(i);
+            if (calls.size() > 0) {
+                Call c = calls.get(0);
+                if (c.getEntryThreadTime() < min) {
+                    min = c.getEntryThreadTime();
+                }
+            }
+        }
+
+        return min;
+    }
+
+    private int findMaxTime() {
+        int max = Integer.MIN_VALUE;
+        for (int i = 0; i < mCalls.size(); i++) {
+            List<Call> calls = mCalls.valueAt(i);
+            if (calls.size() > 0) {
+                Call c = calls.get(calls.size() - 1);
+                if (c.getExitThreadTime() > max) {
+                    max = c.getEntryThreadTime();
+                }
+            }
+        }
+
+        return max;
     }
 
     public int getVersion() {
@@ -73,6 +110,10 @@ public class VmTraceData {
 
     public ClockType getClockType() {
         return mClockType;
+    }
+
+    public TimeUnit getClockTimeUnit() {
+        return TimeUnit.MICROSECONDS;
     }
 
     public String getVm() {
@@ -97,6 +138,14 @@ public class VmTraceData {
 
     public List<Call> getCalls(int threadId) {
         return mCalls.get(threadId);
+    }
+
+    public int getLowestMethodEntryTime() {
+        return mLowestEntryTime;
+    }
+
+    public int getHighestMethodExitTime() {
+        return mHighestExitTime;
     }
 
     public static class Builder {
