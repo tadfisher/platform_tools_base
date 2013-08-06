@@ -162,6 +162,25 @@ public class VmTraceParserTest extends TestCase {
         assertEquals("AsyncTask #1.: ", methods.get(0).getValue().getFullName());
     }
 
+    public void testMethodStats2() throws IOException {
+        VmTraceData traceData = getVmTraceData("/play.dalvik.trace");
+        List<Map.Entry<Long, MethodInfo>> methods = new ArrayList<Map.Entry<Long, MethodInfo>>(
+                traceData.getMethods().entrySet());
+        Collections.sort(methods, new Comparator<Map.Entry<Long, MethodInfo>>() {
+            @Override
+            public int compare(Map.Entry<Long, MethodInfo> o1, Map.Entry<Long, MethodInfo> o2) {
+                long diff = o1.getValue().getInclusiveThreadTimes() - o2.getValue()
+                        .getInclusiveThreadTimes();
+                return Ints.saturatedCast(diff);
+            }
+        });
+
+        for (Map.Entry<Long, MethodInfo> xy : methods) {
+            MethodInfo info = xy.getValue();
+            System.out.printf("%8d %.2f %8s\n", info.getInclusiveThreadTimes(), info.getInclusiveThreadPercent(), info.getShortName());
+        }
+    }
+
     private int findThreadIdFromName(@NonNull String threadName,
             @NonNull SparseArray<String> threads) {
         for (int i = 0; i < threads.size(); i++) {
