@@ -16,6 +16,7 @@
 
 package com.android.tools.perflib.vmtrace;
 
+import com.android.annotations.Nullable;
 import com.android.utils.SparseArray;
 
 import java.util.HashMap;
@@ -92,6 +93,7 @@ public class VmTraceData {
         return mMethods.get(methodId);
     }
 
+    @Nullable
     public Call getTopLevelCall(int threadId) {
         return mCalls.get(threadId);
     }

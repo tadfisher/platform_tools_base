@@ -24,7 +24,9 @@ import com.google.common.primitives.UnsignedInts;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Stack;
 
 public class Call {
     private final long mMethodId;
@@ -43,9 +45,15 @@ public class Call {
 
     private final int mDepth;
 
+    /**
+     * Indicates whether the current call is recursive. A call is recursive if the same method
+     * is present in its backstack.
+     */
+    private final boolean mIsRecursive;
+
     private final List<Call> mCallees;
 
-    private Call(Builder builder) {
+    private Call(Builder builder, Stack<Long> backStack) {
         mMethodId = builder.mMethodId;
 
         mEntryThreadTime = builder.mEntryThreadTime;
@@ -53,15 +61,19 @@ public class Call {
         mExitThreadTime = builder.mExitThreadTime;
         mExitGlobalTime = builder.mExitGlobalTime;
 
-        mDepth = builder.mDepth;
+        mDepth = backStack.size();
+
+        mIsRecursive = backStack.contains(mMethodId);
+
         if (builder.mCallees == null) {
             mCallees = Collections.emptyList();
         } else {
+            backStack.push(mMethodId);
             List<Call> callees = new ArrayList<Call>(builder.mCallees.size());
             for (Builder b : builder.mCallees) {
-                b.setStackDepth(mDepth + 1);
-                callees.add(b.build());
+                callees.add(b.build(backStack));
             }
+            backStack.pop();
             mCallees = new ImmutableList.Builder<Call>().addAll(callees).build();
         }
 
@@ -87,6 +99,14 @@ public class Call {
 
     public int getDepth() {
         return mDepth;
+    }
+
+    /**
+     * Returns true if the call is recursive (another call of the same method id is present
+     * in its backstack)
+     */
+    public boolean isIsRecursive() {
+        return mIsRecursive;
     }
 
     public long getEntryThreadTime() {
@@ -121,8 +141,6 @@ public class Call {
         private int mExitGlobalTime;
         private int mExitThreadTime;
 
-        private int mDepth = 0;
-
         private List<Builder> mCallees = null;
 
         public Builder(long methodId) {
@@ -150,18 +168,9 @@ public class Call {
             mCallees.add(c);
         }
 
-
-        public void setStackDepth(int depth) {
-            mDepth = depth;
-        }
-
         @Nullable
         public List<Builder> getCallees() {
             return mCallees;
-        }
-
-        public Call build() {
-            return new Call(this);
         }
 
         public int getMethodEntryThreadTime() {
@@ -178,6 +187,10 @@ public class Call {
 
         public int getMethodExitGlobalTime() {
             return mExitGlobalTime;
+        }
+
+        public Call build(Stack<Long> backStack) {
+            return new Call(this, backStack);
         }
     }
 
@@ -224,6 +237,47 @@ public class Call {
 
             Call callee = callees.get(i);
             callee.printCallHierarchy(sb, formatter);
+        }
+    }
+
+    public Iterator<Call> getCallHierarchyIterator() {
+        return new CallHierarchyIterator(this);
+    }
+
+    /**
+     * An iterator for a call hierarchy. The iteration order matches the order in which the calls
+     * were invoked.
+     */
+    private static class CallHierarchyIterator implements Iterator<Call> {
+        private final Stack<Call> mCallStack = new Stack<Call>();
+
+        public CallHierarchyIterator(@NonNull Call top) {
+            mCallStack.push(top);
+        }
+
+        @Override
+        public boolean hasNext() {
+            return !mCallStack.isEmpty();
+        }
+
+        @Override
+        public Call next() {
+            if (mCallStack.isEmpty()) {
+                return null;
+            }
+
+            Call top = mCallStack.pop();
+
+            for (int i = top.getCallees().size() - 1; i >= 0; i--) {
+                mCallStack.push(top.getCallees().get(i));
+            }
+
+            return top;
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
         }
     }
 }

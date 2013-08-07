@@ -19,6 +19,7 @@ package com.android.tools.perflib.vmtrace;
 import com.android.annotations.NonNull;
 import com.android.utils.SparseArray;
 import com.google.common.base.Joiner;
+import com.google.common.primitives.Ints;
 
 import junit.framework.TestCase;
 
@@ -26,8 +27,12 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class VmTraceParserTest extends TestCase {
     public void testParseHeader() throws IOException {
@@ -110,6 +115,46 @@ public class VmTraceParserTest extends TestCase {
                 + "                                                                                                                                                                                                                                                                                          -> java/lang/Throwable.fillInStackTrace: ()Ljava/lang/Throwable; -> java/lang/Throwable.nativeFillInStackTrace: ()Ljava/lang/Object;\n"
                 + "                    -> android/os/Debug.stopMethodTracing: ()V -> dalvik/system/VMDebug.stopMethodTracing: ()V";
         testTrace("/exception.trace", "AsyncTask #1", expected);
+    }
+
+    public void testCallDurations() throws IOException {
+        validateCallDurations("/basic.trace", "AsyncTask #1");
+        validateCallDurations("/mismatched.trace", "AsyncTask #1");
+        validateCallDurations("/exception.trace", "AsyncTask #1");
+    }
+
+    private void validateCallDurations(String traceName, String threadName) throws IOException {
+        VmTraceData traceData = getVmTraceData(traceName);
+
+        int threadId = findThreadIdFromName(threadName, traceData.getThreads());
+        assertTrue(String.format("Thread %s was not found in the trace", threadName), threadId > 0);
+
+        Iterator<Call> it = traceData.getTopLevelCall(threadId).getCallHierarchyIterator();
+        while (it.hasNext()) {
+            Call c = it.next();
+
+            assertTrue(c.getEntryGlobalTime() <= c.getExitGlobalTime());
+            assertTrue(c.getEntryThreadTime() <= c.getExitThreadTime());
+        }
+    }
+
+    public void testMethodStats() throws IOException {
+        VmTraceData traceData = getVmTraceData("/play.dalvik.trace");
+        List<Map.Entry<Long, MethodInfo>> methods = new ArrayList<Map.Entry<Long, MethodInfo>>(
+                traceData.getMethods().entrySet());
+        Collections.sort(methods, new Comparator<Map.Entry<Long, MethodInfo>>() {
+            @Override
+            public int compare(Map.Entry<Long, MethodInfo> o1, Map.Entry<Long, MethodInfo> o2) {
+                long diff = o1.getValue().getInclusiveThreadTimes() - o2.getValue()
+                        .getInclusiveThreadTimes();
+                return Ints.saturatedCast(diff);
+            }
+        });
+
+        for (Map.Entry<Long, MethodInfo> m : methods) {
+            MethodInfo info = m.getValue();
+            System.out.printf("%10d %s\n", info.getInclusiveThreadTimes(), info.getFullName());
+        }
     }
 
     private int findThreadIdFromName(@NonNull String threadName,

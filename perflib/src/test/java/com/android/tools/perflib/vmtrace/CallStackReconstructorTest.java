@@ -18,6 +18,7 @@ package com.android.tools.perflib.vmtrace;
 
 import junit.framework.TestCase;
 
+import java.util.Iterator;
 import java.util.List;
 
 public class CallStackReconstructorTest extends TestCase {
@@ -159,5 +160,32 @@ public class CallStackReconstructorTest extends TestCase {
         Call call = callees.get(0);
         assertEquals(8, call.getInclusiveThreadTime());
         assertEquals(6, call.getExclusiveThreadTime());
+    }
+
+    public void testCallHierarchyIterator() {
+        CallStackReconstructor reconstructor = new CallStackReconstructor(0xff);
+
+        reconstructor.addTraceAction(0x1, TraceAction.METHOD_ENTER, 10, 10);
+        reconstructor.addTraceAction(0x2, TraceAction.METHOD_ENTER, 11, 11);
+        reconstructor.addTraceAction(0x3, TraceAction.METHOD_ENTER, 12, 12);
+        reconstructor.addTraceAction(0x3, TraceAction.METHOD_EXIT, 13, 13);
+        reconstructor.addTraceAction(0x3, TraceAction.METHOD_ENTER, 14, 14);
+        reconstructor.addTraceAction(0x3, TraceAction.METHOD_EXIT, 15, 15);
+        reconstructor.addTraceAction(0x2, TraceAction.METHOD_EXIT, 16, 16);
+        reconstructor.addTraceAction(0x5, TraceAction.METHOD_ENTER, 17, 17);
+        reconstructor.addTraceAction(0x5, TraceAction.METHOD_EXIT, 18, 18);
+        reconstructor.addTraceAction(0x1, TraceAction.METHOD_EXIT, 20, 20);
+        reconstructor.addTraceAction(0x6, TraceAction.METHOD_ENTER, 21, 21);
+        reconstructor.addTraceAction(0x6, TraceAction.METHOD_EXIT, 22, 22);
+
+
+        Call topLevel = reconstructor.getTopLevel();
+        for (Iterator<Call> it = topLevel.getCallHierarchyIterator(); it.hasNext();) {
+            Call c = it.next();
+            System.out.printf("%d: %s, entry: %d %d, exit: %d %d\n",
+                    c.getDepth(), c.getMethodId(),
+                    c.getEntryThreadTime(), c.getEntryGlobalTime(),
+                    c.getExitThreadTime(), c.getExitGlobalTime());
+        }
     }
 }
