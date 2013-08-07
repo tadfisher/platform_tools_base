@@ -17,6 +17,7 @@
 package com.android.tools.perflib.vmtrace;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
@@ -27,10 +28,11 @@ import java.util.List;
 public class Call {
     private final long mMethodId;
 
-    private final int mEntryThreadTime;
-    private final int mEntryGlobalTime;
-    private final int mExitGlobalTime;
-    private final int mExitThreadTime;
+    private final long mEntryThreadTime;
+    private final long mEntryGlobalTime;
+    private final long mExitGlobalTime;
+    private final long mExitThreadTime;
+    private final long mInclusiveThreadTimeInCallees;
 
     private final int mDepth;
 
@@ -55,6 +57,16 @@ public class Call {
             }
             mCallees = new ImmutableList.Builder<Call>().addAll(callees).build();
         }
+
+        mInclusiveThreadTimeInCallees = sumThreadTimes(mCallees);
+    }
+
+    private long sumThreadTimes(@NonNull List<Call> callees) {
+        long sum = 0;
+        for (Call c : callees) {
+            sum += c.getInclusiveThreadTime();
+        }
+        return sum;
     }
 
     public long getMethodId() {
@@ -70,12 +82,20 @@ public class Call {
         return mDepth;
     }
 
-    public int getEntryThreadTime() {
+    public long getEntryThreadTime() {
         return mEntryThreadTime;
     }
 
-    public int getExitThreadTime() {
+    public long getExitThreadTime() {
         return mExitThreadTime;
+    }
+
+    public long getInclusiveThreadTime() {
+        return mExitThreadTime - mEntryThreadTime;
+    }
+
+    public long getExclusiveThreadTime() {
+        return getInclusiveThreadTime() - mInclusiveThreadTimeInCallees;
     }
 
     public static class Builder {
@@ -115,12 +135,34 @@ public class Call {
             mCallees.add(c);
         }
 
+
         public void setStackDepth(int depth) {
             mDepth = depth;
         }
 
+        @Nullable
+        public List<Builder> getCallees() {
+            return mCallees;
+        }
+
         public Call build() {
             return new Call(this);
+        }
+
+        public int getMethodEntryThreadTime() {
+            return mEntryThreadTime;
+        }
+
+        public int getMethodEntryGlobalTime() {
+            return mEntryGlobalTime;
+        }
+
+        public int getMethodExitThreadTime() {
+            return mExitThreadTime;
+        }
+
+        public int getMethodExitGlobalTime() {
+            return mExitGlobalTime;
         }
     }
 
