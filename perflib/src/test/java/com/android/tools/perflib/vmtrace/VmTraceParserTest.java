@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -110,6 +111,20 @@ public class VmTraceParserTest extends TestCase {
                 + "                                                                                                                                                                                                                                                                                          -> java/lang/Throwable.fillInStackTrace: ()Ljava/lang/Throwable; -> java/lang/Throwable.nativeFillInStackTrace: ()Ljava/lang/Object;\n"
                 + "                    -> android/os/Debug.stopMethodTracing: ()V -> dalvik/system/VMDebug.stopMethodTracing: ()V";
         testTrace("/exception.trace", "AsyncTask #1", expected);
+    }
+
+    public void testCallHierarchy() throws IOException {
+        VmTraceData traceData = getVmTraceData("/play.dalvik.trace");
+        int threadId = findThreadIdFromName("main", traceData.getThreads());
+        Call call = traceData.getTopLevelCall(threadId);
+        for (Iterator<Call> it = call.getCallHierarchyIterator(); it.hasNext();) {
+            Call c = it.next();
+            System.out.printf("%d: %s, entry: %d %d, exit: %d %d\n",
+                    c.getDepth(), traceData.getMethod(c.getMethodId()).getShortName(),
+                    c.getEntryThreadTime(), c.getEntryGlobalTime(),
+                    c.getExitThreadTime(), c.getExitGlobalTime());
+        }
+
     }
 
     private int findThreadIdFromName(@NonNull String threadName,

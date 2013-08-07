@@ -24,7 +24,9 @@ import com.google.common.primitives.UnsignedInts;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Stack;
 
 public class Call {
     private final long mMethodId;
@@ -224,6 +226,47 @@ public class Call {
 
             Call callee = callees.get(i);
             callee.printCallHierarchy(sb, formatter);
+        }
+    }
+
+    public Iterator<Call> getCallHierarchyIterator() {
+        return new CallHierarchyIterator(this);
+    }
+
+    /**
+     * An iterator for a call hierarchy. The iteration order matches the order in which the calls
+     * were invoked.
+     */
+    private static class CallHierarchyIterator implements Iterator<Call> {
+        private final Stack<Call> mCallStack = new Stack<Call>();
+
+        public CallHierarchyIterator(@NonNull Call top) {
+            mCallStack.push(top);
+        }
+
+        @Override
+        public boolean hasNext() {
+            return !mCallStack.isEmpty();
+        }
+
+        @Override
+        public Call next() {
+            if (mCallStack.isEmpty()) {
+                return null;
+            }
+
+            Call top = mCallStack.pop();
+
+            for (int i = top.getCallees().size() - 1; i >= 0; i--) {
+                mCallStack.push(top.getCallees().get(i));
+            }
+
+            return top;
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
         }
     }
 }
