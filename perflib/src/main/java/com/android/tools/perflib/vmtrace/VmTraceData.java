@@ -22,6 +22,7 @@ import com.android.utils.SparseArray;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The {@link VmTraceData} class stores all the information from a Dalvik method trace file.
@@ -79,6 +80,10 @@ public class VmTraceData {
 
     public Map<String, String> getTraceProperties() {
         return mTraceProperties;
+    }
+
+    public TimeUnit getTimeUnits() {
+        return TimeUnit.MICROSECONDS;
     }
 
     public SparseArray<String> getThreads() {
