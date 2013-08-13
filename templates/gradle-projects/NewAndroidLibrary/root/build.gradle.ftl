@@ -37,4 +37,7 @@ dependencies {
 <#if appCompatLibraryUrl??>
     compile '${appCompatLibraryUrl}'
 </#if>
+<#if gridLayoutLibraryUrl??>
+    compile '${gridLayoutLibraryUrl}'
+</#if>
 }
