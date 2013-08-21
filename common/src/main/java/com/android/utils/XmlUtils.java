@@ -429,4 +429,18 @@ public class XmlUtils {
             return Integer.toString((int) value);
         }
     }
+
+    // Note: The order of elements matters here - we first replace all ampersands with &amp;
+    // since all replacements have the ampersand character themselves
+    private static final String[] XML_KEYWORD_REPLACEMENTS = {"&amp;", "&lt;", "&gt;", "&#39;", "&quot;"};
+    private static final String[] XML_KEYWORDS = {"&", "<", ">", "'", "\""};
+
+    @NonNull
+    public static String escapeXml(@NonNull String text) {
+        for (int i = 0; i < XML_KEYWORDS.length; i++) {
+            text = text.replace(XML_KEYWORDS[i], XML_KEYWORD_REPLACEMENTS[i]);
+        }
+
+        return text;
+    }
 }

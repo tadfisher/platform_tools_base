@@ -20,11 +20,13 @@ import com.android.annotations.NonNull;
 import com.android.tools.perflib.vmtrace.Call;
 import com.android.tools.perflib.vmtrace.MethodInfo;
 import com.android.tools.perflib.vmtrace.VmTraceData;
+import com.android.utils.XmlUtils;
 
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.util.Iterator;
+import java.util.concurrent.TimeUnit;
 
 /** Renders the call hierarchy rooted at a given call that is part of the trace. */
 public class CallHierarchyRenderer {
@@ -122,11 +124,50 @@ public class CallHierarchyRenderer {
         layoutBounds.height = PER_LEVEL_HEIGHT_PX - 2 * PADDING;
     }
 
+    /** Get the tooltip corresponding to given location (in item coordinates). */
+    public String getToolTipFor(int x, int y) {
+        Iterator<Call> it = mTopCall.getCallHierarchyIterator();
+        while (it.hasNext()) {
+            Call c = it.next();
+
+            fillLayoutBounds(c, mLayout);
+            if (mLayout.contains(x, y)) {
+                return formatToolTip(c);
+            }
+        }
+        return null;
+    }
+
+    private String formatToolTip(Call c) {
+        StringBuilder sb = new StringBuilder(100);
+        sb.append("<html>");
+
+        sb.append("<b>"); sb.append(XmlUtils.escapeXml(getName(c))); sb.append("</b><br>");
+
+        sb.append("<p>");
+        sb.append("Entry Time: ");
+        sb.append(TimeUtils.humanizeTime(c.getEntryGlobalTime(),
+                c.getExitGlobalTime() - c.getEntryGlobalTime(),
+                TimeUnit.MICROSECONDS));
+        sb.append("<br>");
+        sb.append("Exit Time: ");
+        sb.append(TimeUtils.humanizeTime(c.getExitGlobalTime(),
+                c.getExitGlobalTime() - c.getEntryGlobalTime(),
+                TimeUnit.MICROSECONDS));
+
+        sb.append("</html>");
+
+        return sb.toString();
+    }
+
     @NonNull
     private String getName(@NonNull Call c) {
+        return getMethodInfo(c).getShortName();
+    }
+
+    private MethodInfo getMethodInfo(@NonNull Call c) {
         long methodId = c.getMethodId();
-        MethodInfo info = mTraceData.getMethod(methodId);
-        return info.getShortName();
+        return mTraceData.getMethod(methodId);
     }
 
     /**
