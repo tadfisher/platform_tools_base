@@ -55,7 +55,7 @@ public class TraceViewCanvas extends JComponent {
     private AffineTransform mTransform;
 
     /** Inverse of {@link #mViewPortTransform}. */
-    private AffineTransform mViewPortInverseTransform;
+    private AffineTransform mInverseTransform;
 
     private VmTraceData mTraceData;
 
@@ -111,7 +111,7 @@ public class TraceViewCanvas extends JComponent {
 
         // Scale so that the full trace occupies 90% of the screen width.
         double width = getWidth();
-        double sx = (width - width/10.0f) / (end - start);
+        double sx = Math.max((width - width / 10.0f) / (end - start), 0.2f);
 
         // Initialize display so that the full trace is visible and takes up most of the view.
         mZoomPanInteractor.setToScaleX(sx, 1); // make everything visible
@@ -130,10 +130,10 @@ public class TraceViewCanvas extends JComponent {
         return -1;
     }
 
-    @Override
-    public Dimension getPreferredSize() {
-        return new Dimension(1000, 800);
-    }
+    //@Override
+    //public Dimension getPreferredSize() {
+    //    return new Dimension(1000, 800);
+    //}
 
     @Override
     protected void paintComponent(Graphics g) {
@@ -181,7 +181,7 @@ public class TraceViewCanvas extends JComponent {
     @Override
     public String getToolTipText(MouseEvent event) {
         mTmpPoint.setLocation(event.getPoint());
-        mViewPortInverseTransform.transform(mTmpPoint, mTmpPoint);
+        mInverseTransform.transform(mTmpPoint, mTmpPoint);
         return mCallHierarchyRenderer.getToolTipFor(mTmpPoint.x, mTmpPoint.y);
     }
 
@@ -191,21 +191,22 @@ public class TraceViewCanvas extends JComponent {
     }
 
     private void updateViewPortTransform(AffineTransform tx) {
+        Thread.dumpStack();
         mViewPortTransform = new AffineTransform(tx);
-
-        try {
-            mViewPortInverseTransform = mViewPortTransform.createInverse();
-        } catch (NoninvertibleTransformException e) {
-            // This can't occur since we just do scale or pan, both of which are invertible
-            mViewPortInverseTransform = new AffineTransform();
-        }
-
         updateTransform();
     }
 
     private void updateTransform() {
         mTransform = new AffineTransform(mScreenTransform);
         mTransform.concatenate(mViewPortTransform);
-        repaint();
+
+      try {
+        mInverseTransform = mViewPortTransform.createInverse();
+      } catch (NoninvertibleTransformException e) {
+        // This can't occur since we just do scale or pan, both of which are invertible
+        mInverseTransform = new AffineTransform();
+      }
+
+      repaint();
     }
 }

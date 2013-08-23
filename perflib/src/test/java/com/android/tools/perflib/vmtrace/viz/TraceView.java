@@ -83,36 +83,38 @@ public class TraceView {
 
     public static class TraceViewPanel extends JPanel {
         private final TraceViewCanvas mTraceViewCanvas;
-        private final JComboBox mThreadCombo;
+//        private final JComboBox mThreadCombo;
 
         public TraceViewPanel() {
-            super(new GridBagLayout());
-
-            GridBagConstraints c = new GridBagConstraints();
-
-            c.gridx = 0;
-            c.gridy = 0;
-            mThreadCombo = new JComboBox();
-            mThreadCombo.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    assert mTraceViewCanvas != null;
-                    mTraceViewCanvas.displayThread((String)mThreadCombo.getSelectedItem());
-                }
-            });
-            add(mThreadCombo, c);
-
-            c.gridx = 1;
-            c.gridy = 0;
-            c.fill = GridBagConstraints.HORIZONTAL;
-            add(new JLabel());
+            super(new BorderLayout());
+//            super(new GridBagLayout());
+//
+//            GridBagConstraints c = new GridBagConstraints();
+//
+//            c.gridx = 0;
+//            c.gridy = 0;
+//            mThreadCombo = new JComboBox();
+//            mThreadCombo.addActionListener(new ActionListener() {
+//                @Override
+//                public void actionPerformed(ActionEvent e) {
+//                    assert mTraceViewCanvas != null;
+//                    mTraceViewCanvas.displayThread((String)mThreadCombo.getSelectedItem());
+//                }
+//            });
+//            add(mThreadCombo, c);
+//
+//            c.gridx = 1;
+//            c.gridy = 0;
+//            c.fill = GridBagConstraints.HORIZONTAL;
+//            add(new JLabel());
 
             mTraceViewCanvas = new TraceViewCanvas();
-            c.gridx = 0;
-            c.gridy = 1;
-            c.gridwidth = 2;
-            c.fill = GridBagConstraints.HORIZONTAL;
-            add(mTraceViewCanvas, c);
+//            c.gridx = 0;
+//            c.gridy = 1;
+//            c.gridwidth = 2;
+//            c.fill = GridBagConstraints.HORIZONTAL;
+//            add(mTraceViewCanvas, c);
+            add(mTraceViewCanvas);
         }
 
         public void setTrace(VmTraceData traceData) {
@@ -125,8 +127,8 @@ public class TraceView {
                 }
             }
 
-            mThreadCombo.setModel(new DefaultComboBoxModel(threadNames.toArray()));
-            mThreadCombo.setEnabled(true);
+//            mThreadCombo.setModel(new DefaultComboBoxModel(threadNames.toArray()));
+//            mThreadCombo.setEnabled(true);
 
             mTraceViewCanvas.setTrace(traceData, DEFAULT_THREAD_NAME);
         }
