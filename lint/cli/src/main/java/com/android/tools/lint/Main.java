@@ -328,7 +328,7 @@ public class Main {
                         System.exit(ERRNO_EXISTS);
                     }
                 }
-                if (output.canWrite()) {
+                if (output.getParentFile() != null && !output.getParentFile().canWrite()) {
                     System.err.println("Cannot write XML output file " + output);
                     System.exit(ERRNO_EXISTS);
                 }
@@ -359,8 +359,8 @@ public class Main {
                             System.exit(ERRNO_EXISTS);
                         }
                     }
-                    if (output.canWrite()) {
-                        System.err.println("Cannot write XML output file " + output);
+                    if (output.getParentFile() != null && !output.getParentFile().canWrite()) {
+                        System.err.println("Cannot write text output file " + output);
                         System.exit(ERRNO_EXISTS);
                     }
                     try {
