@@ -28,6 +28,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This represents a single client, usually a Dalvik VM process.
@@ -247,30 +248,61 @@ public class Client {
         }
     }
 
+    /**
+     * Toggles method profiling state.
+     * @deprecated Use {@link #startMethodProfiling()}, {@link #stopMethodProfiling()},
+     * {@link #startSamplingProfiler(int, java.util.concurrent.TimeUnit)} or
+     * {@link #stopMethodSampling()} instead.
+     */
     public void toggleMethodProfiling() {
-        boolean canStream = mClientData.hasFeature(ClientData.FEATURE_PROFILING_STREAMING);
         try {
-            if (mClientData.getMethodProfilingStatus() == MethodProfilingStatus.ON) {
-                if (canStream) {
-                    HandleProfiling.sendMPSE(this);
-                } else {
-                    HandleProfiling.sendMPRE(this);
-                }
-            } else {
-                int bufferSize = DdmPreferences.getProfilerBufferSizeMb() * 1024 * 1024;
-                if (canStream) {
-                    HandleProfiling.sendMPSS(this, bufferSize, 0 /*flags*/);
-                } else {
-                    String file = "/sdcard/" +
-                        mClientData.getClientDescription().replaceAll("\\:.*", "") +
-                        DdmConstants.DOT_TRACE;
-                    HandleProfiling.sendMPRS(this, file, bufferSize, 0 /*flags*/);
-                }
+            switch (mClientData.getMethodProfilingStatus()) {
+                case TRACER_ON:
+                    stopMethodProfiling();
+                    break;
+                case SAMPLER_ON:
+                    stopMethodSampling();
+                    break;
+                case OFF:
+                    startMethodProfiling();
+                    break;
             }
         } catch (IOException e) {
             Log.w("ddms", "Toggle method profiling failed");
             // ignore
         }
+    }
+
+    public void stopMethodProfiling() throws IOException {
+        boolean canStream = mClientData.hasFeature(ClientData.FEATURE_PROFILING_STREAMING);
+
+        if (canStream) {
+            HandleProfiling.sendMPSE(this);
+        } else {
+            HandleProfiling.sendMPRE(this);
+        }
+    }
+
+    public void stopMethodSampling() throws IOException {
+        HandleProfiling.sendSPSE(this);
+    }
+
+    public void startMethodProfiling() throws IOException {
+        boolean canStream = mClientData.hasFeature(ClientData.FEATURE_PROFILING_STREAMING);
+        int bufferSize = DdmPreferences.getProfilerBufferSizeMb() * 1024 * 1024;
+        if (canStream) {
+            HandleProfiling.sendMPSS(this, bufferSize, 0 /*flags*/);
+        } else {
+            String file = "/sdcard/" +
+                    mClientData.getClientDescription().replaceAll("\\:.*", "") +
+                    DdmConstants.DOT_TRACE;
+            HandleProfiling.sendMPRS(this, file, bufferSize, 0 /*flags*/);
+        }
+    }
+
+    public void startSamplingProfiler(int samplingInterval, TimeUnit timeUnit) throws IOException {
+        int bufferSize = DdmPreferences.getProfilerBufferSizeMb() * 1024 * 1024;
+        HandleProfiling.sendSPSS(this, bufferSize, samplingInterval, timeUnit);
     }
 
     public boolean startOpenGlTracing() {
