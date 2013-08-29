@@ -20,9 +20,9 @@ import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.fail;
 
 import com.android.tools.perflib.vmtrace.Call;
+import com.android.tools.perflib.vmtrace.ThreadInfo;
 import com.android.tools.perflib.vmtrace.VmTraceData;
 import com.android.tools.perflib.vmtrace.VmTraceParser;
-import com.android.utils.SparseArray;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -39,8 +39,8 @@ import javax.swing.*;
  * and displays the stackchart view it within a JFrame.
  */
 public class TraceView {
-    private static final String TRACE_FILE_NAME = "/play.dalvik.trace";
-    private static final String DEFAULT_THREAD_NAME = "main";
+    private static final String TRACE_FILE_NAME = "/lud.trace";
+    private static final String DEFAULT_THREAD_NAME = "AsyncTask #1";
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
@@ -119,12 +119,12 @@ public class TraceView {
         }
 
         public void setTrace(VmTraceData traceData) {
-            SparseArray<String> threads = traceData.getThreads();
+            Collection<ThreadInfo> threads = traceData.getThreads();
             java.util.List<String> threadNames = new ArrayList<String>(threads.size());
-            for (int i = 0; i < threads.size(); i++) {
-                Call topLevelCall = traceData.getTopLevelCall(threads.keyAt(i));
+            for (ThreadInfo thread : threads) {
+                Call topLevelCall = thread.getTopLevelCall();
                 if (topLevelCall != null) {
-                    threadNames.add(threads.valueAt(i));
+                    threadNames.add(thread.getName());
                 }
             }
 

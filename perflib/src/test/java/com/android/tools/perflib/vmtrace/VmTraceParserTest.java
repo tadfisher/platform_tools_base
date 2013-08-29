@@ -18,7 +18,6 @@ package com.android.tools.perflib.vmtrace;
 
 import com.android.annotations.NonNull;
 import com.android.utils.SparseArray;
-import com.google.common.base.Joiner;
 import com.google.common.primitives.Ints;
 
 import junit.framework.TestCase;
@@ -27,12 +26,12 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class VmTraceParserTest extends TestCase {
     public void testParseHeader() throws IOException {
@@ -46,10 +45,10 @@ public class VmTraceParserTest extends TestCase {
         assertEquals(VmTraceData.ClockType.DUAL, traceData.getClockType());
         assertEquals("dalvik", traceData.getVm());
 
-        SparseArray<String> threads = traceData.getThreads();
+        Collection<ThreadInfo> threads = traceData.getThreads();
         assertEquals(2, threads.size());
-        assertEquals("main", threads.get(1));
-        assertEquals("AsyncTask #1", threads.get(11));
+        assertEquals(1, traceData.getThread("main").getId());
+        assertEquals(11, traceData.getThread("AsyncTask #1").getId());
 
         Map<Long, MethodInfo> methods = traceData.getMethods();
         assertEquals(4, methods.size());
@@ -84,10 +83,10 @@ public class VmTraceParserTest extends TestCase {
     private void testTrace(String traceName, String threadName, String expectedCallSequence) throws IOException {
         VmTraceData traceData = getVmTraceData(traceName);
 
-        int threadId = findThreadIdFromName(threadName, traceData.getThreads());
-        assertTrue(String.format("Thread %s was not found in the trace", threadName), threadId > 0);
+        ThreadInfo thread = traceData.getThread(threadName);
+        assertNotNull(String.format("Thread %s was not found in the trace", threadName), thread);
 
-        Call call = traceData.getTopLevelCall(threadId);
+        Call call = thread.getTopLevelCall();
         assertNotNull(call);
         String actual = call.format(new CallFormatter(traceData.getMethods()));
         assertEquals(expectedCallSequence, actual);
@@ -127,10 +126,10 @@ public class VmTraceParserTest extends TestCase {
     private void validateCallDurations(String traceName, String threadName) throws IOException {
         VmTraceData traceData = getVmTraceData(traceName);
 
-        int threadId = findThreadIdFromName(threadName, traceData.getThreads());
-        assertTrue(String.format("Thread %s was not found in the trace", threadName), threadId > 0);
+        ThreadInfo thread = traceData.getThread(threadName);
+        assertNotNull(String.format("Thread %s was not found in the trace", threadName), thread);
 
-        Call topLevelCall = traceData.getTopLevelCall(threadId);
+        Call topLevelCall = thread.getTopLevelCall();
         assertNotNull(topLevelCall);
         Iterator<Call> it = topLevelCall.getCallHierarchyIterator();
         while (it.hasNext()) {
@@ -143,13 +142,14 @@ public class VmTraceParserTest extends TestCase {
 
     public void testMethodStats() throws IOException {
         VmTraceData traceData = getVmTraceData("/basic.trace");
+        final String threadName = "AsyncTask #1";
         List<Map.Entry<Long, MethodInfo>> methods = new ArrayList<Map.Entry<Long, MethodInfo>>(
                 traceData.getMethods().entrySet());
         Collections.sort(methods, new Comparator<Map.Entry<Long, MethodInfo>>() {
             @Override
             public int compare(Map.Entry<Long, MethodInfo> o1, Map.Entry<Long, MethodInfo> o2) {
-                long diff = o2.getValue().getInclusiveThreadTimes() - o1.getValue()
-                        .getInclusiveThreadTimes();
+                long diff = o2.getValue().getInclusiveThreadTime(threadName) - o1.getValue()
+                        .getInclusiveThreadTime(threadName);
                 return Ints.saturatedCast(diff);
             }
         });

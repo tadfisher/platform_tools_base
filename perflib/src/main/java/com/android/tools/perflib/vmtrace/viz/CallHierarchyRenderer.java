@@ -39,6 +39,7 @@ public class CallHierarchyRenderer {
     private static final int TEXT_LEFT_PADDING = 5;
 
     private final VmTraceData mTraceData;
+    private final String mThreadName;
     private final Call mTopCall;
     private final int mYOffset;
 
@@ -48,9 +49,11 @@ public class CallHierarchyRenderer {
 
     private Font myFont;
 
-    public CallHierarchyRenderer(@NonNull VmTraceData vmTraceData, @NonNull Call c, int yOffset) {
+    public CallHierarchyRenderer(@NonNull VmTraceData vmTraceData, @NonNull String threadName,
+            int yOffset) {
         mTraceData = vmTraceData;
-        mTopCall = c;
+        mThreadName = threadName;
+        mTopCall = vmTraceData.getThread(threadName).getTopLevelCall();
         mYOffset = yOffset;
     }
 
@@ -168,12 +171,19 @@ public class CallHierarchyRenderer {
         MethodInfo info = getMethodInfo(c);
         htmlBuilder.add("Inclusive Time (across all invocations): ");
         htmlBuilder.beginBold();
-        htmlBuilder.add(PERCENTAGE_FORMATTER.format(info.getInclusiveThreadPercent()));
+        htmlBuilder.add(PERCENTAGE_FORMATTER.format(computeThreadPercentage(info)));
         htmlBuilder.add("%");
         htmlBuilder.endBold();
 
         htmlBuilder.closeHtmlBody();
         return htmlBuilder.getHtml();
+    }
+
+    private double computeThreadPercentage(MethodInfo info) {
+        long methodTime = info.getExclusiveThreadTime(mThreadName);
+        long topLevelTime = getMethodInfo(mTopCall).getInclusiveThreadTime(mThreadName);
+
+        return (double)methodTime/topLevelTime * 100;
     }
 
     @NonNull
@@ -192,7 +202,7 @@ public class CallHierarchyRenderer {
      */
     private Color getFillColor(Call c) {
         MethodInfo info = mTraceData.getMethod(c.getMethodId());
-        int percent = quantize(info.getInclusiveThreadPercent());
+        int percent = quantize(computeThreadPercentage(info));
         return getFill(percent);
     }
 
@@ -203,7 +213,7 @@ public class CallHierarchyRenderer {
      */
     private Color getFontColor(Call c) {
         MethodInfo info = mTraceData.getMethod(c.getMethodId());
-        int percent = quantize(info.getInclusiveThreadPercent());
+        int percent = quantize(computeThreadPercentage(info));
         return getFontColor(percent);
     }
 
@@ -236,7 +246,7 @@ public class CallHierarchyRenderer {
         return  i > 6 ? Color.WHITE : Color.BLACK;
     }
 
-    private int quantize(float inclusiveThreadPercent) {
+    private int quantize(double inclusiveThreadPercent) {
         return ((int)(inclusiveThreadPercent + 9) / 10) * 10;
     }
 }

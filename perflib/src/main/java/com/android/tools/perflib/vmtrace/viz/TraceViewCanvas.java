@@ -18,6 +18,7 @@ package com.android.tools.perflib.vmtrace.viz;
 
 import com.android.annotations.NonNull;
 import com.android.tools.perflib.vmtrace.Call;
+import com.android.tools.perflib.vmtrace.ThreadInfo;
 import com.android.tools.perflib.vmtrace.VmTraceData;
 import com.android.utils.SparseArray;
 
@@ -100,11 +101,12 @@ public class TraceViewCanvas extends JComponent {
         mCallHierarchyRenderer = null;
         mTimeScaleRenderer = null;
 
-        int threadId = findThreadIdFromName(threadName);
-        if (threadId < 0) {
+        ThreadInfo thread = mTraceData.getThread(threadName);
+        if (thread == null) {
             return;
         }
-        mTopLevelCall = mTraceData.getTopLevelCall(threadId);
+
+        mTopLevelCall = thread.getTopLevelCall();
         if (mTopLevelCall == null) {
             return;
         }
@@ -112,7 +114,7 @@ public class TraceViewCanvas extends JComponent {
         mTimeScaleRenderer = new TimeScaleRenderer(mTopLevelCall.getEntryGlobalTime(),
                 mTraceData.getTimeUnits());
         int yOffset = mTimeScaleRenderer.getLayoutHeight();
-        mCallHierarchyRenderer = new CallHierarchyRenderer(mTraceData, mTopLevelCall, yOffset);
+        mCallHierarchyRenderer = new CallHierarchyRenderer(mTraceData, threadName, yOffset);
 
         zoomFit();
     }
@@ -139,17 +141,6 @@ public class TraceViewCanvas extends JComponent {
         mZoomPanInteractor.setToScaleX(sx, 1); // make everything visible
         mZoomPanInteractor.translateBy(50, 0); // shift over the start of the trace
         updateViewPortTransform(mZoomPanInteractor.getTransform());
-    }
-
-    private int findThreadIdFromName(String threadName) {
-        SparseArray<String> threads = mTraceData.getThreads();
-        for (int i = 0; i < threads.size(); i++) {
-            if (threads.valueAt(i).equalsIgnoreCase(threadName)) {
-                return threads.keyAt(i);
-            }
-        }
-
-        return -1;
     }
 
     @Override
