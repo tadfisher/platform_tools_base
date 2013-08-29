@@ -16,7 +16,10 @@
 
 package com.android.tools.perflib.vmtrace;
 
+import com.google.common.collect.Maps;
+
 import java.util.Locale;
+import java.util.Map;
 
 public class MethodInfo {
     public final long id;
@@ -26,22 +29,26 @@ public class MethodInfo {
     public final String srcPath;
     public final int srcLineNumber;
 
-    private long mInclusiveThreadTimes;
-    private long mExclusiveThreadTimes;
+    /** Method stats across all threads. */
+    private final MethodStats mStats;
 
-    private float mInclusiveThreadPercent;
+    /** Method stats per thread. */
+    private final Map<String,MethodStats> mPerThreadStats;
 
     private String mFullName;
     private String mShortName;
 
-    public MethodInfo(long id, String className, String methodName, String signature, String srcPath,
-            int srcLineNumber) {
+    public MethodInfo(long id, String className, String methodName, String signature,
+            String srcPath, int srcLineNumber) {
         this.id = id;
         this.className = className;
         this.methodName = methodName;
         this.signature = signature;
         this.srcPath = srcPath;
         this.srcLineNumber = srcLineNumber;
+
+        mStats = new MethodStats();
+        mPerThreadStats = Maps.newHashMapWithExpectedSize(20);
     }
 
     public String getFullName() {
@@ -67,27 +74,42 @@ public class MethodInfo {
         return cn;
     }
 
-    public long getExclusiveThreadTimes() {
-        return mExclusiveThreadTimes;
+    public long getExclusiveThreadTime(String thread) {
+        MethodStats stats = mPerThreadStats.get(thread);
+        return stats != null ? stats.exclusiveThreadTime : 0;
     }
 
-    public void addExclusiveThreadTimes(long time) {
-        mExclusiveThreadTimes += time;
+    public long getInclusiveThreadTime(String thread) {
+        MethodStats stats = mPerThreadStats.get(thread);
+        return stats != null ? stats.inclusiveThreadTime : 0;
     }
 
-    public long getInclusiveThreadTimes() {
-        return mInclusiveThreadTimes;
+    public void addExclusiveThreadTimes(long time, String thread) {
+        mStats.exclusiveThreadTime += time;
+
+        MethodStats stats = mPerThreadStats.get(thread);
+        if (stats == null) {
+            stats = new MethodStats();
+            mPerThreadStats.put(thread, stats);
+        }
+
+        stats.exclusiveThreadTime += time;
     }
 
-    public void addInclusiveThreadTimes(long time) {
-        mInclusiveThreadTimes += time;
+    public void addInclusiveThreadTimes(long time, String thread) {
+        mStats.inclusiveThreadTime += time;
+
+        MethodStats stats = mPerThreadStats.get(thread);
+        if (stats == null) {
+            stats = new MethodStats();
+            mPerThreadStats.put(thread, stats);
+        }
+
+        stats.inclusiveThreadTime += time;
     }
 
-    public void setInclusiveThreadPercent(float percent) {
-        mInclusiveThreadPercent = percent;
-    }
-
-    public float getInclusiveThreadPercent() {
-        return mInclusiveThreadPercent;
+    private static class MethodStats {
+        public long inclusiveThreadTime;
+        public long exclusiveThreadTime;
     }
 }

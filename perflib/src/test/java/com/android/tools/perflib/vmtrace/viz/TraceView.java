@@ -20,9 +20,9 @@ import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.fail;
 
 import com.android.tools.perflib.vmtrace.Call;
+import com.android.tools.perflib.vmtrace.ThreadInfo;
 import com.android.tools.perflib.vmtrace.VmTraceData;
 import com.android.tools.perflib.vmtrace.VmTraceParser;
-import com.android.utils.SparseArray;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -60,7 +60,7 @@ public class TraceView {
         frame.add(traceViewPanel, BorderLayout.CENTER);
         frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         frame.pack();
-        frame.setSize(800, 600);
+        frame.setSize(1200, 800);
         frame.setVisible(true);
 
         traceViewPanel.setTrace(traceData);
@@ -100,7 +100,7 @@ public class TraceView {
         }
 
         private JPanel createControlPanel() {
-            JPanel p = new JPanel();
+            JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
             JLabel l = new JLabel("Thread: ");
             p.add(l);
@@ -119,19 +119,27 @@ public class TraceView {
         }
 
         public void setTrace(VmTraceData traceData) {
-            SparseArray<String> threads = traceData.getThreads();
+            Collection<ThreadInfo> threads = traceData.getThreads();
             java.util.List<String> threadNames = new ArrayList<String>(threads.size());
-            for (int i = 0; i < threads.size(); i++) {
-                Call topLevelCall = traceData.getTopLevelCall(threads.keyAt(i));
+            for (ThreadInfo thread : threads) {
+                Call topLevelCall = thread.getTopLevelCall();
                 if (topLevelCall != null) {
-                    threadNames.add(threads.valueAt(i));
+                    threadNames.add(thread.getName());
                 }
+            }
+
+            String thread = DEFAULT_THREAD_NAME;
+            int index = threadNames.indexOf(thread);
+            if (index == -1) {
+                index = 0;
+                thread = threadNames.get(0);
             }
 
             mThreadCombo.setModel(new DefaultComboBoxModel(threadNames.toArray()));
             mThreadCombo.setEnabled(true);
 
-            mTraceViewCanvas.setTrace(traceData, DEFAULT_THREAD_NAME);
+            mTraceViewCanvas.setTrace(traceData, thread);
+            mThreadCombo.setSelectedIndex(index);
         }
     }
 }

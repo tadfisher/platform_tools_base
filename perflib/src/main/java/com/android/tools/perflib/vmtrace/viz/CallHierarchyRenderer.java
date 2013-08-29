@@ -39,6 +39,7 @@ public class CallHierarchyRenderer {
     private static final int TEXT_LEFT_PADDING = 5;
 
     private final VmTraceData mTraceData;
+    private final String mThreadName;
     private final Call mTopCall;
     private final int mYOffset;
 
@@ -46,11 +47,15 @@ public class CallHierarchyRenderer {
     private final Point2D.Float mSrc = new Point2D.Float();
     private final Point2D.Float mDst = new Point2D.Float();
 
-    private Font myFont;
+    private boolean mUseInclusiveTimeForColorAssignment;
 
-    public CallHierarchyRenderer(@NonNull VmTraceData vmTraceData, @NonNull Call c, int yOffset) {
+    private Font mFont;
+
+    public CallHierarchyRenderer(@NonNull VmTraceData vmTraceData, @NonNull String threadName,
+            int yOffset) {
         mTraceData = vmTraceData;
-        mTopCall = c;
+        mThreadName = threadName;
+        mTopCall = vmTraceData.getThread(threadName).getTopLevelCall();
         mYOffset = yOffset;
     }
 
@@ -91,10 +96,10 @@ public class CallHierarchyRenderer {
     }
 
     private void drawString(Graphics2D g, String name, Rectangle bounds, Color fontColor) {
-        if (myFont == null) {
-            myFont = g.getFont().deriveFont(8.0f);
+        if (mFont == null) {
+            mFont = g.getFont().deriveFont(8.0f);
         }
-        g.setFont(myFont);
+        g.setFont(mFont);
         g.setColor(fontColor);
 
         AffineTransform origTx = g.getTransform();
@@ -165,15 +170,27 @@ public class CallHierarchyRenderer {
         htmlBuilder.addTableRow("Duration", durationGlobal, durationThread);
         htmlBuilder.endTable();
 
-        MethodInfo info = getMethodInfo(c);
         htmlBuilder.add("Inclusive Time (across all invocations): ");
         htmlBuilder.beginBold();
-        htmlBuilder.add(PERCENTAGE_FORMATTER.format(info.getInclusiveThreadPercent()));
+        htmlBuilder.add(PERCENTAGE_FORMATTER.format(getDurationPercentage(c)));
         htmlBuilder.add("%");
         htmlBuilder.endBold();
 
         htmlBuilder.closeHtmlBody();
         return htmlBuilder.getHtml();
+    }
+
+    /** Returns the duration of this call as a percentage of the duration of the top level call. */
+    private double getDurationPercentage(Call call) {
+        MethodInfo info = mTraceData.getMethod(call.getMethodId());
+        long methodTime = mUseInclusiveTimeForColorAssignment ?
+                info.getInclusiveThreadTime(mThreadName) :
+                info.getExclusiveThreadTime(mThreadName);
+
+        // Always use inclusive time of top level to compute percentages.
+        long topLevelTime = getMethodInfo(mTopCall).getInclusiveThreadTime(mThreadName);
+
+        return (double)methodTime/topLevelTime * 100;
     }
 
     @NonNull
@@ -191,8 +208,7 @@ public class CallHierarchyRenderer {
      * inclusive thread percentage time.
      */
     private Color getFillColor(Call c) {
-        MethodInfo info = mTraceData.getMethod(c.getMethodId());
-        int percent = quantize(info.getInclusiveThreadPercent());
+        int percent = quantize(getDurationPercentage(c));
         return getFill(percent);
     }
 
@@ -202,8 +218,7 @@ public class CallHierarchyRenderer {
      * on top of that color is distinguishable from the background.
      */
     private Color getFontColor(Call c) {
-        MethodInfo info = mTraceData.getMethod(c.getMethodId());
-        int percent = quantize(info.getInclusiveThreadPercent());
+        int percent = quantize(getDurationPercentage(c));
         return getFontColor(percent);
     }
 
@@ -236,7 +251,11 @@ public class CallHierarchyRenderer {
         return  i > 6 ? Color.WHITE : Color.BLACK;
     }
 
-    private int quantize(float inclusiveThreadPercent) {
+    private int quantize(double inclusiveThreadPercent) {
         return ((int)(inclusiveThreadPercent + 9) / 10) * 10;
+    }
+
+    public void setUseInclusiveTimeForColorAssignment(boolean en) {
+        mUseInclusiveTimeForColorAssignment = en;
     }
 }
