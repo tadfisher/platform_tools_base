@@ -29,6 +29,9 @@ import java.text.DecimalFormat;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
+import static com.android.tools.perflib.vmtrace.ClockType.THREAD;
+import static com.android.tools.perflib.vmtrace.ClockType.GLOBAL;
+
 /** Renders the call hierarchy rooted at a given call that is part of the trace. */
 public class CallHierarchyRenderer {
     /** Height in pixels for a single call instance. Its length is proportional to its duration. */
@@ -39,6 +42,7 @@ public class CallHierarchyRenderer {
     private static final int TEXT_LEFT_PADDING = 5;
 
     private final VmTraceData mTraceData;
+    private final String mThreadName;
     private final Call mTopCall;
     private final int mYOffset;
 
@@ -46,12 +50,21 @@ public class CallHierarchyRenderer {
     private final Point2D.Float mSrc = new Point2D.Float();
     private final Point2D.Float mDst = new Point2D.Float();
 
-    private Font myFont;
+    private Font mFont;
 
-    public CallHierarchyRenderer(@NonNull VmTraceData vmTraceData, @NonNull Call c, int yOffset) {
+    /** Indicates whether to use thread time or global time for rendering. */
+    private boolean mUseThreadTime;
+
+    public CallHierarchyRenderer(@NonNull VmTraceData vmTraceData, @NonNull String threadName,
+            int yOffset) {
         mTraceData = vmTraceData;
-        mTopCall = c;
+        mThreadName = threadName;
+        mTopCall = vmTraceData.getThread(threadName).getTopLevelCall();
         mYOffset = yOffset;
+    }
+
+    public void setUseThreadTime(boolean en) {
+        mUseThreadTime = en;
     }
 
     /**
@@ -91,10 +104,10 @@ public class CallHierarchyRenderer {
     }
 
     private void drawString(Graphics2D g, String name, Rectangle bounds, Color fontColor) {
-        if (myFont == null) {
-            myFont = g.getFont().deriveFont(8.0f);
+        if (mFont == null) {
+            mFont = g.getFont().deriveFont(8.0f);
         }
-        g.setFont(myFont);
+        g.setFont(mFont);
         g.setColor(fontColor);
 
         AffineTransform origTx = g.getTransform();
@@ -119,9 +132,9 @@ public class CallHierarchyRenderer {
 
     /** Fills the layout bounds corresponding to a given call in the given Rectangle object. */
     private void fillLayoutBounds(Call c, Rectangle layoutBounds) {
-        layoutBounds.x = (int) (c.getEntryGlobalTime() - mTopCall.getEntryGlobalTime() + PADDING);
+        layoutBounds.x = (int) (c.getEntryTime(GLOBAL) - mTopCall.getEntryTime(GLOBAL) + PADDING);
         layoutBounds.y = c.getDepth() * PER_LEVEL_HEIGHT_PX + mYOffset + PADDING;
-        layoutBounds.width  = (int) c.getInclusiveGlobalTime() - 2 * PADDING;
+        layoutBounds.width  = (int) c.getInclusiveTime(GLOBAL) - 2 * PADDING;
         layoutBounds.height = PER_LEVEL_HEIGHT_PX - 2 * PADDING;
     }
 
@@ -147,33 +160,53 @@ public class CallHierarchyRenderer {
 
         htmlBuilder.addHeading(getName(c), "black");
 
-        long span = c.getExitGlobalTime() - c.getEntryGlobalTime();
+        long span = c.getExitTime(GLOBAL) - c.getEntryTime(GLOBAL);
         TimeUnit unit = mTraceData.getTimeUnits();
-        String entryGlobal = TimeUtils.makeHumanReadable(c.getEntryGlobalTime(), span, unit);
-        String entryThread = TimeUtils.makeHumanReadable(c.getEntryThreadTime(), span, unit);
-        String exitGlobal = TimeUtils.makeHumanReadable(c.getExitGlobalTime(), span, unit);
-        String exitThread = TimeUtils.makeHumanReadable(c.getExitThreadTime(), span, unit);
+        String entryGlobal = TimeUtils.makeHumanReadable(c.getEntryTime(GLOBAL), span, unit);
+        String entryThread = TimeUtils.makeHumanReadable(c.getEntryTime(THREAD), span, unit);
+        String exitGlobal = TimeUtils.makeHumanReadable(c.getExitTime(GLOBAL), span, unit);
+        String exitThread = TimeUtils.makeHumanReadable(c.getExitTime(THREAD), span, unit);
         String durationGlobal = TimeUtils.makeHumanReadable(
-                c.getExitGlobalTime() - c.getEntryGlobalTime(), span, unit);
+                c.getExitTime(GLOBAL) - c.getEntryTime(GLOBAL), span, unit);
         String durationThread = TimeUtils.makeHumanReadable(
-                c.getExitThreadTime() - c.getEntryThreadTime(), span, unit);
+                c.getExitTime(THREAD) - c.getEntryTime(THREAD), span, unit);
 
         htmlBuilder.beginTable();
-        htmlBuilder.addTableRow(true, "", "Wall Time", "Thread Time");
-        htmlBuilder.addTableRow("Entry", entryGlobal, entryThread);
-        htmlBuilder.addTableRow("Exit", exitGlobal, exitThread);
-        htmlBuilder.addTableRow("Duration", durationGlobal, durationThread);
+        htmlBuilder.addTableRow("Wallclock Time:", durationGlobal,
+                String.format("(from %s to %s)", entryGlobal, exitGlobal));
+        htmlBuilder.addTableRow("CPU Time:", durationThread,
+                String.format("(from %s to %s)", entryThread, exitThread));
         htmlBuilder.endTable();
 
-        MethodInfo info = getMethodInfo(c);
-        htmlBuilder.add("Inclusive Time (across all invocations): ");
+        htmlBuilder.newline();
+        htmlBuilder.add("Inclusive Time (time spent in this method and all its callees): ");
         htmlBuilder.beginBold();
-        htmlBuilder.add(PERCENTAGE_FORMATTER.format(info.getInclusiveThreadPercent()));
+        htmlBuilder.add(PERCENTAGE_FORMATTER.format(
+                getDurationPercentage(c, INCLUSIVE_TIME_SELECTOR)));
+        htmlBuilder.add("%");
+        htmlBuilder.endBold();
+
+        htmlBuilder.newline();
+        htmlBuilder.add("Exclusive Time (self time): ");
+        htmlBuilder.beginBold();
+        htmlBuilder.add(PERCENTAGE_FORMATTER.format(
+                getDurationPercentage(c, EXCLUSIVE_TIME_SELECTOR)));
         htmlBuilder.add("%");
         htmlBuilder.endBold();
 
         htmlBuilder.closeHtmlBody();
         return htmlBuilder.getHtml();
+    }
+
+    /** Returns the duration of this call as a percentage of the duration of the top level call. */
+    private double getDurationPercentage(Call call, TimeSelector selector) {
+        MethodInfo info = mTraceData.getMethod(call.getMethodId());
+        long methodTime = selector.get(info, mThreadName);
+
+        // Always use inclusive time of top level to compute percentages.
+        long topLevelTime = getMethodInfo(mTopCall).getInclusiveThreadTime(mThreadName);
+
+        return (double)methodTime/topLevelTime * 100;
     }
 
     @NonNull
@@ -191,8 +224,7 @@ public class CallHierarchyRenderer {
      * inclusive thread percentage time.
      */
     private Color getFillColor(Call c) {
-        MethodInfo info = mTraceData.getMethod(c.getMethodId());
-        int percent = quantize(info.getInclusiveThreadPercent());
+        int percent = quantize(getDurationPercentage(c, EXCLUSIVE_TIME_SELECTOR));
         return getFill(percent);
     }
 
@@ -202,8 +234,7 @@ public class CallHierarchyRenderer {
      * on top of that color is distinguishable from the background.
      */
     private Color getFontColor(Call c) {
-        MethodInfo info = mTraceData.getMethod(c.getMethodId());
-        int percent = quantize(info.getInclusiveThreadPercent());
+        int percent = quantize(getDurationPercentage(c, EXCLUSIVE_TIME_SELECTOR));
         return getFontColor(percent);
     }
 
@@ -236,7 +267,25 @@ public class CallHierarchyRenderer {
         return  i > 6 ? Color.WHITE : Color.BLACK;
     }
 
-    private int quantize(float inclusiveThreadPercent) {
+    private int quantize(double inclusiveThreadPercent) {
         return ((int)(inclusiveThreadPercent + 9) / 10) * 10;
     }
+
+    private interface TimeSelector {
+        public long get(MethodInfo info, String thread);
+    }
+
+    private static TimeSelector INCLUSIVE_TIME_SELECTOR = new TimeSelector() {
+        @Override
+        public long get(MethodInfo info, String thread) {
+            return info.getInclusiveThreadTime(thread);
+        }
+    };
+
+    private static TimeSelector EXCLUSIVE_TIME_SELECTOR = new TimeSelector() {
+        @Override
+        public long get(MethodInfo info, String thread) {
+            return info.getExclusiveThreadTime(thread);
+        }
+    };
 }
