@@ -76,7 +76,6 @@ public class ValueXmlHelper {
             // Trim surrounding quotes. Note that there can be *any* number of these, and
             // the left side and right side do not have to match; e.g. you can have
             //    """"f"" => f
-            int quoteStart = i;
             int quoteEnd = n;
             while (i < n) {
                 char c = s.charAt(i);
@@ -341,7 +340,7 @@ public class ValueXmlHelper {
                     if (!hasSpace) {
                         sb.append('\\');
                     }
-                    sb.append(c);
+                    sb.append('\\');
                     break;
                 case '"':
                 case '\\':
