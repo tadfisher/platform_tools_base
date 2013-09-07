@@ -16,6 +16,9 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.SdkConstants.CONSTRUCTOR_NAME;
+
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ClassContext;
@@ -30,6 +33,7 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.MethodNode;
 
 /**
  * Checks that Handler implementations are top level classes or static.
@@ -76,6 +80,15 @@ public class HandlerDetector extends Detector implements ClassScanner {
 
         if (context.getDriver().isSubclassOf(classNode, "android/os/Handler") //$NON-NLS-1$
                 && !LintUtils.isStaticInnerClass(classNode)) {
+            // Only flag handlers using the default looper
+            for (Object m : classNode.methods) {
+                MethodNode method = (MethodNode) m;
+                if (CONSTRUCTOR_NAME.equals(method.name) &&
+                        method.desc.contains("Landroid/os/Looper;")) {
+                    return;
+                }
+            }
+
             Location location = context.getLocation(classNode);
             context.report(ISSUE, location, String.format(
                     "This Handler class should be static or leaks might occur (%1$s)",
