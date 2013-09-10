@@ -15,6 +15,7 @@
  */
 package com.android.ide.common.repository;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 
 import java.util.regex.Matcher;
@@ -70,7 +71,7 @@ public class MavenCoordinate implements Comparable<MavenCoordinate> {
    * @return a coordinate object or null if the given string was malformed.
    */
   @Nullable
-  public static MavenCoordinate parseCoordinateString(String coordinateString) {
+  public static MavenCoordinate parseCoordinateString(@NonNull String coordinateString) {
     if (coordinateString == null) {
       return null;
     }
@@ -105,15 +106,22 @@ public class MavenCoordinate implements Comparable<MavenCoordinate> {
     return String.format("%s:%s:%d.%d.%s", myGroupId, myArtifactId, myMajorRevision, myMinorRevision, micro);
   }
 
+  @Nullable
   public String getGroupId() {
     return myGroupId;
   }
 
+  @Nullable
   public String getArtifactId() {
     return myArtifactId;
   }
 
+  @Nullable
   public String getId() {
+    if (myGroupId == null || myArtifactId == null) {
+      return null;
+    }
+
     return String.format("%s:%s", myGroupId, myArtifactId);
   }
 
@@ -129,17 +137,22 @@ public class MavenCoordinate implements Comparable<MavenCoordinate> {
     return myMicroRevision;
   }
 
+  public String getFullRevision() {
+    String micro = (myMicroRevision == PLUS_REV) ? "+" : Integer.toString(myMicroRevision);
+    return String.format("%d.%d.%s", myMajorRevision, myMinorRevision, micro);
+  }
+
   /**
    * Returns true if and only if the given coordinate refers to the same group and artifact.
    * @param o the coordinate to compare with
    * @return true iff the other group and artifact match the group and artifact of this coordinate.
    */
-  public boolean isSameArtifact(MavenCoordinate o) {
+  public boolean isSameArtifact(@NonNull MavenCoordinate o) {
     return o.myGroupId.equals(myGroupId) && o.myArtifactId.equals(myArtifactId);
   }
 
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@NonNull Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
 
@@ -165,9 +178,11 @@ public class MavenCoordinate implements Comparable<MavenCoordinate> {
   }
 
   @Override
-  public int compareTo(MavenCoordinate that) {
-    // Make sure we're comparing apples to apples.
-    assert(this.isSameArtifact(that));
+  public int compareTo(@NonNull MavenCoordinate that) {
+    // Make sure we're comparing apples to apples. If not, compare artifactIds
+    if (!this.isSameArtifact(that)) {
+      return this.myArtifactId.compareTo(that.myArtifactId);
+    }
 
     if (this.myMajorRevision != that.myMajorRevision) {
       return this.myMajorRevision - that.myMajorRevision;
