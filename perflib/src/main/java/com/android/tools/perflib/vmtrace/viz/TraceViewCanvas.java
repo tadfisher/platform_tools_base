@@ -36,9 +36,13 @@ import javax.swing.*;
  * String)} and {@link #displayThread(String)} methods.
  */
 public class TraceViewCanvas extends JComponent {
-    private static final Color BACKGROUND_COLOR = Color.LIGHT_GRAY;
-
+    private static final Color BACKGROUND_COLOR;
     private static final int TOOLTIP_OFFSET = 10;
+
+    static {
+        UIDefaults def = UIManager.getLookAndFeelDefaults();
+        BACKGROUND_COLOR = def.getColor("EditorPane.background");
+    }
 
     /**
      * Interactor that listens to mouse events, interprets them as zoom/pan events, and provides the
