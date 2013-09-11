@@ -21,12 +21,14 @@ import com.android.tools.perflib.vmtrace.Call;
 import com.android.tools.perflib.vmtrace.ClockType;
 import com.android.tools.perflib.vmtrace.ThreadInfo;
 import com.android.tools.perflib.vmtrace.VmTraceData;
-import com.android.utils.SparseArray;
 
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.*;
 
@@ -90,7 +92,7 @@ public class TraceViewCanvas extends JComponent {
             @Override
             public void ancestorResized(HierarchyEvent e) {
                 removeHierarchyBoundsListener(this);
-                zoomFit();
+                zoomFit(getTimeUnit(getWidth(), mTopLevelCall));
             }
         });
     }
@@ -120,13 +122,16 @@ public class TraceViewCanvas extends JComponent {
             return;
         }
 
-        mTimeScaleRenderer = new TimeScaleRenderer(mTopLevelCall.getEntryTime(ClockType.GLOBAL),
-                mTraceData.getTimeUnits());
+        TimeUnit u = getTimeUnit(getWidth(), mTopLevelCall);
+
+        mTimeScaleRenderer = new TimeScaleRenderer(mTopLevelCall.getEntryTime(ClockType.GLOBAL, u),
+                TimeUnit.NANOSECONDS);
         int yOffset = mTimeScaleRenderer.getLayoutHeight();
         mCallHierarchyRenderer = new CallHierarchyRenderer(mTraceData, threadName, yOffset,
                 mRenderClock);
+        mCallHierarchyRenderer.setLayoutTimeUnit(u);
 
-        zoomFit();
+        zoomFit(u);
     }
 
     public void setRenderClock(ClockType clock) {
@@ -137,17 +142,38 @@ public class TraceViewCanvas extends JComponent {
         }
     }
 
-    private void zoomFit() {
+    private TimeUnit getTimeUnit(int displayWidth, Call c) {
+        List<TimeUnit> l = Arrays.asList(TimeUnit.NANOSECONDS, TimeUnit.MICROSECONDS,
+                TimeUnit.MILLISECONDS);
+
+        for (TimeUnit x : l) {
+            long start = c.getEntryTime(ClockType.GLOBAL, x);
+            long end = c.getExitTime(ClockType.GLOBAL, x);
+
+            double sx = displayWidth * .9d / (end - start);
+            if (sx > 0.0001) {
+                return x;
+            } else {
+                System.out.println("sx = " + sx + ", skipping unit " + x);
+            }
+        }
+
+        return l.get(l.size() - 1);
+    }
+
+    private void zoomFit(TimeUnit u) {
         if (mTopLevelCall == null) {
             return;
         }
 
-        long start = mTopLevelCall.getEntryTime(ClockType.GLOBAL);
-        long end = mTopLevelCall.getExitTime(ClockType.GLOBAL);
+        long start = mTopLevelCall.getEntryTime(ClockType.GLOBAL, u);
+        long end = mTopLevelCall.getExitTime(ClockType.GLOBAL, u);
 
         // Scale so that the full trace occupies 90% of the screen width.
         double width = getWidth();
         double sx = width * .9f / (end - start);
+
+        System.out.println("***************setting sx = " + sx);
 
         // Guard against trying to zoom when the component doesn't know its width yet. Width is
         // usually 0 in such cases, but we just make it slightly general and check for width < 10.

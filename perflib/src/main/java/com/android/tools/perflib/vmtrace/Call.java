@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
+import java.util.concurrent.TimeUnit;
 
 public class Call {
     private final long mMethodId;
@@ -111,23 +112,43 @@ public class Call {
         return mIsRecursive;
     }
 
-    public long getEntryTime(ClockType clockType) {
+    public long getEntryTime(ClockType clockType, TimeUnit units) {
+        long entryTimeMicros = getEntryTime(clockType);
+        return units.convert(entryTimeMicros, TimeUnit.MICROSECONDS);
+    }
+
+    private long getEntryTime(ClockType clockType) {
         return clockType == ClockType.THREAD ? UnsignedInts.toLong(mEntryThreadTime) :
                 UnsignedInts.toLong(mEntryGlobalTime);
     }
 
-    public long getExitTime(ClockType clockType) {
+    public long getExitTime(ClockType clockType, TimeUnit units) {
+        long exitTimeMicros = getExitTime(clockType);
+        return units.convert(exitTimeMicros, TimeUnit.MICROSECONDS);
+    }
+
+    private long getExitTime(ClockType clockType) {
         return clockType == ClockType.THREAD ? UnsignedInts.toLong(mExitThreadTime) :
                 UnsignedInts.toLong(mExitGlobalTime);
     }
 
-    public long getInclusiveTime(ClockType clockType) {
+    public long getInclusiveTime(ClockType clockType, TimeUnit units) {
+        long inclusiveTimeMicros = getInclusiveTime(clockType);
+        return units.convert(inclusiveTimeMicros, TimeUnit.MICROSECONDS);
+    }
+
+    private long getInclusiveTime(ClockType clockType) {
         return clockType == ClockType.THREAD ?
                 UnsignedInts.toLong(mExitThreadTime - mEntryThreadTime) :
                 UnsignedInts.toLong(mExitGlobalTime - mEntryGlobalTime);
     }
 
-    public long getExclusiveTime(ClockType clockType) {
+    public long getExclusiveTime(ClockType clockType, TimeUnit units) {
+        long exclusiveTimeMicros = getExclusiveTime(clockType);
+        return units.convert(exclusiveTimeMicros, TimeUnit.MICROSECONDS);
+    }
+
+    private long getExclusiveTime(ClockType clockType) {
         long inclusiveTimeInCallees = clockType == ClockType.THREAD ?
                 mInclusiveThreadTimeInCallees : mInclusiveGlobalTimeInCallees;
         return getInclusiveTime(clockType) - inclusiveTimeInCallees;
