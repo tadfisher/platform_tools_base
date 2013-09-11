@@ -40,7 +40,7 @@ import javax.swing.*;
  * and displays the stackchart view it within a JFrame.
  */
 public class TraceView {
-    private static final String TRACE_FILE_NAME = "/play.dalvik.trace";
+    private static final String TRACE_FILE_NAME = "/lud.trace";
     private static final String DEFAULT_THREAD_NAME = "main";
 
     public static void main(String[] args) {

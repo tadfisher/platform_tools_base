@@ -22,10 +22,12 @@ import com.android.tools.perflib.vmtrace.ClockType;
 import com.android.tools.perflib.vmtrace.MethodInfo;
 import com.android.tools.perflib.vmtrace.VmTraceData;
 import com.android.utils.HtmlBuilder;
+import com.google.common.primitives.Ints;
 
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.text.DecimalFormat;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
@@ -55,6 +57,8 @@ public class CallHierarchyRenderer {
 
     private ClockType mRenderClock;
 
+    private TimeUnit mLayoutTimeUnits;
+
     public CallHierarchyRenderer(@NonNull VmTraceData vmTraceData, @NonNull String threadName,
             int yOffset, ClockType renderClock) {
         mTraceData = vmTraceData;
@@ -66,6 +70,10 @@ public class CallHierarchyRenderer {
 
     public void setRenderClock(ClockType clockType) {
         mRenderClock = clockType;
+    }
+
+    public void setLayoutTimeUnit(TimeUnit u) {
+        mLayoutTimeUnits = u;
     }
 
     /**
@@ -133,10 +141,12 @@ public class CallHierarchyRenderer {
 
     /** Fills the layout bounds corresponding to a given call in the given Rectangle object. */
     private void fillLayoutBounds(Call c, Rectangle layoutBounds) {
-        layoutBounds.x = (int) (c.getEntryTime(mRenderClock) - mTopCall.getEntryTime(mRenderClock)
+        layoutBounds.x = Ints.checkedCast(c.getEntryTime(mRenderClock, mLayoutTimeUnits)
+                - mTopCall.getEntryTime(mRenderClock, mLayoutTimeUnits)
                 + PADDING);
         layoutBounds.y = c.getDepth() * PER_LEVEL_HEIGHT_PX + mYOffset + PADDING;
-        layoutBounds.width  = (int) c.getInclusiveTime(mRenderClock) - 2 * PADDING;
+        layoutBounds.width  = Ints.checkedCast(c.getInclusiveTime(mRenderClock, mLayoutTimeUnits))
+                - 2 * PADDING;
         layoutBounds.height = PER_LEVEL_HEIGHT_PX - 2 * PADDING;
     }
 
@@ -162,16 +172,16 @@ public class CallHierarchyRenderer {
 
         htmlBuilder.addHeading(getName(c), "black");
 
-        long span = c.getExitTime(GLOBAL) - c.getEntryTime(GLOBAL);
-        TimeUnit unit = mTraceData.getTimeUnits();
-        String entryGlobal = TimeUtils.makeHumanReadable(c.getEntryTime(GLOBAL), span, unit);
-        String entryThread = TimeUtils.makeHumanReadable(c.getEntryTime(THREAD), span, unit);
-        String exitGlobal = TimeUtils.makeHumanReadable(c.getExitTime(GLOBAL), span, unit);
-        String exitThread = TimeUtils.makeHumanReadable(c.getExitTime(THREAD), span, unit);
+        long span = c.getExitTime(GLOBAL, TimeUnit.NANOSECONDS) - c.getEntryTime(GLOBAL, TimeUnit.NANOSECONDS);
+        TimeUnit unit = TimeUnit.NANOSECONDS;
+        String entryGlobal = TimeUtils.makeHumanReadable(c.getEntryTime(GLOBAL, unit), span, unit);
+        String entryThread = TimeUtils.makeHumanReadable(c.getEntryTime(THREAD, unit), span, unit);
+        String exitGlobal = TimeUtils.makeHumanReadable(c.getExitTime(GLOBAL, unit), span, unit);
+        String exitThread = TimeUtils.makeHumanReadable(c.getExitTime(THREAD, unit), span, unit);
         String durationGlobal = TimeUtils.makeHumanReadable(
-                c.getExitTime(GLOBAL) - c.getEntryTime(GLOBAL), span, unit);
+                c.getExitTime(GLOBAL, unit) - c.getEntryTime(GLOBAL, unit), span, unit);
         String durationThread = TimeUtils.makeHumanReadable(
-                c.getExitTime(THREAD) - c.getEntryTime(THREAD), span, unit);
+                c.getExitTime(THREAD, unit) - c.getEntryTime(THREAD, unit), span, unit);
 
         htmlBuilder.beginTable();
         htmlBuilder.addTableRow("Wallclock Time:", durationGlobal,
