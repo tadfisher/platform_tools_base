@@ -21,14 +21,24 @@ import com.android.tools.perflib.vmtrace.Call;
 import com.android.tools.perflib.vmtrace.ClockType;
 import com.android.tools.perflib.vmtrace.ThreadInfo;
 import com.android.tools.perflib.vmtrace.VmTraceData;
-import com.android.utils.SparseArray;
+import com.google.common.collect.ImmutableList;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.RenderingHints;
+import java.awt.event.HierarchyBoundsAdapter;
+import java.awt.event.HierarchyEvent;
+import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
-import javax.swing.*;
+import javax.swing.JComponent;
+import javax.swing.ToolTipManager;
+import javax.swing.UIManager;
 
 /**
  * A canvas that displays the call hierarchy for a single thread. The trace and the the thread to be
@@ -90,7 +100,7 @@ public class TraceViewCanvas extends JComponent {
             @Override
             public void ancestorResized(HierarchyEvent e) {
                 removeHierarchyBoundsListener(this);
-                zoomFit();
+                zoomFit(getHighestResolutionTimeUnit(mTopLevelCall));
             }
         });
     }
@@ -120,13 +130,16 @@ public class TraceViewCanvas extends JComponent {
             return;
         }
 
-        mTimeScaleRenderer = new TimeScaleRenderer(mTopLevelCall.getEntryTime(ClockType.GLOBAL),
-                mTraceData.getTimeUnits());
+        TimeUnit u = getHighestResolutionTimeUnit(mTopLevelCall);
+
+        mTimeScaleRenderer = new TimeScaleRenderer(
+                mTopLevelCall.getEntryTime(ClockType.GLOBAL, u), u);
         int yOffset = mTimeScaleRenderer.getLayoutHeight();
         mCallHierarchyRenderer = new CallHierarchyRenderer(mTraceData, threadName, yOffset,
                 mRenderClock);
+        mCallHierarchyRenderer.setLayoutTimeUnit(u);
 
-        zoomFit();
+        zoomFit(u);
     }
 
     public void setRenderClock(ClockType clock) {
@@ -137,13 +150,49 @@ public class TraceViewCanvas extends JComponent {
         }
     }
 
-    private void zoomFit() {
+    /**
+     * Returns the highest resolution {@link TimeUnit} to use so that the time values still
+     * fit within an integer range.
+     *
+     * All the layout and rendering operations are performed using integers. Ideally, we want to use
+     * the highest resolution time units (nanoseconds) wherever possible since that would allow for
+     * smooth panning and zooming even when you are viewing a trace of just a few microseconds.
+     *
+     * However, when viewing larger traces, use of nano seconds would cause an overflow if the
+     * layout operations store values in integer types. So this method returns the highest
+     * resolution time unit to use given the start and end times of the top level call.
+     *
+     * TODO Currently, we don't dynamically change the time unit used as the user zooms in or out.
+     * Ideally, if the initial display was in milliseconds, and then we zoom in to view just a few
+     * microseconds, the display should change the timeunits from ms to ns.
+     */
+    private TimeUnit getHighestResolutionTimeUnit(Call c) {
+        final int MAX_ZOOM_FACTOR = 10;
+
+        List<TimeUnit> timeunits = ImmutableList.of(TimeUnit.NANOSECONDS, TimeUnit.MICROSECONDS,
+                TimeUnit.MILLISECONDS);
+
+        for (TimeUnit unit : timeunits) {
+            long start = c.getEntryTime(ClockType.GLOBAL, unit);
+            long end = c.getExitTime(ClockType.GLOBAL, unit);
+            long diff = end - start;
+            long max = Math.max(end, diff);
+
+            if (max * MAX_ZOOM_FACTOR < Integer.MAX_VALUE) {
+                return unit;
+            }
+        }
+
+        return TimeUnit.MILLISECONDS;
+    }
+
+    private void zoomFit(TimeUnit u) {
         if (mTopLevelCall == null) {
             return;
         }
 
-        long start = mTopLevelCall.getEntryTime(ClockType.GLOBAL);
-        long end = mTopLevelCall.getExitTime(ClockType.GLOBAL);
+        long start = mTopLevelCall.getEntryTime(ClockType.GLOBAL, u);
+        long end = mTopLevelCall.getExitTime(ClockType.GLOBAL, u);
 
         // Scale so that the full trace occupies 90% of the screen width.
         double width = getWidth();
