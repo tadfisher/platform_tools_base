@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <recipe>
+    <dependency mavenUrl="com.google.android.gms:play-services:3.2.25" />
     <merge from="settings.gradle.ftl"
              to="${escapeXmlAttribute(topOut)}/settings.gradle" />
     <instantiate from="build.gradle.ftl"
