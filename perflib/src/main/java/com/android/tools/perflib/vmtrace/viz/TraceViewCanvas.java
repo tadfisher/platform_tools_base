@@ -33,6 +33,7 @@ import java.awt.event.HierarchyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
+import java.awt.geom.Point2D;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -100,7 +101,8 @@ public class TraceViewCanvas extends JComponent {
             @Override
             public void ancestorResized(HierarchyEvent e) {
                 removeHierarchyBoundsListener(this);
-                zoomFit(getHighestResolutionTimeUnit(mTopLevelCall));
+                zoomFit(TimeUnit.NANOSECONDS);
+                //zoomFit(getHighestResolutionTimeUnit(mTopLevelCall));
             }
         });
     }
@@ -131,6 +133,7 @@ public class TraceViewCanvas extends JComponent {
         }
 
         TimeUnit u = getHighestResolutionTimeUnit(mTopLevelCall);
+        u = TimeUnit.NANOSECONDS;
 
         mTimeScaleRenderer = new TimeScaleRenderer(
                 mTopLevelCall.getEntryTime(ClockType.GLOBAL, u), u);
@@ -229,13 +232,13 @@ public class TraceViewCanvas extends JComponent {
         AffineTransform screenTransform = g2d.getTransform();
 
         // set the viewport * screen space transform
-        AffineTransform transform = new AffineTransform(screenTransform);
-        transform.concatenate(mViewPortTransform);
-        g2d.setTransform(transform);
+//        AffineTransform transform = new AffineTransform(screenTransform);
+//        transform.concatenate(mViewPortTransform);
+//        g2d.setTransform(transform);
 
         // paint stack layout view
         if (mCallHierarchyRenderer != null) {
-            mCallHierarchyRenderer.render(g2d);
+            mCallHierarchyRenderer.render(g2d, mViewPortTransform);
         }
 
         // paint timeline at top
@@ -253,15 +256,17 @@ public class TraceViewCanvas extends JComponent {
                 RenderingHints.VALUE_INTERPOLATION_BICUBIC);
     }
 
+    private final Point2D mTmpPoint2 = new Point2D.Double();
+
     @Override
     public String getToolTipText(MouseEvent event) {
         if (mTraceData == null || mCallHierarchyRenderer == null) {
             return null;
         }
 
-        mTmpPoint.setLocation(event.getPoint());
-        mViewPortInverseTransform.transform(mTmpPoint, mTmpPoint);
-        return mCallHierarchyRenderer.getToolTipFor(mTmpPoint.x, mTmpPoint.y);
+        mTmpPoint2.setLocation(event.getPoint());
+        mViewPortInverseTransform.transform(mTmpPoint2, mTmpPoint2);
+        return mCallHierarchyRenderer.getToolTipFor(mTmpPoint2.getX(), mTmpPoint2.getY());
     }
 
     @Override
