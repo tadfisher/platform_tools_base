@@ -100,7 +100,8 @@ public class TraceViewCanvas extends JComponent {
             @Override
             public void ancestorResized(HierarchyEvent e) {
                 removeHierarchyBoundsListener(this);
-                zoomFit(getHighestResolutionTimeUnit(mTopLevelCall));
+                zoomFit(TimeUnit.NANOSECONDS);
+                //zoomFit(getHighestResolutionTimeUnit(mTopLevelCall));
             }
         });
     }
@@ -131,6 +132,7 @@ public class TraceViewCanvas extends JComponent {
         }
 
         TimeUnit u = getHighestResolutionTimeUnit(mTopLevelCall);
+        u = TimeUnit.NANOSECONDS;
 
         mTimeScaleRenderer = new TimeScaleRenderer(
                 mTopLevelCall.getEntryTime(ClockType.GLOBAL, u), u);
@@ -229,13 +231,13 @@ public class TraceViewCanvas extends JComponent {
         AffineTransform screenTransform = g2d.getTransform();
 
         // set the viewport * screen space transform
-        AffineTransform transform = new AffineTransform(screenTransform);
-        transform.concatenate(mViewPortTransform);
-        g2d.setTransform(transform);
+//        AffineTransform transform = new AffineTransform(screenTransform);
+//        transform.concatenate(mViewPortTransform);
+//        g2d.setTransform(transform);
 
         // paint stack layout view
         if (mCallHierarchyRenderer != null) {
-            mCallHierarchyRenderer.render(g2d);
+            mCallHierarchyRenderer.render(g2d, mViewPortTransform);
         }
 
         // paint timeline at top
