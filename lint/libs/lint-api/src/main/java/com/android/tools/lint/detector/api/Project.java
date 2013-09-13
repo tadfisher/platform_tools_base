@@ -42,6 +42,7 @@ import com.google.common.annotations.Beta;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
+import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 
@@ -58,6 +59,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -608,7 +610,9 @@ public class Project {
             }
 
             List<Project> all = new ArrayList<Project>();
-            addLibraryProjects(all);
+            Set<Project> seen = Sets.newHashSet();
+            seen.add(this);
+            addLibraryProjects(all, seen);
             mAllLibraries = all;
         }
 
@@ -621,11 +625,18 @@ public class Project {
      *
      * @param collection the collection to add the projects into
      */
-    private void addLibraryProjects(@NonNull Collection<Project> collection) {
+    private void addLibraryProjects(@NonNull Collection<Project> collection,
+            @NonNull Set<Project> seen) {
         for (Project library : mDirectLibraries) {
+            if (seen.contains(library)) {
+                mClient.log(Severity.WARNING, null,
+                        "Internal lint error: encountered %1$s more than once", library);
+                continue;
+            }
             collection.add(library);
+            seen.add(library);
             // Recurse
-            library.addLibraryProjects(collection);
+            library.addLibraryProjects(collection, seen);
         }
     }
 
