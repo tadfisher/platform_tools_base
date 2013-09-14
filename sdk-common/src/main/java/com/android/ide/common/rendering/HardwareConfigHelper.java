@@ -26,6 +26,7 @@ import com.android.sdklib.devices.Screen;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -186,7 +187,7 @@ public class HardwareConfigHelper {
         float length = (float) screen.getDiagonalLength();
         // Round dimensions to the nearest tenth
         length = Math.round(10 * length) / 10.0f;
-        return String.format(java.util.Locale.US, "%1$s (%3$s\", %2$s)",
+        return String.format(Locale.US, "%1$s (%3$s\", %2$s)",
                 name, getResolutionString(device), Float.toString(length));
     }
 
@@ -215,7 +216,7 @@ public class HardwareConfigHelper {
             String n = matcher.group(2);
             int dot = size.indexOf('.');
             if (dot == -1) {
-                size = size + ".0";
+                size += ".0";
                 dot = size.length() - 2;
             }
             for (int i = 0; i < 2 - dot; i++) {
@@ -224,7 +225,7 @@ public class HardwareConfigHelper {
             name = size + "\" " + n;
         }
 
-        return String.format(java.util.Locale.US, "%1$s (%2$s)", name,
+        return String.format(Locale.US, "%1$s (%2$s)", name,
                 getResolutionString(device));
     }
 
@@ -236,7 +237,7 @@ public class HardwareConfigHelper {
     @NonNull
     public static String getResolutionString(@NonNull Device device) {
         Screen screen = device.getDefaultHardware().getScreen();
-        return String.format(java.util.Locale.US,
+        return String.format(Locale.US,
                 "%1$d \u00D7 %2$d: %3$s", // U+00D7: Unicode multiplication sign
                 screen.getXDimension(),
                 screen.getYDimension(),
@@ -270,26 +271,29 @@ public class HardwareConfigHelper {
      */
     public static int nexusRank(Device device) {
         String name = device.getName();
-        if (name.endsWith(" One")) {     //$NON-NLS-1$
+        if (name.endsWith(" One")) {      //$NON-NLS-1$
             return 1;
         }
-        if (name.endsWith(" S")) {       //$NON-NLS-1$
+        if (name.endsWith(" S")) {        //$NON-NLS-1$
             return 2;
         }
-        if (name.startsWith("Galaxy")) { //$NON-NLS-1$
+        if (name.startsWith("Galaxy")) {  //$NON-NLS-1$
             return 3;
         }
-        if (name.endsWith(" 7")) {       //$NON-NLS-1$
+        if (name.endsWith(" 7 (2012)")) { //$NON-NLS-1$
             return 4;
         }
         if (name.endsWith(" 10")) {       //$NON-NLS-1$
             return 5;
         }
-        if (name.endsWith(" 4")) {       //$NON-NLS-1$
+        if (name.endsWith(" 4")) {        //$NON-NLS-1$
             return 6;
         }
+        if (name.endsWith(" 7")) {        //$NON-NLS-1$
+            return 7;
+        }
 
-        return 7;
+        return 8;
     }
 
     /**
