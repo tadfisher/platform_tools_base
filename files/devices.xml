@@ -322,8 +322,87 @@
             <d:nav-state>nonav</d:nav-state>
         </d:state>
     </d:device>
+
     <d:device>
         <d:name>Nexus 7</d:name>
+        <d:manufacturer>Google</d:manufacturer>
+        <d:hardware>
+            <d:screen>
+                <d:screen-size>large</d:screen-size>
+                <d:diagonal-length>7.02</d:diagonal-length>
+                <d:pixel-density>xhdpi</d:pixel-density>
+                <d:screen-ratio>notlong</d:screen-ratio>
+                <d:dimensions>
+                    <d:x-dimension>1200</d:x-dimension>
+                    <d:y-dimension>1920</d:y-dimension>
+                </d:dimensions>
+                <d:xdpi>323</d:xdpi>
+                <d:ydpi>323</d:ydpi>
+                <d:touch>
+                    <d:multitouch>jazz-hands</d:multitouch>
+                    <d:mechanism>finger</d:mechanism>
+                    <d:screen-type>capacitive</d:screen-type>
+                </d:touch>
+            </d:screen>
+            <d:networking>
+                Wifi
+                Bluetooth
+                NFC
+            </d:networking>
+            <d:sensors>
+                Accelerometer
+                Compass
+                GPS
+                Gyroscope
+                LightSensor
+            </d:sensors>
+            <d:mic>true</d:mic>
+            <d:camera>
+                <d:location>front</d:location>
+                <d:autofocus>false</d:autofocus>
+                <d:flash>false</d:flash>
+            </d:camera>
+            <d:keyboard>nokeys</d:keyboard>
+            <d:nav>nonav</d:nav>
+            <d:ram unit="GiB">2</d:ram>
+            <d:buttons>soft</d:buttons>
+            <d:internal-storage unit="GiB">32</d:internal-storage>
+            <d:removable-storage unit="MiB"> </d:removable-storage>
+            <d:cpu> Qualcomm Snapdragon S4 Pro, 1.5GHz </d:cpu>
+            <d:gpu> Adreno 320, 400MHz </d:gpu>
+            <d:abi>
+                armeabi-v7a
+                armeabi
+            </d:abi>
+            <d:dock> </d:dock>
+            <d:power-type>battery</d:power-type>
+        </d:hardware>
+
+        <d:software>
+            <d:api-level>18</d:api-level>
+            <d:live-wallpaper-support>true</d:live-wallpaper-support>
+            <d:bluetooth-profiles> </d:bluetooth-profiles>
+            <d:gl-version>2.0</d:gl-version>
+            <d:gl-extensions> </d:gl-extensions>
+            <d:status-bar>true</d:status-bar>
+        </d:software>
+
+        <d:state name="Portrait" default="true">
+            <d:description>The phone in portrait view</d:description>
+            <d:screen-orientation>port</d:screen-orientation>
+            <d:keyboard-state>keyssoft</d:keyboard-state>
+            <d:nav-state>nonav</d:nav-state>
+        </d:state>
+        <d:state name="Landscape">
+            <d:description>The phone in landscape view</d:description>
+            <d:screen-orientation>land</d:screen-orientation>
+            <d:keyboard-state>keyssoft</d:keyboard-state>
+            <d:nav-state>nonav</d:nav-state>
+        </d:state>
+    </d:device>
+
+    <d:device>
+        <d:name>Nexus 7 (2012)</d:name>
         <d:manufacturer>Google</d:manufacturer>
         <d:hardware>
             <d:screen>
@@ -398,7 +477,6 @@
             <d:keyboard-state>keyssoft</d:keyboard-state>
             <d:nav-state>nonav</d:nav-state>
         </d:state>
-
     </d:device>
 
     <d:device>
