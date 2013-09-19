@@ -35,6 +35,8 @@ public class MethodInfo {
     /** Method stats per thread. */
     private final Map<Integer,MethodStats> mPerThreadStats;
 
+    private MethodProfileData mProfileData;
+
     private String mFullName;
     private String mShortName;
 
@@ -75,13 +77,11 @@ public class MethodInfo {
     }
 
     public long getExclusiveTime(ThreadInfo thread, ClockType clockType) {
-        MethodStats stats = mPerThreadStats.get(thread.getId());
-        return stats != null ? stats.getExclusiveTime(clockType) : 0;
+        return mProfileData.getExclusiveTime(thread, clockType);
     }
 
     public long getInclusiveTime(ThreadInfo thread, ClockType clockType) {
-        MethodStats stats = mPerThreadStats.get(thread.getId());
-        return stats != null ? stats.getInclusiveTime(clockType) : 0;
+        return mProfileData.getInclusiveTime(thread, clockType);
     }
 
     public void addExclusiveTime(long time, ThreadInfo thread, ClockType clockType) {
@@ -105,6 +105,10 @@ public class MethodInfo {
             mPerThreadStats.put(thread.getId(), stats);
         }
         return stats;
+    }
+
+    public void setProfileData(MethodProfileData profileData) {
+        mProfileData = profileData;
     }
 
     private static class MethodStats {
