@@ -147,14 +147,15 @@ public class VmTraceParserTest extends TestCase {
 
     public void testMethodStats() throws IOException {
         VmTraceData traceData = getVmTraceData("/basic.trace");
-        final String threadName = "AsyncTask #1";
+        String threadName = "AsyncTask #1";
+        final ThreadInfo thread = traceData.getThread(threadName);
         List<Map.Entry<Long, MethodInfo>> methods = new ArrayList<Map.Entry<Long, MethodInfo>>(
                 traceData.getMethods().entrySet());
         Collections.sort(methods, new Comparator<Map.Entry<Long, MethodInfo>>() {
             @Override
             public int compare(Map.Entry<Long, MethodInfo> o1, Map.Entry<Long, MethodInfo> o2) {
-                long diff = o2.getValue().getInclusiveTime(threadName, ClockType.THREAD) -
-                        o1.getValue().getInclusiveTime(threadName, ClockType.THREAD);
+                long diff = o2.getValue().getInclusiveTime(thread, ClockType.THREAD) -
+                        o1.getValue().getInclusiveTime(thread, ClockType.THREAD);
                 return Ints.saturatedCast(diff);
             }
         });
@@ -171,8 +172,9 @@ public class VmTraceParserTest extends TestCase {
     // all methods called from that top level
     public void testMethodStats2() throws IOException {
         VmTraceData traceData = getVmTraceData("/basic.trace");
-        String thread = "AsyncTask #1";
-        Call top = traceData.getThread(thread).getTopLevelCall();
+        ThreadInfo thread = traceData.getThread("AsyncTask #1");
+
+        Call top = thread.getTopLevelCall();
 
         assertNotNull(top);
 
@@ -192,7 +194,7 @@ public class VmTraceParserTest extends TestCase {
 
     public void testSearch() throws IOException {
         VmTraceData traceData = getVmTraceData("/basic.trace");
-        String thread = "AsyncTask #1";
+        ThreadInfo thread = traceData.getThread("AsyncTask #1");
 
         SearchResult results = traceData.searchFor("startMethodTracing", thread);
 
@@ -204,7 +206,7 @@ public class VmTraceParserTest extends TestCase {
     // Validates that search is not impacted by current locale
     public void testSearchLocale() throws IOException {
         VmTraceData traceData = getVmTraceData("/basic.trace");
-        String thread = "AsyncTask #1";
+        ThreadInfo thread = traceData.getThread("AsyncTask #1");
 
         String pattern = "ii)v";
         SearchResult results = traceData.searchFor(pattern, thread);

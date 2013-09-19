@@ -141,7 +141,7 @@ public class TraceViewCanvas extends JComponent {
                 mTopLevelCall.getEntryTime(ClockType.GLOBAL, DEFAULT_TIME_UNITS),
                 DEFAULT_TIME_UNITS);
         int yOffset = mTimeScaleRenderer.getLayoutHeight();
-        mCallHierarchyRenderer = new CallHierarchyRenderer(mTraceData, threadName, yOffset,
+        mCallHierarchyRenderer = new CallHierarchyRenderer(mTraceData, thread, yOffset,
                 DEFAULT_TIME_UNITS, mRenderContext);
 
         zoomFit();
