@@ -19,6 +19,7 @@ package com.android.tools.perflib.vmtrace;
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
+import com.google.common.collect.Maps;
 import com.google.common.io.Closeables;
 
 import java.io.BufferedReader;
@@ -30,6 +31,7 @@ import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class VmTraceParser {
@@ -396,9 +398,21 @@ public class VmTraceParser {
         for (ThreadInfo thread : data.getThreads()) {
             computePerThreadStats(thread, data);
         }
+
+        ProfileDataBuilder builder = new ProfileDataBuilder();
+        for (ThreadInfo thread : data.getThreads()) {
+            Call c = thread.getTopLevelCall();
+            if (c == null) {
+                continue;
+            }
+
+            builder.computeCallStats(c, null, thread);
+        }
+
+        // iterate through all builders and obtain final stats
     }
 
-    private void computePerThreadStats(@NonNull ThreadInfo thread, VmTraceData data) {
+    private void computePerThreadStats(@NonNull ThreadInfo thread, @NonNull VmTraceData data) {
         Call c = thread.getTopLevelCall();
         if (c == null) {
             return;
@@ -424,5 +438,31 @@ public class VmTraceParser {
             }
         }
 
+    }
+
+    private static class ProfileDataBuilder {
+        /** Maps method ids to their corresponding method data builders */
+        private final Map<Long, MethodProfileData.Builder> mBuilderMap = Maps.newHashMap();
+
+        public void computeCallStats(Call c, Call parent, ThreadInfo thread) {
+            long methodId = c.getMethodId();
+            MethodProfileData.Builder builder = getProfileDataBuilder(methodId);
+            builder.addCallTime(c, parent, thread);
+            builder.incrementInvocationCount(c, thread);
+
+            for (Call callee: c.getCallees()) {
+                computeCallStats(callee, c, thread);
+            }
+        }
+
+        @NonNull
+        private MethodProfileData.Builder getProfileDataBuilder(long methodId) {
+            MethodProfileData.Builder builder = mBuilderMap.get(methodId);
+            if (builder == null) {
+                builder = new MethodProfileData.Builder();
+                mBuilderMap.put(methodId, builder);
+            }
+            return builder;
+        }
     }
 }
