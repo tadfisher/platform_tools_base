@@ -182,8 +182,9 @@ public class TraceView {
                         return;
                     }
 
-                    SearchResult results = mTraceData.searchFor(pattern,
-                            (String) mThreadCombo.getSelectedItem());
+                    String threadName = (String) mThreadCombo.getSelectedItem();
+                    ThreadInfo thread = mTraceData.getThread(threadName);
+                    SearchResult results = mTraceData.searchFor(pattern, thread);
                     mTraceViewCanvas.setHighlightMethods(results.getMethods());
 
                     String result = String.format("%1$d methods, %2$d instances",
