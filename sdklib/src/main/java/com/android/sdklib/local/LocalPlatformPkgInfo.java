@@ -285,10 +285,16 @@ public class LocalPlatformPkgInfo extends LocalAndroidVersionPkgInfo {
         String[] skins = parseSkinFolder(pt.getPath(IAndroidTarget.SKINS));
         pt.setSkins(skins);
 
-        // add the samples
+        // add path to the non-legacy samples package if it exists
         LocalPkgInfo samples = getLocalSdk().getPkgInfo(LocalSdk.PKG_SAMPLES, getAndroidVersion());
         if (samples != null) {
             pt.setSamplesPath(samples.getLocalDir().getAbsolutePath());
+        }
+
+        // add path to the non-legacy sources package if it exists
+        LocalPkgInfo sources = getLocalSdk().getPkgInfo(LocalSdk.PKG_SOURCES, getAndroidVersion());
+        if (sources != null) {
+            pt.setSourcesPath(sources.getLocalDir().getAbsolutePath());
         }
 
         return pt;
