@@ -37,6 +37,7 @@ public class MavenCoordinate implements Comparable<MavenCoordinate> {
    *   version uniquely identifies a version.
    *
    * We only care about coordinates of the following form: groupId:artifactId:MajorRevision.MinorRevision.(MicroRevision|+)
+   *                                                   or: groupId:artifactId:+
    */
 
   public static final int PLUS_REV           = Integer.MAX_VALUE;
@@ -48,7 +49,10 @@ public class MavenCoordinate implements Comparable<MavenCoordinate> {
   private final int myMinorRevision;
   private final int myMicroRevision;
 
-  private static final Pattern MAVEN_PATTERN = Pattern.compile("([\\w\\d\\.-]+):([\\w\\d\\.-]+):(\\d+)\\.(\\d+)\\.(\\d+|\\+)");
+  private final boolean myIsAnyRevision;
+
+  private static final Pattern MAVEN_PATTERN = Pattern.compile("([\\w\\d\\.-]+):([\\w\\d\\.-]+):([\\d+\\.]+|\\+)");
+  private static final Pattern REVISION_PATTERN = Pattern.compile("(\\d+)\\.(\\d+)\\.(\\d+|\\+)");
 
   /**
    * Constructor
@@ -64,6 +68,9 @@ public class MavenCoordinate implements Comparable<MavenCoordinate> {
     myMajorRevision = majorRevision;
     myMinorRevision = minorRevision;
     myMicroRevision = microRevision;
+
+    // If the major revision is "+" then we'll accept any revision
+    myIsAnyRevision = (myMajorRevision == PLUS_REV);
   }
 
   /**
@@ -84,27 +91,41 @@ public class MavenCoordinate implements Comparable<MavenCoordinate> {
 
     String groupId = matcher.group(1);
     String artifactId = matcher.group(2);
+    String revision = matcher.group(3);
 
-    try {
-      int majorRevision = Integer.parseInt(matcher.group(3));
-      int minorRevision = Integer.parseInt(matcher.group(4));
-      String microRevisionString = matcher.group(5);
-      int microRevision;
-      if (microRevisionString.equals("+")) {
-        microRevision = PLUS_REV;
-      } else {
-        microRevision = Integer.parseInt(microRevisionString);
+    int majorRevision;
+    int minorRevision;
+    int microRevision;
+    if (revision.equals("+")) {
+      majorRevision = minorRevision = microRevision = PLUS_REV;
+    } else {
+      matcher = REVISION_PATTERN.matcher(revision);
+      try {
+        majorRevision = Integer.parseInt(matcher.group(1));
+        minorRevision = Integer.parseInt(matcher.group(2));
+        String microRevisionString = matcher.group(3);
+        if (microRevisionString.equals("+")) {
+          microRevision = PLUS_REV;
+        } else {
+          microRevision = Integer.parseInt(microRevisionString);
+        }
+      } catch (Exception e) {
+        return null;
       }
-      return new MavenCoordinate(groupId, artifactId, majorRevision, minorRevision, microRevision);
-    } catch (Exception e) {
-      return null;
     }
+    return new MavenCoordinate(groupId, artifactId, majorRevision, minorRevision, microRevision);
   }
 
   @Override
   public String toString() {
     String micro = (myMicroRevision == PLUS_REV) ? "+" : Integer.toString(myMicroRevision);
-    return String.format(Locale.US, "%s:%s:%d.%d.%s", myGroupId, myArtifactId, myMajorRevision, myMinorRevision, micro);
+    String revision;
+    if (myIsAnyRevision) {
+      revision = "+";
+    } else {
+      revision = String.format(Locale.US, "%d.%d.%s", myMajorRevision, myMinorRevision, micro);
+    }
+    return String.format(Locale.US, "%s:%s:%s", myGroupId, myArtifactId, revision);
   }
 
   @Nullable
@@ -183,6 +204,13 @@ public class MavenCoordinate implements Comparable<MavenCoordinate> {
     // Make sure we're comparing apples to apples. If not, compare artifactIds
     if (!this.isSameArtifact(that)) {
       return this.myArtifactId.compareTo(that.myArtifactId);
+    }
+
+    // Specific version should beat "any version"
+    if (myIsAnyRevision) {
+      return -1;
+    } else if (that.myIsAnyRevision) {
+      return 1;
     }
 
     if (this.myMajorRevision != that.myMajorRevision) {
