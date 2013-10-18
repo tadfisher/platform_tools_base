@@ -175,6 +175,49 @@ final class Device implements IDevice {
         }
     }
 
+    /**
+     * Output receiver for "cat /sys/class/power_supply/.../capacity" command line.
+     */
+    private static final class SysFsBatteryLevelReceiver extends MultiLineReceiver {
+
+        private static final Pattern BATTERY_LEVEL = Pattern.compile("^(\\d+)");
+        private Integer mBatteryLevel = null;
+
+        /**
+         * Get the parsed battery level.
+         * @return
+         */
+        public Integer getBatteryLevel() {
+            return mBatteryLevel;
+        }
+
+        @Override
+        public boolean isCancelled() {
+            return false;
+        }
+
+        @Override
+        public void processNewLines(String[] lines) {
+            for (String line : lines) {
+                Matcher batteryMatch = BATTERY_LEVEL.matcher(line);
+                if (batteryMatch.matches()) {
+                    if (mBatteryLevel == null) {
+                        mBatteryLevel = Integer.parseInt(batteryMatch.group(1));
+                    } else {
+                        // multiple matches, check if they are different
+                        Integer tmpLevel = Integer.parseInt(batteryMatch.group(1));
+                        if (!mBatteryLevel.equals(tmpLevel)) {
+                            Log.w(LOG_TAG, String.format(
+                                    "Multiple lines matched with different value; " +
+                                    "Original: %s, Current: %s (keeping original)",
+                                    mBatteryLevel.toString(), tmpLevel.toString()));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     /*
      * (non-Javadoc)
      * @see com.android.ddmlib.IDevice#getSerialNumber()
@@ -874,6 +917,16 @@ final class Device implements IDevice {
                 && mLastBatteryCheckTime > (System.currentTimeMillis() - freshnessMs)) {
             return mLastBatteryLevel;
         }
+        // first try to get it from sysfs
+        SysFsBatteryLevelReceiver sysBattReceiver = new SysFsBatteryLevelReceiver();
+        executeShellCommand("cat /sys/class/power_supply/*/capacity",
+                sysBattReceiver, BATTERY_TIMEOUT);
+        mLastBatteryLevel = sysBattReceiver.getBatteryLevel();
+        if (mLastBatteryLevel != null) {
+            mLastBatteryCheckTime = System.currentTimeMillis();
+            return mLastBatteryLevel;
+        }
+        // now try dumpsys
         BatteryReceiver receiver = new BatteryReceiver();
         executeShellCommand("dumpsys battery", receiver, BATTERY_TIMEOUT);
         mLastBatteryLevel = receiver.getBatteryLevel();
