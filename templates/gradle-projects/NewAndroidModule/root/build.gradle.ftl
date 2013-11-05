@@ -10,7 +10,11 @@ buildscript {
         classpath 'com.android.tools.build:gradle:${gradlePluginVersion}'
     }
 }
+<#if isLibraryProject?? && isLibraryProject>
 apply plugin: 'android-library'
+<#else>
+apply plugin: 'android'
+</#if>
 
 repositories {
 <#if mavenUrl == "mavenCentral">
@@ -28,7 +32,19 @@ android {
         minSdkVersion ${minApi}
         targetSdkVersion ${targetApi}
     }
+<#if javaVersion?? && javaVersion != "1.6">
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_${javaVersion?replace('.','_','i')}
+        targetCompatibility JavaVersion.VERSION_${javaVersion?replace('.','_','i')}
+    }
+</#if>
 }
 
 dependencies {
+    <#if dependencyList?? >
+    <#list dependencyList as dependency>
+    compile '${dependency}'
+    </#list>
+    </#if>
 }
