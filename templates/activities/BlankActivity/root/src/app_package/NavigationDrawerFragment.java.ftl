@@ -1,9 +1,9 @@
 package ${packageName};
 
-<#if appCompat?has_content>import android.support.v7.app.ActionBarActivity;</#if>;
+<#if appCompat?has_content>import android.support.v7.app.ActionBarActivity;</#if>
 import android.app.Activity;
 import android.<#if appCompat?has_content>support.v7.</#if>app.ActionBar;
-import android.<#if appCompat?has_content>support.v4.</#if>app.Fragment;
+import android.<#if Support?has_content>support.v4.</#if>app.Fragment;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -77,9 +77,6 @@ public class NavigationDrawerFragment extends Fragment {
 
         // Select either the default item (0) or the last selected item.
         selectItem(mCurrentSelectedPosition);
-
-        // Indicate that this fragment would like to influence the set of actions in the action bar.
-        setHasOptionsMenu(true);
     }
 
     @Override
@@ -104,6 +101,12 @@ public class NavigationDrawerFragment extends Fragment {
                 }));
         mDrawerListView.setItemChecked(mCurrentSelectedPosition, true);
         return mDrawerListView;
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        // Indicate that this fragment would like to influence the set of actions in the action bar.
+        setHasOptionsMenu(true);
     }
 
     public boolean isDrawerOpen() {

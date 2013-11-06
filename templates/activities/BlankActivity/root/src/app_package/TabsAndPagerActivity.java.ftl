@@ -4,9 +4,9 @@ import java.util.Locale;
 
 import <#if appCompat?has_content>android.support.v7.app.ActionBarActivity<#else>android.app.Activity</#if>;
 import android.<#if appCompat?has_content>support.v7.</#if>app.ActionBar;
-import android.<#if appCompat?has_content>support.v4.</#if>app.Fragment;
-import android.<#if appCompat?has_content>support.v4.</#if>app.FragmentManager;
-import android.<#if appCompat?has_content>support.v4.</#if>app.FragmentTransaction;
+import android.<#if Support?has_content>support.v4.</#if>app.Fragment;
+import android.<#if Support?has_content>support.v4.</#if>app.FragmentManager;
+import android.<#if Support?has_content>support.v4.</#if>app.FragmentTransaction;
 import android.support.${(appCompat?has_content)?string('v4','v13')}.app.FragmentPagerAdapter;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
