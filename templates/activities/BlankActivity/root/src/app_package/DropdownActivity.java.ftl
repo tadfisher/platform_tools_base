@@ -2,7 +2,7 @@ package ${packageName};
 
 import <#if appCompat?has_content>android.support.v7.app.ActionBarActivity<#else>android.app.Activity</#if>;
 import android.<#if appCompat?has_content>support.v7.</#if>app.ActionBar;
-import android.<#if appCompat?has_content>support.v4.</#if>app.Fragment;
+import android.<#if Support?has_content>support.v4.</#if>app.Fragment;
 import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;

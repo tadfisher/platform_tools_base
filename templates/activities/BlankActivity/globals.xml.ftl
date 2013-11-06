@@ -4,7 +4,7 @@
     <global id="manifestOut" value="${manifestDir}" />
     <global id="appCompat" value="${(minApiLevel lt 14)?string('1','')}" />
     <!-- e.g. getSupportActionBar vs. getActionBar -->
-    <global id="Support" value="${(minApiLevel lt 14)?string('Support','')}" />
+    <global id="Support" value="${(minApiLevel lt 11)?string('Support','')}" />
     <global id="hasViewPager" value="${(navType == 'pager' || navType == 'tabs')?string('1','')}" />
     <global id="hasSections" value="${(navType == 'pager' || navType == 'tabs' || navType == 'spinner' || navType == 'drawer')?string('1','')}" />
     <global id="srcOut" value="${srcDir}/${slashedPackageName(packageName)}" />
