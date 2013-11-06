@@ -1,9 +1,9 @@
 package ${packageName};
 
-<#if appCompat?has_content>import android.support.v7.app.ActionBarActivity;</#if>;
+<#if appCompat?has_content>import android.support.v7.app.ActionBarActivity;</#if>
 import android.app.Activity;
 import android.<#if appCompat?has_content>support.v7.</#if>app.ActionBar;
-import android.<#if appCompat?has_content>support.v4.</#if>app.Fragment;
+import android.<#if Support?has_content>support.v4.</#if>app.Fragment;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
