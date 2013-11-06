@@ -14,6 +14,8 @@
                    to="${escapeXmlAttribute(projectOut)}/build.gradle" />
     <instantiate from="AndroidManifest.xml.ftl"
                    to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />
+    <merge from="gradle.properties.ftl"
+                   to="${escapeXmlAttribute(topOut)}/gradle.properties" />
 
 <#if copyIcons>
     <copy from="res/drawable-hdpi"
