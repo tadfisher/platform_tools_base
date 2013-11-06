@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
 <globals>
+    <global id="appCompat" value="${(minApiLevel lt 14)?string('1','')}" />
+    <global id="Support" value="${(minApiLevel lt 11)?string('Support','')}" />
     <global id="projectOut" value="." />
     <global id="manifestOut" value="${manifestDir}" />
     <global id="srcOut" value="${srcDir}/${slashedPackageName(packageName)}" />
