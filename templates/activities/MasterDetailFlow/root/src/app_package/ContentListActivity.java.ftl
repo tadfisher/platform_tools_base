@@ -2,9 +2,9 @@ package ${packageName};
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
-<#if parentActivityClass != "">import android.support.v4.app.NavUtils;
-import android.view.MenuItem;</#if>
+import <#if Support?has_content>android.support.v4.app.FragmentActivity<#else>android.app.Activity</#if>;
+<#if (parentActivityClass != "" && minApiLevel lt 16)>import android.support.v4.app.NavUtils;</#if>
+<#if parentActivityClass != "">import android.view.MenuItem;</#if>
 
 /**
  * An activity representing a list of ${objectKindPlural}. This activity
@@ -22,7 +22,7 @@ import android.view.MenuItem;</#if>
  * {@link ${CollectionName}Fragment.Callbacks} interface
  * to listen for item selections.
  */
-public class ${CollectionName}Activity extends FragmentActivity
+public class ${CollectionName}Activity extends ${(Support?has_content)?string('Fragment','')}Activity
         implements ${CollectionName}Fragment.Callbacks {
 
     /**
@@ -37,7 +37,7 @@ public class ${CollectionName}Activity extends FragmentActivity
         setContentView(R.layout.activity_${collection_name});
         <#if parentActivityClass != "">
         // Show the Up button in the action bar.
-        getActionBar().setDisplayHomeAsUpEnabled(true);
+        get${Support}ActionBar().setDisplayHomeAsUpEnabled(true);
         </#if>
 
         if (findViewById(R.id.${detail_name}_container) != null) {
@@ -49,7 +49,7 @@ public class ${CollectionName}Activity extends FragmentActivity
 
             // In two-pane mode, list items should be given the
             // 'activated' state when touched.
-            ((${CollectionName}Fragment) getSupportFragmentManager()
+            ((${CollectionName}Fragment) get${Support}FragmentManager()
                     .findFragmentById(R.id.${collection_name}))
                     .setActivateOnItemClick(true);
         }
@@ -69,7 +69,7 @@ public class ${CollectionName}Activity extends FragmentActivity
             //
             // http://developer.android.com/design/patterns/navigation.html#up-vs-back
             //
-            NavUtils.navigateUpFromSameTask(this);
+            ${(minApiLevel lt 16)?string('NavUtils.','')}navigateUpFromSameTask(this);
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -90,7 +90,7 @@ public class ${CollectionName}Activity extends FragmentActivity
             arguments.putString(${DetailName}Fragment.ARG_ITEM_ID, id);
             ${DetailName}Fragment fragment = new ${DetailName}Fragment();
             fragment.setArguments(arguments);
-            getSupportFragmentManager().beginTransaction()
+            get${Support}FragmentManager().beginTransaction()
                     .replace(R.id.${detail_name}_container, fragment)
                     .commit();
 
