@@ -62,6 +62,7 @@ public class XmlTestRunListener implements ITestRunListener {
     private static final String ATTR_CLASSNAME = "classname";
     private static final String TIMESTAMP = "timestamp";
     private static final String HOSTNAME = "hostname";
+    private static final String RUN_METRICS = "runMetrics";
 
     /** the XML namespace */
     private static final String ns = null;
@@ -131,13 +132,13 @@ public class XmlTestRunListener implements ITestRunListener {
     @Override
     public void testRunEnded(long elapsedTime, Map<String, String> runMetrics) {
         mRunResult.setRunComplete(true);
-        generateDocument(mReportDir, elapsedTime);
+        generateDocument(mReportDir, elapsedTime, runMetrics);
     }
 
     /**
      * Creates a report file and populates it with the report data from the completed tests.
      */
-    private void generateDocument(File reportDir, long elapsedTime) {
+    private void generateDocument(File reportDir, long elapsedTime, Map<String, String> runMetrics) {
         String timestamp = getTimestamp();
 
         OutputStream stream = null;
@@ -149,7 +150,7 @@ public class XmlTestRunListener implements ITestRunListener {
             serializer.setFeature(
                     "http://xmlpull.org/v1/doc/features.html#indent-output", true);
             // TODO: insert build info
-            printTestResults(serializer, timestamp, elapsedTime);
+            printTestResults(serializer, timestamp, elapsedTime, runMetrics);
             serializer.endDocument();
             String msg = String.format("XML test result file generated at %s. Total tests %d, " +
                     "Failed %d, Error %d", getAbsoluteReportPath(), mRunResult.getNumTests(),
@@ -213,7 +214,8 @@ public class XmlTestRunListener implements ITestRunListener {
         return mRunResult.getName();
     }
 
-    void printTestResults(KXmlSerializer serializer, String timestamp, long elapsedTime)
+    void printTestResults(KXmlSerializer serializer, String timestamp, long elapsedTime,
+            Map<String, String> runMetrics)
             throws IOException {
         serializer.startTag(ns, TESTSUITE);
         String name = getTestSuiteName();
@@ -230,6 +232,14 @@ public class XmlTestRunListener implements ITestRunListener {
         serializer.startTag(ns, PROPERTIES);
         setPropertiesAttributes(serializer, ns);
         serializer.endTag(ns, PROPERTIES);
+
+        if (!runMetrics.isEmpty()) {
+            serializer.startTag(ns, RUN_METRICS);
+            for (Map.Entry<String, String> metricEntry : runMetrics.entrySet()) {
+                serializer.attribute(ns, metricEntry.getKey(), metricEntry.getValue());
+            }
+            serializer.endTag(ns, RUN_METRICS);
+        }
 
         Map<TestIdentifier, TestResult> testResults = mRunResult.getTestResults();
         for (Map.Entry<TestIdentifier, TestResult> testEntry : testResults.entrySet()) {
