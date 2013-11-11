@@ -434,7 +434,7 @@ public class InstrumentationResultParser extends MultiLineReceiver {
      * Reports a test result to the test run listener. Must be called when a individual test
      * result has been fully parsed.
      *
-     * @param statusMap key-value status pairs of test result
+     * @param testInfo test result data
      */
     private void reportResult(TestResult testInfo) {
         if (!testInfo.isComplete()) {
