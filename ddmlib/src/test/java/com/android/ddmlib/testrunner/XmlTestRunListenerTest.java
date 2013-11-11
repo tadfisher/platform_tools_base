@@ -28,6 +28,7 @@ import java.io.OutputStream;
 import java.io.StringReader;
 import java.util.Collections;
 import java.util.Map;
+import java.util.TreeMap;
 
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathExpressionException;
@@ -110,6 +111,44 @@ public class XmlTestRunListenerTest extends TestCase {
             "</testsuite>";
         mResultReporter.testRunStarted("test", 1);
         mResultReporter.testRunEnded(1, Collections.<String, String> emptyMap());
+
+        // because the timestamp is impossible to hardcode, look for the actual timestamp and
+        // replace it in the expected string.
+        String output = getOutput();
+        String time = getTime(output);
+        assertNotNull(time);
+
+        String expectedTimedOutput = expectedOutput.replaceFirst("#TIMEVALUE#", time);
+        assertEquals(expectedTimedOutput, output);
+    }
+
+    /**
+     * A simple test to ensure expected output is generated for test run with performance test.
+     */
+    public void testPerformanceMetricGeneration() {
+
+        Map<String, String> runMetrics = new TreeMap<String, String>();
+        runMetrics.put("execution_time", "3000");
+        runMetrics.put("java_pss", "1000");
+        runMetrics.put("java_private_dirty", "2000");
+        runMetrics.put("java_shared_dirty", "3000");
+        runMetrics.put("native_pss", "1000");
+        runMetrics.put("native_private_dirty", "2000");
+        runMetrics.put("native_shared_dirty", "3000");
+        runMetrics.put("native_pss", "1000");
+        runMetrics.put("native_private_dirty", "2000");
+        runMetrics.put("native_shared_dirty", "3000");
+
+        final String expectedOutput = "<?xml version='1.0' encoding='UTF-8' ?>" +
+                "<testsuite name=\"test\" tests=\"0\" failures=\"0\" errors=\"0\" time=\"#TIMEVALUE#\" " +
+                "timestamp=\"ignore\" hostname=\"localhost\"> " +
+                "<properties /> " +
+                "<runMetrics execution_time=\"3000\" java_private_dirty=\"2000\" java_pss=\"1000\" " +
+                "java_shared_dirty=\"3000\" native_private_dirty=\"2000\" native_pss=\"1000\" " +
+                "native_shared_dirty=\"3000\" />" +
+                "</testsuite>";
+        mResultReporter.testRunStarted("test", 0);
+        mResultReporter.testRunEnded(1, runMetrics);
 
         // because the timestamp is impossible to hardcode, look for the actual timestamp and
         // replace it in the expected string.
