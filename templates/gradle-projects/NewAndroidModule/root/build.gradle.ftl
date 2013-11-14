@@ -58,8 +58,7 @@ android {
             proguardFile getDefaultProguardFile('proguard-android-optimize.txt')
         }
         debug {
-            runProguard true
-            proguardFile getDefaultProguardFile('proguard-android.txt')
+            runProguard false
         }
     }
     productFlavors {
