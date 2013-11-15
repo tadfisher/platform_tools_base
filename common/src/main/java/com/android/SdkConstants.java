@@ -16,6 +16,8 @@
 
 package com.android;
 
+import com.sun.istack.internal.NotNull;
+
 import java.io.File;
 
 /**
@@ -921,6 +923,10 @@ public final class SdkConstants {
     // Values: Drawables
     public static final String VALUE_DISABLED = "disabled";            //$NON-NLS-1$
     public static final String VALUE_CLAMP = "clamp";                  //$NON-NLS-1$
+
+    // Values: Gradle Build File
+    public static final String VALUE_ANDROID_PLUGIN = "android";
+    public static final String VALUE_ANDROID_LIBRARY_PLUGIN = "android-library";
 
     // Menus
     public static final String ATTR_SHOW_AS_ACTION = "showAsAction";   //$NON-NLS-1$
