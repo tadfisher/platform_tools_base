@@ -50,7 +50,11 @@ public class ActionBarIconGenerator extends GraphicGenerator {
         Graphics2D g2 = (Graphics2D) tempImage.getGraphics();
         Util.drawCenterInside(g2, options.sourceImage, targetRect);
 
-        if (actionBarOptions.theme == Theme.HOLO_LIGHT) {
+        if (actionBarOptions.theme == Theme.CUSTOM) {
+          Util.drawEffects(g, tempImage, 0, 0, new Effect[] {
+            new FillEffect(new Color(actionBarOptions.customThemeColor), 0.6),
+          });
+        } else if (actionBarOptions.theme == Theme.HOLO_LIGHT) {
             Util.drawEffects(g, tempImage, 0, 0, new Effect[] {
                     new FillEffect(new Color(0x333333), 0.6),
             });
@@ -74,14 +78,43 @@ public class ActionBarIconGenerator extends GraphicGenerator {
 
         /** Whether or not the source image is a clipart source */
         public boolean sourceIsClipart = false;
+
+        /** Color defined for a custom theme */
+        public int customThemeColor;
     }
 
-    /** The themes to generate action bar icons for */
+    /**
+     * The themes to generate action bar icons for
+     */
     public enum Theme {
-        /** Theme.Holo - a dark (and default) version of the Honeycomb theme */
-        HOLO_DARK,
+      /**
+       *Theme.Holo - a dark (and default) version of the Honeycomb theme
+       */
+      HOLO_DARK("Holo Dark"),
 
-        /** Theme.HoloLight - a light version of the Honeycomb theme */
-        HOLO_LIGHT
+      /**
+       * Theme.HoloLight - a light version of the Honeycomb theme
+       */
+      HOLO_LIGHT("Holo Light"),
+
+      /**
+       * Custom Theme
+       */
+      CUSTOM("Custom");
+
+      /**
+       * Display name to show to the user in the asset type selection list
+       */
+      private final String myDisplayName;
+
+
+      Theme(String displayName) {
+        myDisplayName = displayName;
+      }
+
+      @Override
+      public String toString() {
+        return myDisplayName;
+      }
     }
 }

@@ -164,13 +164,6 @@ public abstract class GraphicGenerator {
             if (!density.isValidValueForDevice()) {
                 continue;
             }
-            if (density == Density.LOW || density == Density.TV ||
-                density == Density.XXXHIGH ||
-                (density == Density.XXHIGH && !(this instanceof LauncherIconGenerator))) {
-                // TODO don't manually check and instead gracefully handle missing stencils.
-                // Not yet supported -- missing stencil image
-                continue;
-            }
             options.density = density;
             BufferedImage image = generate(context, options);
             if (image != null) {
@@ -209,6 +202,9 @@ public abstract class GraphicGenerator {
     @SuppressWarnings("resource") // Eclipse doesn't know about Closeables#closeQuietly yet
     public static BufferedImage getStencilImage(String relativePath) throws IOException {
         InputStream is = GraphicGenerator.class.getResourceAsStream(relativePath);
+        if (is == null) {
+          return null;
+        }
         try {
             return ImageIO.read(is);
         } finally {
