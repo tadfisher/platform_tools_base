@@ -89,7 +89,7 @@ public class LocalSdkTest extends TestCase {
         assertEquals(new File("/sdk/tools"), pi.getLocalDir());
         assertSame(mLS, pi.getLocalSdk());
         assertEquals(null, pi.getLoadError());
-        assertEquals(new FullRevision(22, 3, 4), pi.getFullRevision());
+        assertEquals(new FullRevision(22, 3, 4), pi.getDesc().getFullRevision());
         assertEquals("<LocalToolPkgInfo FullRev=22.3.4>", pi.toString());
 
         Package pkg = pi.getPackage();
@@ -123,7 +123,7 @@ public class LocalSdkTest extends TestCase {
         assertEquals(new File("/sdk/platform-tools"), pi.getLocalDir());
         assertSame(mLS, pi.getLocalSdk());
         assertEquals(null, pi.getLoadError());
-        assertEquals(new FullRevision(18, 19, 20), pi.getFullRevision());
+        assertEquals(new FullRevision(18, 19, 20), pi.getDesc().getFullRevision());
         assertEquals("<LocalPlatformToolPkgInfo FullRev=18.19.20>", pi.toString());
 
         Package pkg = pi.getPackage();
@@ -153,7 +153,7 @@ public class LocalSdkTest extends TestCase {
         assertEquals(new File("/sdk/docs"), pi.getLocalDir());
         assertSame(mLS, pi.getLocalSdk());
         assertEquals(null, pi.getLoadError());
-        assertEquals(new MajorRevision(2), pi.getMajorRevision());
+        assertEquals(new MajorRevision(2), pi.getDesc().getMajorRevision());
         assertEquals("<LocalDocPkgInfo MajorRev=2>", pi.toString());
 
         Package pkg = pi.getPackage();
@@ -252,7 +252,7 @@ public class LocalSdkTest extends TestCase {
         assertEquals(new File("/sdk/build-tools/18.1.2"), pi.getLocalDir());
         assertSame(mLS, pi.getLocalSdk());
         assertEquals(null, pi.getLoadError());
-        assertEquals(new FullRevision(18, 1, 2), pi.getFullRevision());
+        assertEquals(new FullRevision(18, 1, 2), pi.getDesc().getFullRevision());
 
         Package pkg = pi.getPackage();
         assertNotNull(pkg);
@@ -312,13 +312,13 @@ public class LocalSdkTest extends TestCase {
         LocalPkgInfo pi1 = mLS.getPkgInfo(LocalSdk.PKG_EXTRAS, "vendor1/path1");
         assertNotNull(pi1);
         assertTrue(pi1 instanceof LocalExtraPkgInfo);
-        assertEquals("vendor1/path1", ((LocalExtraPkgInfo)pi1).getPath());
+        assertEquals("vendor1/path1", ((LocalExtraPkgInfo)pi1).getDesc().getPath());
         assertEquals("path1",         ((LocalExtraPkgInfo)pi1).getExtraPath());
         assertEquals("vendor1",       ((LocalExtraPkgInfo)pi1).getVendorId());
         assertEquals(new File("/sdk/extras/vendor1/path1"), pi1.getLocalDir());
         assertSame(mLS, pi1.getLocalSdk());
         assertEquals(null, pi1.getLoadError());
-        assertEquals(new FullRevision(11), pi1.getFullRevision());
+        assertEquals(new FullRevision(11), pi1.getDesc().getFullRevision());
 
         Package pkg = pi1.getPackage();
         assertNotNull(pkg);
@@ -370,16 +370,16 @@ public class LocalSdkTest extends TestCase {
         assertTrue(pi18 instanceof LocalSourcePkgInfo);
         assertSame(mLS, pi18.getLocalSdk());
         assertEquals(null, pi18.getLoadError());
-        assertEquals(new AndroidVersion(18, null), pi18.getAndroidVersion());
-        assertEquals(new MajorRevision(2), pi18.getMajorRevision());
+        assertEquals(new AndroidVersion(18, null), pi18.getDesc().getAndroidVersion());
+        assertEquals(new MajorRevision(2), pi18.getDesc().getMajorRevision());
 
         Package pkg = pi18.getPackage();
         assertNotNull(pkg);
 
         LocalPkgInfo pi1 = mLS.getPkgInfo(LocalSdk.PKG_SOURCES, new AndroidVersion(3, "CUPCAKE"));
         assertNotNull(pi1);
-        assertEquals(new AndroidVersion(3, "CUPCAKE"), pi1.getAndroidVersion());
-        assertEquals(new MajorRevision(1), pi1.getMajorRevision());
+        assertEquals(new AndroidVersion(3, "CUPCAKE"), pi1.getDesc().getAndroidVersion());
+        assertEquals(new MajorRevision(1), pi1.getDesc().getMajorRevision());
 
         // -- get all extras and iterate, sorted by revision.
 
@@ -417,8 +417,8 @@ public class LocalSdkTest extends TestCase {
         assertTrue(pi18 instanceof LocalSamplePkgInfo);
         assertSame(mLS, pi18.getLocalSdk());
         assertEquals(null, pi18.getLoadError());
-        assertEquals(new AndroidVersion(18, null), pi18.getAndroidVersion());
-        assertEquals(new MajorRevision(2), pi18.getMajorRevision());
+        assertEquals(new AndroidVersion(18, null), pi18.getDesc().getAndroidVersion());
+        assertEquals(new MajorRevision(2), pi18.getDesc().getMajorRevision());
 
         Package pkg = pi18.getPackage();
         assertNotNull(pkg);
@@ -483,8 +483,8 @@ public class LocalSdkTest extends TestCase {
         assertTrue(pi instanceof LocalSysImgPkgInfo);
         assertSame(mLS, pi.getLocalSdk());
         assertEquals(null, pi.getLoadError());
-        assertEquals(new MajorRevision(1), pi.getMajorRevision());
-        assertEquals("armeabi-v7a", pi.getPath());
+        assertEquals(new MajorRevision(1), pi.getDesc().getMajorRevision());
+        assertEquals("armeabi-v7a", pi.getDesc().getPath());
 
         Package pkg = pi.getPackage();
         assertNull(pkg);
@@ -506,8 +506,8 @@ public class LocalSdkTest extends TestCase {
         assertTrue(pi instanceof LocalPlatformPkgInfo);
         assertSame(mLS, pi.getLocalSdk());
         assertEquals(null, pi.getLoadError());
-        assertEquals(new AndroidVersion(18, null), pi.getAndroidVersion());
-        assertEquals(new MajorRevision(1), pi.getMajorRevision());
+        assertEquals(new AndroidVersion(18, null), pi.getDesc().getAndroidVersion());
+        assertEquals(new MajorRevision(1), pi.getDesc().getMajorRevision());
 
         Package pkg = pi.getPackage();
         assertNotNull(pkg);
@@ -598,9 +598,9 @@ public class LocalSdkTest extends TestCase {
         assertTrue(pi instanceof LocalAddonPkgInfo);
         assertSame(mLS, pi.getLocalSdk());
         assertEquals(null, pi.getLoadError());
-        assertEquals(new AndroidVersion(18, null), pi.getAndroidVersion());
-        assertEquals(new MajorRevision(2), pi.getMajorRevision());
-        assertEquals("Some Vendor:Some Name:18", pi.getPath());
+        assertEquals(new AndroidVersion(18, null), pi.getDesc().getAndroidVersion());
+        assertEquals(new MajorRevision(2), pi.getDesc().getMajorRevision());
+        assertEquals("Some Vendor:Some Name:18", pi.getDesc().getPath());
 
         Package pkg = pi.getPackage();
         assertNotNull(pkg);

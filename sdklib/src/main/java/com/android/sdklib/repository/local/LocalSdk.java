@@ -32,6 +32,7 @@ import com.android.sdklib.io.IFileOp;
 import com.android.sdklib.repository.FullRevision;
 import com.android.sdklib.repository.MajorRevision;
 import com.android.sdklib.repository.NoPreviewRevision;
+import com.android.sdklib.repository.descriptors.PkgDesc;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -344,11 +345,9 @@ public class LocalSdk {
                filter == PKG_SOURCES;
 
         for (LocalPkgInfo pkg : getPkgsInfos(filter)) {
-            if (pkg instanceof LocalAndroidVersionPkgInfo) {
-                LocalAndroidVersionPkgInfo p = (LocalAndroidVersionPkgInfo) pkg;
-                if (p.getAndroidVersion().equals(version)) {
-                    return p;
-                }
+            PkgDesc d = pkg.getDesc();
+            if (d.hasAndroidVersion() && d.getAndroidVersion().equals(version)) {
+                return pkg;
             }
         }
 
@@ -370,11 +369,9 @@ public class LocalSdk {
         assert filter == PKG_BUILD_TOOLS;
 
         for (LocalPkgInfo pkg : getPkgsInfos(filter)) {
-            if (pkg instanceof LocalFullRevisionPkgInfo) {
-                LocalFullRevisionPkgInfo p = (LocalFullRevisionPkgInfo) pkg;
-                if (p.getFullRevision().equals(revision)) {
-                    return p;
-                }
+            PkgDesc d = pkg.getDesc();
+            if (d.hasFullRevision() && d.getFullRevision().equals(revision)) {
+                return pkg;
             }
         }
         return null;
@@ -394,7 +391,7 @@ public class LocalSdk {
                filter == PKG_PLATFORMS;
 
         for (LocalPkgInfo pkg : getPkgsInfos(filter)) {
-            if (pkg.hasPath() && vendorPath.equals(pkg.getPath())) {
+            if (pkg.getDesc().hasPath() && vendorPath.equals(pkg.getDesc().getPath())) {
                return pkg;
            }
        }
@@ -594,7 +591,7 @@ public class LocalSdk {
         if (pkgs.length == 0) {
             LocalPkgInfo ptPkg = getPkgInfo(PKG_PLATFORM_TOOLS);
             if (ptPkg instanceof LocalPlatformToolPkgInfo &&
-                    ptPkg.getFullRevision().compareTo(new FullRevision(17)) < 0) {
+                    ptPkg.getDesc().getFullRevision().compareTo(new FullRevision(17)) < 0) {
                 // older SDK, create a compatible build-tools
                 mLegacyBuildTools = createLegacyBuildTools((LocalPlatformToolPkgInfo) ptPkg);
                 return mLegacyBuildTools;
@@ -624,7 +621,7 @@ public class LocalSdk {
         File platformToolsRs = new File(platformTools, SdkConstants.FN_FRAMEWORK_RENDERSCRIPT);
 
         return new BuildToolInfo(
-                ptInfo.getFullRevision(),
+                ptInfo.getDesc().getFullRevision(),
                 platformTools,
                 new File(platformTools, SdkConstants.FN_AAPT),
                 new File(platformTools, SdkConstants.FN_AIDL),
