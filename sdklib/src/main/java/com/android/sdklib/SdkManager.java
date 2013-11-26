@@ -26,6 +26,7 @@ import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.internal.androidTarget.AddOnTarget;
 import com.android.sdklib.internal.androidTarget.PlatformTarget;
 import com.android.sdklib.repository.FullRevision;
+import com.android.sdklib.repository.descriptors.PkgDesc;
 import com.android.sdklib.repository.local.LocalExtraPkgInfo;
 import com.android.sdklib.repository.local.LocalPkgInfo;
 import com.android.sdklib.repository.local.LocalPlatformPkgInfo;
@@ -191,8 +192,9 @@ public class SdkManager {
         LocalPkgInfo[] pkgs = mLocalSdk.getPkgsInfos(LocalSdk.PKG_BUILD_TOOLS);
         TreeSet<FullRevision> bt = new TreeSet<FullRevision>();
         for (LocalPkgInfo pkg : pkgs) {
-            if (pkg.hasFullRevision()) {
-                bt.add(pkg.getFullRevision());
+            PkgDesc d = pkg.getDesc();
+            if (d.hasFullRevision()) {
+                bt.add(d.getFullRevision());
             }
         }
         return Collections.unmodifiableSet(bt);
@@ -355,7 +357,7 @@ public class SdkManager {
                 LocalExtraPkgInfo ei = (LocalExtraPkgInfo) info;
                 String vendor = ei.getVendorId();
                 String path   = ei.getExtraPath();
-                int majorRev  = ei.getFullRevision().getMajor();
+                int majorRev  = ei.getDesc().getFullRevision().getMajor();
 
                 extraVersions.put(vendor + '/' + path, majorRev);
             }
@@ -368,8 +370,9 @@ public class SdkManager {
     @Nullable
     public String getPlatformToolsVersion() {
         LocalPkgInfo info = mLocalSdk.getPkgInfo(LocalSdk.PKG_PLATFORM_TOOLS);
-        if (info != null && info.hasFullRevision()) {
-            return info.getFullRevision().toShortString();
+        PkgDesc d = info == null ? null : info.getDesc();
+        if (d != null && d.hasFullRevision()) {
+            return d.getFullRevision().toShortString();
         }
 
         return null;

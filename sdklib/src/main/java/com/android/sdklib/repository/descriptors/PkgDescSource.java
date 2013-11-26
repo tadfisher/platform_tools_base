@@ -14,35 +14,41 @@
  * limitations under the License.
  */
 
-package com.android.sdklib.repository.local;
+package com.android.sdklib.repository.descriptors;
 
 import com.android.annotations.NonNull;
 import com.android.sdklib.AndroidVersion;
+import com.android.sdklib.repository.MajorRevision;
 
-import java.io.File;
-import java.util.Properties;
-
-abstract class LocalAndroidVersionPkgInfo extends LocalPkgInfo {
+/**
+ * Local source package, for a given platform's {@link AndroidVersion}.
+ * The package itself has a major revision.
+ * There should be only one for a given android platform version.
+ */
+public class PkgDescSource extends PkgDescAndroidVersion {
 
     @NonNull
-    private final AndroidVersion mVersion;
+    private final MajorRevision mRevision;
 
-    public LocalAndroidVersionPkgInfo(@NonNull LocalSdk localSdk,
-                                      @NonNull File localDir,
-                                      @NonNull Properties sourceProps,
-                                      @NonNull AndroidVersion version) {
-        super(localSdk, localDir, sourceProps);
-        mVersion = version;
+    public PkgDescSource(@NonNull AndroidVersion version,
+                         @NonNull MajorRevision revision) {
+        super(version);
+        mRevision = revision;
     }
 
     @Override
-    public boolean hasAndroidVersion() {
+    public int getType() {
+        return PkgDesc.PKG_SOURCES;
+    }
+
+    @Override
+    public boolean hasMajorRevision() {
         return true;
     }
 
     @NonNull
     @Override
-    public AndroidVersion getAndroidVersion() {
-        return mVersion;
+    public MajorRevision getMajorRevision() {
+        return mRevision;
     }
 }

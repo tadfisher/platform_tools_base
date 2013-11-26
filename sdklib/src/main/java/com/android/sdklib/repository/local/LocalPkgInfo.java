@@ -18,11 +18,9 @@ package com.android.sdklib.repository.local;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.internal.repository.IListDescription;
 import com.android.sdklib.internal.repository.packages.Package;
-import com.android.sdklib.repository.FullRevision;
-import com.android.sdklib.repository.MajorRevision;
+import com.android.sdklib.repository.descriptors.PkgDesc;
 
 import java.io.File;
 import java.util.Properties;
@@ -68,78 +66,45 @@ public abstract class LocalPkgInfo implements IListDescription, Comparable<Local
 
     // ----
 
-    public abstract int getType();
+    /** Returns the {@link PkgDesc} describing this package. */
+    @NonNull
+    public abstract PkgDesc getDesc();
 
-    public boolean hasFullRevision() {
-        return false;
-    }
-
-    public boolean hasMajorRevision() {
-        return false;
-    }
-
-    public boolean hasAndroidVersion() {
-        return false;
-    }
-
-    public boolean hasPath() {
-        return false;
-    }
-
-    @Nullable
-    public FullRevision getFullRevision() {
-        return null;
-    }
-
-    @Nullable
-    public MajorRevision getMajorRevision() {
-        return null;
-    }
-
-    @Nullable
-    public AndroidVersion getAndroidVersion() {
-        return null;
-    }
-
-    @Nullable
-    public String getPath() {
-        return null;
-    }
 
     //---- Ordering ----
 
     @Override
     public int compareTo(@NonNull LocalPkgInfo o) {
-        int t1 = getType();
-        int t2 = o.getType();
+        int t1 = getDesc().getType();
+        int t2 = o.getDesc().getType();
         if (t1 != t2) {
             return t2 - t1;
         }
 
-        if (hasAndroidVersion() && o.hasAndroidVersion()) {
-            t1 = getAndroidVersion().compareTo(o.getAndroidVersion());
+        if (getDesc().hasAndroidVersion() && o.getDesc().hasAndroidVersion()) {
+            t1 = getDesc().getAndroidVersion().compareTo(o.getDesc().getAndroidVersion());
             if (t1 != 0) {
                 return t1;
             }
         }
 
 
-        if (hasPath() && o.hasPath()) {
-            t1 = getPath().compareTo(o.getPath());
+        if (getDesc().hasPath() && o.getDesc().hasPath()) {
+            t1 = getDesc().getPath().compareTo(o.getDesc().getPath());
             if (t1 != 0) {
                 return t1;
             }
         }
 
-        if (hasFullRevision() && o.hasFullRevision()) {
-            t1 = getFullRevision().compareTo(o.getFullRevision());
+        if (getDesc().hasFullRevision() && o.getDesc().hasFullRevision()) {
+            t1 = getDesc().getFullRevision().compareTo(o.getDesc().getFullRevision());
             if (t1 != 0) {
                 return t1;
             }
         }
 
-        if (hasMajorRevision() && o.hasMajorRevision()) {
-            t1 = getMajorRevision().compareTo(o.getMajorRevision());
+        if (getDesc().hasMajorRevision() && o.getDesc().hasMajorRevision()) {
+            t1 = getDesc().getMajorRevision().compareTo(o.getDesc().getMajorRevision());
             if (t1 != 0) {
                 return t1;
             }
@@ -155,20 +120,20 @@ public abstract class LocalPkgInfo implements IListDescription, Comparable<Local
         builder.append("<");
         builder.append(this.getClass().getSimpleName());
 
-        if (hasAndroidVersion()) {
-            builder.append(" Android=").append(getAndroidVersion());
+        if (getDesc().hasAndroidVersion()) {
+            builder.append(" Android=").append(getDesc().getAndroidVersion());
         }
 
-        if (hasPath()) {
-            builder.append(" Path=").append(getPath());
+        if (getDesc().hasPath()) {
+            builder.append(" Path=").append(getDesc().getPath());
         }
 
-        if (hasFullRevision()) {
-            builder.append(" FullRev=").append(getFullRevision());
+        if (getDesc().hasFullRevision()) {
+            builder.append(" FullRev=").append(getDesc().getFullRevision());
         }
 
-        if (hasMajorRevision()) {
-            builder.append(" MajorRev=").append(getMajorRevision());
+        if (getDesc().hasMajorRevision()) {
+            builder.append(" MajorRev=").append(getDesc().getMajorRevision());
         }
 
         builder.append(">");
