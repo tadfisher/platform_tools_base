@@ -488,7 +488,6 @@ public class LocalSdkParser {
             }
 
             String api = propertyMap.get(LocalAddonPkgInfo.ADDON_API);
-            PlatformTarget plat = null;
             if (api == null) {
                 error = String.format("'%1$s' is missing from %2$s.",
                         LocalAddonPkgInfo.ADDON_API,
