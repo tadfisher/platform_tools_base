@@ -23,22 +23,27 @@ import com.android.sdklib.internal.repository.archives.Archive.Os;
 import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.internal.repository.packages.ToolPackage;
 import com.android.sdklib.repository.FullRevision;
+import com.android.sdklib.repository.descriptors.PkgDescTool;
 
 import java.io.File;
 import java.util.Properties;
 
-public class LocalToolPkgInfo extends LocalFullRevisionPkgInfo {
+public class LocalToolPkgInfo extends LocalPkgInfo {
+
+    private final @NonNull PkgDescTool mDesc;
 
     public LocalToolPkgInfo(@NonNull LocalSdk localSdk,
                             @NonNull File localDir,
                             @NonNull Properties sourceProps,
                             @NonNull FullRevision revision) {
-        super(localSdk, localDir, sourceProps, revision);
+        super(localSdk, localDir, sourceProps);
+        mDesc = new PkgDescTool(revision);
     }
 
+    @NonNull
     @Override
-    public int getType() {
-        return LocalSdk.PKG_TOOLS;
+    public PkgDescTool getDesc() {
+        return mDesc;
     }
 
     @Nullable

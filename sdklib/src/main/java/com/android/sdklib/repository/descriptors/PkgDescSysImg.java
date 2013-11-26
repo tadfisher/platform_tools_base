@@ -14,15 +14,11 @@
  * limitations under the License.
  */
 
-package com.android.sdklib.repository.local;
+package com.android.sdklib.repository.descriptors;
 
 import com.android.annotations.NonNull;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.repository.MajorRevision;
-import com.android.sdklib.repository.descriptors.PkgDescSysImg;
-
-import java.io.File;
-import java.util.Properties;
 
 /**
  * Local system-image package, for a given platform's {@link AndroidVersion}
@@ -30,27 +26,52 @@ import java.util.Properties;
  * The package itself has a major revision.
  * There should be only one for a given android platform version & ABI.
  */
-public class LocalSysImgPkgInfo extends LocalPkgInfo {
+public class PkgDescSysImg extends PkgDescAndroidVersion {
 
+    @NonNull
+    private final MajorRevision mRevision;
+    @NonNull
+    private final String mAbi;
 
-    private final @NonNull PkgDescSysImg mDesc;
+    public PkgDescSysImg(@NonNull AndroidVersion version,
+                         @NonNull String abi,
+                         @NonNull MajorRevision revision) {
+        super(version);
+        mAbi = abi;
+        mRevision = revision;
 
-    public LocalSysImgPkgInfo(@NonNull LocalSdk localSdk,
-                              @NonNull File localDir,
-                              @NonNull Properties sourceProps,
-                              @NonNull AndroidVersion version,
-                              @NonNull String abi,
-                              @NonNull MajorRevision revision) {
-        super(localSdk, localDir, sourceProps);
-        mDesc = new PkgDescSysImg(version, abi, revision);
+    }
+
+    @Override
+    public int getType() {
+        return PkgDesc.PKG_SYS_IMAGES;
+    }
+
+    @Override
+    public boolean hasMajorRevision() {
+        return true;
     }
 
     @NonNull
     @Override
-    public PkgDescSysImg getDesc() {
-        return mDesc;
+    public MajorRevision getMajorRevision() {
+        return mRevision;
     }
 
-    // TODO create package on demand if needed. This might not be needed
-    // since typically system-images are retrieved via IAndroidTarget.
+    @Override
+    public boolean hasPath() {
+        return true;
+    }
+
+    /** The System-image path is its ABI. */
+    @NonNull
+    @Override
+    public String getPath() {
+        return getAbi();
+    }
+
+    @NonNull
+    public String getAbi() {
+        return mAbi;
+    }
 }

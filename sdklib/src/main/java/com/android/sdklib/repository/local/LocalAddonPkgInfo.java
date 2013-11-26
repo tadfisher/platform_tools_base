@@ -32,6 +32,8 @@ import com.android.sdklib.internal.repository.packages.AddonPackage;
 import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.io.IFileOp;
 import com.android.sdklib.repository.MajorRevision;
+import com.android.sdklib.repository.descriptors.PkgDesc;
+import com.android.sdklib.repository.descriptors.PkgDescAddon;
 import com.android.utils.Pair;
 
 import java.io.File;
@@ -64,47 +66,62 @@ public class LocalAddonPkgInfo extends LocalPlatformPkgInfo {
     private static final Pattern PATTERN_USB_IDS = Pattern.compile(
            "^0x[a-f0-9]{4}$", Pattern.CASE_INSENSITIVE);                    //$NON-NLS-1$
 
+    private final @NonNull PkgDescAddon mAddonDesc;
+    private String mTargetHash;
+
     public LocalAddonPkgInfo(@NonNull LocalSdk localSdk,
                              @NonNull File localDir,
                              @NonNull Properties sourceProps,
                              @NonNull AndroidVersion version,
                              @NonNull MajorRevision revision) {
         super(localSdk, localDir, sourceProps, version, revision);
+        mAddonDesc = new PkgDescAddon(version, revision) {
+            @NonNull
+            @Override
+            public String getPath() {
+                // Lazily compute the target hash the first time it is required.
+                return getTargetHash();
+            }
+        };
     }
 
+    @NonNull
     @Override
-    public int getType() {
-        return LocalSdk.PKG_ADDONS;
+    public PkgDescAddon getDesc() {
+        return mAddonDesc;
     }
 
     @NonNull
     @Override
     public String getTargetHash() {
-        IAndroidTarget target = getAndroidTarget();
+        if (mTargetHash == null) {
+            IAndroidTarget target = getAndroidTarget();
 
-        String vendor = null;
-        String name   = null;
+            String vendor = null;
+            String name   = null;
 
-        if (target != null) {
-            vendor = target.getVendor();
-            name   = target.getName();
-        } else {
-            Pair<Map<String, String>, String> infos = parseAddonProperties();
-            Map<String, String> map = infos.getFirst();
-            if (map != null) {
-                vendor = map.get(ADDON_VENDOR);
-                name   = map.get(ADDON_NAME);
+            if (target != null) {
+                vendor = target.getVendor();
+                name   = target.getName();
+            } else {
+                Pair<Map<String, String>, String> infos = parseAddonProperties();
+                Map<String, String> map = infos.getFirst();
+                if (map != null) {
+                    vendor = map.get(ADDON_VENDOR);
+                    name   = map.get(ADDON_NAME);
+                }
             }
-        }
 
-        if (vendor == null || name == null) {
-            return "invalid";
-        }
+            if (vendor == null || name == null) {
+                return "invalid";
+            }
 
-        return AndroidTargetHash.getAddonHashString(
-                vendor,
-                name,
-                getAndroidVersion());
+            mTargetHash = AndroidTargetHash.getAddonHashString(
+                    vendor,
+                    name,
+                    getDesc().getAndroidVersion());
+        }
+        return mTargetHash;
     }
 
     //-----
@@ -160,7 +177,8 @@ public class LocalAddonPkgInfo extends LocalPlatformPkgInfo {
             PlatformTarget baseTarget = null;
 
             // Look for a platform that has a matching api level or codename.
-            LocalPkgInfo plat = sdk.getPkgInfo(LocalSdk.PKG_PLATFORMS, getAndroidVersion());
+            LocalPkgInfo plat = sdk.getPkgInfo(PkgDesc.PKG_PLATFORMS,
+                                               getDesc().getAndroidVersion());
             if (plat instanceof LocalPlatformPkgInfo) {
                 baseTarget = (PlatformTarget) ((LocalPlatformPkgInfo) plat).getAndroidTarget();
             }
@@ -333,8 +351,8 @@ public class LocalAddonPkgInfo extends LocalPlatformPkgInfo {
 
             // Look for a platform that has a matching api level or codename.
             IAndroidTarget baseTarget = null;
-            LocalPkgInfo plat = getLocalSdk().getPkgInfo(LocalSdk.PKG_PLATFORMS,
-                                                         getAndroidVersion());
+            LocalPkgInfo plat = getLocalSdk().getPkgInfo(PkgDesc.PKG_PLATFORMS,
+                                                         getDesc().getAndroidVersion());
             if (plat instanceof LocalPlatformPkgInfo) {
                 baseTarget = ((LocalPlatformPkgInfo) plat).getAndroidTarget();
             }

@@ -19,7 +19,6 @@ package com.android.sdklib.repository.local;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISystemImage;
@@ -33,6 +32,8 @@ import com.android.sdklib.internal.repository.packages.PlatformPackage;
 import com.android.sdklib.io.IFileOp;
 import com.android.sdklib.repository.MajorRevision;
 import com.android.sdklib.repository.PkgProps;
+import com.android.sdklib.repository.descriptors.PkgDesc;
+import com.android.sdklib.repository.descriptors.PkgDescPlatform;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -45,13 +46,15 @@ import java.util.Set;
 import java.util.TreeSet;
 
 @SuppressWarnings("ConstantConditions")
-public class LocalPlatformPkgInfo extends LocalAndroidVersionPkgInfo {
+public class LocalPlatformPkgInfo extends LocalPkgInfo {
 
     public static final String PROP_VERSION_SDK      = "ro.build.version.sdk";      //$NON-NLS-1$
     public static final String PROP_VERSION_CODENAME = "ro.build.version.codename"; //$NON-NLS-1$
     public static final String PROP_VERSION_RELEASE  = "ro.build.version.release";  //$NON-NLS-1$
 
-    private final MajorRevision mRevision;
+    @NonNull
+    private final PkgDescPlatform mDesc;
+
     /** Android target, lazyly loaded from #getAndroidTarget */
     private IAndroidTarget mTarget;
     private boolean mLoaded;
@@ -61,28 +64,20 @@ public class LocalPlatformPkgInfo extends LocalAndroidVersionPkgInfo {
                                 @NonNull Properties sourceProps,
                                 @NonNull AndroidVersion version,
                                 @NonNull MajorRevision revision) {
-        super(localSdk, localDir, sourceProps, version);
-        mRevision = revision;
-    }
-
-    @Override
-    public int getType() {
-        return LocalSdk.PKG_PLATFORMS;
-    }
-
-    @Override
-    public boolean hasPath() {
-        return true;
-    }
-
-    @Override
-    public String getPath() {
-        return getTargetHash();
+        super(localSdk, localDir, sourceProps);
+        mDesc = new PkgDescPlatform(version, revision);
     }
 
     @NonNull
+    @Override
+    public PkgDescPlatform getDesc() {
+        return mDesc;
+    }
+
+    /** The "path" of a Platform is its Target Hash. */
+    @NonNull
     public String getTargetHash() {
-        return AndroidTargetHash.getPlatformHashString(getAndroidVersion());
+        return getDesc().getPath();
     }
 
     @Nullable
@@ -96,16 +91,6 @@ public class LocalPlatformPkgInfo extends LocalAndroidVersionPkgInfo {
 
     public boolean isLoaded() {
         return mLoaded;
-    }
-
-    @Override
-    public boolean hasMajorRevision() {
-        return true;
-    }
-
-    @Override
-    public MajorRevision getMajorRevision() {
-        return mRevision;
     }
 
     @Override
@@ -287,13 +272,13 @@ public class LocalPlatformPkgInfo extends LocalAndroidVersionPkgInfo {
         pt.setSkins(skins);
 
         // add path to the non-legacy samples package if it exists
-        LocalPkgInfo samples = sdk.getPkgInfo(LocalSdk.PKG_SAMPLES, getAndroidVersion());
+        LocalPkgInfo samples = sdk.getPkgInfo(PkgDesc.PKG_SAMPLES, getDesc().getAndroidVersion());
         if (samples != null) {
             pt.setSamplesPath(samples.getLocalDir().getAbsolutePath());
         }
 
         // add path to the non-legacy sources package if it exists
-        LocalPkgInfo sources = sdk.getPkgInfo(LocalSdk.PKG_SOURCES, getAndroidVersion());
+        LocalPkgInfo sources = sdk.getPkgInfo(PkgDesc.PKG_SOURCES, getDesc().getAndroidVersion());
         if (sources != null) {
             pt.setSourcesPath(sources.getLocalDir().getAbsolutePath());
         }
@@ -324,9 +309,10 @@ public class LocalPlatformPkgInfo extends LocalAndroidVersionPkgInfo {
         // First look in the SDK/system-image/platform-n/abi folders.
         // If we find multiple occurrences of the same platform/abi, the first one read wins.
 
-        for (LocalPkgInfo pkg : getLocalSdk().getPkgsInfos(LocalSdk.PKG_SYS_IMAGES)) {
-            if (pkg instanceof LocalSysImgPkgInfo && apiVersion.equals(pkg.getAndroidVersion())) {
-                String abi = ((LocalSysImgPkgInfo)pkg).getAbi();
+        for (LocalPkgInfo pkg : getLocalSdk().getPkgsInfos(PkgDesc.PKG_SYS_IMAGES)) {
+            if (pkg instanceof LocalSysImgPkgInfo &&
+                    apiVersion.equals(pkg.getDesc().getAndroidVersion())) {
+                String abi = ((LocalSysImgPkgInfo)pkg).getDesc().getAbi();
                 if (abi != null && !abiFound.contains(abi)) {
                     found.add(new SystemImage(
                             pkg.getLocalDir(),
