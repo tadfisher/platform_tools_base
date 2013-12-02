@@ -631,7 +631,6 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
 
         if (tag.equals(TAG_USES_PERMISSION)) {
             Attr name = element.getAttributeNodeNS(ANDROID_URI, ATTR_NAME);
-            //String name = element.getAttributeNS(ANDROID_URI, ATTR_NAME);
             if (name != null && name.getValue().equals(MOCK_LOCATION_PERMISSION)
                     && context.getMainProject().isGradleProject()
                     && !isDebugManifest(context, context.file)) {
