@@ -75,8 +75,8 @@ public abstract class LocalPkgInfo implements IListDescription, Comparable<Local
 
     @Override
     public int compareTo(@NonNull LocalPkgInfo o) {
-        int t1 = getDesc().getType();
-        int t2 = o.getDesc().getType();
+        int t1 = getDesc().getType().getIntValue();
+        int t2 = o.getDesc().getType().getIntValue();
         if (t1 != t2) {
             return t2 - t1;
         }

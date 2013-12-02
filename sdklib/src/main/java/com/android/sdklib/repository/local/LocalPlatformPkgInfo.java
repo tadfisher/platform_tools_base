@@ -32,12 +32,13 @@ import com.android.sdklib.internal.repository.packages.PlatformPackage;
 import com.android.sdklib.io.IFileOp;
 import com.android.sdklib.repository.MajorRevision;
 import com.android.sdklib.repository.PkgProps;
-import com.android.sdklib.repository.descriptors.PkgDesc;
 import com.android.sdklib.repository.descriptors.PkgDescPlatform;
+import com.android.sdklib.repository.descriptors.PkgType;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -272,13 +273,13 @@ public class LocalPlatformPkgInfo extends LocalPkgInfo {
         pt.setSkins(skins);
 
         // add path to the non-legacy samples package if it exists
-        LocalPkgInfo samples = sdk.getPkgInfo(PkgDesc.PKG_SAMPLES, getDesc().getAndroidVersion());
+        LocalPkgInfo samples = sdk.getPkgInfo(PkgType.PKG_SAMPLES, getDesc().getAndroidVersion());
         if (samples != null) {
             pt.setSamplesPath(samples.getLocalDir().getAbsolutePath());
         }
 
         // add path to the non-legacy sources package if it exists
-        LocalPkgInfo sources = sdk.getPkgInfo(PkgDesc.PKG_SOURCES, getDesc().getAndroidVersion());
+        LocalPkgInfo sources = sdk.getPkgInfo(PkgType.PKG_SOURCES, getDesc().getAndroidVersion());
         if (sources != null) {
             pt.setSourcesPath(sources.getLocalDir().getAbsolutePath());
         }
@@ -309,7 +310,7 @@ public class LocalPlatformPkgInfo extends LocalPkgInfo {
         // First look in the SDK/system-image/platform-n/abi folders.
         // If we find multiple occurrences of the same platform/abi, the first one read wins.
 
-        for (LocalPkgInfo pkg : getLocalSdk().getPkgsInfos(PkgDesc.PKG_SYS_IMAGES)) {
+        for (LocalPkgInfo pkg : getLocalSdk().getPkgsInfos(EnumSet.of(PkgType.PKG_SYS_IMAGES))) {
             if (pkg instanceof LocalSysImgPkgInfo &&
                     apiVersion.equals(pkg.getDesc().getAndroidVersion())) {
                 String abi = ((LocalSysImgPkgInfo)pkg).getDesc().getAbi();

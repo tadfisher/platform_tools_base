@@ -55,8 +55,8 @@ public class PkgDescAddon extends PkgDescPlatform {
     }
 
     @Override
-    public int getType() {
-        return PkgDesc.PKG_ADDONS;
+    public PkgType getType() {
+        return PkgType.PKG_ADDONS;
     }
 
     /** The "path" of a Add-on is its Target Hash. */

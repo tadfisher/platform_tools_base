@@ -32,8 +32,8 @@ import com.android.sdklib.internal.repository.packages.AddonPackage;
 import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.io.IFileOp;
 import com.android.sdklib.repository.MajorRevision;
-import com.android.sdklib.repository.descriptors.PkgDesc;
 import com.android.sdklib.repository.descriptors.PkgDescAddon;
+import com.android.sdklib.repository.descriptors.PkgType;
 import com.android.utils.Pair;
 
 import java.io.File;
@@ -177,7 +177,7 @@ public class LocalAddonPkgInfo extends LocalPlatformPkgInfo {
             PlatformTarget baseTarget = null;
 
             // Look for a platform that has a matching api level or codename.
-            LocalPkgInfo plat = sdk.getPkgInfo(PkgDesc.PKG_PLATFORMS,
+            LocalPkgInfo plat = sdk.getPkgInfo(PkgType.PKG_PLATFORMS,
                                                getDesc().getAndroidVersion());
             if (plat instanceof LocalPlatformPkgInfo) {
                 baseTarget = (PlatformTarget) ((LocalPlatformPkgInfo) plat).getAndroidTarget();
@@ -351,7 +351,7 @@ public class LocalAddonPkgInfo extends LocalPlatformPkgInfo {
 
             // Look for a platform that has a matching api level or codename.
             IAndroidTarget baseTarget = null;
-            LocalPkgInfo plat = getLocalSdk().getPkgInfo(PkgDesc.PKG_PLATFORMS,
+            LocalPkgInfo plat = getLocalSdk().getPkgInfo(PkgType.PKG_PLATFORMS,
                                                          getDesc().getAndroidVersion());
             if (plat instanceof LocalPlatformPkgInfo) {
                 baseTarget = ((LocalPlatformPkgInfo) plat).getAndroidTarget();

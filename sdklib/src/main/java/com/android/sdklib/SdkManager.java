@@ -27,6 +27,7 @@ import com.android.sdklib.internal.androidTarget.AddOnTarget;
 import com.android.sdklib.internal.androidTarget.PlatformTarget;
 import com.android.sdklib.repository.FullRevision;
 import com.android.sdklib.repository.descriptors.PkgDesc;
+import com.android.sdklib.repository.descriptors.PkgType;
 import com.android.sdklib.repository.local.LocalExtraPkgInfo;
 import com.android.sdklib.repository.local.LocalPkgInfo;
 import com.android.sdklib.repository.local.LocalPlatformPkgInfo;
@@ -38,6 +39,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -114,7 +116,7 @@ public class SdkManager {
      */
     public void reloadSdk(@NonNull ILogger log) {
         mCachedTargets = null;
-        mLocalSdk.clearLocalPkg(PkgDesc.PKG_ALL);
+        mLocalSdk.clearLocalPkg(PkgType.PKG_ALL);
     }
 
     /**
@@ -137,9 +139,9 @@ public class SdkManager {
      * @return True if at least one directory or source.prop has changed.
      */
     public boolean hasChanged(@Nullable ILogger log) {
-        return mLocalSdk.hasChanged(PkgDesc.PKG_PLATFORMS |
-                                    PkgDesc.PKG_ADDONS |
-                                    PkgDesc.PKG_BUILD_TOOLS);
+        return mLocalSdk.hasChanged(EnumSet.of(PkgType.PKG_PLATFORMS,
+                                               PkgType.PKG_ADDONS,
+                                               PkgType.PKG_BUILD_TOOLS));
     }
 
     /**
@@ -163,8 +165,8 @@ public class SdkManager {
     @NonNull
     public IAndroidTarget[] getTargets() {
         if (mCachedTargets == null) {
-            LocalPkgInfo[] pkgsInfos = mLocalSdk.getPkgsInfos(PkgDesc.PKG_PLATFORMS |
-                                                              PkgDesc.PKG_ADDONS);
+            LocalPkgInfo[] pkgsInfos = mLocalSdk.getPkgsInfos(
+                    EnumSet.of(PkgType.PKG_PLATFORMS, PkgType.PKG_ADDONS));
             int n = pkgsInfos.length;
             List<IAndroidTarget> targets = new ArrayList<IAndroidTarget>(n);
             for (int i = 0; i < n; i++) {
@@ -189,7 +191,7 @@ public class SdkManager {
     @Deprecated
     @NonNull
     public Set<FullRevision> getBuildTools() {
-        LocalPkgInfo[] pkgs = mLocalSdk.getPkgsInfos(PkgDesc.PKG_BUILD_TOOLS);
+        LocalPkgInfo[] pkgs = mLocalSdk.getPkgsInfos(EnumSet.of(PkgType.PKG_BUILD_TOOLS));
         TreeSet<FullRevision> bt = new TreeSet<FullRevision>();
         for (LocalPkgInfo pkg : pkgs) {
             PkgDesc d = pkg.getDesc();
@@ -310,7 +312,7 @@ public class SdkManager {
     @NonNull
     public Map<File, String> getExtraSamples() {
 
-        LocalPkgInfo[] pkgsInfos = mLocalSdk.getPkgsInfos(PkgDesc.PKG_EXTRAS);
+        LocalPkgInfo[] pkgsInfos = mLocalSdk.getPkgsInfos(EnumSet.of(PkgType.PKG_EXTRAS));
         Map<File, String> samples = new HashMap<File, String>();
 
         for (LocalPkgInfo info : pkgsInfos) {
@@ -348,7 +350,7 @@ public class SdkManager {
     @Deprecated
     @NonNull
     public Map<String, Integer> getExtrasVersions() {
-        LocalPkgInfo[] pkgsInfos = mLocalSdk.getPkgsInfos(PkgDesc.PKG_EXTRAS);
+        LocalPkgInfo[] pkgsInfos = mLocalSdk.getPkgsInfos(EnumSet.of(PkgType.PKG_EXTRAS));
         Map<String, Integer> extraVersions = new TreeMap<String, Integer>();
 
         for (LocalPkgInfo info : pkgsInfos) {
@@ -369,7 +371,7 @@ public class SdkManager {
     /** Returns the platform tools version if installed, null otherwise. */
     @Nullable
     public String getPlatformToolsVersion() {
-        LocalPkgInfo info = mLocalSdk.getPkgInfo(PkgDesc.PKG_PLATFORM_TOOLS);
+        LocalPkgInfo info = mLocalSdk.getPkgInfo(PkgType.PKG_PLATFORM_TOOLS);
         PkgDesc d = info == null ? null : info.getDesc();
         if (d != null && d.hasFullRevision()) {
             return d.getFullRevision().toShortString();

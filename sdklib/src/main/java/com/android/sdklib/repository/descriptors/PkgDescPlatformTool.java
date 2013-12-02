@@ -26,7 +26,7 @@ public class PkgDescPlatformTool extends PkgDescFullRevision {
     }
 
     @Override
-    public int getType() {
-        return PkgDesc.PKG_PLATFORM_TOOLS;
+    public PkgType getType() {
+        return PkgType.PKG_PLATFORM_TOOLS;
     }
 }
