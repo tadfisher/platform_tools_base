@@ -26,7 +26,7 @@ public class PkgDescBuildTool extends PkgDescFullRevision {
     }
 
     @Override
-    public int getType() {
-        return PkgDesc.PKG_BUILD_TOOLS;
+    public PkgType getType() {
+        return PkgType.PKG_BUILD_TOOLS;
     }
 }
