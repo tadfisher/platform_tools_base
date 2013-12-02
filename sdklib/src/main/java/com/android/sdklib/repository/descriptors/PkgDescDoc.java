@@ -25,8 +25,9 @@ public class PkgDescDoc extends PkgDescMajorRevision {
         super(revision);
     }
 
+    @NonNull
     @Override
-    public int getType() {
-        return PkgDesc.PKG_DOCS;
+    public PkgType getType() {
+        return PkgType.PKG_DOCS;
     }
 }

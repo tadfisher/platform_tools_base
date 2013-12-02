@@ -54,9 +54,10 @@ public class PkgDescAddon extends PkgDescPlatform {
         mAddonPath = AndroidTargetHash.getAddonHashString(addonVendor, addonName, version);
     }
 
+    @NonNull
     @Override
-    public int getType() {
-        return PkgDesc.PKG_ADDONS;
+    public PkgType getType() {
+        return PkgType.PKG_ADDONS;
     }
 
     /** The "path" of a Add-on is its Target Hash. */

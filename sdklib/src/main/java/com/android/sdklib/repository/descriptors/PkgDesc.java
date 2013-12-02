@@ -34,48 +34,12 @@ import com.android.sdklib.repository.MajorRevision;
  */
 public abstract class PkgDesc implements Comparable<PkgDesc> {
 
-    /** Filter all SDK folders. */
-    public static final int PKG_ALL            = 0xFFFF;
-
-    /** Filter the SDK/tools folder.
-     *  Has {@link FullRevision}. */
-    public static final int PKG_TOOLS          = 0x0001;
-    /** Filter the SDK/platform-tools folder.
-     *  Has {@link FullRevision}. */
-    public static final int PKG_PLATFORM_TOOLS = 0x0002;
-    /** Filter the SDK/build-tools folder.
-     *  Has {@link FullRevision}. */
-    public static final int PKG_BUILD_TOOLS    = 0x0004;
-
-    /** Filter the SDK/docs folder.
-     *  Has {@link MajorRevision}. */
-    public static final int PKG_DOCS           = 0x0010;
-    /** Filter the SDK/extras folder.
-     *  Has {@code Path}. Has {@link MajorRevision}. */
-    public static final int PKG_EXTRAS         = 0x0020;
-
-    /** Filter the SDK/platforms.
-     *  Has {@link AndroidVersion}. Has {@link MajorRevision}. */
-    public static final int PKG_PLATFORMS      = 0x0100;
-    /** Filter the SDK/sys-images.
-     * Has {@link AndroidVersion}. Has {@link MajorRevision}. */
-    public static final int PKG_SYS_IMAGES     = 0x0200;
-    /** Filter the SDK/addons.
-     *  Has {@link AndroidVersion}. Has {@link MajorRevision}. */
-    public static final int PKG_ADDONS         = 0x0400;
-    /** Filter the SDK/samples folder.
-     *  Note: this will not detect samples located in the SDK/extras packages.
-     *  Has {@link AndroidVersion}. Has {@link MajorRevision}. */
-    public static final int PKG_SAMPLES        = 0x0800;
-    /** Filter the SDK/sources folder.
-     *  Has {@link AndroidVersion}. Has {@link MajorRevision}. */
-    public static final int PKG_SOURCES        = 0x1000;
-
     /**
      * Returns the type of the package.
-     * @return Returns one of the {@code PkgDesc.PKG_...} constants.
+     * @return Returns one of the {@link PkgType} constants.
      */
-    public abstract int getType();
+    @NonNull
+    public abstract PkgType getType();
 
     /**
      * Indicates whether this package type has a {@link FullRevision}.
@@ -149,8 +113,8 @@ public abstract class PkgDesc implements Comparable<PkgDesc> {
 
     @Override
     public int compareTo(@NonNull PkgDesc o) {
-        int t1 = getType();
-        int t2 = o.getType();
+        int t1 = getType().getIntValue();
+        int t2 = o.getType().getIntValue();
         if (t1 != t2) {
             return t2 - t1;
         }

@@ -32,9 +32,10 @@ public class PkgDescExtra extends PkgDescFullRevision {
         mExtraPath = path;
     }
 
+    @NonNull
     @Override
-    public int getType() {
-        return PkgDesc.PKG_EXTRAS;
+    public PkgType getType() {
+        return PkgType.PKG_EXTRAS;
     }
 
     @Override

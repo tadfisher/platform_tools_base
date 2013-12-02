@@ -31,7 +31,7 @@ public class PkgDescTest extends TestCase {
     public final void testPkgDescTool() {
         PkgDescTool p = new PkgDescTool(new FullRevision(1, 2, 3, 4));
 
-        assertEquals(PkgDesc.PKG_TOOLS, p.getType());
+        assertEquals(PkgType.PKG_TOOLS, p.getType());
 
         assertTrue(p.hasFullRevision());
         assertEquals(new FullRevision(1, 2, 3, 4), p.getFullRevision());
@@ -51,7 +51,7 @@ public class PkgDescTest extends TestCase {
     public final void testPkgDescPlatformTool() {
         PkgDescPlatformTool p = new PkgDescPlatformTool(new FullRevision(1, 2, 3, 4));
 
-        assertEquals(PkgDesc.PKG_PLATFORM_TOOLS, p.getType());
+        assertEquals(PkgType.PKG_PLATFORM_TOOLS, p.getType());
 
         assertTrue(p.hasFullRevision());
         assertEquals(new FullRevision(1, 2, 3, 4), p.getFullRevision());
@@ -72,7 +72,7 @@ public class PkgDescTest extends TestCase {
     public final void testPkgDescDoc() {
         PkgDescDoc p = new PkgDescDoc(new MajorRevision(1));
 
-        assertEquals(PkgDesc.PKG_DOCS, p.getType());
+        assertEquals(PkgType.PKG_DOCS, p.getType());
 
         assertFalse(p.hasFullRevision());
         assertNull(p.getFullRevision());
@@ -92,7 +92,7 @@ public class PkgDescTest extends TestCase {
     public final void testPkgDescBuildTool() {
         PkgDescBuildTool p = new PkgDescBuildTool(new FullRevision(1, 2, 3, 4));
 
-        assertEquals(PkgDesc.PKG_BUILD_TOOLS, p.getType());
+        assertEquals(PkgType.PKG_BUILD_TOOLS, p.getType());
 
         assertTrue(p.hasFullRevision());
         assertEquals(new FullRevision(1, 2, 3, 4), p.getFullRevision());
@@ -112,7 +112,7 @@ public class PkgDescTest extends TestCase {
     public final void testPkgDescExtra() {
         PkgDescExtra p = new PkgDescExtra("vendor", "extra_path", new NoPreviewRevision(1, 2, 3));
 
-        assertEquals(PkgDesc.PKG_EXTRAS, p.getType());
+        assertEquals(PkgType.PKG_EXTRAS, p.getType());
 
         assertTrue(p.hasFullRevision());
         assertEquals(new FullRevision(1, 2, 3), p.getFullRevision());
@@ -132,7 +132,7 @@ public class PkgDescTest extends TestCase {
     public final void testPkgDescSource() throws Exception {
         PkgDescSource p = new PkgDescSource(new AndroidVersion("19"), new MajorRevision(1));
 
-        assertEquals(PkgDesc.PKG_SOURCES, p.getType());
+        assertEquals(PkgType.PKG_SOURCES, p.getType());
 
         assertFalse(p.hasFullRevision());
         assertNull(p.getFullRevision());
@@ -152,7 +152,7 @@ public class PkgDescTest extends TestCase {
     public final void testPkgDescSample() throws Exception {
         PkgDescSample p = new PkgDescSample(new AndroidVersion("19"), new MajorRevision(1));
 
-        assertEquals(PkgDesc.PKG_SAMPLES, p.getType());
+        assertEquals(PkgType.PKG_SAMPLES, p.getType());
 
         assertFalse(p.hasFullRevision());
         assertNull(p.getFullRevision());
@@ -172,7 +172,7 @@ public class PkgDescTest extends TestCase {
     public final void testPkgDescPlatform() throws Exception {
         PkgDescPlatform p = new PkgDescPlatform(new AndroidVersion("19"), new MajorRevision(1));
 
-        assertEquals(PkgDesc.PKG_PLATFORMS, p.getType());
+        assertEquals(PkgType.PKG_PLATFORMS, p.getType());
 
         assertFalse(p.hasFullRevision());
         assertNull(p.getFullRevision());
@@ -193,7 +193,7 @@ public class PkgDescTest extends TestCase {
         PkgDescAddon p1 = new PkgDescAddon(new AndroidVersion("19"), new MajorRevision(1),
                                              "vendor", "addon_name");
 
-        assertEquals(PkgDesc.PKG_ADDONS, p1.getType());
+        assertEquals(PkgType.PKG_ADDONS, p1.getType());
 
         assertFalse(p1.hasFullRevision());
         assertNull(p1.getFullRevision());
@@ -242,7 +242,7 @@ public class PkgDescTest extends TestCase {
     public final void testPkgDescSysImg() throws Exception {
         PkgDescSysImg p = new PkgDescSysImg(new AndroidVersion("19"), "eabi", new MajorRevision(1));
 
-        assertEquals(PkgDesc.PKG_SYS_IMAGES, p.getType());
+        assertEquals(PkgType.PKG_SYS_IMAGES, p.getType());
 
         assertFalse(p.hasFullRevision());
         assertNull(p.getFullRevision());
