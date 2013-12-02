@@ -36,9 +36,10 @@ public class PkgDescSource extends PkgDescAndroidVersion {
         mRevision = revision;
     }
 
+    @NonNull
     @Override
-    public int getType() {
-        return PkgDesc.PKG_SOURCES;
+    public PkgType getType() {
+        return PkgType.PKG_SOURCES;
     }
 
     @Override

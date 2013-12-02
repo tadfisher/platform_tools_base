@@ -25,8 +25,9 @@ public class PkgDescTool extends PkgDescFullRevision {
         super(revision);
     }
 
+    @NonNull
     @Override
-    public int getType() {
-        return PkgDesc.PKG_TOOLS;
+    public PkgType getType() {
+        return PkgType.PKG_TOOLS;
     }
 }

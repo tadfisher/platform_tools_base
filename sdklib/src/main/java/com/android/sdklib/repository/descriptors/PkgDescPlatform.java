@@ -31,9 +31,10 @@ public class PkgDescPlatform extends PkgDescAndroidVersion {
         mRevision = revision;
     }
 
+    @NonNull
     @Override
-    public int getType() {
-        return PkgDesc.PKG_PLATFORMS;
+    public PkgType getType() {
+        return PkgType.PKG_PLATFORMS;
     }
 
     @Override

@@ -42,9 +42,10 @@ public class PkgDescSysImg extends PkgDescAndroidVersion {
 
     }
 
+    @NonNull
     @Override
-    public int getType() {
-        return PkgDesc.PKG_SYS_IMAGES;
+    public PkgType getType() {
+        return PkgType.PKG_SYS_IMAGES;
     }
 
     @Override
