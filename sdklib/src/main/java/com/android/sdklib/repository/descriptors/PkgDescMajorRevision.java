@@ -19,12 +19,15 @@ package com.android.sdklib.repository.descriptors;
 import com.android.annotations.NonNull;
 import com.android.sdklib.repository.MajorRevision;
 
+/**
+ * Implementation detail of {@link PkgDesc}.
+ */
 abstract class PkgDescMajorRevision extends PkgDesc {
 
     @NonNull
     private final MajorRevision mRevision;
 
-    public PkgDescMajorRevision(@NonNull MajorRevision revision) {
+    PkgDescMajorRevision(@NonNull MajorRevision revision) {
         mRevision = revision;
     }
 

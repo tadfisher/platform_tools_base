@@ -21,12 +21,17 @@ import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.repository.MajorRevision;
 
-public class PkgDescPlatform extends PkgDescAndroidVersion {
+/**
+ * Implementation detail of {@link PkgDesc} for platforms.
+ * Do not use this class directly.
+ * To create an instance use {@link PkgDesc#newPlatform(AndroidVersion, MajorRevision)} instead.
+ */
+class PkgDescPlatform extends PkgDescAndroidVersion {
 
     private final MajorRevision mRevision;
 
-    public PkgDescPlatform(@NonNull AndroidVersion version,
-                           @NonNull MajorRevision revision) {
+    PkgDescPlatform(@NonNull AndroidVersion version,
+                    @NonNull MajorRevision revision) {
         super(version);
         mRevision = revision;
     }

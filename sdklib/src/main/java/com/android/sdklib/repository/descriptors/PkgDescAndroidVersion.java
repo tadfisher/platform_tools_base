@@ -19,12 +19,15 @@ package com.android.sdklib.repository.descriptors;
 import com.android.annotations.NonNull;
 import com.android.sdklib.AndroidVersion;
 
+/**
+ * Implementation detail of {@link PkgDesc}.
+ */
 abstract class PkgDescAndroidVersion extends PkgDesc {
 
     @NonNull
     private final AndroidVersion mVersion;
 
-    public PkgDescAndroidVersion(@NonNull AndroidVersion version) {
+    PkgDescAndroidVersion(@NonNull AndroidVersion version) {
         mVersion = version;
     }
 

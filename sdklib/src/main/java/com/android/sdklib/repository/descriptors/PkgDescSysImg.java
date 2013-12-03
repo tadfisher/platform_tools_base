@@ -21,21 +21,23 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.repository.MajorRevision;
 
 /**
- * Local system-image package, for a given platform's {@link AndroidVersion}
- * and given ABI.
- * The package itself has a major revision.
- * There should be only one for a given android platform version & ABI.
+ * Implementation detail of {@link PkgDesc} for system-images.
+ * Do not use this class directly.
+ * To create an instance use {@link PkgDesc#newSysImg(AndroidVersion, String, MajorRevision)}
+ * instead.
+ * <p/>
+ * For system-images, the path returns the ABI.
  */
-public class PkgDescSysImg extends PkgDescAndroidVersion {
+class PkgDescSysImg extends PkgDescAndroidVersion {
 
     @NonNull
     private final MajorRevision mRevision;
     @NonNull
     private final String mAbi;
 
-    public PkgDescSysImg(@NonNull AndroidVersion version,
-                         @NonNull String abi,
-                         @NonNull MajorRevision revision) {
+    PkgDescSysImg(@NonNull AndroidVersion version,
+                  @NonNull String abi,
+                  @NonNull MajorRevision revision) {
         super(version);
         mAbi = abi;
         mRevision = revision;

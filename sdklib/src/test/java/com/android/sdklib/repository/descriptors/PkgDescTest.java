@@ -29,7 +29,7 @@ import junit.framework.TestCase;
 public class PkgDescTest extends TestCase {
 
     public final void testPkgDescTool() {
-        PkgDescTool p = new PkgDescTool(new FullRevision(1, 2, 3, 4));
+        PkgDesc p = PkgDesc.newTool(new FullRevision(1, 2, 3, 4));
 
         assertEquals(PkgType.PKG_TOOLS, p.getType());
 
@@ -45,11 +45,11 @@ public class PkgDescTest extends TestCase {
         assertFalse(p.hasPath());
         assertNull(p.getPath());
 
-        assertEquals("<PkgDescTool FullRev=1.2.3 rc4>", p.toString());
+        assertEquals("<PkgDesc FullRev=1.2.3 rc4>", p.toString());
     }
 
     public final void testPkgDescPlatformTool() {
-        PkgDescPlatformTool p = new PkgDescPlatformTool(new FullRevision(1, 2, 3, 4));
+        PkgDesc p = PkgDesc.newPlatformTool(new FullRevision(1, 2, 3, 4));
 
         assertEquals(PkgType.PKG_PLATFORM_TOOLS, p.getType());
 
@@ -65,12 +65,12 @@ public class PkgDescTest extends TestCase {
         assertFalse(p.hasPath());
         assertNull(p.getPath());
 
-        assertEquals("<PkgDescPlatformTool FullRev=1.2.3 rc4>", p.toString());
+        assertEquals("<PkgDesc FullRev=1.2.3 rc4>", p.toString());
 
     }
 
     public final void testPkgDescDoc() {
-        PkgDescDoc p = new PkgDescDoc(new MajorRevision(1));
+        PkgDesc p = PkgDesc.newDoc(new MajorRevision(1));
 
         assertEquals(PkgType.PKG_DOCS, p.getType());
 
@@ -86,11 +86,11 @@ public class PkgDescTest extends TestCase {
         assertFalse(p.hasPath());
         assertNull(p.getPath());
 
-        assertEquals("<PkgDescDoc MajorRev=1>", p.toString());
+        assertEquals("<PkgDesc MajorRev=1>", p.toString());
     }
 
     public final void testPkgDescBuildTool() {
-        PkgDescBuildTool p = new PkgDescBuildTool(new FullRevision(1, 2, 3, 4));
+        PkgDesc p = PkgDesc.newBuildTool(new FullRevision(1, 2, 3, 4));
 
         assertEquals(PkgType.PKG_BUILD_TOOLS, p.getType());
 
@@ -106,11 +106,11 @@ public class PkgDescTest extends TestCase {
         assertFalse(p.hasPath());
         assertNull(p.getPath());
 
-        assertEquals("<PkgDescBuildTool FullRev=1.2.3 rc4>", p.toString());
+        assertEquals("<PkgDesc FullRev=1.2.3 rc4>", p.toString());
     }
 
     public final void testPkgDescExtra() {
-        PkgDescExtra p = new PkgDescExtra("vendor", "extra_path", new NoPreviewRevision(1, 2, 3));
+        PkgDesc p = PkgDesc.newExtra("vendor", "extra_path", new NoPreviewRevision(1, 2, 3));
 
         assertEquals(PkgType.PKG_EXTRAS, p.getType());
 
@@ -126,11 +126,11 @@ public class PkgDescTest extends TestCase {
         assertTrue(p.hasPath());
         assertEquals("vendor/extra_path", p.getPath());
 
-        assertEquals("<PkgDescExtra Path=vendor/extra_path FullRev=1.2.3>", p.toString());
+        assertEquals("<PkgDesc Path=vendor/extra_path FullRev=1.2.3>", p.toString());
     }
 
     public final void testPkgDescSource() throws Exception {
-        PkgDescSource p = new PkgDescSource(new AndroidVersion("19"), new MajorRevision(1));
+        PkgDesc p = PkgDesc.newSource(new AndroidVersion("19"), new MajorRevision(1));
 
         assertEquals(PkgType.PKG_SOURCES, p.getType());
 
@@ -146,11 +146,11 @@ public class PkgDescTest extends TestCase {
         assertFalse(p.hasPath());
         assertNull(p.getPath());
 
-        assertEquals("<PkgDescSource Android=API 19 MajorRev=1>", p.toString());
+        assertEquals("<PkgDesc Android=API 19 MajorRev=1>", p.toString());
     }
 
     public final void testPkgDescSample() throws Exception {
-        PkgDescSample p = new PkgDescSample(new AndroidVersion("19"), new MajorRevision(1));
+        PkgDesc p = PkgDesc.newSample(new AndroidVersion("19"), new MajorRevision(1));
 
         assertEquals(PkgType.PKG_SAMPLES, p.getType());
 
@@ -166,11 +166,11 @@ public class PkgDescTest extends TestCase {
         assertFalse(p.hasPath());
         assertNull(p.getPath());
 
-        assertEquals("<PkgDescSample Android=API 19 MajorRev=1>", p.toString());
+        assertEquals("<PkgDesc Android=API 19 MajorRev=1>", p.toString());
     }
 
     public final void testPkgDescPlatform() throws Exception {
-        PkgDescPlatform p = new PkgDescPlatform(new AndroidVersion("19"), new MajorRevision(1));
+        PkgDesc p = PkgDesc.newPlatform(new AndroidVersion("19"), new MajorRevision(1));
 
         assertEquals(PkgType.PKG_PLATFORMS, p.getType());
 
@@ -186,11 +186,11 @@ public class PkgDescTest extends TestCase {
         assertTrue(p.hasPath());
         assertEquals("android-19", p.getPath());
 
-        assertEquals("<PkgDescPlatform Android=API 19 Path=android-19 MajorRev=1>", p.toString());
+        assertEquals("<PkgDesc Android=API 19 Path=android-19 MajorRev=1>", p.toString());
     }
 
     public final void testPkgDescAddon() throws Exception {
-        PkgDescAddon p1 = new PkgDescAddon(new AndroidVersion("19"), new MajorRevision(1),
+        PkgDesc p1 = PkgDesc.newAddon(new AndroidVersion("19"), new MajorRevision(1),
                                              "vendor", "addon_name");
 
         assertEquals(PkgType.PKG_ADDONS, p1.getType());
@@ -207,40 +207,31 @@ public class PkgDescTest extends TestCase {
         assertTrue(p1.hasPath());
         assertEquals("vendor:addon_name:19", p1.getPath());
 
-        assertEquals("<PkgDescAddon Android=API 19 Path=vendor:addon_name:19 MajorRev=1>",
+        assertEquals("<PkgDesc Android=API 19 Path=vendor:addon_name:19 MajorRev=1>",
                      p1.toString());
-
-        // This should generate an error because the add-on has string isn't determined
-        PkgDescAddon p2 = new PkgDescAddon(new AndroidVersion("2"), new MajorRevision(4));
-        try {
-            assertNull(p2.getPath());
-            fail("PkgDescAddon.getPath should generate an IllegalArgumentException.");
-        } catch (Exception e) {
-            assertEquals(IllegalArgumentException.class, e.getClass());
-        }
 
         // If the add-on hash string isn't determined in the constructor, the implementation
         // should override getPath to compute it lazily when needed.
-        PkgDescAddon p3 = new PkgDescAddon(new AndroidVersion("3"), new MajorRevision(5)) {
-            @NonNull
-            @Override
-            public String getPath() {
-                try {
-                    return AndroidTargetHash.getAddonHashString(
-                            "vendor3",
-                            "name3",
-                            new AndroidVersion("3"));
-                } catch (AndroidVersionException e) {
-                    fail(); // should not happen, it would mean "3" wasn't parsed as a number
-                    return null;
-                }
-            }
-        };
+        PkgDesc p3 = PkgDesc.newAddon(new AndroidVersion("3"), new MajorRevision(5),
+                new PkgDesc.ITargetHashProvider() {
+                    @Override
+                    public String getTargetHash() {
+                        try {
+                            return AndroidTargetHash.getAddonHashString(
+                                    "vendor3",
+                                    "name3",
+                                    new AndroidVersion("3"));
+                        } catch (AndroidVersionException e) {
+                            fail(); // should not happen, it would mean "3" wasn't parsed as a number
+                            return null;
+                        }
+                    }
+        });
         assertEquals("vendor3:name3:3", p3.getPath());
     }
 
     public final void testPkgDescSysImg() throws Exception {
-        PkgDescSysImg p = new PkgDescSysImg(new AndroidVersion("19"), "eabi", new MajorRevision(1));
+        PkgDesc p = PkgDesc.newSysImg(new AndroidVersion("19"), "eabi", new MajorRevision(1));
 
         assertEquals(PkgType.PKG_SYS_IMAGES, p.getType());
 
@@ -256,7 +247,7 @@ public class PkgDescTest extends TestCase {
         assertTrue(p.hasPath());
         assertEquals("eabi", p.getPath());
 
-        assertEquals("<PkgDescSysImg Android=API 19 Path=eabi MajorRev=1>", p.toString());
+        assertEquals("<PkgDesc Android=API 19 Path=eabi MajorRev=1>", p.toString());
     }
 
 }
