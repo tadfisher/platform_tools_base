@@ -32,7 +32,7 @@ import com.android.sdklib.internal.repository.packages.PlatformPackage;
 import com.android.sdklib.io.IFileOp;
 import com.android.sdklib.repository.MajorRevision;
 import com.android.sdklib.repository.PkgProps;
-import com.android.sdklib.repository.descriptors.PkgDescPlatform;
+import com.android.sdklib.repository.descriptors.PkgDesc;
 import com.android.sdklib.repository.descriptors.PkgType;
 
 import java.io.File;
@@ -54,7 +54,7 @@ public class LocalPlatformPkgInfo extends LocalPkgInfo {
     public static final String PROP_VERSION_RELEASE  = "ro.build.version.release";  //$NON-NLS-1$
 
     @NonNull
-    private final PkgDescPlatform mDesc;
+    private final PkgDesc mDesc;
 
     /** Android target, lazyly loaded from #getAndroidTarget */
     private IAndroidTarget mTarget;
@@ -66,12 +66,12 @@ public class LocalPlatformPkgInfo extends LocalPkgInfo {
                                 @NonNull AndroidVersion version,
                                 @NonNull MajorRevision revision) {
         super(localSdk, localDir, sourceProps);
-        mDesc = new PkgDescPlatform(version, revision);
+        mDesc = PkgDesc.newPlatform(version, revision);
     }
 
     @NonNull
     @Override
-    public PkgDescPlatform getDesc() {
+    public PkgDesc getDesc() {
         return mDesc;
     }
 
@@ -313,7 +313,7 @@ public class LocalPlatformPkgInfo extends LocalPkgInfo {
         for (LocalPkgInfo pkg : getLocalSdk().getPkgsInfos(EnumSet.of(PkgType.PKG_SYS_IMAGES))) {
             if (pkg instanceof LocalSysImgPkgInfo &&
                     apiVersion.equals(pkg.getDesc().getAndroidVersion())) {
-                String abi = ((LocalSysImgPkgInfo)pkg).getDesc().getAbi();
+                String abi = ((LocalSysImgPkgInfo)pkg).getDesc().getPath();
                 if (abi != null && !abiFound.contains(abi)) {
                     found.add(new SystemImage(
                             pkg.getLocalDir(),

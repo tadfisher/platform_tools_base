@@ -21,16 +21,19 @@ import com.android.annotations.Nullable;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.repository.FullRevision;
 import com.android.sdklib.repository.MajorRevision;
+import com.android.sdklib.repository.NoPreviewRevision;
 
 /**
- * {@link PkgDesc} keeps information on individual SDK packages.
+ * {@link PkgDesc} keeps information on individual SDK packages
+ * (both local or remote packages definitions.)
  * <br/>
  * Packages have different attributes depending on their type.
+ * <p/>
  * To create a new {@link PkgDesc}, use one of the package-specific constructors
- * for example {@link PkgDescTool}'s constructor. However when testing packages
- * capabilities, rely on {@link #getType()} and the {@code PkgDesc.hasXxx()} methods
- * rather than on the class name.
- * <br/>
+ * provided here.
+ * <p/>
+ * To query packages capabilities, rely on {@link #getType()} and the {@code PkgDesc.hasXxx()}
+ * methods provided in the base {@link PkgDesc}.
  */
 public abstract class PkgDesc implements Comparable<PkgDesc> {
 
@@ -154,27 +157,202 @@ public abstract class PkgDesc implements Comparable<PkgDesc> {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("<");
-        builder.append(this.getClass().getSimpleName());
+        builder.append("<PkgDesc");                                             //NON-NLS-1$
 
         if (hasAndroidVersion()) {
-            builder.append(" Android=").append(getAndroidVersion());
+            builder.append(" Android=").append(getAndroidVersion());            //NON-NLS-1$
         }
 
         if (hasPath()) {
-            builder.append(" Path=").append(getPath());
+            builder.append(" Path=").append(getPath());                         //NON-NLS-1$
         }
 
         if (hasFullRevision()) {
-            builder.append(" FullRev=").append(getFullRevision());
+            builder.append(" FullRev=").append(getFullRevision());              //NON-NLS-1$
         }
 
         if (hasMajorRevision()) {
-            builder.append(" MajorRev=").append(getMajorRevision());
+            builder.append(" MajorRev=").append(getMajorRevision());            //NON-NLS-1$
         }
 
-        builder.append(">");
+        builder.append('>');
         return builder.toString();
+    }
+
+    // ---- Constructors -----
+
+    /**
+     * Create a new tool package descriptor.
+     *
+     * @param revision The revision of the tool package.
+     * @return A {@link PkgDesc} describing this tool package.
+     */
+    @NonNull
+    public static PkgDesc newTool(@NonNull FullRevision revision) {
+        return new PkgDescFullRevision(revision) {
+            @Override
+            public PkgType getType() {
+                return PkgType.PKG_TOOLS;
+            }
+        };
+    }
+
+    /**
+     * Create a new platform-tool package descriptor.
+     *
+     * @param revision The revision of the platform-tool package.
+     * @return A {@link PkgDesc} describing this platform-tool package.
+     */
+    @NonNull
+    public static PkgDesc newPlatformTool(@NonNull FullRevision revision) {
+        return new PkgDescFullRevision(revision) {
+            @Override
+            public PkgType getType() {
+                return PkgType.PKG_PLATFORM_TOOLS;
+            }
+        };
+    }
+
+    /**
+     * Create a new build-tool package descriptor.
+     *
+     * @param revision The revision of the build-tool package.
+     * @return A {@link PkgDesc} describing this build-tool package.
+     */
+    @NonNull
+    public static PkgDesc newBuildTool(@NonNull FullRevision revision) {
+        return new PkgDescFullRevision(revision) {
+            @Override
+            public PkgType getType() {
+                return PkgType.PKG_BUILD_TOOLS;
+            }
+        };
+    }
+
+    /**
+     * Create a new doc package descriptor.
+     *
+     * @param revision The revision of the doc package.
+     * @return A {@link PkgDesc} describing this doc package.
+     */
+    @NonNull
+    public static PkgDesc newDoc(@NonNull MajorRevision revision) {
+        return new PkgDescMajorRevision(revision) {
+            @Override
+            public PkgType getType() {
+                return PkgType.PKG_DOCS;
+            }
+        };
+    }
+
+    /**
+     * Create a new extra package descriptor.
+     *
+     * @param vendorId The vendor id string of the extra package.
+     * @param path The path id string of the extra package.
+     * @param revision The revision of the extra package.
+     * @return A {@link PkgDesc} describing this extra package.
+     */
+    @NonNull
+    public static PkgDesc newExtra(@NonNull String vendorId,
+                                   @NonNull String path,
+                                   @NonNull NoPreviewRevision revision) {
+        return new PkgDescExtra(vendorId, path, revision);
+    }
+
+    /**
+     * Create a new platform package descriptor.
+     *
+     * @param version The android version of the platform package.
+     * @param revision The revision of the extra package.
+     * @return A {@link PkgDesc} describing this platform package.
+     */
+    @NonNull
+    public static PkgDesc newPlatform(@NonNull AndroidVersion version,
+                                      @NonNull MajorRevision revision) {
+        return new PkgDescPlatform(version, revision);
+    }
+
+    /**
+     * Create a new add-on package descriptor.
+     * <p/>
+     * The vendor id and the name id provided are used to compute the add-on's
+     * target hash.
+     *
+     * @param version The android version of the add-on package.
+     * @param revision The revision of the add-on package.
+     * @param addonVendor The vendor id of the add-on package.
+     * @param addonName The name id of the add-on package.
+     * @return A {@link PkgDesc} describing this add-on package.
+     */
+    @NonNull
+    public static PkgDesc newAddon(@NonNull AndroidVersion version,
+                                   @NonNull MajorRevision revision,
+                                   @NonNull String addonVendor,
+                                   @NonNull String addonName) {
+        return new PkgDescAddon(version, revision, addonVendor, addonName);
+    }
+
+    public interface ITargetHashProvider {
+        String getTargetHash();
+    }
+
+    /**
+     * Create a new platform add-on descriptor where the target hash isn't determined yet.
+     *
+     * @param version The android version of the add-on package.
+     * @param revision The revision of the add-on package.
+     * @param targetHashProvider Implements a method that will return the target hash when needed.
+     * @return A {@link PkgDesc} describing this add-on package.
+     */
+    @NonNull
+    public static PkgDesc newAddon(@NonNull AndroidVersion version,
+                                   @NonNull MajorRevision revision,
+                                   @NonNull ITargetHashProvider targetHashProvider) {
+        return new PkgDescAddon(version, revision, targetHashProvider);
+    }
+
+    /**
+     * Create a new system-image package descriptor.
+     * <p/>
+     * For system-images, {@link PkgDesc#getPath()} returns the ABI.
+     *
+     * @param version The android version of the system-image package.
+     * @param abi The ABI of the system-image package.
+     * @param revision The revision of the system-image package.
+     * @return A {@link PkgDesc} describing this system-image package.
+     */
+    @NonNull
+    public static PkgDesc newSysImg(@NonNull AndroidVersion version,
+                                    @NonNull String abi,
+                                    @NonNull MajorRevision revision) {
+        return new PkgDescSysImg(version, abi, revision);
+    }
+
+    /**
+     * Create a new source package descriptor.
+     *
+     * @param version The android version of the source package.
+     * @param revision The revision of the source package.
+     * @return A {@link PkgDesc} describing this source package.
+     */
+    @NonNull
+    public static PkgDesc newSource(@NonNull AndroidVersion version,
+                                    @NonNull MajorRevision revision) {
+        return new PkgDescSource(version, revision);
+    }
+
+    /**
+     * Create a new sample package descriptor.
+     *
+     * @param version The android version of the sample package.
+     * @param revision The revision of the sample package.
+     * @return A {@link PkgDesc} describing this sample package.
+     */
+    @NonNull
+    public static PkgDesc newSample(@NonNull AndroidVersion version,
+                                    @NonNull MajorRevision revision) {
+        return new PkgDescSample(version, revision);
     }
 }
 

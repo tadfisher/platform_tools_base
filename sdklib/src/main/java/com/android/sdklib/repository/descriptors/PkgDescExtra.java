@@ -19,14 +19,19 @@ package com.android.sdklib.repository.descriptors;
 import com.android.annotations.NonNull;
 import com.android.sdklib.repository.NoPreviewRevision;
 
-public class PkgDescExtra extends PkgDescFullRevision {
+/**
+ * Implementation detail of {@link PkgDesc} for extras.
+ * Do not use this class directly.
+ * To create an instance use {@link PkgDesc#newExtra(String, String, NoPreviewRevision)} instead.
+ */
+class PkgDescExtra extends PkgDescFullRevision {
 
     private final @NonNull String mExtraPath;
     private final @NonNull String mVendorId;
 
-    public PkgDescExtra(@NonNull String vendorId,
-                        @NonNull String path,
-                        @NonNull NoPreviewRevision revision) {
+    PkgDescExtra(@NonNull String vendorId,
+                 @NonNull String path,
+                 @NonNull NoPreviewRevision revision) {
         super(revision);
         mVendorId = vendorId;
         mExtraPath = path;

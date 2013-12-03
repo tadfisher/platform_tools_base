@@ -22,7 +22,7 @@ import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.internal.repository.packages.BuildToolPackage;
 import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.repository.FullRevision;
-import com.android.sdklib.repository.descriptors.PkgDescBuildTool;
+import com.android.sdklib.repository.descriptors.PkgDesc;
 
 import java.io.File;
 import java.util.Properties;
@@ -31,7 +31,7 @@ public class LocalBuildToolPkgInfo extends LocalPkgInfo {
 
 
     private final @Nullable BuildToolInfo mBuildToolInfo;
-    private final @NonNull  PkgDescBuildTool mDesc;
+    private final @NonNull  PkgDesc mDesc;
 
     public LocalBuildToolPkgInfo(@NonNull LocalSdk localSdk,
                                  @NonNull File localDir,
@@ -39,13 +39,13 @@ public class LocalBuildToolPkgInfo extends LocalPkgInfo {
                                  @NonNull FullRevision revision,
                                  @Nullable BuildToolInfo btInfo) {
         super(localSdk, localDir, sourceProps);
-        mDesc = new PkgDescBuildTool(revision);
+        mDesc = PkgDesc.newBuildTool(revision);
         mBuildToolInfo = btInfo;
     }
 
     @NonNull
     @Override
-    public PkgDescBuildTool getDesc() {
+    public PkgDesc getDesc() {
         return mDesc;
     }
 

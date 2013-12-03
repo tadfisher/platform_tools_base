@@ -19,12 +19,15 @@ package com.android.sdklib.repository.descriptors;
 import com.android.annotations.NonNull;
 import com.android.sdklib.repository.FullRevision;
 
+/**
+ * Implementation detail of {@link PkgDesc}.
+ */
 abstract class PkgDescFullRevision extends PkgDesc {
 
     @NonNull
     private final FullRevision mRevision;
 
-    public PkgDescFullRevision(@NonNull FullRevision revision) {
+    PkgDescFullRevision(@NonNull FullRevision revision) {
         mRevision = revision;
     }
 
