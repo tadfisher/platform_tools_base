@@ -22,7 +22,8 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.internal.repository.packages.SourcePackage;
 import com.android.sdklib.repository.MajorRevision;
-import com.android.sdklib.repository.descriptors.PkgDescSource;
+import com.android.sdklib.repository.descriptors.IPkgDesc;
+import com.android.sdklib.repository.descriptors.PkgDesc;
 
 import java.io.File;
 import java.util.Properties;
@@ -34,7 +35,7 @@ import java.util.Properties;
  */
 public class LocalSourcePkgInfo extends LocalPkgInfo {
 
-    private final @NonNull PkgDescSource mDesc;
+    private final @NonNull IPkgDesc mDesc;
 
     public LocalSourcePkgInfo(@NonNull LocalSdk localSdk,
                               @NonNull File localDir,
@@ -42,12 +43,12 @@ public class LocalSourcePkgInfo extends LocalPkgInfo {
                               @NonNull AndroidVersion version,
                               @NonNull MajorRevision revision) {
         super(localSdk, localDir, sourceProps);
-        mDesc = new PkgDescSource(version, revision);
+        mDesc = PkgDesc.newSource(version, revision);
     }
 
     @NonNull
     @Override
-    public PkgDescSource getDesc() {
+    public IPkgDesc getDesc() {
         return mDesc;
     }
 

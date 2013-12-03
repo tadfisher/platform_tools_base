@@ -21,8 +21,10 @@ import com.android.annotations.Nullable;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.internal.repository.packages.SamplePackage;
+import com.android.sdklib.repository.FullRevision;
 import com.android.sdklib.repository.MajorRevision;
-import com.android.sdklib.repository.descriptors.PkgDescSample;
+import com.android.sdklib.repository.descriptors.IPkgDesc;
+import com.android.sdklib.repository.descriptors.PkgDesc;
 
 import java.io.File;
 import java.util.Properties;
@@ -34,20 +36,21 @@ import java.util.Properties;
  */
 public class LocalSamplePkgInfo extends LocalPkgInfo {
 
-    private final @NonNull PkgDescSample mDesc;
+    private final @NonNull IPkgDesc mDesc;
 
     public LocalSamplePkgInfo(@NonNull LocalSdk localSdk,
                               @NonNull File localDir,
                               @NonNull Properties sourceProps,
                               @NonNull AndroidVersion version,
-                              @NonNull MajorRevision revision) {
+                              @NonNull MajorRevision revision,
+                              @NonNull FullRevision minToolsRev) {
         super(localSdk, localDir, sourceProps);
-        mDesc = new PkgDescSample(version, revision);
+        mDesc = PkgDesc.newSample(version, revision, minToolsRev);
     }
 
     @NonNull
     @Override
-    public PkgDescSample getDesc() {
+    public IPkgDesc getDesc() {
         return mDesc;
     }
 

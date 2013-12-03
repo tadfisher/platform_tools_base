@@ -26,7 +26,7 @@ import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.internal.androidTarget.AddOnTarget;
 import com.android.sdklib.internal.androidTarget.PlatformTarget;
 import com.android.sdklib.repository.FullRevision;
-import com.android.sdklib.repository.descriptors.PkgDesc;
+import com.android.sdklib.repository.descriptors.IPkgDesc;
 import com.android.sdklib.repository.descriptors.PkgType;
 import com.android.sdklib.repository.local.LocalExtraPkgInfo;
 import com.android.sdklib.repository.local.LocalPkgInfo;
@@ -194,7 +194,7 @@ public class SdkManager {
         LocalPkgInfo[] pkgs = mLocalSdk.getPkgsInfos(PkgType.PKG_BUILD_TOOLS);
         TreeSet<FullRevision> bt = new TreeSet<FullRevision>();
         for (LocalPkgInfo pkg : pkgs) {
-            PkgDesc d = pkg.getDesc();
+            IPkgDesc d = pkg.getDesc();
             if (d.hasFullRevision()) {
                 bt.add(d.getFullRevision());
             }
@@ -372,7 +372,7 @@ public class SdkManager {
     @Nullable
     public String getPlatformToolsVersion() {
         LocalPkgInfo info = mLocalSdk.getPkgInfo(PkgType.PKG_PLATFORM_TOOLS);
-        PkgDesc d = info == null ? null : info.getDesc();
+        IPkgDesc d = info == null ? null : info.getDesc();
         if (d != null && d.hasFullRevision()) {
             return d.getFullRevision().toShortString();
         }

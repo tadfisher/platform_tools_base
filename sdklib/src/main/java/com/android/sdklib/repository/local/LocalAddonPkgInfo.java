@@ -31,8 +31,10 @@ import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.repository.packages.AddonPackage;
 import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.io.IFileOp;
+import com.android.sdklib.repository.FullRevision;
 import com.android.sdklib.repository.MajorRevision;
-import com.android.sdklib.repository.descriptors.PkgDescAddon;
+import com.android.sdklib.repository.descriptors.IPkgDesc;
+import com.android.sdklib.repository.descriptors.PkgDesc;
 import com.android.sdklib.repository.descriptors.PkgType;
 import com.android.utils.Pair;
 
@@ -66,7 +68,7 @@ public class LocalAddonPkgInfo extends LocalPlatformPkgInfo {
     private static final Pattern PATTERN_USB_IDS = Pattern.compile(
            "^0x[a-f0-9]{4}$", Pattern.CASE_INSENSITIVE);                    //$NON-NLS-1$
 
-    private final @NonNull PkgDescAddon mAddonDesc;
+    private final @NonNull IPkgDesc mAddonDesc;
     private String mTargetHash;
 
     public LocalAddonPkgInfo(@NonNull LocalSdk localSdk,
@@ -74,20 +76,19 @@ public class LocalAddonPkgInfo extends LocalPlatformPkgInfo {
                              @NonNull Properties sourceProps,
                              @NonNull AndroidVersion version,
                              @NonNull MajorRevision revision) {
-        super(localSdk, localDir, sourceProps, version, revision);
-        mAddonDesc = new PkgDescAddon(version, revision) {
-            @NonNull
+        super(localSdk, localDir, sourceProps, version, revision, FullRevision.NOT_SPECIFIED);
+        mAddonDesc = PkgDesc.newAddon(version, revision, new PkgDesc.ITargetHashProvider() {
             @Override
-            public String getPath() {
+            public String getTargetHash() {
                 // Lazily compute the target hash the first time it is required.
-                return getTargetHash();
+                return LocalAddonPkgInfo.this.getTargetHash();
             }
-        };
+        });
     }
 
     @NonNull
     @Override
-    public PkgDescAddon getDesc() {
+    public IPkgDesc getDesc() {
         return mAddonDesc;
     }
 

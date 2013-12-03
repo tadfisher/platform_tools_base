@@ -17,11 +17,18 @@
 package com.android.sdklib.repository.descriptors;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
+import com.android.sdklib.repository.FullRevision;
 import com.android.sdklib.repository.MajorRevision;
 
-public class PkgDescAddon extends PkgDescPlatform {
+/**
+ * Implementation detail of {@link PkgDesc} for add-ons.
+ * Do not use this class directly.
+ * To create an instance use {@link PkgDesc#newAddon} instead.
+ */
+class PkgDescAddon extends PkgDesc {
 
     public static final String ADDON_NAME         = "name";                 //$NON-NLS-1$
     public static final String ADDON_VENDOR       = "vendor";               //$NON-NLS-1$
@@ -33,24 +40,30 @@ public class PkgDescAddon extends PkgDescPlatform {
     public static final String ADDON_REVISION     = "revision";             //$NON-NLS-1$
     public static final String ADDON_REVISION_OLD = "version";              //$NON-NLS-1$
 
-    private final String mAddonPath;
+    private @NonNull  final AndroidVersion mVersion;
+    private @NonNull  final MajorRevision mRevision;
+    private @NonNull  final String mAddonPath;
+    private @Nullable final ITargetHashProvider mTargetHashProvider;
 
     /**
-     * Creates an add-on pkg description where the target path (add-on hash string) isn't
-     * determined yet. Implementations <em>MUST</em> override {@link #getPath()} to return
-     * a non-null target path.
+     * Creates an add-on pkg description where the target hash isn't determined yet.
      */
-    public PkgDescAddon(@NonNull AndroidVersion version,
-                        @NonNull MajorRevision revision) {
-        super(version, revision);
+    PkgDescAddon(@NonNull AndroidVersion version,
+                 @NonNull MajorRevision revision,
+                 @NonNull ITargetHashProvider targetHashProvider) {
+        mVersion = version;
+        mRevision = revision;
+        mTargetHashProvider = targetHashProvider;
         mAddonPath = null;
     }
 
-    public PkgDescAddon(@NonNull AndroidVersion version,
+    PkgDescAddon(@NonNull AndroidVersion version,
                         @NonNull MajorRevision revision,
                         @NonNull String addonVendor,
                         @NonNull String addonName) {
-        super(version, revision);
+        mVersion = version;
+        mRevision = revision;
+        mTargetHashProvider = null;
         mAddonPath = AndroidTargetHash.getAddonHashString(addonVendor, addonName, version);
     }
 
@@ -60,15 +73,29 @@ public class PkgDescAddon extends PkgDescPlatform {
         return PkgType.PKG_ADDONS;
     }
 
+    @NonNull
+    @Override
+    public AndroidVersion getAndroidVersion() {
+        return mVersion;
+    }
+
+    @Override
+    public MajorRevision getMajorRevision() {
+        return mRevision;
+    }
+
     /** The "path" of a Add-on is its Target Hash. */
     @NonNull
     @Override
     public String getPath() {
-        if (mAddonPath == null) {
-            throw new IllegalArgumentException(
-                    "Implementation MUST override PkgDescAddon.getPath " +      //$NON-NLS-1$
-                    "to compute the add-on hash string");                       //$NON-NLS-1$
+        if (mTargetHashProvider != null) {
+            return mTargetHashProvider.getTargetHash();
         }
         return mAddonPath;
+    }
+
+    @Override
+    public FullRevision getMinToolsRev() {
+        return null;
     }
 }
