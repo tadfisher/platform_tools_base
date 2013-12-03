@@ -21,17 +21,17 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.repository.MajorRevision;
 
 /**
- * Local source package, for a given platform's {@link AndroidVersion}.
- * The package itself has a major revision.
- * There should be only one for a given android platform version.
+ * Implementation detail of {@link PkgDesc} for sources.
+ * Do not use this class directly.
+ * To create an instance use {@link PkgDesc#newSource(AndroidVersion, MajorRevision)} instead.
  */
-public class PkgDescSource extends PkgDescAndroidVersion {
+class PkgDescSource extends PkgDescAndroidVersion {
 
     @NonNull
     private final MajorRevision mRevision;
 
-    public PkgDescSource(@NonNull AndroidVersion version,
-                         @NonNull MajorRevision revision) {
+    PkgDescSource(@NonNull AndroidVersion version,
+                  @NonNull MajorRevision revision) {
         super(version);
         mRevision = revision;
     }

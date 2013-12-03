@@ -19,7 +19,7 @@ package com.android.sdklib.repository.local;
 import com.android.annotations.NonNull;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.repository.MajorRevision;
-import com.android.sdklib.repository.descriptors.PkgDescSysImg;
+import com.android.sdklib.repository.descriptors.PkgDesc;
 
 import java.io.File;
 import java.util.Properties;
@@ -33,7 +33,7 @@ import java.util.Properties;
 public class LocalSysImgPkgInfo extends LocalPkgInfo {
 
 
-    private final @NonNull PkgDescSysImg mDesc;
+    private final @NonNull PkgDesc mDesc;
 
     public LocalSysImgPkgInfo(@NonNull LocalSdk localSdk,
                               @NonNull File localDir,
@@ -42,12 +42,12 @@ public class LocalSysImgPkgInfo extends LocalPkgInfo {
                               @NonNull String abi,
                               @NonNull MajorRevision revision) {
         super(localSdk, localDir, sourceProps);
-        mDesc = new PkgDescSysImg(version, abi, revision);
+        mDesc = PkgDesc.newSysImg(version, abi, revision);
     }
 
     @NonNull
     @Override
-    public PkgDescSysImg getDesc() {
+    public PkgDesc getDesc() {
         return mDesc;
     }
 

@@ -23,26 +23,26 @@ import com.android.sdklib.internal.repository.archives.Archive.Os;
 import com.android.sdklib.internal.repository.packages.DocPackage;
 import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.repository.MajorRevision;
-import com.android.sdklib.repository.descriptors.PkgDescDoc;
+import com.android.sdklib.repository.descriptors.PkgDesc;
 
 import java.io.File;
 import java.util.Properties;
 
 public class LocalDocPkgInfo extends LocalPkgInfo {
 
-    private final @NonNull PkgDescDoc mDesc;
+    private final @NonNull PkgDesc mDesc;
 
     public LocalDocPkgInfo(@NonNull LocalSdk localSdk,
                            @NonNull File localDir,
                            @NonNull Properties sourceProps,
                            @NonNull MajorRevision revision) {
         super(localSdk, localDir, sourceProps);
-        mDesc = new PkgDescDoc(revision);
+        mDesc = PkgDesc.newDoc(revision);
     }
 
     @NonNull
     @Override
-    public PkgDescDoc getDesc() {
+    public PkgDesc getDesc() {
         return mDesc;
     }
 
