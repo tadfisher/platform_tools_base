@@ -10,8 +10,8 @@
       <sourceFolder url="file://$MODULE_DIR$/src/test/groovy" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/src/device-test/groovy" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/src/build-test/groovy" isTestSource="true" />
-      <excludeFolder url="file://$MODULE_DIR$/../../../out/host/gradle/tools/build/gradle" />
       <excludeFolder url="file://$MODULE_DIR$/.gradle" />
+      <excludeFolder url="file://$MODULE_DIR$/../../../out/host/gradle/tools/build/gradle" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
