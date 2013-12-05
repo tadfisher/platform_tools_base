@@ -29,8 +29,10 @@ import com.android.sdklib.internal.repository.archives.Archive.Arch;
 import com.android.sdklib.internal.repository.archives.Archive.Os;
 import com.android.sdklib.internal.repository.sources.SdkSource;
 import com.android.sdklib.io.IFileOp;
+import com.android.sdklib.repository.MajorRevision;
 import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.SdkRepoConstants;
+import com.android.sdklib.repository.descriptors.PkgDesc;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.w3c.dom.Node;
@@ -60,6 +62,8 @@ public class SamplePackage extends MinToolsPackage
      */
     private final int mMinApiLevel;
 
+    private final PkgDesc mPkgDesc;
+
     /**
      * Creates a new sample package from the attributes and elements of the given XML node.
      * This constructor should throw an exception if the package cannot be created.
@@ -88,6 +92,8 @@ public class SamplePackage extends MinToolsPackage
         mMinApiLevel = PackageParserUtils.getXmlInt(packageNode,
                     SdkRepoConstants.NODE_MIN_API_LEVEL,
                     MIN_API_LEVEL_NOT_SPECIFIED);
+
+        mPkgDesc = PkgDesc.newSample(mVersion, (MajorRevision) getRevision());
     }
 
     /**
@@ -123,6 +129,8 @@ public class SamplePackage extends MinToolsPackage
 
         mMinApiLevel = getPropertyInt(props, PkgProps.SAMPLE_MIN_API_LEVEL,
                                              MIN_API_LEVEL_NOT_SPECIFIED);
+
+        mPkgDesc = PkgDesc.newSample(mVersion, (MajorRevision) getRevision());
     }
 
     /**
@@ -158,6 +166,14 @@ public class SamplePackage extends MinToolsPackage
 
         mMinApiLevel = getPropertyInt(props, PkgProps.SAMPLE_MIN_API_LEVEL,
                                              MIN_API_LEVEL_NOT_SPECIFIED);
+
+        mPkgDesc = PkgDesc.newSample(mVersion, (MajorRevision) getRevision());
+    }
+
+    @Override
+    @NonNull
+    public PkgDesc getPkgDesc() {
+        return mPkgDesc;
     }
 
     /**

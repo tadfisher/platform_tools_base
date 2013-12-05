@@ -179,6 +179,55 @@ public abstract class PkgDesc implements Comparable<PkgDesc> {
         return builder.toString();
     }
 
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + (hasAndroidVersion() ? getAndroidVersion().hashCode() : 0);
+        result = prime * result + (hasPath()           ? getPath()          .hashCode() : 0);
+        result = prime * result + (hasFullRevision()   ? getFullRevision()  .hashCode() : 0);
+        result = prime * result + (hasMajorRevision()  ? getMajorRevision() .hashCode() : 0);
+
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof PkgDesc)) return false;
+        PkgDesc rhs = (PkgDesc) obj;
+
+        if (hasAndroidVersion() != rhs.hasAndroidVersion()) {
+            return false;
+        }
+        if (hasAndroidVersion() && !getAndroidVersion().equals(rhs.getAndroidVersion())) {
+            return false;
+        }
+
+        if (hasPath() != rhs.hasPath()) {
+            return false;
+        }
+        if (hasPath() && !getPath().equals(rhs.getPath())) {
+            return false;
+        }
+
+        if (hasFullRevision() != rhs.hasFullRevision()) {
+            return false;
+        }
+        if (hasFullRevision() && !getFullRevision().equals(rhs.getFullRevision())) {
+            return false;
+        }
+
+        if (hasMajorRevision() != rhs.hasMajorRevision()) {
+            return false;
+        }
+        if (hasMajorRevision() && !getMajorRevision().equals(rhs.getMajorRevision())) {
+            return false;
+        }
+
+        return true;
+    }
+
+
     // ---- Constructors -----
 
     /**
