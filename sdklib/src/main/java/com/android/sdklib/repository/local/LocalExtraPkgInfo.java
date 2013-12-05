@@ -23,6 +23,7 @@ import com.android.sdklib.internal.repository.archives.Archive.Os;
 import com.android.sdklib.internal.repository.packages.ExtraPackage;
 import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.repository.NoPreviewRevision;
+import com.android.sdklib.repository.descriptors.IPkgDesc;
 import com.android.sdklib.repository.descriptors.PkgDesc;
 
 import java.io.File;
@@ -32,7 +33,7 @@ public class LocalExtraPkgInfo extends LocalPkgInfo {
 
     private final @NonNull String mExtraPath;
     private final @NonNull String mVendorId;
-    private final @NonNull PkgDesc mDesc;
+    private final @NonNull IPkgDesc mDesc;
 
     public LocalExtraPkgInfo(@NonNull LocalSdk localSdk,
                              @NonNull File localDir,
@@ -48,7 +49,7 @@ public class LocalExtraPkgInfo extends LocalPkgInfo {
 
     @NonNull
     @Override
-    public PkgDesc getDesc() {
+    public IPkgDesc getDesc() {
         return mDesc;
     }
 

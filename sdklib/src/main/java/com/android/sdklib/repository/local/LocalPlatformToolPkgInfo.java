@@ -23,6 +23,7 @@ import com.android.sdklib.internal.repository.archives.Archive.Os;
 import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.internal.repository.packages.PlatformToolPackage;
 import com.android.sdklib.repository.FullRevision;
+import com.android.sdklib.repository.descriptors.IPkgDesc;
 import com.android.sdklib.repository.descriptors.PkgDesc;
 
 import java.io.File;
@@ -30,7 +31,7 @@ import java.util.Properties;
 
 public class LocalPlatformToolPkgInfo extends LocalPkgInfo {
 
-    private final @NonNull PkgDesc mDesc;
+    private final @NonNull IPkgDesc mDesc;
 
     public LocalPlatformToolPkgInfo(@NonNull LocalSdk localSdk,
                                     @NonNull File localDir,
@@ -42,7 +43,7 @@ public class LocalPlatformToolPkgInfo extends LocalPkgInfo {
 
     @NonNull
     @Override
-    public PkgDesc getDesc() {
+    public IPkgDesc getDesc() {
         return mDesc;
     }
 

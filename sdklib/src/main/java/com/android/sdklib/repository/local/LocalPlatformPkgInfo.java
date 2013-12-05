@@ -30,15 +30,16 @@ import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.internal.repository.packages.PlatformPackage;
 import com.android.sdklib.io.IFileOp;
+import com.android.sdklib.repository.FullRevision;
 import com.android.sdklib.repository.MajorRevision;
 import com.android.sdklib.repository.PkgProps;
+import com.android.sdklib.repository.descriptors.IPkgDesc;
 import com.android.sdklib.repository.descriptors.PkgDesc;
 import com.android.sdklib.repository.descriptors.PkgType;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -54,7 +55,7 @@ public class LocalPlatformPkgInfo extends LocalPkgInfo {
     public static final String PROP_VERSION_RELEASE  = "ro.build.version.release";  //$NON-NLS-1$
 
     @NonNull
-    private final PkgDesc mDesc;
+    private final IPkgDesc mDesc;
 
     /** Android target, lazyly loaded from #getAndroidTarget */
     private IAndroidTarget mTarget;
@@ -64,14 +65,15 @@ public class LocalPlatformPkgInfo extends LocalPkgInfo {
                                 @NonNull File localDir,
                                 @NonNull Properties sourceProps,
                                 @NonNull AndroidVersion version,
-                                @NonNull MajorRevision revision) {
+                                @NonNull MajorRevision revision,
+                                @NonNull FullRevision minToolsRev) {
         super(localSdk, localDir, sourceProps);
-        mDesc = PkgDesc.newPlatform(version, revision);
+        mDesc = PkgDesc.newPlatform(version, revision, minToolsRev);
     }
 
     @NonNull
     @Override
-    public PkgDesc getDesc() {
+    public IPkgDesc getDesc() {
         return mDesc;
     }
 

@@ -18,6 +18,7 @@ package com.android.sdklib.repository.descriptors;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.repository.FullRevision;
 import com.android.sdklib.repository.MajorRevision;
@@ -35,45 +36,68 @@ import com.android.sdklib.repository.NoPreviewRevision;
  * To query packages capabilities, rely on {@link #getType()} and the {@code PkgDesc.hasXxx()}
  * methods provided in the base {@link PkgDesc}.
  */
-public abstract class PkgDesc implements Comparable<PkgDesc> {
+public abstract class PkgDesc implements IPkgDesc {
 
     /**
      * Returns the type of the package.
      * @return Returns one of the {@link PkgType} constants.
      */
     @NonNull
+    @Override
     public abstract PkgType getType();
 
     /**
      * Indicates whether this package type has a {@link FullRevision}.
      * @return True if this package type has a {@link FullRevision}.
      */
-    public boolean hasFullRevision() {
-        return false;
+    @Override
+    public final boolean hasFullRevision() {
+        return getType().hasFullRevision();
     }
 
     /**
      * Indicates whether this package type has a {@link MajorRevision}.
      * @return True if this package type has a {@link MajorRevision}.
      */
-    public boolean hasMajorRevision() {
-        return false;
+    @Override
+    public final boolean hasMajorRevision() {
+        return getType().hasMajorRevision();
     }
 
     /**
      * Indicates whether this package type has a {@link AndroidVersion}.
      * @return True if this package type has a {@link AndroidVersion}.
      */
-    public boolean hasAndroidVersion() {
-        return false;
+    @Override
+    public final boolean hasAndroidVersion() {
+        return getType().hasAndroidVersion();
     }
 
     /**
      * Indicates whether this package type has a path.
      * @return True if this package type has a path.
      */
-    public boolean hasPath() {
-        return false;
+    @Override
+    public final boolean hasPath() {
+        return getType().hasPath();
+    }
+
+    /**
+     * Indicates whether this package type has a {@code min-tools-rev} attribute.
+     * @return True if this package type has a {@code min-tools-rev} attribute.
+     */
+    @Override
+    public final boolean hasMinToolsRev() {
+        return getType().hasMinToolsRev();
+    }
+
+    /**
+     * Indicates whether this package type has a {@code min-platform-tools-rev} attribute.
+     * @return True if this package type has a {@code min-platform-tools-rev} attribute.
+     */
+    @Override
+    public final boolean hasMinPlatformToolsRev() {
+        return getType().hasMinPlatformToolsRev();
     }
 
     /**
@@ -81,6 +105,7 @@ public abstract class PkgDesc implements Comparable<PkgDesc> {
      * @return A non-null value if {@link #hasFullRevision()} is true; otherwise a null value.
      */
     @Nullable
+    @Override
     public FullRevision getFullRevision() {
         return null;
     }
@@ -90,6 +115,7 @@ public abstract class PkgDesc implements Comparable<PkgDesc> {
      * @return A non-null value if {@link #hasMajorRevision()} is true; otherwise a null value.
      */
     @Nullable
+    @Override
     public MajorRevision getMajorRevision() {
         return null;
     }
@@ -99,6 +125,7 @@ public abstract class PkgDesc implements Comparable<PkgDesc> {
      * @return A non-null value if {@link #hasAndroidVersion()} is true; otherwise a null value.
      */
     @Nullable
+    @Override
     public AndroidVersion getAndroidVersion() {
         return null;
     }
@@ -108,14 +135,42 @@ public abstract class PkgDesc implements Comparable<PkgDesc> {
      * @return A non-null value if {@link #hasPath()} is true; otherwise a null value.
      */
     @Nullable
+    @Override
     public String getPath() {
+        return null;
+    }
+
+    /**
+     * Returns the package's {@code min-tools-rev} or null.
+     * @return A non-null value if {@link #hasMinToolsRev()} is true; otherwise a null value.
+     */
+    @Nullable
+    @Override
+    public FullRevision getMinToolsRev() {
+        return null;
+    }
+
+    /**
+     * Returns the package's {@code min-platform-tools-rev} or null.
+     * @return A non-null value if {@link #hasMinPlatformToolsRev()} is true; otherwise null.
+     */
+    @Nullable
+    @Override
+    public FullRevision getMinPlatformToolsRev() {
         return null;
     }
 
     //---- Ordering ----
 
+    /**
+     * Compares this descriptor to another one.
+     * All fields must match for equality.
+     * <p/>
+     * This is must not be used an indication that a package is a suitable update for another one.
+     * The comparison order is however suitable for sorting packages for display purposes.
+     */
     @Override
-    public int compareTo(@NonNull PkgDesc o) {
+    public int compareTo(@NonNull IPkgDesc o) {
         int t1 = getType().getIntValue();
         int t2 = o.getType().getIntValue();
         if (t1 != t2) {
@@ -151,6 +206,20 @@ public abstract class PkgDesc implements Comparable<PkgDesc> {
             }
         }
 
+        if (hasMinToolsRev() && o.hasMinToolsRev()) {
+            t1 = getMinToolsRev().compareTo(o.getMinToolsRev());
+            if (t1 != 0) {
+                return t1;
+            }
+        }
+
+        if (hasMinPlatformToolsRev() && o.hasMinPlatformToolsRev()) {
+            t1 = getMinPlatformToolsRev().compareTo(o.getMinPlatformToolsRev());
+            if (t1 != 0) {
+                return t1;
+            }
+        }
+
         return 0;
     }
 
@@ -158,27 +227,102 @@ public abstract class PkgDesc implements Comparable<PkgDesc> {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("<PkgDesc");                                             //NON-NLS-1$
+        builder.append("<PkgDesc");                                                 //NON-NLS-1$
 
         if (hasAndroidVersion()) {
-            builder.append(" Android=").append(getAndroidVersion());            //NON-NLS-1$
+            builder.append(" Android=").append(getAndroidVersion());                //NON-NLS-1$
         }
 
         if (hasPath()) {
-            builder.append(" Path=").append(getPath());                         //NON-NLS-1$
+            builder.append(" Path=").append(getPath());                             //NON-NLS-1$
         }
 
         if (hasFullRevision()) {
-            builder.append(" FullRev=").append(getFullRevision());              //NON-NLS-1$
+            builder.append(" FullRev=").append(getFullRevision());                  //NON-NLS-1$
         }
 
         if (hasMajorRevision()) {
-            builder.append(" MajorRev=").append(getMajorRevision());            //NON-NLS-1$
+            builder.append(" MajorRev=").append(getMajorRevision());                //NON-NLS-1$
+        }
+
+        if (hasMinToolsRev()) {
+            builder.append(" MinToolsRev=").append(getMinToolsRev());               //NON-NLS-1$
+        }
+
+        if (hasMinPlatformToolsRev()) {
+            builder.append(" MinPlatToolsRev=").append(getMinPlatformToolsRev());   //NON-NLS-1$
         }
 
         builder.append('>');
         return builder.toString();
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + (hasAndroidVersion() ? getAndroidVersion().hashCode() : 0);
+        result = prime * result + (hasPath()           ? getPath()          .hashCode() : 0);
+        result = prime * result + (hasFullRevision()   ? getFullRevision()  .hashCode() : 0);
+        result = prime * result + (hasMajorRevision()  ? getMajorRevision() .hashCode() : 0);
+        result = prime * result + (hasMinToolsRev()    ? getMinToolsRev()   .hashCode() : 0);
+        result = prime * result + (hasMinPlatformToolsRev() ?
+                                                         getMinPlatformToolsRev().hashCode() : 0);
+
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof IPkgDesc)) return false;
+        IPkgDesc rhs = (IPkgDesc) obj;
+
+        if (hasAndroidVersion() != rhs.hasAndroidVersion()) {
+            return false;
+        }
+        if (hasAndroidVersion() && !getAndroidVersion().equals(rhs.getAndroidVersion())) {
+            return false;
+        }
+
+        if (hasPath() != rhs.hasPath()) {
+            return false;
+        }
+        if (hasPath() && !getPath().equals(rhs.getPath())) {
+            return false;
+        }
+
+        if (hasFullRevision() != rhs.hasFullRevision()) {
+            return false;
+        }
+        if (hasFullRevision() && !getFullRevision().equals(rhs.getFullRevision())) {
+            return false;
+        }
+
+        if (hasMajorRevision() != rhs.hasMajorRevision()) {
+            return false;
+        }
+        if (hasMajorRevision() && !getMajorRevision().equals(rhs.getMajorRevision())) {
+            return false;
+        }
+
+        if (hasMinToolsRev() != rhs.hasMinToolsRev()) {
+            return false;
+        }
+        if (hasMinToolsRev() && !getMinToolsRev().equals(rhs.getMinToolsRev())) {
+            return false;
+        }
+
+        if (hasMinPlatformToolsRev() != rhs.hasMinPlatformToolsRev()) {
+            return false;
+        }
+        if (hasMinPlatformToolsRev() &&
+                !getMinPlatformToolsRev().equals(rhs.getMinPlatformToolsRev())) {
+            return false;
+        }
+
+        return true;
+    }
+
 
     // ---- Constructors -----
 
@@ -186,14 +330,27 @@ public abstract class PkgDesc implements Comparable<PkgDesc> {
      * Create a new tool package descriptor.
      *
      * @param revision The revision of the tool package.
+     * @param minPlatformToolsRev The {@code min-platform-tools-rev}.
+     *                  Use {@link FullRevision#NOT_SPECIFIED} to indicate there is no requirement.
      * @return A {@link PkgDesc} describing this tool package.
      */
     @NonNull
-    public static PkgDesc newTool(@NonNull FullRevision revision) {
-        return new PkgDescFullRevision(revision) {
+    public static IPkgDesc newTool(@NonNull final FullRevision revision,
+                                   @NonNull final FullRevision minPlatformToolsRev) {
+        return new PkgDesc() {
             @Override
             public PkgType getType() {
                 return PkgType.PKG_TOOLS;
+            }
+
+            @Override
+            public FullRevision getFullRevision() {
+                return revision;
+            }
+
+            @Override
+            public FullRevision getMinPlatformToolsRev() {
+                return minPlatformToolsRev;
             }
         };
     }
@@ -205,11 +362,16 @@ public abstract class PkgDesc implements Comparable<PkgDesc> {
      * @return A {@link PkgDesc} describing this platform-tool package.
      */
     @NonNull
-    public static PkgDesc newPlatformTool(@NonNull FullRevision revision) {
-        return new PkgDescFullRevision(revision) {
+    public static IPkgDesc newPlatformTool(@NonNull final FullRevision revision) {
+        return new PkgDesc() {
             @Override
             public PkgType getType() {
                 return PkgType.PKG_PLATFORM_TOOLS;
+            }
+
+            @Override
+            public FullRevision getFullRevision() {
+                return revision;
             }
         };
     }
@@ -221,11 +383,16 @@ public abstract class PkgDesc implements Comparable<PkgDesc> {
      * @return A {@link PkgDesc} describing this build-tool package.
      */
     @NonNull
-    public static PkgDesc newBuildTool(@NonNull FullRevision revision) {
-        return new PkgDescFullRevision(revision) {
+    public static IPkgDesc newBuildTool(@NonNull final FullRevision revision) {
+        return new PkgDesc() {
             @Override
             public PkgType getType() {
                 return PkgType.PKG_BUILD_TOOLS;
+            }
+
+            @Override
+            public FullRevision getFullRevision() {
+                return revision;
             }
         };
     }
@@ -237,11 +404,22 @@ public abstract class PkgDesc implements Comparable<PkgDesc> {
      * @return A {@link PkgDesc} describing this doc package.
      */
     @NonNull
-    public static PkgDesc newDoc(@NonNull MajorRevision revision) {
-        return new PkgDescMajorRevision(revision) {
+    public static IPkgDesc newDoc(@NonNull final AndroidVersion version,
+                                  @NonNull final MajorRevision revision) {
+        return new PkgDesc() {
             @Override
             public PkgType getType() {
                 return PkgType.PKG_DOCS;
+            }
+
+            @Override
+            public MajorRevision getMajorRevision() {
+                return revision;
+            }
+
+            @Override
+            public AndroidVersion getAndroidVersion() {
+                return version;
             }
         };
     }
@@ -255,23 +433,93 @@ public abstract class PkgDesc implements Comparable<PkgDesc> {
      * @return A {@link PkgDesc} describing this extra package.
      */
     @NonNull
-    public static PkgDesc newExtra(@NonNull String vendorId,
-                                   @NonNull String path,
-                                   @NonNull NoPreviewRevision revision) {
-        return new PkgDescExtra(vendorId, path, revision);
+    public static IPkgDescExtra newExtra(@NonNull final String vendorId,
+                                         @NonNull final String path,
+                                         @NonNull final NoPreviewRevision revision) {
+        return new PkgDescExtra() {
+            String fullPath = vendorId + '/' + path;
+
+            @Override
+            public PkgType getType() {
+                return PkgType.PKG_EXTRAS;
+            }
+
+            @Override
+            public FullRevision getFullRevision() {
+                return revision;
+            }
+
+            @Override
+            public String getPath() {
+                return fullPath;
+            }
+
+            @Override
+            public boolean hasExtraPath() {
+                return true;
+            }
+
+            @Override
+            public String getExtraPath() {
+                return path;
+            }
+
+            @Override
+            public String getVendorId() {
+                return vendorId;
+            }
+        };
     }
+
+    public interface IPkgDescExtra extends IPkgDesc {
+        public boolean hasExtraPath();
+        @NonNull public String getExtraPath();
+        @NonNull public String getVendorId();
+    }
+
+    private static abstract class PkgDescExtra extends PkgDesc implements IPkgDescExtra {}
 
     /**
      * Create a new platform package descriptor.
      *
      * @param version The android version of the platform package.
      * @param revision The revision of the extra package.
+     * @param minToolsRev An optional {@code min-tools-rev}.
+     *                    Use {@link FullRevision#NOT_SPECIFIED} to indicate
+     *                    there is no requirement.
      * @return A {@link PkgDesc} describing this platform package.
      */
     @NonNull
-    public static PkgDesc newPlatform(@NonNull AndroidVersion version,
-                                      @NonNull MajorRevision revision) {
-        return new PkgDescPlatform(version, revision);
+    public static IPkgDesc newPlatform(@NonNull final AndroidVersion version,
+                                       @NonNull final MajorRevision revision,
+                                       @NonNull final FullRevision minToolsRev) {
+        return new PkgDesc() {
+            @Override
+            public PkgType getType() {
+                return PkgType.PKG_PLATFORMS;
+            }
+
+            @Override
+            public MajorRevision getMajorRevision() {
+                return revision;
+            }
+
+            @Override
+            public AndroidVersion getAndroidVersion() {
+                return version;
+            }
+
+            @Override
+            public FullRevision getMinToolsRev() {
+                return minToolsRev;
+            }
+
+            /** The "path" of a Platform is its Target Hash. */
+            @Override
+            public String getPath() {
+                return AndroidTargetHash.getPlatformHashString(getAndroidVersion());
+            }
+        };
     }
 
     /**
@@ -287,10 +535,10 @@ public abstract class PkgDesc implements Comparable<PkgDesc> {
      * @return A {@link PkgDesc} describing this add-on package.
      */
     @NonNull
-    public static PkgDesc newAddon(@NonNull AndroidVersion version,
-                                   @NonNull MajorRevision revision,
-                                   @NonNull String addonVendor,
-                                   @NonNull String addonName) {
+    public static IPkgDesc newAddon(@NonNull AndroidVersion version,
+                                    @NonNull MajorRevision revision,
+                                    @NonNull String addonVendor,
+                                    @NonNull String addonName) {
         return new PkgDescAddon(version, revision, addonVendor, addonName);
     }
 
@@ -307,9 +555,9 @@ public abstract class PkgDesc implements Comparable<PkgDesc> {
      * @return A {@link PkgDesc} describing this add-on package.
      */
     @NonNull
-    public static PkgDesc newAddon(@NonNull AndroidVersion version,
-                                   @NonNull MajorRevision revision,
-                                   @NonNull ITargetHashProvider targetHashProvider) {
+    public static IPkgDesc newAddon(@NonNull AndroidVersion version,
+                                    @NonNull MajorRevision revision,
+                                    @NonNull ITargetHashProvider targetHashProvider) {
         return new PkgDescAddon(version, revision, targetHashProvider);
     }
 
@@ -324,10 +572,30 @@ public abstract class PkgDesc implements Comparable<PkgDesc> {
      * @return A {@link PkgDesc} describing this system-image package.
      */
     @NonNull
-    public static PkgDesc newSysImg(@NonNull AndroidVersion version,
-                                    @NonNull String abi,
-                                    @NonNull MajorRevision revision) {
-        return new PkgDescSysImg(version, abi, revision);
+    public static IPkgDesc newSysImg(@NonNull final AndroidVersion version,
+                                     @NonNull final String abi,
+                                     @NonNull final MajorRevision revision) {
+        return new PkgDesc() {
+            @Override
+            public PkgType getType() {
+                return PkgType.PKG_SYS_IMAGES;
+            }
+
+            @Override
+            public MajorRevision getMajorRevision() {
+                return revision;
+            }
+
+            @Override
+            public AndroidVersion getAndroidVersion() {
+                return version;
+            }
+
+            @Override
+            public String getPath() {
+                return abi;
+            }
+        };
     }
 
     /**
@@ -338,9 +606,24 @@ public abstract class PkgDesc implements Comparable<PkgDesc> {
      * @return A {@link PkgDesc} describing this source package.
      */
     @NonNull
-    public static PkgDesc newSource(@NonNull AndroidVersion version,
-                                    @NonNull MajorRevision revision) {
-        return new PkgDescSource(version, revision);
+    public static IPkgDesc newSource(@NonNull final AndroidVersion version,
+                                     @NonNull final MajorRevision revision) {
+        return new PkgDesc() {
+            @Override
+            public PkgType getType() {
+                return PkgType.PKG_SOURCES;
+            }
+
+            @Override
+            public MajorRevision getMajorRevision() {
+                return revision;
+            }
+
+            @Override
+            public AndroidVersion getAndroidVersion() {
+                return version;
+            }
+        };
     }
 
     /**
@@ -348,12 +631,36 @@ public abstract class PkgDesc implements Comparable<PkgDesc> {
      *
      * @param version The android version of the sample package.
      * @param revision The revision of the sample package.
+     * @param minToolsRev An optional {@code min-tools-rev}.
+     *                    Use {@link FullRevision#NOT_SPECIFIED} to indicate
+     *                    there is no requirement.
      * @return A {@link PkgDesc} describing this sample package.
      */
     @NonNull
-    public static PkgDesc newSample(@NonNull AndroidVersion version,
-                                    @NonNull MajorRevision revision) {
-        return new PkgDescSample(version, revision);
+    public static IPkgDesc newSample(@NonNull final AndroidVersion version,
+                                     @NonNull final MajorRevision revision,
+                                     @NonNull final FullRevision minToolsRev) {
+        return new PkgDesc() {
+            @Override
+            public PkgType getType() {
+                return PkgType.PKG_SAMPLES;
+            }
+
+            @Override
+            public MajorRevision getMajorRevision() {
+                return revision;
+            }
+
+            @Override
+            public AndroidVersion getAndroidVersion() {
+                return version;
+            }
+
+            @Override
+            public FullRevision getMinToolsRev() {
+                return minToolsRev;
+            }
+        };
     }
 }
 
