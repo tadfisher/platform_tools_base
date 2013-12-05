@@ -29,8 +29,10 @@ import com.android.sdklib.internal.repository.IDescription;
 import com.android.sdklib.internal.repository.archives.Archive.Arch;
 import com.android.sdklib.internal.repository.archives.Archive.Os;
 import com.android.sdklib.internal.repository.sources.SdkSource;
+import com.android.sdklib.repository.MajorRevision;
 import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.SdkRepoConstants;
+import com.android.sdklib.repository.descriptors.PkgDesc;
 import com.android.utils.Pair;
 
 import org.w3c.dom.Node;
@@ -56,6 +58,8 @@ public class PlatformPackage extends MinToolsPackage
 
     /** The helper handling the layoutlib version. */
     private final LayoutlibVersionMixin mLayoutlibVersion;
+
+    private final PkgDesc mPkgDesc;
 
     /**
      * Creates a new platform package from the attributes and elements of the given XML node.
@@ -90,6 +94,8 @@ public class PlatformPackage extends MinToolsPackage
                                         SdkRepoConstants.NODE_ABI_INCLUDED);
 
         mLayoutlibVersion = new LayoutlibVersionMixin(packageNode);
+
+        mPkgDesc = PkgDesc.newPlatform(mVersion, (MajorRevision) getRevision());
     }
 
     /**
@@ -128,6 +134,14 @@ public class PlatformPackage extends MinToolsPackage
         mVersionName  = target.getVersionName();
         mLayoutlibVersion = new LayoutlibVersionMixin(props);
         mIncludedAbi = props == null ? null : props.getProperty(PkgProps.PLATFORM_INCLUDED_ABI);
+
+        mPkgDesc = PkgDesc.newPlatform(mVersion, (MajorRevision) getRevision());
+    }
+
+    @Override
+    @NonNull
+    public PkgDesc getPkgDesc() {
+        return mPkgDesc;
     }
 
     /**
