@@ -32,5 +32,9 @@ import com.android.sdklib.repository.NoPreviewRevision;
  * methods provided by {@link IPkgDescExtra}.
  */
 public interface IPkgDescExtra extends IPkgDesc {
+    /**
+     * Returns an optional list of older paths for this extra package.
+     * @return A non-null, possibly empty, for old paths previously used for the same extra.
+     */
     @NonNull public String[] getOldPaths();
 }
