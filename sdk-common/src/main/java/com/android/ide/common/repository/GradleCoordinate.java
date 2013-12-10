@@ -17,6 +17,7 @@ package com.android.ide.common.repository;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import sun.tools.jar.resources.jar;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -40,15 +41,50 @@ public class GradleCoordinate implements Comparable<GradleCoordinate> {
    * where revision is a series of '.' separated numbers optionally terminated by a '+' character.
    */
 
+  public enum ArtifactType {
+    POM("pom"),
+    JAR("jar"),
+    MAVEN_PLUGIN("maven-plugin"),
+    EJB("ejb"),
+    WAR("war"),
+    EAR("ear"),
+    RAR("rar"),
+    PAR("par"),
+    AAR("aar");
+
+    private String myId;
+
+    ArtifactType(String id) {
+      myId = id;
+    }
+
+    public static ArtifactType fromString(String name) {
+      if (name != null) {
+        for (ArtifactType at : ArtifactType.values()) {
+          if (at.myId.equals(name)) {
+            return at;
+          }
+        }
+      }
+      return null;
+    }
+
+    @Override
+    public String toString() {
+      return myId;
+    }
+  }
+
   public static final int PLUS_REV = -1;
 
   private final String myGroupId;
   private final String myArtifactId;
+  private final ArtifactType myArtifactType;
 
   private final List<Integer> myRevisions = new ArrayList<Integer>(3);
   private final boolean myIsAnyRevision;
 
-  private static final Pattern MAVEN_PATTERN = Pattern.compile("([\\w\\d\\.-]+):([\\w\\d\\.-]+):([\\d+\\.\\+]+)");
+  private static final Pattern MAVEN_PATTERN = Pattern.compile("([\\w\\d\\.-]+):([\\w\\d\\.-]+):([\\d+\\.\\+]+)(@\\w+)?");
   private static final Pattern REVISION_PATTERN = Pattern.compile("(\\d+|\\+)");
 
   /**
@@ -58,7 +94,7 @@ public class GradleCoordinate implements Comparable<GradleCoordinate> {
    * @param revisions
    */
   public GradleCoordinate(@NonNull String groupId, @NonNull String artifactId, @NonNull Integer... revisions) {
-    this(groupId, artifactId, Arrays.asList(revisions));
+    this(groupId, artifactId, Arrays.asList(revisions), null);
   }
 
   /**
@@ -67,13 +103,15 @@ public class GradleCoordinate implements Comparable<GradleCoordinate> {
    * @param artifactId
    * @param revisions
    */
-  public GradleCoordinate(@NonNull String groupId, @NonNull String artifactId, @NonNull List<Integer> revisions) {
+  public GradleCoordinate(@NonNull String groupId, @NonNull String artifactId, @NonNull List<Integer> revisions, @Nullable ArtifactType type) {
     myGroupId = groupId;
     myArtifactId = artifactId;
     myRevisions.addAll(revisions);
 
     // If the major revision is "+" then we'll accept any revision
     myIsAnyRevision = (!myRevisions.isEmpty() && myRevisions.get(0) == PLUS_REV);
+
+    myArtifactType = type;
   }
 
   /**
@@ -95,6 +133,13 @@ public class GradleCoordinate implements Comparable<GradleCoordinate> {
     String groupId = matcher.group(1);
     String artifactId = matcher.group(2);
     String revision = matcher.group(3);
+    String typeString = matcher.group(4);
+    ArtifactType type = null;
+
+    if (typeString != null) {
+      // Strip off the '@' symbol and try to convert
+      type = ArtifactType.fromString(typeString.substring(1).toLowerCase());
+    }
 
     matcher = REVISION_PATTERN.matcher(revision);
 
@@ -109,12 +154,16 @@ public class GradleCoordinate implements Comparable<GradleCoordinate> {
       }
     }
 
-    return new GradleCoordinate(groupId, artifactId, revisions);
+    return new GradleCoordinate(groupId, artifactId, revisions, type);
   }
 
   @Override
   public String toString() {
-    return String.format(Locale.US, "%s:%s:%s", myGroupId, myArtifactId, getFullRevision());
+    String s = String.format(Locale.US, "%s:%s:%s", myGroupId, myArtifactId, getFullRevision());
+    if (myArtifactType != null) {
+      s += "@" + myArtifactType.toString();
+    }
+    return s;
   }
 
   @Nullable
@@ -134,6 +183,11 @@ public class GradleCoordinate implements Comparable<GradleCoordinate> {
     }
 
     return String.format("%s:%s", myGroupId, myArtifactId);
+  }
+
+  @Nullable
+  public ArtifactType getType() {
+    return myArtifactType;
   }
 
   public boolean acceptsGreaterRevisions() {
@@ -158,7 +212,11 @@ public class GradleCoordinate implements Comparable<GradleCoordinate> {
    * @return true iff the other group and artifact match the group and artifact of this coordinate.
    */
   public boolean isSameArtifact(@NonNull GradleCoordinate o) {
-    return o.myGroupId.equals(myGroupId) && o.myArtifactId.equals(myArtifactId);
+    boolean isEqual = o.myGroupId.equals(myGroupId) && o.myArtifactId.equals(myArtifactId);
+    if (myArtifactType != null) {
+      isEqual &= myArtifactType.equals(o.myArtifactType);
+    }
+    return isEqual;
   }
 
   @Override
@@ -171,6 +229,8 @@ public class GradleCoordinate implements Comparable<GradleCoordinate> {
     if (!myRevisions.equals(that.myRevisions)) return false;
     if (!myArtifactId.equals(that.myArtifactId)) return false;
     if (!myGroupId.equals(that.myGroupId)) return false;
+    if ((myArtifactType == null) != (that.myArtifactType == null)) return false;
+    if (myArtifactType != null && !myArtifactType.equals(that.myArtifactType)) return false;
 
     return true;
   }
@@ -181,6 +241,9 @@ public class GradleCoordinate implements Comparable<GradleCoordinate> {
     result = 31 * result + myArtifactId.hashCode();
     for (Integer i : myRevisions) {
       result = 31 * result + i;
+    }
+    if (myArtifactType != null) {
+      result = 31 * result + myArtifactType.hashCode();
     }
     return result;
   }
