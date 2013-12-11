@@ -61,6 +61,20 @@ public class RenderSession {
     }
 
     /**
+     * Returns the {@link ViewInfo} objects for the system decor views, like the ActionBar.
+     * <p/>
+     * This is reset to a new instance every time {@link #render()} is called and can be
+     * <code>null</code> if the call failed, or there was no system decor.
+     * <p/>
+     * This can be safely modified by the caller.
+     *
+     * @return the list of {@link ViewInfo} or null if there aren't any.
+     */
+    public List<ViewInfo> getSystemRootViews() {
+        return null;
+    }
+
+    /**
      * Returns the rendering of the full layout.
      * <p>
      * This is reset to a new instance every time {@link #render()} is called and can be

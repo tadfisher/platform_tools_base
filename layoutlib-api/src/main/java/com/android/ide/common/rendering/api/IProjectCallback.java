@@ -151,4 +151,6 @@ public interface IProjectCallback {
      */
     AdapterBinding getAdapterBinding(ResourceReference adapterViewRef, Object adapterCookie,
             Object viewObject);
+
+    ActionBarCallback getActionBarCallback();
 }

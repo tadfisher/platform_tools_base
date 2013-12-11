@@ -181,4 +181,12 @@ public class ViewInfo {
     public int getBottomMargin() {
         return mBottomMargin;
     }
+
+    /**
+     * Returns if the ViewInfo represents part of the SystemUI, for example, the ActionBar.
+     * @return
+     */
+    public boolean isSystemUI() {
+        return false;
+    }
 }
