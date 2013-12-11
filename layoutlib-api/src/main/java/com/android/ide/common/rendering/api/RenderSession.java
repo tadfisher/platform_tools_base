@@ -45,8 +45,10 @@ public class RenderSession {
     /**
      * Returns the {@link ViewInfo} objects for the top level views.
      * <p/>
-     * In most case the list will only contain one item. If the top level node is {@code merge}
-     * though then it will contain all the items under the {@code merge} tag.
+     * It contains {@code ViewInfo} for only views in the layout. For {@code ViewInfo} of the
+     * System UI surrounding the layout use {@link #getSystemRootViews()}. In most case the list
+     * will only contain one item. If the top level node is {@code merge} though then it will
+     * contain all the items under the {@code merge} tag.
      * <p/>
      * This is reset to a new instance every time {@link #render()} is called and can be
      * <code>null</code> if the call failed (and the method returned a {@link Result} with
@@ -55,8 +57,24 @@ public class RenderSession {
      * This can be safely modified by the caller.
      *
      * @return the list of {@link ViewInfo} or null if there aren't any.
+     *
+     * @see #getSystemRootViews()
      */
     public List<ViewInfo> getRootViews() {
+        return null;
+    }
+
+    /**
+     * Returns the {@link ViewInfo} objects for the system decor views, like the ActionBar.
+     * <p/>
+     * This is reset to a new instance every time {@link #render()} is called and can be
+     * <code>null</code> if the call failed, or there was no system decor.
+     * <p/>
+     * This can be safely modified by the caller.
+     *
+     * @return the list of {@link ViewInfo} or null if there aren't any.
+     */
+    public List<ViewInfo> getSystemRootViews() {
         return null;
     }
 
