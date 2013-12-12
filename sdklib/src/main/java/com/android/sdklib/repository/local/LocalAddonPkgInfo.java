@@ -34,6 +34,7 @@ import com.android.sdklib.io.IFileOp;
 import com.android.sdklib.repository.FullRevision;
 import com.android.sdklib.repository.MajorRevision;
 import com.android.sdklib.repository.descriptors.IPkgDesc;
+import com.android.sdklib.repository.descriptors.IAddonDesc;
 import com.android.sdklib.repository.descriptors.PkgDesc;
 import com.android.sdklib.repository.descriptors.PkgType;
 import com.android.utils.Pair;
@@ -70,6 +71,7 @@ public class LocalAddonPkgInfo extends LocalPlatformPkgInfo {
 
     private final @NonNull IPkgDesc mAddonDesc;
     private String mTargetHash;
+    private String mVendorId;
 
     public LocalAddonPkgInfo(@NonNull LocalSdk localSdk,
                              @NonNull File localDir,
@@ -77,11 +79,19 @@ public class LocalAddonPkgInfo extends LocalPlatformPkgInfo {
                              @NonNull AndroidVersion version,
                              @NonNull MajorRevision revision) {
         super(localSdk, localDir, sourceProps, version, revision, FullRevision.NOT_SPECIFIED);
-        mAddonDesc = PkgDesc.newAddon(version, revision, new PkgDesc.ITargetHashProvider() {
+        mAddonDesc = PkgDesc.newAddon(version, revision, new IAddonDesc() {
+            @NonNull
             @Override
             public String getTargetHash() {
                 // Lazily compute the target hash the first time it is required.
                 return LocalAddonPkgInfo.this.getTargetHash();
+            }
+
+            @NonNull
+            @Override
+            public String getVendorId() {
+                // Lazily compute the vendor id the first time it is required.
+                return LocalAddonPkgInfo.this.getVendorId();
             }
         });
     }
@@ -90,6 +100,32 @@ public class LocalAddonPkgInfo extends LocalPlatformPkgInfo {
     @Override
     public IPkgDesc getDesc() {
         return mAddonDesc;
+    }
+
+    @NonNull
+    public String getVendorId() {
+        if (mVendorId == null) {
+            IAndroidTarget target = getAndroidTarget();
+
+            String vendor = null;
+
+            if (target != null) {
+                vendor = target.getVendor();
+            } else {
+                Pair<Map<String, String>, String> infos = parseAddonProperties();
+                Map<String, String> map = infos.getFirst();
+                if (map != null) {
+                    vendor = map.get(ADDON_VENDOR);
+                }
+            }
+
+            if (vendor == null) {
+                return "invalid";
+            }
+
+            mVendorId = vendor;
+        }
+        return mVendorId;
     }
 
     @NonNull
@@ -113,10 +149,15 @@ public class LocalAddonPkgInfo extends LocalPlatformPkgInfo {
                 }
             }
 
+            if (vendor == null) {
+                vendor = mVendorId;
+            }
+
             if (vendor == null || name == null) {
                 return "invalid";
             }
 
+            mVendorId = vendor;
             mTargetHash = AndroidTargetHash.getAddonHashString(
                     vendor,
                     name,

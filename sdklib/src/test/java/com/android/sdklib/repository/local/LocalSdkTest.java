@@ -261,7 +261,7 @@ public class LocalSdkTest extends TestCase {
         // check empty
         assertEquals("[]", Arrays.toString(mLS.getPkgsInfos(PkgType.PKG_EXTRAS)));
         assertNull(mLS.getPkgInfo(PkgType.PKG_EXTRAS, "vendor1/path1"));
-        assertNull(mLS.getExtra("vendor1/path1"));
+        assertNull(mLS.getExtra("vendor1", "path1"));
 
         // setup fake files
         mLS.clearLocalPkg(PkgType.PKG_ALL);
@@ -301,12 +301,11 @@ public class LocalSdkTest extends TestCase {
                 "Pkg.Revision=21\n" +
                 "Archive.Arch=ANY\n");
 
-        LocalPkgInfo pi1 = mLS.getPkgInfo(PkgType.PKG_EXTRAS, "vendor1/path1");
+        LocalPkgInfo pi1 = mLS.getPkgInfo(PkgType.PKG_EXTRAS, "vendor1", "path1");
         assertNotNull(pi1);
         assertTrue(pi1 instanceof LocalExtraPkgInfo);
-        assertEquals("vendor1/path1", ((LocalExtraPkgInfo)pi1).getDesc().getPath());
-        assertEquals("path1",         ((LocalExtraPkgInfo)pi1).getExtraPath());
-        assertEquals("vendor1",       ((LocalExtraPkgInfo)pi1).getVendorId());
+        assertEquals("vendor1",       ((LocalExtraPkgInfo)pi1).getDesc().getVendorId());
+        assertEquals("path1",         ((LocalExtraPkgInfo)pi1).getDesc().getPath());
         assertEquals(new File("/sdk/extras/vendor1/path1"), pi1.getLocalDir());
         assertSame(mLS, pi1.getLocalSdk());
         assertEquals(null, pi1.getLoadError());
@@ -315,14 +314,14 @@ public class LocalSdkTest extends TestCase {
         Package pkg = pi1.getPackage();
         assertNotNull(pkg);
 
-        LocalExtraPkgInfo pi2 = mLS.getExtra("vendor1/path1");
+        LocalExtraPkgInfo pi2 = mLS.getExtra("vendor1", "path1");
         assertSame(pi1, pi2);
 
         // -- get all extras and iterate, sorted by revision.
 
-        assertEquals("[<LocalExtraPkgInfo:PkgDesc Path=vendor1/path1 FullRev=11.0.0>, " +
-                      "<LocalExtraPkgInfo:PkgDesc Path=vendor1/path2 FullRev=21.0.0>, " +
-                      "<LocalExtraPkgInfo:PkgDesc Path=vendor2/path1 FullRev=21.0.0>]",
+        assertEquals("[<LocalExtraPkgInfo:PkgDesc Vendor=vendor1 Path=path1 FullRev=11.0.0>, " +
+                      "<LocalExtraPkgInfo:PkgDesc Vendor=vendor1 Path=path2 FullRev=21.0.0>, " +
+                      "<LocalExtraPkgInfo:PkgDesc Vendor=vendor2 Path=path1 FullRev=21.0.0>]",
                      Arrays.toString(mLS.getPkgsInfos(PkgType.PKG_EXTRAS)));
     }
 
@@ -584,10 +583,10 @@ public class LocalSdkTest extends TestCase {
                 "com.foo.lib1=foo.jar;API for Foo\n" +
                 "com.blah.lib2=blah.jar;API for Blah\n");
 
-        assertEquals("[<LocalAddonPkgInfo:PkgDesc Android=API 18 Path=Some Vendor:Some Name:18 MajorRev=2>]",
+        assertEquals("[<LocalAddonPkgInfo:PkgDesc Android=API 18 Vendor=Some Vendor Path=Some Vendor:Some Name:18 MajorRev=2>]",
                      Arrays.toString(mLS.getPkgsInfos(PkgType.PKG_ADDONS)));
         assertEquals("[<LocalPlatformPkgInfo:PkgDesc Android=API 18 Path=android-18 MajorRev=1 MinToolsRev=21.0.0>, " +
-                      "<LocalAddonPkgInfo:PkgDesc Android=API 18 Path=Some Vendor:Some Name:18 MajorRev=2>]",
+                      "<LocalAddonPkgInfo:PkgDesc Android=API 18 Vendor=Some Vendor Path=Some Vendor:Some Name:18 MajorRev=2>]",
                      Arrays.toString(mLS.getPkgsInfos(PkgType.PKG_ALL)));
 
         LocalPkgInfo pi = mLS.getPkgInfo(PkgType.PKG_ADDONS, "Some Vendor:Some Name:18");
