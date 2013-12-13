@@ -105,13 +105,13 @@ public class GradleImport {
     public static final String ECLIPSE_DOT_PROJECT = ".project";
     public static final String IMPORT_SUMMARY_TXT = "import-summary.txt";
 
-    private List<? extends ImportModule> mModules;
+    private List<? extends ImportModule> mRootModules;
+    private Set<ImportModule> mModules;
     private ImportSummary mSummary;
     private File mWorkspaceLocation;
     private File mGradleWrapperLocation;
     private File mSdkLocation;
     private SdkManager mSdkManager;
-    private int mModuleCount;
     private Set<String> mHandledJars = Sets.newHashSet();
     private Map<String,File> mWorkspaceProjects;
 
@@ -137,7 +137,6 @@ public class GradleImport {
      */
     public void importProjects(@NonNull List<File> projectDirs) throws IOException {
         mSummary = new ImportSummary(this);
-        mModuleCount = 0;
         mProjectMap.clear();
         mHandledJars.clear();
         mWarnings.clear();
@@ -162,7 +161,12 @@ public class GradleImport {
         // Find unique projects. (We can register projects under multiple paths
         // if the dir and the canonical dir differ, so pick unique values here)
         Set<EclipseProject> projects = Sets.newHashSet(mProjectMap.values());
-        mModules = EclipseProject.performImport(this, projects);
+        mRootModules = EclipseProject.performImport(this, projects);
+        mModules = Sets.newHashSet();
+        for (ImportModule module : mRootModules) {
+            mModules.add(module);
+            mModules.addAll(module.getAllDependencies());
+        }
     }
 
     public static boolean isEclipseProjectDir(@Nullable File file) {
@@ -391,7 +395,7 @@ public class GradleImport {
 
         exportGradleWrapper(destDir);
 
-        for (ImportModule module : mModules) {
+        for (ImportModule module : mRootModules) {
             exportModule(new File(destDir, module.getModuleName()), module);
         }
 
@@ -540,7 +544,7 @@ public class GradleImport {
         Files.write(sb.toString(), file, UTF_8);
     }
 
-    private String getBuildToolsVersion() {
+    String getBuildToolsVersion() {
         SdkManager sdkManager = getSdkManager();
         if (sdkManager != null) {
             final BuildToolInfo buildTool = sdkManager.getLatestBuildTool();
@@ -626,7 +630,7 @@ public class GradleImport {
     private void createSettingsGradle(@NonNull File file) throws IOException {
         StringBuilder sb = new StringBuilder();
 
-        for (ImportModule module : mModules) {
+        for (ImportModule module : mRootModules) {
             sb.append("include '");
             sb.append(module.getModuleReference());
             sb.append("'");
@@ -779,14 +783,14 @@ public class GradleImport {
         mProjectMap.put(project.getCanonicalDir(), project);
     }
 
-    void registerModule(@NonNull ImportModule module) {
-        if (module.isReplacedWithDependency()) {
-            mModuleCount++;
-        }
-    }
-
     int getModuleCount() {
-        return mModuleCount;
+        int moduleCount = 0;
+        for (ImportModule module : mModules) {
+            if (!module.isReplacedWithDependency()) {
+                moduleCount++;
+            }
+        }
+        return moduleCount;
     }
 
     /** Interface used by the {@link #copyDir(java.io.File, java.io.File, CopyHandler)} handler */
@@ -891,7 +895,7 @@ public class GradleImport {
     }
 
     private boolean haveArtifact(String groupId) {
-        for (ImportModule module : mModules) {
+        for (ImportModule module : mRootModules) {
             for (GradleCoordinate dependency : module.getDependencies()) {
                 if (groupId.equals(dependency.getGroupId())) {
                     return true;
