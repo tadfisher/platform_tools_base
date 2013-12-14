@@ -120,7 +120,7 @@ public class GradleImport {
      * Whether we should place the repository definitions in the global build.gradle rather
      * than in each module
      */
-    static final boolean DECLARE_GLOBAL_REPOSITORIES = true;
+    static final boolean DECLARE_GLOBAL_REPOSITORIES = false;
 
     private List<? extends ImportModule> mRootModules;
     private Set<ImportModule> mModules;
@@ -141,6 +141,7 @@ public class GradleImport {
 
     private final List<String> mWarnings = Lists.newArrayList();
     private final List<String> mErrors = Lists.newArrayList();
+    private Map<String, File> mPathMap = Maps.newTreeMap();
 
     public GradleImport() {
         String workspace = System.getProperty(WORKSPACE_PROPERTY);
@@ -162,6 +163,7 @@ public class GradleImport {
         mHandledJars.clear();
         mWarnings.clear();
         mErrors.clear();
+        mPathMap.clear();
         mWorkspaceProjects = null;
 
         for (File file : projectDirs) {
@@ -246,6 +248,12 @@ public class GradleImport {
         return this;
     }
 
+    /** Gets location of Eclipse workspace, if known */
+    @Nullable
+    public File getEclipseWorkspace() {
+        return mWorkspaceLocation;
+    }
+
     /** Whether import should attempt to replace jars with dependencies */
     @NonNull
     public GradleImport setReplaceJars(boolean replaceJars) {
@@ -281,29 +289,6 @@ public class GradleImport {
         return mGradleNameStyle;
     }
 
-    /**
-     * Do we need to know the Eclipse workspace location in order to work out path variables,
-     * locations of dependent libraries etc?
-     * <p>
-     * To find workspace choose File->Switch Workspace->Other... and it will display the
-     * workspace path.
-     */
-    public boolean needEclipseWorkspace() {
-        // Already know it?
-        //noinspection VariableNotUsedInsideIf
-        if (mWorkspaceLocation != null) {
-            return false;
-        }
-
-        for (EclipseProject project : mProjectMap.values()) {
-            if (project.needWorkspaceLocation()) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     private void guessWorkspace(@NonNull File projectDir) {
         if (mWorkspaceLocation == null) {
             File dir = projectDir.getParentFile();
@@ -317,7 +302,7 @@ public class GradleImport {
         }
     }
 
-    private static boolean isEclipseWorkspaceDir(@NonNull File file) {
+    public static boolean isEclipseWorkspaceDir(@NonNull File file) {
         return file.isDirectory() &&
                 new File(file, ".metadata" + separator + "version.ini").exists();
     }
@@ -328,6 +313,16 @@ public class GradleImport {
             return null;
         }
 
+        // If file within project, must match on all prefixes
+        for (File file : mPathMap.values()) {
+            if (file != null && path.startsWith(file.getPath())) {
+                File resolved = new File(file, path);
+                if (resolved.exists()) {
+                    return resolved;
+                }
+            }
+        }
+
         if (mWorkspaceLocation != null) {
             // Is the file present directly in the workspace?
             char first = path.charAt(0);
@@ -336,6 +331,7 @@ public class GradleImport {
             }
             File f = new File(mWorkspaceLocation, path.substring(1).replace('/', separatorChar));
             if (f.exists()) {
+                mPathMap.put(path, f);
                 return f;
             }
 
@@ -376,7 +372,6 @@ public class GradleImport {
                                         }
                                     } catch (Throwable t) {
                                         // Ignore binary data we can't read
-                                        t.printStackTrace();
                                     }
                                 }
                             } catch (IOException e) {
@@ -394,6 +389,7 @@ public class GradleImport {
             // Is it just a project root?
             File project = mWorkspaceProjects.get(path);
             if (project != null) {
+                mPathMap.put(path, project);
                 return project;
             }
 
@@ -401,9 +397,16 @@ public class GradleImport {
             for (File file : mWorkspaceProjects.values()) {
                 File resolved = new File(file, path);
                 if (resolved.exists()) {
+                    mPathMap.put(path, project);
                     return resolved;
                 }
             }
+
+            // Record path as one we need to resolve
+            mPathMap.put(path, null);
+        } else {
+            // Record path as one we need to resolve
+            mPathMap.put(path, null);
         }
 
         return null;
@@ -762,7 +765,7 @@ public class GradleImport {
         return sb.toString();
     }
 
-    public String resolvePathVariable(String name) throws IOException {
+    public String resolvePathVariable(@NonNull String name) throws IOException {
         Properties properties = getJdkSettingsProperties(true);
         assert properties != null; // because mustExist=true, otherwise throws error
         String value = properties.getProperty("org.eclipse.jdt.core.classpathVariable." + name);
@@ -840,12 +843,19 @@ public class GradleImport {
 
     int getModuleCount() {
         int moduleCount = 0;
-        for (ImportModule module : mModules) {
-            if (!module.isReplacedWithDependency()) {
-                moduleCount++;
+        if (mModules != null) {
+            for (ImportModule module : mModules) {
+                if (!module.isReplacedWithDependency()) {
+                    moduleCount++;
+                }
             }
         }
         return moduleCount;
+    }
+
+    /** Returns a path map for workspace paths */
+    public Map<String, File> getPathMap() {
+        return mPathMap;
     }
 
     /** Interface used by the {@link #copyDir(java.io.File, java.io.File, CopyHandler)} handler */
@@ -941,19 +951,21 @@ public class GradleImport {
         return false;
     }
 
-    boolean needSupportRepository() {
+    public boolean needSupportRepository() {
         return haveArtifact("com.android.support");
     }
 
-    boolean needGoogleRepository() {
+    public boolean needGoogleRepository() {
         return haveArtifact("com.google.android.gms");
     }
 
     private boolean haveArtifact(String groupId) {
-        for (ImportModule module : mRootModules) {
-            for (GradleCoordinate dependency : module.getDependencies()) {
-                if (groupId.equals(dependency.getGroupId())) {
-                    return true;
+        if (mRootModules != null) {
+            for (ImportModule module : mRootModules) {
+                for (GradleCoordinate dependency : module.getDependencies()) {
+                    if (groupId.equals(dependency.getGroupId())) {
+                        return true;
+                    }
                 }
             }
         }
@@ -961,11 +973,11 @@ public class GradleImport {
         return false;
     }
 
-    boolean isMissingSupportRepository() {
+    public boolean isMissingSupportRepository() {
         return !haveLocalRepository("android");
     }
 
-    boolean isMissingGoogleRepository() {
+    public boolean isMissingGoogleRepository() {
         return !haveLocalRepository("google");
     }
 }
