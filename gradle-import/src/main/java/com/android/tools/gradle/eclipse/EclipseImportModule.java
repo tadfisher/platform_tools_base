@@ -19,6 +19,7 @@ package com.android.tools.gradle.eclipse;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.repository.GradleCoordinate;
+import com.google.common.collect.Lists;
 
 import java.io.File;
 import java.util.List;
@@ -26,10 +27,13 @@ import java.util.List;
 /** An imported module from Eclipse */
 class EclipseImportModule extends ImportModule {
     private final EclipseProject mProject;
+    private List<ImportModule> mDirectDependencies;
+    private List<ImportModule> mAllDependencies;
 
     public EclipseImportModule(@NonNull GradleImport importer, @NonNull EclipseProject project) {
         super(importer);
         mProject = project;
+        mProject.setModule(this);
     }
 
     @Override
@@ -50,7 +54,7 @@ class EclipseImportModule extends ImportModule {
                 GradleCoordinate dependency = guessDependency(jar);
                 if (dependency != null) {
                     mDependencies.add(dependency);
-                    mImporter.getSummary().replacedJar(jar, dependency);
+                    mImporter.getSummary().reportReplacedJar(jar, dependency);
                     continue;
                 }
             }
@@ -68,6 +72,9 @@ class EclipseImportModule extends ImportModule {
 
     @Override
     protected boolean dependsOnLibrary(@NonNull String pkg) {
+        if (!isAndroidProject()) {
+            return false;
+        }
         if (pkg.equals(mProject.getPackage())) {
             return true;
         }
@@ -79,6 +86,38 @@ class EclipseImportModule extends ImportModule {
         }
 
         return false;
+    }
+
+    @NonNull
+    @Override
+    protected List<ImportModule> getDirectDependencies() {
+        if (mDirectDependencies == null) {
+            mDirectDependencies = Lists.newArrayList();
+            for (EclipseProject project : mProject.getDirectLibraries()) {
+                EclipseImportModule module = project.getModule();
+                if (module != null) {
+                    mDirectDependencies.add(module);
+                }
+            }
+        }
+
+        return mDirectDependencies;
+    }
+
+    @NonNull
+    @Override
+    protected List<ImportModule> getAllDependencies() {
+        if (mAllDependencies == null) {
+            mAllDependencies = Lists.newArrayList();
+            for (EclipseProject project : mProject.getAllLibraries()) {
+                EclipseImportModule module = project.getModule();
+                if (module != null) {
+                    mAllDependencies.add(module);
+                }
+            }
+        }
+
+        return mAllDependencies;
     }
 
     @Override

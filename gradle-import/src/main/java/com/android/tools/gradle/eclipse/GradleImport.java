@@ -22,7 +22,7 @@ import static com.android.SdkConstants.FN_BUILD_GRADLE;
 import static com.android.SdkConstants.FN_SETTINGS_GRADLE;
 import static com.android.SdkConstants.GRADLE_PLUGIN_LATEST_VERSION;
 import static com.android.SdkConstants.GRADLE_PLUGIN_NAME;
-import static java.io.File.createTempFile;
+import static com.google.common.base.Charsets.UTF_8;
 import static java.io.File.separator;
 import static java.io.File.separatorChar;
 
@@ -31,7 +31,6 @@ import com.android.annotations.Nullable;
 import com.android.ide.common.repository.GradleCoordinate;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.SdkManager;
-import com.android.sdklib.repository.descriptors.PkgDesc;
 import com.android.sdklib.repository.descriptors.PkgType;
 import com.android.sdklib.repository.local.LocalExtraPkgInfo;
 import com.android.sdklib.repository.local.LocalPkgInfo;
@@ -39,23 +38,29 @@ import com.android.sdklib.repository.local.LocalSdk;
 import com.android.utils.ILogger;
 import com.android.utils.SdkUtils;
 import com.android.utils.StdLogger;
-import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
+import com.google.common.primitives.Bytes;
 
 import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.StringReader;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 /**
  * Importer which can generate Android Gradle projects.
@@ -98,21 +103,39 @@ public class GradleImport {
     public static final String CURRENT_BUILD_TOOLS_VERSION = "19.0.1";
     public static final String ANDROID_GRADLE_PLUGIN =
             GRADLE_PLUGIN_NAME + GRADLE_PLUGIN_LATEST_VERSION;
+    public static final String MAVEN_URL_PROPERTY = "android.mavenRepoUrl";
+    private static final String WORKSPACE_PROPERTY = "android.eclipseWorkspace";
 
-    static final String MAVEN_REPOSITORY = "mavenCentral()";
+    static final String MAVEN_REPOSITORY;
+    static {
+        String repository = System.getProperty(MAVEN_URL_PROPERTY);
+        if (repository == null) {
+            repository = "mavenCentral()";
+        } else {
+            repository = "maven { url '" + repository + "' }";
+        }
+        MAVEN_REPOSITORY = repository;
+    }
 
     public static final String ECLIPSE_DOT_CLASSPATH = ".classpath";
     public static final String ECLIPSE_DOT_PROJECT = ".project";
     public static final String IMPORT_SUMMARY_TXT = "import-summary.txt";
 
-    private List<? extends ImportModule> mModules;
+    /**
+     * Whether we should place the repository definitions in the global build.gradle rather
+     * than in each module
+     */
+    static final boolean DECLARE_GLOBAL_REPOSITORIES = true;
+
+    private List<? extends ImportModule> mRootModules;
+    private Set<ImportModule> mModules;
     private ImportSummary mSummary;
     private File mWorkspaceLocation;
     private File mGradleWrapperLocation;
     private File mSdkLocation;
     private SdkManager mSdkManager;
-    private int mModuleCount;
     private Set<String> mHandledJars = Sets.newHashSet();
+    private Map<String,File> mWorkspaceProjects;
 
     /** Whether we should convert project names to lowercase module names */
     private boolean mGradleNameStyle = true;
@@ -123,8 +146,13 @@ public class GradleImport {
 
     private final List<String> mWarnings = Lists.newArrayList();
     private final List<String> mErrors = Lists.newArrayList();
+    private Map<String, File> mPathMap = Maps.newTreeMap();
 
     public GradleImport() {
+        String workspace = System.getProperty(WORKSPACE_PROPERTY);
+        if (workspace != null) {
+            mWorkspaceLocation = new File(workspace);
+        }
     }
 
     /** Imports the given projects. Note that this just reads in the project state;
@@ -136,11 +164,13 @@ public class GradleImport {
      */
     public void importProjects(@NonNull List<File> projectDirs) throws IOException {
         mSummary = new ImportSummary(this);
-        mModuleCount = 0;
         mProjectMap.clear();
         mHandledJars.clear();
         mWarnings.clear();
         mErrors.clear();
+        mWorkspaceProjects = null;
+        mRootModules = Collections.emptyList();
+        mModules = Sets.newHashSet();
 
         for (File file : projectDirs) {
             if (file.isFile()) {
@@ -149,9 +179,18 @@ public class GradleImport {
             }
 
             if (isAdtProjectDir(file)) {
-                EclipseProject.getProject(this, file);
+                try {
+                    EclipseProject.getProject(this, file);
+                } catch (ImportException e) {
+                    // Already recorded
+                    return;
+                } catch (Exception e) {
+                    reportError(null, file, e.toString(), false);
+                    return;
+                }
             } else {
-                reportError(null, file, "Not a recognized project: " + file);
+                reportError(null, file, "Not a recognized project: " + file, false);
+                return;
             }
 
             guessWorkspace(file);
@@ -160,7 +199,11 @@ public class GradleImport {
         // Find unique projects. (We can register projects under multiple paths
         // if the dir and the canonical dir differ, so pick unique values here)
         Set<EclipseProject> projects = Sets.newHashSet(mProjectMap.values());
-        mModules = EclipseProject.performImport(this, projects);
+        mRootModules = EclipseProject.performImport(this, projects);
+        for (ImportModule module : mRootModules) {
+            mModules.add(module);
+            mModules.addAll(module.getAllDependencies());
+        }
     }
 
     public static boolean isEclipseProjectDir(@Nullable File file) {
@@ -219,6 +262,12 @@ public class GradleImport {
         return this;
     }
 
+    /** Gets location of Eclipse workspace, if known */
+    @Nullable
+    public File getEclipseWorkspace() {
+        return mWorkspaceLocation;
+    }
+
     /** Whether import should attempt to replace jars with dependencies */
     @NonNull
     public GradleImport setReplaceJars(boolean replaceJars) {
@@ -254,29 +303,6 @@ public class GradleImport {
         return mGradleNameStyle;
     }
 
-    /**
-     * Do we need to know the Eclipse workspace location in order to work out path variables,
-     * locations of dependent libraries etc?
-     * <p>
-     * To find workspace choose File->Switch Workspace->Other... and it will display the
-     * workspace path.
-     */
-    public boolean needEclipseWorkspace() {
-        // Already know it?
-        //noinspection VariableNotUsedInsideIf
-        if (mWorkspaceLocation != null) {
-            return false;
-        }
-
-        for (EclipseProject project : mProjectMap.values()) {
-            if (project.needWorkspaceLocation()) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     private void guessWorkspace(@NonNull File projectDir) {
         if (mWorkspaceLocation == null) {
             File dir = projectDir.getParentFile();
@@ -290,9 +316,129 @@ public class GradleImport {
         }
     }
 
-    private static boolean isEclipseWorkspaceDir(@NonNull File file) {
+    public static boolean isEclipseWorkspaceDir(@NonNull File file) {
         return file.isDirectory() &&
                 new File(file, ".metadata" + separator + "version.ini").exists();
+    }
+
+    @Nullable
+    public File resolveWorkspacePath(@NonNull String path) {
+        if (path.isEmpty()) {
+            return null;
+        }
+
+        // If file within project, must match on all prefixes
+        for (Map.Entry<String,File> entry : mPathMap.entrySet()) {
+            String workspacePath = entry.getKey();
+            File file = entry.getValue();
+            if (file != null && path.startsWith(workspacePath)) {
+                if (path.equals(workspacePath)) {
+                    return file;
+                } else {
+                    path = path.substring(workspacePath.length());
+                    if (path.charAt(0) == '/' || path.charAt(0) == separatorChar) {
+                        path = path.substring(1);
+                    }
+                    File resolved = new File(file, path.replace('/', separatorChar));
+                    if (resolved.exists()) {
+                        return resolved;
+                    }
+                }
+            }
+        }
+
+        if (mWorkspaceLocation != null) {
+            // Is the file present directly in the workspace?
+            char first = path.charAt(0);
+            if (first != '/') {
+                return null;
+            }
+            File f = new File(mWorkspaceLocation, path.substring(1).replace('/', separatorChar));
+            if (f.exists()) {
+                mPathMap.put(path, f);
+                return f;
+            }
+
+            // Other files may be in other file systems, mapped by a .location link in the
+            // workspace metadata
+            if (mWorkspaceProjects == null) {
+                mWorkspaceProjects = Maps.newHashMap();
+                File projectDir = new File(mWorkspaceLocation, ".metadata" + separator + ".plugins"
+                        + separator + "org.eclipse.core.resources" + separator + ".projects");
+                File[] projects = projectDir.exists() ? projectDir.listFiles() : null;
+                byte[] target = "URI//file:".getBytes(Charsets.US_ASCII);
+                if (projects != null) {
+                    for (File project : projects) {
+                        File location = new File(project, ".location");
+                        if (location.exists()) {
+                            try {
+                                byte[] bytes = Files.toByteArray(location);
+                                int start = Bytes.indexOf(bytes, target);
+                                if (start != -1) {
+                                    int end = start + target.length;
+                                    for (; end < bytes.length; end++) {
+                                        if (bytes[end] == (byte)0) {
+                                            break;
+                                        }
+                                    }
+                                    try {
+                                        int length = end - start;
+                                        String s = new String(bytes, start, length, UTF_8);
+                                        s = s.substring(5); // skip URI//
+                                        File file = SdkUtils.urlToFile(s);
+                                        if (file.exists()) {
+                                            String name = project.getName();
+                                            mWorkspaceProjects.put('/' + name, file);
+                                            //noinspection ConstantConditions
+                                        }
+                                    } catch (Throwable t) {
+                                        // Ignore binary data we can't read
+                                    }
+                                }
+                            } catch (IOException e) {
+                                reportWarning((ImportModule) null, location,
+                                        "Can't read .location file");
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Is it just a project root?
+            File project = mWorkspaceProjects.get(path);
+            if (project != null) {
+                mPathMap.put(path, project);
+                return project;
+            }
+
+            // If file within project, must match on all prefixes
+            for (Map.Entry<String,File> entry : mWorkspaceProjects.entrySet()) {
+                String workspacePath = entry.getKey();
+                File file = entry.getValue();
+                if (file != null && path.startsWith(workspacePath)) {
+                    if (path.equals(workspacePath)) {
+                        return file;
+                    } else {
+                        path = path.substring(workspacePath.length());
+                        if (path.charAt(0) == '/' || path.charAt(0) == separatorChar) {
+                            path = path.substring(1);
+                        }
+                        File resolved = new File(file, path.replace('/', separatorChar));
+                        if (resolved.exists()) {
+                            return resolved;
+                        }
+                    }
+                }
+            }
+
+            // Record path as one we need to resolve
+            mPathMap.put(path, null);
+        } else {
+            // Record path as one we need to resolve
+            mPathMap.put(path, null);
+        }
+
+        return null;
     }
 
     public void exportProject(@NonNull File destDir, boolean allowNonEmpty) throws IOException {
@@ -303,7 +449,7 @@ public class GradleImport {
 
         exportGradleWrapper(destDir);
 
-        for (ImportModule module : mModules) {
+        for (ImportModule module : mRootModules) {
             exportModule(new File(destDir, module.getModuleName()), module);
         }
 
@@ -319,8 +465,8 @@ public class GradleImport {
                 reportWarning((ImportModule)null, gradlewDest,
                         "Could not make gradle wrapper script executable");
             }
-            copyDir(new File(mGradleWrapperLocation, "gradlew.bat"), new File(destDir, "gradlew.bat"),
-                    null);
+            copyDir(new File(mGradleWrapperLocation, "gradlew.bat"), new File(destDir,
+                    "gradlew.bat"), null);
             copyDir(new File(mGradleWrapperLocation, "gradle"), new File(destDir, "gradle"), null);
         }
     }
@@ -347,7 +493,10 @@ public class GradleImport {
         StringBuilder sb = new StringBuilder(500);
 
         if (module.isApp() || module.isAndroidLibrary()) {
-            appendRepositories(sb, true);
+            //noinspection PointlessBooleanExpression,ConstantConditions
+            if (!DECLARE_GLOBAL_REPOSITORIES) {
+                appendRepositories(sb, true);
+            }
 
             if (module.isApp()) {
                 sb.append("apply plugin: 'android'").append(NL);
@@ -355,11 +504,14 @@ public class GradleImport {
                 assert module.isAndroidLibrary();
                 sb.append("apply plugin: 'android-library'").append(NL);
             }
-            sb.append("").append(NL);
-            sb.append("repositories {").append(NL);
-            sb.append("    ").append(MAVEN_REPOSITORY).append(NL);
-            sb.append("}").append(NL);
-            sb.append("").append(NL);
+            sb.append(NL);
+            //noinspection PointlessBooleanExpression,ConstantConditions
+            if (!DECLARE_GLOBAL_REPOSITORIES) {
+                sb.append("repositories {").append(NL);
+                sb.append("    ").append(MAVEN_REPOSITORY).append(NL);
+                sb.append("}").append(NL);
+                sb.append(NL);
+            }
             sb.append("android {").append(NL);
             String compileSdkVersion = Integer.toString(module.getCompileSdkVersion());
             String minSdkVersion = Integer.toString(module.getMinSdkVersion());
@@ -367,7 +519,7 @@ public class GradleImport {
             sb.append("    compileSdkVersion ").append(compileSdkVersion).append(NL);
             sb.append("    buildToolsVersion \"").append(getBuildToolsVersion()).append("\"")
                     .append(NL);
-            sb.append("").append(NL);
+            sb.append(NL);
             sb.append("    defaultConfig {").append(NL);
             sb.append("        minSdkVersion ").append(minSdkVersion).append(NL);
             if (module.getTargetSdkVersion() > 1) {
@@ -426,18 +578,19 @@ public class GradleImport {
                 }
             }
             sb.append("}").append(NL);
-            sb.append(NL);
-            sb.append("dependencies {").append(NL);
             appendDependencies(sb, module);
-            sb.append("}");
 
         } else if (module.isJavaLibrary()) {
-            appendRepositories(sb, false);
+            //noinspection PointlessBooleanExpression,ConstantConditions
+            if (!DECLARE_GLOBAL_REPOSITORIES) {
+                appendRepositories(sb, false);
+            }
 
             sb.append("apply plugin: 'java'").append(NL);
 
             String languageLevel = module.getLanguageLevel();
             if (!languageLevel.equals(EclipseProject.DEFAULT_LANGUAGE_LEVEL)) {
+                sb.append(NL);
                 sb.append("sourceCompatibility = \"");
                 sb.append(languageLevel);
                 sb.append("\"").append(NL);
@@ -445,14 +598,16 @@ public class GradleImport {
                 sb.append(languageLevel);
                 sb.append("\"").append(NL);
             }
+
+            appendDependencies(sb, module);
         } else {
             assert false : module;
         }
 
-        Files.write(sb.toString(), file, Charsets.UTF_8);
+        Files.write(sb.toString(), file, UTF_8);
     }
 
-    private String getBuildToolsVersion() {
+    String getBuildToolsVersion() {
         SdkManager sdkManager = getSdkManager();
         if (sdkManager != null) {
             final BuildToolInfo buildTool = sdkManager.getLatestBuildTool();
@@ -493,45 +648,83 @@ public class GradleImport {
     private static void appendDependencies(@NonNull StringBuilder sb,
             @NonNull ImportModule module)
             throws IOException {
-        for (GradleCoordinate dependency : module.getDependencies()) {
-            sb.append("    compile '").append(dependency.toString()).append("'").append(NL);
-        }
-        for (File jar : module.getJarDependencies()) {
-            String path = jar.getPath().replace(separatorChar, '/'); // Always / in gradle
-            sb.append("    compile files('").append(path).append("')").append(NL);
+        if (!module.getDirectDependencies().isEmpty()
+                || !module.getDependencies().isEmpty()
+                || !module.getJarDependencies().isEmpty()) {
+            sb.append(NL);
+            sb.append("dependencies {").append(NL);
+            for (ImportModule lib : module.getDirectDependencies()) {
+                if (lib.isReplacedWithDependency()) {
+                    continue;
+                }
+                sb.append("    compile project('").append(lib.getModuleReference()).append("')")
+                        .append(NL);
+            }
+            for (GradleCoordinate dependency : module.getDependencies()) {
+                sb.append("    compile '").append(dependency.toString()).append("'").append(NL);
+            }
+            for (File jar : module.getJarDependencies()) {
+                String path = jar.getPath().replace(separatorChar, '/'); // Always / in gradle
+                sb.append("    compile files('").append(path).append("')").append(NL);
+            }
+            sb.append("}");
         }
     }
 
     private static void appendRepositories(@NonNull StringBuilder sb, boolean needAndroidPlugin) {
-        sb.append("buildscript {").append(NL);
-        sb.append("    repositories {").append(NL);
-        sb.append("        ").append(MAVEN_REPOSITORY).append(NL);
-        sb.append("    }").append(NL);
-        if (needAndroidPlugin) {
-            sb.append("    dependencies {").append(NL);
-            sb.append("        classpath '" + ANDROID_GRADLE_PLUGIN + "'").append(NL);
+        //noinspection PointlessBooleanExpression,ConstantConditions
+        if (!DECLARE_GLOBAL_REPOSITORIES) {
+            sb.append("buildscript {").append(NL);
+            sb.append("    repositories {").append(NL);
+            sb.append("        ").append(MAVEN_REPOSITORY).append(NL);
             sb.append("    }").append(NL);
+            if (needAndroidPlugin) {
+                sb.append("    dependencies {").append(NL);
+                sb.append("        classpath '" + ANDROID_GRADLE_PLUGIN + "'").append(NL);
+                sb.append("    }").append(NL);
+            }
+            sb.append("}").append(NL);
         }
-        sb.append("}").append(NL);
     }
 
     private static void createProjectBuildGradle(@NonNull File file) throws IOException {
-        Files.write("// Top-level build file where you can add configuration options " +
-                "common to all sub-projects/modules." + NL, file,
-                Charsets.UTF_8);
+        StringBuilder sb = new StringBuilder();
+        sb.append(
+                "// Top-level build file where you can add configuration options common to all sub-projects/modules.");
+
+        //noinspection PointlessBooleanExpression,ConstantConditions
+        if (DECLARE_GLOBAL_REPOSITORIES) {
+            sb.append(NL);
+            sb.append("buildscript {").append(NL);
+            sb.append("    repositories {").append(NL);
+            sb.append("        ").append(MAVEN_REPOSITORY).append(NL);
+            sb.append("    }").append(NL);
+            sb.append("    dependencies {").append(NL);
+            sb.append("        classpath '" + ANDROID_GRADLE_PLUGIN + "'").append(NL);
+            sb.append("    }").append(NL);
+            sb.append("}").append(NL);
+            sb.append(NL);
+            sb.append("allprojects {").append(NL);
+            sb.append("    repositories {").append(NL);
+            sb.append("        ").append(MAVEN_REPOSITORY).append(NL);
+            sb.append("    }").append(NL);
+            sb.append("}");
+        }
+        sb.append(NL);
+        Files.write(sb.toString(), file, UTF_8);
     }
 
     private void createSettingsGradle(@NonNull File file) throws IOException {
         StringBuilder sb = new StringBuilder();
 
-        for (ImportModule module : mModules) {
+        for (ImportModule module : mRootModules) {
             sb.append("include '");
             sb.append(module.getModuleReference());
             sb.append("'");
             sb.append(NL);
         }
 
-        Files.write(sb.toString(), file, Charsets.UTF_8);
+        Files.write(sb.toString(), file, UTF_8);
     }
 
     private void createDestDir(@NonNull File destDir, boolean allowNonEmpty) throws IOException {
@@ -557,14 +750,42 @@ public class GradleImport {
         return mErrors;
     }
 
+    private static class ImportException extends RuntimeException {
+        private String mMessage;
+
+        private ImportException(@NonNull String message) {
+            mMessage = message;
+        }
+
+        @Override
+        public String getMessage() {
+            return mMessage;
+        }
+
+        @Override
+        public String toString() {
+            return getMessage();
+        }
+    }
+
     @SuppressWarnings("MethodMayBeStatic")
     public void reportError(
             @Nullable EclipseProject project,
             @Nullable File file,
-            @NonNull String message) throws IOException {
+            @NonNull String message) {
+        reportError(project, file, message, true);
+    }
+
+    public void reportError(
+            @Nullable EclipseProject project,
+            @Nullable File file,
+            @NonNull String message,
+            boolean abort) {
         String text = formatMessage(project != null ? project.getName() : null, file, message);
         mErrors.add(text);
-        throw new IOException(text);
+        if (abort) {
+            throw new ImportException(text);
+        }
     }
 
     public void reportWarning(
@@ -601,7 +822,7 @@ public class GradleImport {
         return sb.toString();
     }
 
-    public String resolvePathVariable(String name) throws IOException {
+    public String resolvePathVariable(@NonNull String name) throws IOException {
         Properties properties = getJdkSettingsProperties(true);
         assert properties != null; // because mustExist=true, otherwise throws error
         String value = properties.getProperty("org.eclipse.jdt.core.classpathVariable." + name);
@@ -640,13 +861,21 @@ public class GradleImport {
         return mWorkspaceLocation;
     }
 
-    static Document getXmlDocument(File file, boolean namespaceAware) throws IOException {
-        String xml = Files.toString(file, Charsets.UTF_8);
-        Document document = XmlUtils.parseDocumentSilently(xml, namespaceAware);
-        if (document == null) {
-            throw new IOException("Invalid XML file: " + file.getPath());
+    Document getXmlDocument(File file, boolean namespaceAware) throws IOException {
+        String xml = Files.toString(file, UTF_8);
+
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        InputSource is = new InputSource(new StringReader(xml));
+        factory.setNamespaceAware(namespaceAware);
+        factory.setValidating(false);
+        try {
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            return builder.parse(is);
+        } catch (Exception e) {
+            reportError(null, file, "Invalid XML file: " + file.getPath() + ":\n"
+                    + e.getMessage());
+            return null;
         }
-        return document;
     }
 
     static Properties getProperties(File file) throws IOException {
@@ -677,14 +906,19 @@ public class GradleImport {
         mProjectMap.put(project.getCanonicalDir(), project);
     }
 
-    void registerModule(@NonNull ImportModule module) {
-        if (module.isReplacedWithDependency()) {
-            mModuleCount++;
+    int getModuleCount() {
+        int moduleCount = 0;
+        for (ImportModule module : mModules) {
+            if (!module.isReplacedWithDependency()) {
+                moduleCount++;
+            }
         }
+        return moduleCount;
     }
 
-    int getModuleCount() {
-        return mModuleCount;
+    /** Returns a path map for workspace paths */
+    public Map<String, File> getPathMap() {
+        return mPathMap;
     }
 
     /** Interface used by the {@link #copyDir(java.io.File, java.io.File, CopyHandler)} handler */
@@ -780,16 +1014,16 @@ public class GradleImport {
         return false;
     }
 
-    boolean needSupportRepository() {
+    public boolean needSupportRepository() {
         return haveArtifact("com.android.support");
     }
 
-    boolean needGoogleRepository() {
+    public boolean needGoogleRepository() {
         return haveArtifact("com.google.android.gms");
     }
 
     private boolean haveArtifact(String groupId) {
-        for (ImportModule module : mModules) {
+        for (ImportModule module : mRootModules) {
             for (GradleCoordinate dependency : module.getDependencies()) {
                 if (groupId.equals(dependency.getGroupId())) {
                     return true;
@@ -800,11 +1034,11 @@ public class GradleImport {
         return false;
     }
 
-    boolean isMissingSupportRepository() {
+    public boolean isMissingSupportRepository() {
         return !haveLocalRepository("android");
     }
 
-    boolean isMissingGoogleRepository() {
+    public boolean isMissingGoogleRepository() {
         return !haveLocalRepository("google");
     }
 }
