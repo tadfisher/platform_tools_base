@@ -25,86 +25,35 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.ProductFlavorData
 import com.android.build.gradle.internal.Sdk
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
-import com.android.build.gradle.internal.dependency.DependencyChecker
-import com.android.build.gradle.internal.dependency.LibraryDependencyImpl
-import com.android.build.gradle.internal.dependency.ManifestDependencyImpl
-import com.android.build.gradle.internal.dependency.SymbolFileProviderImpl
-import com.android.build.gradle.internal.dependency.VariantDependencies
+import com.android.build.gradle.internal.dependency.*
 import com.android.build.gradle.internal.dsl.SigningConfigDsl
 import com.android.build.gradle.internal.model.ArtifactMetaDataImpl
 import com.android.build.gradle.internal.model.JavaArtifactImpl
 import com.android.build.gradle.internal.model.ModelBuilder
-import com.android.build.gradle.internal.tasks.AndroidReportTask
-import com.android.build.gradle.internal.tasks.DependencyReportTask
-import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestLibraryTask
-import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask
-import com.android.build.gradle.internal.tasks.InstallTask
-import com.android.build.gradle.internal.tasks.OutputFileTask
-import com.android.build.gradle.internal.tasks.PrepareDependenciesTask
-import com.android.build.gradle.internal.tasks.PrepareLibraryTask
-import com.android.build.gradle.internal.tasks.SigningReportTask
-import com.android.build.gradle.internal.tasks.TestServerTask
-import com.android.build.gradle.internal.tasks.UninstallTask
-import com.android.build.gradle.internal.tasks.ValidateSigningTask
+import com.android.build.gradle.internal.tasks.*
 import com.android.build.gradle.internal.test.report.ReportType
-import com.android.build.gradle.internal.variant.ApkVariantData
-import com.android.build.gradle.internal.variant.ApplicationVariantData
-import com.android.build.gradle.internal.variant.BaseVariantData
-import com.android.build.gradle.internal.variant.DefaultSourceProviderContainer
-import com.android.build.gradle.internal.variant.LibraryVariantData
-import com.android.build.gradle.internal.variant.TestVariantData
-import com.android.build.gradle.internal.variant.TestedVariantData
-import com.android.build.gradle.tasks.AidlCompile
-import com.android.build.gradle.tasks.Dex
-import com.android.build.gradle.tasks.GenerateBuildConfig
-import com.android.build.gradle.tasks.Lint
-import com.android.build.gradle.tasks.MergeAssets
-import com.android.build.gradle.tasks.MergeResources
-import com.android.build.gradle.tasks.NdkCompile
-import com.android.build.gradle.tasks.PackageApplication
-import com.android.build.gradle.tasks.PreDex
-import com.android.build.gradle.tasks.ProcessAndroidResources
-import com.android.build.gradle.tasks.ProcessAppManifest
-import com.android.build.gradle.tasks.ProcessTestManifest
-import com.android.build.gradle.tasks.RenderscriptCompile
-import com.android.build.gradle.tasks.ZipAlign
+import com.android.build.gradle.internal.variant.*
+import com.android.build.gradle.tasks.*
 import com.android.builder.AndroidBuilder
 import com.android.builder.DefaultProductFlavor
 import com.android.builder.SdkParser
 import com.android.builder.VariantConfiguration
 import com.android.builder.dependency.JarDependency
 import com.android.builder.dependency.LibraryDependency
-import com.android.builder.model.AndroidArtifact
-import com.android.builder.model.AndroidProject
-import com.android.builder.model.ArtifactMetaData
-import com.android.builder.model.BuildType
-import com.android.builder.model.JavaArtifact
-import com.android.builder.model.ProductFlavor
-import com.android.builder.model.SigningConfig
-import com.android.builder.model.SourceProvider
-import com.android.builder.model.SourceProviderContainer
+import com.android.builder.model.*
 import com.android.builder.testing.ConnectedDeviceProvider
 import com.android.builder.testing.api.DeviceProvider
 import com.android.builder.testing.api.TestServer
 import com.android.utils.ILogger
-import com.google.common.collect.ArrayListMultimap
-import com.google.common.collect.ListMultimap
-import com.google.common.collect.Lists
-import com.google.common.collect.Maps
-import com.google.common.collect.Multimap
-import com.google.common.collect.Sets
+import com.google.common.collect.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.ModuleVersionIdentifier
-import org.gradle.api.artifacts.ProjectDependency
-import org.gradle.api.artifacts.ResolvedArtifact
-import org.gradle.api.artifacts.SelfResolvingDependency
+import org.gradle.api.artifacts.*
 import org.gradle.api.artifacts.result.DependencyResult
+import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
-import org.gradle.api.artifacts.result.ResolvedModuleVersionResult
 import org.gradle.api.artifacts.result.UnresolvedDependencyResult
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.plugins.JavaBasePlugin
@@ -122,15 +71,7 @@ import proguard.gradle.ProGuardTask
 import java.util.jar.Attributes
 import java.util.jar.Manifest
 
-import static com.android.builder.BuilderConstants.CONNECTED
-import static com.android.builder.BuilderConstants.DEVICE
-import static com.android.builder.BuilderConstants.EXT_LIB_ARCHIVE
-import static com.android.builder.BuilderConstants.FD_FLAVORS
-import static com.android.builder.BuilderConstants.FD_FLAVORS_ALL
-import static com.android.builder.BuilderConstants.FD_INSTRUMENT_RESULTS
-import static com.android.builder.BuilderConstants.FD_INSTRUMENT_TESTS
-import static com.android.builder.BuilderConstants.FD_REPORTS
-import static com.android.builder.BuilderConstants.INSTRUMENT_TEST
+import static com.android.builder.BuilderConstants.*
 import static java.io.File.separator
 
 /**
@@ -139,7 +80,7 @@ import static java.io.File.separator
 public abstract class BasePlugin {
     protected final static String DIR_BUNDLES = "bundles";
 
-    public static final String GRADLE_MIN_VERSION = "1.9"
+    public static final String GRADLE_MIN_VERSION = "1.10"
     public static final String[] GRADLE_SUPPORTED_VERSIONS = [ GRADLE_MIN_VERSION ]
 
     public static final String INSTALL_GROUP = "Install"
@@ -1834,14 +1775,14 @@ public abstract class BasePlugin {
         }
     }
 
-    def addDependency(ResolvedModuleVersionResult moduleVersion,
+    def addDependency(ResolvedComponentResult moduleVersion,
                       VariantDependencies configDependencies,
                       Collection<LibraryDependencyImpl> bundles,
                       List<JarDependency> jars,
                       Map<ModuleVersionIdentifier, List<LibraryDependencyImpl>> modules,
                       Map<ModuleVersionIdentifier, List<ResolvedArtifact>> artifacts,
                       Multimap<LibraryDependency, VariantDependencies> reverseMap) {
-        def id = moduleVersion.id
+        ModuleVersionIdentifier id = moduleVersion.moduleVersion
         if (configDependencies.checker.excluded(id)) {
             return
         }
