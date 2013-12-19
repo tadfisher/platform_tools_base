@@ -218,19 +218,6 @@ public abstract class BasePlugin {
 
         mainPreBuild = project.tasks.create("preBuild")
 
-        lint = project.tasks.create("lint", Lint)
-        lint.description = "Runs lint on all variants."
-        lint.group = JavaBasePlugin.VERIFICATION_GROUP
-        lint.setPlugin(this)
-        int count = variantDataList.size()
-        for (int i = 0 ; i < count ; i++) {
-            final BaseVariantData baseVariantData = variantDataList.get(i)
-            if (isLintVariant(baseVariantData)) {
-                lint.dependsOn baseVariantData.javaCompileTask
-            }
-        }
-        project.tasks.check.dependsOn lint
-
         project.afterEvaluate {
             createAndroidTasks(false)
         }
@@ -936,29 +923,37 @@ public abstract class BasePlugin {
         return config.getType() != VariantConfiguration.Type.TEST;
     }
 
-    // Add tasks for running lint on individual variants. We've already added a
-    // lint task earlier which runs on all variants.
     protected void createLintTasks() {
+        // Multi-variant task which analyzes all and aggregates results (does not
+        // depend on individual variant tasks created below; does its own analysis)
+        lint = project.tasks.create("lint", Lint)
+        lint.description = "Runs lint on all variants."
+        lint.group = JavaBasePlugin.VERIFICATION_GROUP
+        lint.setPlugin(this)
+        lint.dependsOn lintCompile
+
         int count = variantDataList.size()
         for (int i = 0 ; i < count ; i++) {
             final BaseVariantData baseVariantData = variantDataList.get(i)
-            if (!isLintVariant(baseVariantData)) {
-                continue;
-            }
+            if (isLintVariant(baseVariantData)) {
+                lint.dependsOn baseVariantData.javaCompileTask
 
-            String variantName = baseVariantData.variantConfiguration.fullName
-            def capitalizedVariantName = variantName.capitalize()
-            Task lintCheck = project.tasks.create("lint" + capitalizedVariantName, Lint)
-            lintCheck.dependsOn baseVariantData.javaCompileTask, lintCompile
-            // Note that we don't do "lint.dependsOn lintCheck"; the "lint" target will
-            // on its own run through all variants (and compare results), it doesn't delegate
-            // to the individual tasks (since it needs to coordinate data collection and
-            // reporting)
-            lintCheck.setPlugin(this)
-            lintCheck.setVariantName(variantName)
-            lintCheck.description = "Runs lint on the " + capitalizedVariantName + " build"
-            lintCheck.group = JavaBasePlugin.VERIFICATION_GROUP
+                // Individual variant tasks
+                String variantName = baseVariantData.variantConfiguration.fullName
+                def capitalizedVariantName = variantName.capitalize()
+                Task lintCheck = project.tasks.create("lint" + capitalizedVariantName, Lint)
+                lintCheck.dependsOn baseVariantData.javaCompileTask, lintCompile
+                // Note that we don't do "lint.dependsOn lintCheck"; the "lint" target will
+                // on its own run through all variants (and compare results), it doesn't delegate
+                // to the individual tasks (since it needs to coordinate data collection and
+                // reporting)
+                lintCheck.setPlugin(this)
+                lintCheck.setVariantName(variantName)
+                lintCheck.description = "Runs lint on the " + capitalizedVariantName + " build"
+                lintCheck.group = JavaBasePlugin.VERIFICATION_GROUP
+            }
         }
+        project.tasks.check.dependsOn lint
     }
 
     protected void createCheckTasks(boolean hasFlavors, boolean isLibraryTest) {
