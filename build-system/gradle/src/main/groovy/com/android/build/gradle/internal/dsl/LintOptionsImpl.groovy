@@ -60,6 +60,8 @@ public class LintOptionsImpl implements LintOptions, Serializable {
     private boolean warningsAsErrors
     @Input
     private boolean showAll
+    @Input
+    private boolean checkReleaseBuilds = true;
     @InputFile
     private File lintConfig
     @Input
@@ -96,7 +98,8 @@ public class LintOptionsImpl implements LintOptions, Serializable {
             boolean checkAllWarnings,
             boolean ignoreWarnings,
             boolean warningsAsErrors,
-            boolean showAll) {
+            boolean showAll,
+            boolean checkReleaseBuilds) {
         this.disable = disable
         this.enable = enable
         this.check = check
@@ -115,6 +118,7 @@ public class LintOptionsImpl implements LintOptions, Serializable {
         this.ignoreWarnings = ignoreWarnings
         this.warningsAsErrors = warningsAsErrors
         this.showAll = showAll
+        this.checkReleaseBuilds = checkReleaseBuilds
     }
 
     @NonNull
@@ -137,7 +141,8 @@ public class LintOptionsImpl implements LintOptions, Serializable {
                 source.isCheckAllWarnings(),
                 source.isIgnoreWarnings(),
                 source.isWarningsAsErrors(),
-                source.isShowAll()
+                source.isShowAll(),
+                source.isCheckReleaseBuilds()
         )
     }
 
@@ -294,6 +299,15 @@ public class LintOptionsImpl implements LintOptions, Serializable {
      */
     public void setShowAll(boolean showAll) {
         this.showAll = showAll
+    }
+
+    @Override
+    public boolean isCheckReleaseBuilds() {
+        return checkReleaseBuilds;
+    }
+
+    public void setCheckReleaseBuilds(boolean checkReleaseBuilds) {
+        this.checkReleaseBuilds = checkReleaseBuilds
     }
 
     /**
