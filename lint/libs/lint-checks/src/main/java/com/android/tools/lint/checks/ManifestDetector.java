@@ -182,7 +182,7 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
 
             Category.CORRECTNESS,
             5,
-            Severity.ERROR,
+            Severity.FATAL,
             IMPLEMENTATION);
 
     /** Not explicitly defining allowBackup */
@@ -238,7 +238,7 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
 
             Category.CORRECTNESS,
             6,
-            Severity.ERROR,
+            Severity.FATAL,
             IMPLEMENTATION);
 
     /** Using a resource for attributes that do not allow it */
@@ -267,9 +267,9 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
             "Checks for resource references where only literals are allowed",
 
             "For the `versionCode` attribute, you have to specify an actual integer " +
-                    "literal; you cannot use an indirection with a `@dimen/name` resource. " +
-                    "Similarly, the `versionName` attribute should be an actual string, not " +
-                    "a string resource url.",
+            "literal; you cannot use an indirection with a `@dimen/name` resource. " +
+            "Similarly, the `versionName` attribute should be an actual string, not " +
+            "a string resource url.",
 
             Category.CORRECTNESS,
             8,
@@ -342,7 +342,7 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
 
             Category.CORRECTNESS,
             8,
-            Severity.ERROR,
+            Severity.FATAL,
             IMPLEMENTATION);
 
     /** Permission name of mock location permission */
