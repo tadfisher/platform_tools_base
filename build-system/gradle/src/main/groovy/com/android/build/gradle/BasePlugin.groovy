@@ -956,6 +956,24 @@ public abstract class BasePlugin {
         }
     }
 
+    private void createLintVitalTask(@NonNull ApkVariantData variantData) {
+        assert extension.lintOptions.checkReleaseBuilds
+        if (!variantData.variantConfiguration.buildType.debuggable) {
+            String variantName = variantData.variantConfiguration.fullName
+            def capitalizedVariantName = variantName.capitalize()
+            def taskName = "lintVital" + capitalizedVariantName
+            Lint lintReleaseCheck = project.tasks.create(taskName, Lint)
+            // TODO: Make this task depend on lintCompile too (resolve initialization order first)
+            lintReleaseCheck.dependsOn variantData.javaCompileTask
+            lintReleaseCheck.setPlugin(this)
+            lintReleaseCheck.setVariantName(variantName)
+            lintReleaseCheck.setFatalOnly(true)
+            lintReleaseCheck.description = "Runs lint on just the fatal issues in the " +
+                    capitalizedVariantName + " build"
+            variantData.assembleTask.dependsOn lintReleaseCheck
+        }
+    }
+
     protected void createCheckTasks(boolean hasFlavors, boolean isLibraryTest) {
         List<AndroidReportTask> reportTasks = Lists.newArrayListWithExpectedSize(2)
 
@@ -1365,6 +1383,9 @@ public abstract class BasePlugin {
         }
         assembleTask.dependsOn appTask
         variantData.assembleTask = assembleTask
+        if (extension.lintOptions.checkReleaseBuilds) {
+            createLintVitalTask(variantData)
+        }
 
         variantData.outputFile = { outputFileTask.outputFile }
 
