@@ -116,8 +116,17 @@ public class LintCliClient extends LintClient {
 
         Collections.sort(mWarnings);
 
+        boolean hasConsoleOutput = false;
         for (Reporter reporter : mFlags.getReporters()) {
             reporter.write(mErrorCount, mWarningCount, mWarnings);
+            if (reporter instanceof TextReporter && ((TextReporter)reporter).isWriteToConsole()) {
+                hasConsoleOutput = true;
+            }
+        }
+
+        if (!hasConsoleOutput) {
+            System.out.println(String.format(
+                    "Lint found %1$d errors and %2$d warnings", mErrorCount, mWarningCount));
         }
 
         return mFlags.isSetExitCode() ? (mHasErrors ? ERRNO_ERRORS : ERRNO_SUCCESS) : ERRNO_SUCCESS;

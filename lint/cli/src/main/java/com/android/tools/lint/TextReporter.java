@@ -213,4 +213,8 @@ public class TextReporter extends Reporter {
             }
         }
     }
+
+    boolean isWriteToConsole() {
+        return mOutput == null;
+    }
 }
