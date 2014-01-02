@@ -104,9 +104,20 @@ task javadocJar(type: Jar, dependsOn:groovydoc) {
     from        groovydoc.destinationDir
 }
 
+task testJar(type:Jar){
+    classifier = 'tests'
+    from sourceSets.test.output
+}
+task buildTestJar(type:Jar){
+    classifier = 'buildTests'
+    from sourceSets.buildTest.output
+}
+
 // add javadoc jar tasks as artifacts
 artifacts {
     archives javadocJar
+    archives testJar
+    archives buildTestJar
 }
 
 apply plugin: 'distrib'

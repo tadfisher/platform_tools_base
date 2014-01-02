@@ -1,0 +1,46 @@
+subprojects {
+   repositories {
+        maven { url = "${rootProject.projectDir}/../../out/host/gradle/repo" }
+    }
+    apply plugin: 'java'
+    apply plugin: 'groovy'
+    apply plugin: 'maven'
+    dependencies {
+        compile gradleApi()
+        compile localGroovy()
+
+        testRuntime "com.android.tools.build:${project.name}:+"
+        testRuntime fileTree(rootProject.projectDir).matching {
+            include 'gradle-*/lib/**'
+       }
+    }
+
+    test{
+        systemProperties['testPath'] = "${rootProject.projectDir}/build-system/"
+    }
+     task extractJar(type: Copy){
+        def zipFiles = fileTree(file("${rootProject.projectDir}/../../out/host/gradle/repo/com/android/tools/build/")).matching{
+            include "${project.name}/*/${project.name}*-tests.jar"
+            include "${project.name}/*/${project.name}*-buildTests.jar"
+        }
+
+        def outputDir = file("build/classes/test")
+
+        zipFiles.each {
+            from zipTree(it)
+            into outputDir
+        }
+    }
+    task disableTestFailures << {
+        tasks.withType(Test) {
+            ignoreFailures = true
+        }
+    }
+}
+
+def testTasks = subprojects.collect { it.tasks.withType(Test) }.flatten()
+task aggregateResults(type: Copy) {
+    from { testTasks*.testResultsDir }
+    into { file("${rootProject.projectDir}/build/results") }
+}
+
