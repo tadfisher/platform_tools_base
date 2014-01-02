@@ -15,7 +15,16 @@ cloneArtifacts {
     mainRepo = "$rootDir/../../prebuilts/tools/common/m2/repository"
     secondaryRepo = "$rootDir/../../prebuilts/tools/common/m2/internal"
 }
+task zipArtifacts(type:Zip) {
+    classifier = 'remote-tests'
+    from fileTree(new File(project.rootProject.projectDir, "remote-tests")){
+        include '**'
+    }
+    from fileTree(project.rootProject.projectDir){
+        include 'build-system/tests/**'
+    }
 
+}
 // set up the distribution destination
 distribution {
     destinationPath = "$rootDir/../../prebuilts/devtools"

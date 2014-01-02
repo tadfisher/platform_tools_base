@@ -21,6 +21,13 @@ dependencies {
     testCompile project(':testutils')
 }
 
+task testJar(type:Jar){
+    classifier = 'tests'
+    from sourceSets.test.output
+}
+artifacts {
+    archives testJar
+}
 group = 'com.android.tools.build'
 archivesBaseName = 'builder'
 project.ext.pomName = 'Android Builder library'
