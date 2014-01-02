@@ -33,21 +33,26 @@ public abstract class BaseTest extends TestCase {
      * Returns the root dir for the gradle plugin project
      */
     protected File getRootDir() {
-        CodeSource source = getClass().getProtectionDomain().getCodeSource()
-        if (source != null) {
-            URL location = source.getLocation();
-            try {
-                File dir = new File(location.toURI())
-                assertTrue(dir.getPath(), dir.exists())
-
-                File f= dir.getParentFile().getParentFile().getParentFile().getParentFile().getParentFile().getParentFile().getParentFile().getParentFile();
-                return  new File(f, "tools" + File.separator + "base" + File.separator + "build-system")
-            } catch (URISyntaxException e) {
-                fail(e.getLocalizedMessage())
-            }
+        String path = System.getProperty("testPath");
+        if(path != null) {
+            return new File(path);
         }
 
-        fail("Fail to get the tools/build folder")
+        CodeSource source = getClass().getProtectionDomain().getCodeSource();
+        if (source == null) {
+            fail("Fail to get the tools/base folder");
+        }
+
+        URL location = source.getLocation();
+        try {
+            File dir = new File(location.toURI())
+            assertTrue(dir.getPath(), dir.exists())
+
+            File f= dir.getParentFile().getParentFile().getParentFile().getParentFile().getParentFile().getParentFile().getParentFile().getParentFile();
+            return  new File(f, "tools" + File.separator + "base" + File.separator + "build-system")
+        } catch (URISyntaxException e) {
+            fail(e.getLocalizedMessage())
+        }
     }
 
     /**
