@@ -104,6 +104,17 @@ task javadocJar(type: Jar, dependsOn:groovydoc) {
     from        groovydoc.destinationDir
 }
 
+task testJar(type:Jar){
+    destinationDir = file(new File(rootProject.buildDir, "test_artifacts"))
+    classifier = 'tests'
+    from sourceSets.test.output
+}
+task buildTestJar(type:Jar){
+    destinationDir = file(new File(rootProject.buildDir, "test_artifacts"))
+    classifier = 'buildTests'
+    from sourceSets.buildTest.output
+}
+
 // add javadoc jar tasks as artifacts
 artifacts {
     archives javadocJar
