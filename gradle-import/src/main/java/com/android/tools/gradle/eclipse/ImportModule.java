@@ -86,6 +86,7 @@ abstract class ImportModule implements Comparable<ImportModule> {
     @NonNull protected abstract String getOriginalName();
     @NonNull protected abstract List<File> getSourcePaths();
     @NonNull protected abstract List<File> getJarPaths();
+    @NonNull protected abstract List<File> getNativeLibs();
     @NonNull protected abstract File resolveFile(@NonNull File file);
     @NonNull protected abstract File getCanonicalModuleDir();
     @NonNull protected abstract List<File> getLocalProguardFiles();
@@ -374,6 +375,22 @@ abstract class ImportModule implements Comparable<ImportModule> {
                 Files.copy(srcJar, destJar);
                 summary.reportMoved(this, srcJar, destJar);
                 recordCopiedFile(copied, srcJar);
+            }
+        }
+
+        List<File> libs = getNativeLibs();
+        if (!libs.isEmpty()) {
+            for (File lib : libs) {
+                File srcLib = resolveFile(lib);
+                String abi = lib.getParentFile().getName();
+                File destLib = new File(destDir, "src" + separator + "main" + separator
+                        + "jniLibs" + separator + abi + separator + lib.getName());
+                if (destLib.getParentFile() != null) {
+                    mImporter.mkdirs(destLib.getParentFile());
+                }
+                Files.copy(srcLib, destLib);
+                summary.reportMoved(this, srcLib, destLib);
+                recordCopiedFile(copied, srcLib);
             }
         }
 
