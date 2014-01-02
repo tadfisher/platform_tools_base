@@ -15,7 +15,6 @@ cloneArtifacts {
     mainRepo = "$rootDir/../../prebuilts/tools/common/m2/repository"
     secondaryRepo = "$rootDir/../../prebuilts/tools/common/m2/internal"
 }
-
 // set up the distribution destination
 distribution {
     destinationPath = "$rootDir/../../prebuilts/devtools"
@@ -66,3 +65,16 @@ task copyGradleProperty(type: Copy) {
     from { "${System.env.HOME}/.gradle/gradle.properties" }
     into { gradle.gradleUserHomeDir }
 }
+task zipArtifacts(type:Zip) {
+    destinationDir = file(new File(buildDir, "test_artifacts"))
+    classifier = 'remote-tests'
+    from fileTree(new File(project.rootProject.projectDir, "remote-tests")){
+        include '**'
+    }
+    from fileTree(project.rootProject.projectDir){
+        include 'build-system/tests/**'
+        include 'gradle.properties'
+    }
+
+}
+
