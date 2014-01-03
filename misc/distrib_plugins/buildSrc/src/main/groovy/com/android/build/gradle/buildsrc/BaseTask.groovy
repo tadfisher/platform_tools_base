@@ -24,4 +24,8 @@ abstract class BaseTask extends DefaultTask {
     public static boolean isLocalArtifact(ModuleVersionIdentifier id) {
         return id.group == "base" || id.group == "swt"
     }
+
+    public static boolean isAndroidArtifact(ModuleVersionIdentifier id) {
+        return id.group.startsWith("com.android.tools") && !id.group.startsWith("com.android.tools.external")
+    }
 }
