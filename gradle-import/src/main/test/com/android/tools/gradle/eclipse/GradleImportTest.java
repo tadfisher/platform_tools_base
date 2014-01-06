@@ -48,6 +48,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.SdkManager;
+import com.android.sdklib.repository.local.LocalSdk;
 import com.android.testutils.TestUtils;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
@@ -2744,10 +2745,10 @@ public class GradleImportTest extends TestCase {
         String sdkPath = getTestSdkPath();
         if (sdkPath != null) {
             ILogger logger = new StdLogger(StdLogger.Level.INFO);
-            SdkManager sdkManager = SdkManager.createManager(sdkPath, logger);
-            if (sdkManager != null) {
-                importer.setSdkManager(sdkManager);
-                assertSame(sdkManager, importer.getSdkManager());
+            LocalSdk localSdk = new LocalSdk(new File(sdkPath));
+            if (localSdk != null) {
+                importer.setSdk(localSdk);
+                assertSame(localSdk, importer.getSdk());
                 assertEquals(new File(sdkPath), importer.getSdkLocation());
             }
         }

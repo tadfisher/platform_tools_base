@@ -31,31 +31,20 @@ import com.android.sdklib.devices.DeviceManager;
 import com.android.sdklib.devices.DeviceManager.DeviceStatus;
 import com.android.sdklib.internal.avd.AvdInfo.AvdStatus;
 import com.android.sdklib.internal.project.ProjectProperties;
+import com.android.sdklib.repository.local.LocalSdk;
 import com.android.sdklib.util.GrabProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.IProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.Wait;
 import com.android.utils.ILogger;
+import com.android.utils.NullLogger;
 import com.android.utils.Pair;
 import com.google.common.base.Charsets;
 import com.google.common.io.Closeables;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.WeakHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -298,11 +287,11 @@ public class AvdManager {
     private final ArrayList<AvdInfo> mAllAvdList = new ArrayList<AvdInfo>();
     private AvdInfo[] mValidAvdList;
     private AvdInfo[] mBrokenAvdList;
-    private final SdkManager mSdkManager;
+    private final LocalSdk myLocalSdk;
 
     /**
      * Creates an AVD Manager for a given SDK represented by a {@link SdkManager}.
-     * @param sdkManager The SDK.
+     * @param localSdk The SDK.
      * @param log The log object to receive the log of the initial loading of the AVDs.
      *            This log object is not kept by this instance of AvdManager and each
      *            method takes its own logger. The rationale is that the AvdManager
@@ -310,20 +299,29 @@ public class AvdManager {
      *            logging needs. Cannot be null.
      * @throws AndroidLocationException
      */
-    protected AvdManager(SdkManager sdkManager, ILogger log) throws AndroidLocationException {
-        mSdkManager = sdkManager;
+    protected AvdManager(LocalSdk localSdk, ILogger log) throws AndroidLocationException {
+        myLocalSdk = localSdk;
         buildAvdList(mAllAvdList, log);
     }
 
-    public static AvdManager getInstance(SdkManager sdkManager, ILogger log)
+    /**
+     * Temporary while we slowly deprecate SdkManager
+     */
+    public static AvdManager getInstance(SdkManager manager, ILogger log)
+            throws AndroidLocationException {
+        return getInstance(manager.getLocalSdk(), log);
+    }
+
+    public static AvdManager getInstance(LocalSdk localSdk, ILogger log)
             throws AndroidLocationException {
         synchronized(mManagers) {
             AvdManager manager;
-            if ((manager = mManagers.get(sdkManager.getLocation())) != null) {
+            if ((manager = mManagers.get(localSdk.getLocation())) != null) {
                 return manager;
             }
-            manager = new AvdManager(sdkManager, log);
-            mManagers.put(sdkManager.getLocation(), manager);
+            manager = new AvdManager(localSdk, log);
+
+            mManagers.put(localSdk.getLocation().getPath(), manager);
             return manager;
         }
     }
@@ -339,10 +337,19 @@ public class AvdManager {
     }
 
     /**
+     * Returns the {@link LocalSdk} associated with the {@link AvdManager}.
+     */
+    public LocalSdk getSdk() {
+        return myLocalSdk;
+    }
+
+    /**
      * Returns the {@link SdkManager} associated with the {@link AvdManager}.
+     * Note: This is temporary and will be removed as SdkManager is phased out.
+     * TODO: Remove this when SdkManager is removed
      */
     public SdkManager getSdkManager() {
-        return mSdkManager;
+        return SdkManager.createManager(myLocalSdk.getPath(), NullLogger.getLogger());
     }
 
     /**
@@ -685,7 +692,7 @@ public class AvdManager {
                     log.info("Snapshot image already present, was not changed.\n");
 
                 } else {
-                    String toolsLib = mSdkManager.getLocation() + File.separator
+                    String toolsLib = myLocalSdk.getLocation() + File.separator
                                       + SdkConstants.OS_SDK_TOOLS_LIB_EMULATOR_FOLDER;
                     File snapshotBlank = new File(toolsLib, SNAPSHOTS_IMG);
                     if (snapshotBlank.exists() == false) {
@@ -792,7 +799,7 @@ public class AvdManager {
                         String path = sdcardFile.getAbsolutePath();
 
                         // execute mksdcard with the proper parameters.
-                        File toolsFolder = new File(mSdkManager.getLocation(),
+                        File toolsFolder = new File(myLocalSdk.getLocation(),
                                 SdkConstants.FD_TOOLS);
                         File mkSdCard = new File(toolsFolder, SdkConstants.mkSdCardCmdName());
 
@@ -996,7 +1003,7 @@ public class AvdManager {
         String imageFullPath = folder.getAbsolutePath();
 
         // make this path relative to the SDK location
-        String sdkLocation = mSdkManager.getLocation();
+        String sdkLocation = myLocalSdk.getPath();
         if (!imageFullPath.startsWith(sdkLocation)) {
             // this really really should not happen.
             assert false;
@@ -1055,7 +1062,7 @@ public class AvdManager {
         String path = skin.getAbsolutePath();
 
         // make this path relative to the SDK location
-        String sdkLocation = mSdkManager.getLocation();
+        String sdkLocation = myLocalSdk.getPath();
         if (path.startsWith(sdkLocation) == false) {
             // this really really should not happen.
             log.error(null, "Target location is not inside the SDK.");
@@ -1406,7 +1413,7 @@ public class AvdManager {
         Map<String, String> properties = null;
 
         if (targetHash != null) {
-            target = mSdkManager.getTargetFromHashString(targetHash);
+            target = myLocalSdk.getTargetFromHashString(targetHash);
         }
 
         // load the AVD properties.
@@ -1442,13 +1449,13 @@ public class AvdManager {
         if (properties != null) {
             String imageSysDir = properties.get(AVD_INI_IMAGES_1);
             if (imageSysDir != null) {
-                File f = new File(mSdkManager.getLocation() + File.separator + imageSysDir);
+                File f = new File(myLocalSdk.getLocation() + File.separator + imageSysDir);
                 if (f.isDirectory() == false) {
                     validImageSysdir = false;
                 } else {
                     imageSysDir = properties.get(AVD_INI_IMAGES_2);
                     if (imageSysDir != null) {
-                        f = new File(mSdkManager.getLocation() + File.separator + imageSysDir);
+                        f = new File(myLocalSdk.getLocation() + File.separator + imageSysDir);
                         if (f.isDirectory() == false) {
                             validImageSysdir = false;
                         }
@@ -1465,7 +1472,7 @@ public class AvdManager {
             String hash = properties.get(AVD_INI_DEVICE_HASH);
             if (deviceName != null && deviceMfctr != null && hash != null) {
                 int deviceHash = Integer.parseInt(hash);
-                DeviceManager devMan = DeviceManager.createInstance(mSdkManager.getLocation(), log);
+                DeviceManager devMan = DeviceManager.createInstance(myLocalSdk.getPath(), log);
                 deviceStatus = devMan.getDeviceStatus(deviceName, deviceMfctr, deviceHash);
             }
         }

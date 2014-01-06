@@ -16,37 +16,15 @@
 
 package com.android.tools.gradle.eclipse;
 
-import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
-import static com.android.SdkConstants.ANDROID_URI;
-import static com.android.SdkConstants.ATTR_NAME;
-import static com.android.SdkConstants.ATTR_PACKAGE;
-import static com.android.SdkConstants.FD_EXTRAS;
-import static com.android.SdkConstants.FD_RES;
-import static com.android.SdkConstants.FD_SOURCES;
-import static com.android.SdkConstants.FN_BUILD_GRADLE;
-import static com.android.SdkConstants.FN_LOCAL_PROPERTIES;
-import static com.android.SdkConstants.FN_SETTINGS_GRADLE;
-import static com.android.SdkConstants.GRADLE_PLUGIN_LATEST_VERSION;
-import static com.android.SdkConstants.GRADLE_PLUGIN_NAME;
-import static com.android.sdklib.internal.project.ProjectProperties.PROPERTY_NDK;
-import static com.android.sdklib.internal.project.ProjectProperties.PROPERTY_SDK;
-import static com.android.xml.AndroidManifest.NODE_INSTRUMENTATION;
-import static com.google.common.base.Charsets.UTF_8;
-import static java.io.File.separator;
-import static java.io.File.separatorChar;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.repository.GradleCoordinate;
 import com.android.sdklib.BuildToolInfo;
-import com.android.sdklib.SdkManager;
 import com.android.sdklib.repository.descriptors.IPkgDesc;
 import com.android.sdklib.repository.descriptors.PkgType;
 import com.android.sdklib.repository.local.LocalPkgInfo;
 import com.android.sdklib.repository.local.LocalSdk;
-import com.android.utils.ILogger;
 import com.android.utils.SdkUtils;
-import com.android.utils.StdLogger;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -54,26 +32,24 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import com.google.common.primitives.Bytes;
-
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.*;
+import java.util.*;
+
+import static com.android.SdkConstants.*;
+import static com.android.sdklib.internal.project.ProjectProperties.PROPERTY_NDK;
+import static com.android.sdklib.internal.project.ProjectProperties.PROPERTY_SDK;
+import static com.android.xml.AndroidManifest.NODE_INSTRUMENTATION;
+import static com.google.common.base.Charsets.UTF_8;
+import static java.io.File.separator;
+import static java.io.File.separatorChar;
 
 /**
  * Importer which can generate Android Gradle projects.
@@ -143,7 +119,7 @@ public class GradleImport {
     private File mGradleWrapperLocation;
     private File mSdkLocation;
     private File mNdkLocation;
-    private SdkManager mSdkManager;
+    private LocalSdk mLocalSdk;
     private Set<String> mHandledJars = Sets.newHashSet();
     private Map<String,File> mWorkspaceProjects;
 
@@ -254,20 +230,19 @@ public class GradleImport {
 
     /** Sets SDK manager to use with the import, if known */
     @NonNull
-    public GradleImport setSdkManager(@NonNull SdkManager sdkManager) {
-        mSdkManager = sdkManager;
-        mSdkLocation = new File(sdkManager.getLocation());
+    public GradleImport setSdk(@NonNull LocalSdk localSdk) {
+        mLocalSdk = localSdk;
+        mSdkLocation = localSdk.getLocation();
         return this;
     }
 
     @Nullable
-    public SdkManager getSdkManager() {
-        if (mSdkManager == null && mSdkLocation != null && mSdkLocation.exists()) {
-            ILogger logger = new StdLogger(StdLogger.Level.INFO);
-            mSdkManager = SdkManager.createManager(mSdkLocation.getPath(), logger);
+    public LocalSdk getSdk() {
+        if (mLocalSdk == null && mSdkLocation != null && mSdkLocation.exists()) {
+            mLocalSdk = new LocalSdk(mSdkLocation);
         }
 
-        return mSdkManager;
+        return mLocalSdk;
     }
 
     /** Sets location of the SDK to use with the import, if known */
@@ -801,9 +776,9 @@ public class GradleImport {
     }
 
     String getBuildToolsVersion() {
-        SdkManager sdkManager = getSdkManager();
-        if (sdkManager != null) {
-            final BuildToolInfo buildTool = sdkManager.getLatestBuildTool();
+        LocalSdk localSdk = getSdk();
+        if (localSdk != null) {
+            final BuildToolInfo buildTool = localSdk.getLatestBuildTool();
             if (buildTool != null) {
                 return buildTool.getRevision().toString();
             }
@@ -1268,10 +1243,8 @@ public class GradleImport {
     }
 
     private boolean haveLocalRepository(String vendor) {
-        SdkManager sdkManager = getSdkManager();
-        if (sdkManager != null) {
-            LocalSdk localSdk = sdkManager.getLocalSdk();
-            LocalPkgInfo[] infos = localSdk.getPkgsInfos(PkgType.PKG_EXTRAS);
+        if (getSdk() != null) {
+            LocalPkgInfo[] infos = getSdk().getPkgsInfos(PkgType.PKG_EXTRAS);
             for (LocalPkgInfo info : infos) {
                 IPkgDesc d = info.getDesc();
                 if (d.hasVendorId() && vendor.equals(d.getVendorId()) &&
