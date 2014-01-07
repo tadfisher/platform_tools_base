@@ -6,7 +6,7 @@
 set -e
 function build_base {
     rm -rf ../../out/host/gradle/repo/
-    ./gradlew gradle:clean prepareRepo zipArtifacts publishLocal testJar buildTestJar
+    ./gradlew --no-daemon gradle:clean prepareRepo zipArtifacts publishLocal testJar buildTestJar resourcesJar
 }
 
 function prep_target {
@@ -27,7 +27,7 @@ function build_in_remote {
     pushd $remote_test_dir
     unzip ${remote_dir}/remote-tests.zip
     unzip gradle-${gradle_version}-bin.zip
-    ./gradle-${gradle_version}/bin/gradle disableTestFailures  extractJar check aggregateResults
+    ./gradle-${gradle_version}/bin/gradle --no-daemon disableTestFailures  extractJar extractResourcesJar check aggregateResults  
 }
 
 if [[ -n "$1" ]]

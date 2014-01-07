@@ -15,7 +15,16 @@ dependencies {
 jar {
     from 'NOTICE'
 }
-
+task testJar(type:Jar){
+    destinationDir = file(new File(rootProject.buildDir, "test_artifacts"))
+    classifier = 'tests'
+    from sourceSets.test.output
+}
+task resourcesJar(type:Jar){
+    destinationDir = file(new File(rootProject.buildDir, "test_artifacts"))
+    classifier = 'resources'
+    from sourceSets.test.resources
+}
 project.ext.pomName = 'Android Tools sdk-common library'
 project.ext.pomDesc = 'sdk-common library used by other Android tools libraries.'
 

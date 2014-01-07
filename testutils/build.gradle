@@ -1,9 +1,18 @@
 apply plugin: 'java'
 apply plugin: 'distrib'
+apply plugin: 'maven'
 
 group = 'com.android.tools'
 archivesBaseName = 'testutils'
 
+task publishLocal(type: Upload) {
+    configuration = configurations.archives
+    repositories {
+        mavenDeployer {
+            repository(url: uri("$rootProject.ext.localRepo"))
+        }
+    }
+}
 dependencies {
     compile project(':common')
     compile 'junit:junit:3.8.1'
