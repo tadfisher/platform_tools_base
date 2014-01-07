@@ -1,3 +1,7 @@
+def baseProjects = ["sdk-common"]
+def buildProjects = ["gradle","builder"]
+def baseVersion = "22.5.0-SNAPSHOT"
+def buildVersion = "0.8.0-SNAPSHOT"
 subprojects {
    repositories {
         maven { url = "${rootProject.projectDir}/../../out/host/gradle/repo" }
@@ -5,10 +9,17 @@ subprojects {
     apply plugin: 'java'
     apply plugin: 'groovy'
     apply plugin: 'maven'
+    def projectDependency
+    if(baseProjects.contains(project.name)) {
+        projectDependency = "com.android.tools:${project.name}:${baseVersion}"
+    } else {
+        projectDependency = "com.android.tools.build:${project.name}:${buildVersion}"
+    }
     dependencies {
         compile gradleApi()
         compile localGroovy()
-        testRuntime "com.android.tools.build:${project.name}:0.8.0-SNAPSHOT"
+        testRuntime projectDependency
+        testRuntime "com.android.tools:testutils:${baseVersion}"
         testRuntime fileTree(rootProject.projectDir).matching {
             include 'gradle-*/lib/**'
        }
@@ -30,6 +41,19 @@ subprojects {
             into outputDir
         }
     }
+    task extractResourcesJar(type: Copy){
+        def zipFiles = fileTree(file("${rootProject.projectDir}/../../")).matching{
+            include "${project.name}*-resources.jar"
+        }
+
+        def outputDir = file("src/test/resources")
+
+        zipFiles.each {
+            from zipTree(it)
+            into outputDir
+        }
+    }
+
     task disableTestFailures << {
         tasks.withType(Test) {
             ignoreFailures = true
@@ -38,6 +62,7 @@ subprojects {
 }
 
 def testTasks = subprojects.collect { it.tasks.withType(Test) }.flatten()
+
 task aggregateResults(type: Copy) {
     from { testTasks*.testResultsDir }
     into { file("${rootProject.buildDir}/build/results") }
