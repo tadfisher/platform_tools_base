@@ -27,12 +27,15 @@ import com.android.build.gradle.tasks.ProcessManifest;
 import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.builder.DefaultBuildType;
 import com.android.builder.DefaultProductFlavor;
+import com.android.builder.model.SourceProvider;
+
 import org.gradle.api.Task;
 import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.compile.JavaCompile;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * A Build variant and all its public data. This is the base class for items common to apps,
@@ -90,6 +93,9 @@ public interface BaseVariant {
      */
     @NonNull
     DefaultProductFlavor getConfig();
+
+    @NonNull
+    List<SourceProvider> getSourceSets();
 
     /**
      * Returns the output file for this build variants. Depending on the configuration, this could
