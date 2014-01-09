@@ -65,6 +65,8 @@ import javax.xml.xpath.XPathExpressionException;
  * <tr><td>-F apk-file</td><td>apkfolder<br>outfolder<br>apkbasename<br>basename</td><td>attribute (Path)<br>attribute (Path) deprecated<br>attribute (String)<br>attribute (String) deprecated</td></tr>
  * <tr><td>-J R-file-dir</td><td>rfolder</td><td>attribute (Path)<br>-m always enabled</td></tr>
  * <tr><td>--rename-manifest-package package-name</td><td>manifestpackage</td><td>attribute (String)</td></tr>
+ * <tr><td>-c CONFIGS</td><td>includeconfigurations</td><td>attribute (String)</td></tr>
+ * <tr><td>--preferred-configurations CONFIGS</td><td>preferredconfigurations</td><td>attribute (String)</td></tr>
  * <tr><td></td><td></td><td></td></tr>
  * </table>
  */
@@ -100,6 +102,8 @@ public final class AaptExecTask extends SingleDependencyTask {
     private String mManifestFile;
     private String mManifestPackage;
     private String mOriginalManifestPackage;
+    private String mIncludeConfigurations;
+    private String mPreferredConfigurations;
     private ArrayList<Path> mResources;
     private String mAssets;
     private String mAndroidJar;
@@ -260,6 +264,43 @@ public final class AaptExecTask extends SingleDependencyTask {
      */
     public void setOriginalManifestPackage(String packageName) {
         mOriginalManifestPackage = packageName;
+    }
+
+    /**
+     * Specify which configurations to include.<p>
+     * The default is all configurations. The value of the parameter should be a comma separated list of configuration
+     * values. Locales should be specified as either a language or language-region pair.<p>
+     * Some examples:
+     * <ul>
+     * <li>en</li>
+     * <li>port,en</li>
+     * <li>port,land,en_US</li>
+     * </ul>
+     * If you put the special locale, zz_ZZ on the list, it will perform pseudolocalization on the default locale,
+     * modifying all of the strings so you can look for strings that missed the internationalization process.<p>
+     * For example:
+     * <ul>
+     * <li>port,land,zz_ZZ</li>
+     * </ul>
+     *
+     * @param includeConfigurations
+     *            The configurations to include.
+     */
+    public void setIncludeConfigurations(String includeConfigurations) {
+        if (includeConfigurations != null && includeConfigurations.length() != 0) {
+            mIncludeConfigurations = includeConfigurations;
+        }
+    }
+
+    /**
+     * Like the -c option for filtering out unneeded configurations, but only expresses a preference.
+     * If there is no resource available with the preferred configuration then it will not be stripped.
+     * @param preferredConfigurations the preferred configuration to include.
+     */
+    public void setPreferredConfigurations(String preferredConfigurations) {
+        if (preferredConfigurations != null && preferredConfigurations.length() != 0) {
+            mPreferredConfigurations = preferredConfigurations;
+        }
     }
 
     /**
@@ -618,6 +659,16 @@ public final class AaptExecTask extends SingleDependencyTask {
         if (mManifestPackage != null) {
             task.createArg().setValue("--rename-manifest-package");
             task.createArg().setValue(mManifestPackage);
+        }
+
+        if (mIncludeConfigurations != null) {
+            task.createArg().setValue("-c");
+            task.createArg().setValue(mIncludeConfigurations);
+        }
+
+        if (mPreferredConfigurations != null) {
+            task.createArg().setValue("--preferred-configurations");
+            task.createArg().setValue(mPreferredConfigurations);
         }
 
         // resources locations.
