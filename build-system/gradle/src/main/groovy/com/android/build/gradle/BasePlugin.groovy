@@ -1861,9 +1861,13 @@ public abstract class BasePlugin {
             Multimap<LibraryDependency, VariantDependencies> reverseMap) {
 
         Configuration compileClasspath = variantDeps.compileConfiguration
+        Configuration packageClasspath = variantDeps.packageConfiguration
+        Configuration providedClasspath = variantDeps.providedConfiguration
 
         // TODO - shouldn't need to do this - fix this in Gradle
         ensureConfigured(compileClasspath)
+        ensureConfigured(packageClasspath)
+        ensureConfigured(providedClasspath)
 
         variantDeps.checker = new DependencyChecker(variantDeps, logger)
 
@@ -1871,8 +1875,8 @@ public abstract class BasePlugin {
 
         // TODO - defer downloading until required -- This is hard to do as we need the info to build the variant config.
         List<LibraryDependencyImpl> bundles = []
-        List<JarDependency> jars = []
-        List<JarDependency> localJars = []
+        Map<File, JarDependency> jars = [:]
+        Map<File, JarDependency> localJars = [:]
         collectArtifacts(compileClasspath, artifacts)
         def dependencies = compileClasspath.incoming.resolutionResult.root.dependencies
         dependencies.each { DependencyResult dep ->
@@ -1893,18 +1897,16 @@ public abstract class BasePlugin {
                     !(dep instanceof ProjectDependency)) {
                 Set<File> files = ((SelfResolvingDependency) dep).resolve()
                 for (File f : files) {
-                    // TODO: support compile only dependencies.
-                    localJars << new JarDependency(f)
+                    localJars.put(f, new JarDependency(f, true /*compiled*/, true /*packaged*/))
                 }
             }
         }
 
-        // handle package dependencies. We'll refuse aar libs only in package but not
-        // in compile and remove all dependencies already in compile to get package-only jar
-        // files.
-        Configuration packageClasspath = variantDeps.packageConfiguration
-
         if (!compileClasspath.resolvedConfiguration.hasError()) {
+            // handle package dependencies. We'll refuse aar libs only in package but not
+            // in compile and remove all dependencies already in compile to get package-only jar
+            // files.
+
             Set<File> compileFiles = compileClasspath.files
             Set<File> packageFiles = packageClasspath.files
 
@@ -1914,20 +1916,41 @@ public abstract class BasePlugin {
                 }
 
                 if (f.getName().toLowerCase().endsWith(".jar")) {
-                    jars.add(new JarDependency(f, false /*compiled*/, true /*packaged*/))
+                    jars.put(f, new JarDependency(f, false /*compiled*/, true /*packaged*/))
                 } else {
                     throw new RuntimeException("Package-only dependency '" +
                             f.absolutePath +
                             "' is not supported")
                 }
             }
+
+            Set<File> providedFiles = providedClasspath.files
+            for (File f : providedFiles) {
+                // because all the provided files are also in the compiled scope
+                // there should already be a JarDependency object for them
+                JarDependency jarDep = jars.get(f)
+                if (jarDep != null) {
+                    jarDep.setPackaged(false)
+                } else {
+                    throw new RuntimeException("Provided-only dependency '" +
+                            f.absolutePath +
+                            "' is not supported")
+                }
+            }
+
         } else if (!currentUnresolvedDependencies.isEmpty()) {
             unresolvedDependencies.addAll(currentUnresolvedDependencies)
         }
 
+        println "---- ${variantDeps.compileConfiguration.name}"
+        for (JarDependency jar : jars.values()) {
+            println "\t${jar}"
+        }
+        println "----"
+
         variantDeps.addLibraries(bundles)
-        variantDeps.addJars(jars)
-        variantDeps.addLocalJars(localJars)
+        variantDeps.addJars(jars.values())
+        variantDeps.addLocalJars(localJars.values())
 
         // TODO - filter bundles out of source set classpath
 
@@ -1965,7 +1988,7 @@ public abstract class BasePlugin {
     def addDependency(ResolvedComponentResult moduleVersion,
                       VariantDependencies configDependencies,
                       Collection<LibraryDependencyImpl> bundles,
-                      List<JarDependency> jars,
+                      Map<File, JarDependency> jars,
                       Map<ModuleVersionIdentifier, List<LibraryDependencyImpl>> modules,
                       Map<ModuleVersionIdentifier, List<ResolvedArtifact>> artifacts,
                       Multimap<LibraryDependency, VariantDependencies> reverseMap) {
@@ -2000,8 +2023,8 @@ public abstract class BasePlugin {
                     bundlesForThisModule << adep
                     reverseMap.put(adep, configDependencies)
                 } else {
-                    // TODO: support compile only dependencies.
-                    jars << new JarDependency(artifact.file)
+                    jars.put(artifact.file,
+                            new JarDependency(artifact.file, true /*compiled*/, true /*packaged*/))
                 }
             }
 
