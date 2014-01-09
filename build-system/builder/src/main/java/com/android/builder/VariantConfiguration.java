@@ -1255,8 +1255,14 @@ public class VariantConfiguration implements TestData {
 
         for (JarDependency jar : mJars) {
             File jarFile = jar.getJarFile();
+            System.out.println("PACKAGE? " + jarFile.getAbsolutePath());
+            System.out.println("\t" + jar.toString());
+            System.out.println("\tExists: " + Boolean.valueOf(jarFile.isFile()));
             if (jar.isPackaged() && jarFile.exists()) {
+                System.out.println("\tYES");
                 jars.add(jarFile);
+            } else {
+                System.out.println("\tNO");
             }
         }
 
