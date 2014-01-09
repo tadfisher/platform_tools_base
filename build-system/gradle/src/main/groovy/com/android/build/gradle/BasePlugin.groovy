@@ -1568,6 +1568,7 @@ public abstract class BasePlugin {
 
                 // injar: the dependencies
                 for (File inJar : packagedJars) {
+                    logger.info("### Proguard(${project.name}:${variantData.variantConfiguration.fullName}) inJar: $inJar.absolutePath")
                     proguardTask.injars(inJar, filter: '!META-INF/MANIFEST.MF')
                 }
 
@@ -1580,6 +1581,7 @@ public abstract class BasePlugin {
 
         // libraryJars: the runtime jars
         for (String runtimeJar : getRuntimeJarList()) {
+            logger.info("### Proguard(${project.name}:${variantData.variantConfiguration.fullName}) libJar: $runtimeJar")
             proguardTask.libraryjars(runtimeJar)
         }
 
