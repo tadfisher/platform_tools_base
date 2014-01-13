@@ -81,7 +81,7 @@ public class GradleCoordinate implements Comparable<GradleCoordinate> {
         }
     }
 
-    public static final int PLUS_REV = -1;
+    public static final int PLUS_REV = Integer.MAX_VALUE;
 
     private final String myGroupId;
 
