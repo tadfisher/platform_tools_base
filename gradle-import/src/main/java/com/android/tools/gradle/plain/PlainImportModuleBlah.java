@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.tools.gradle.eclipse;
+package com.android.tools.gradle.plain;
 
 import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.BIN_FOLDER;
@@ -55,7 +55,7 @@ import java.util.ListIterator;
 import java.util.Locale;
 import java.util.Set;
 
-abstract class ImportModule implements Comparable<ImportModule> {
+abstract class PlainImportModuleBlah implements Comparable<PlainImportModuleBlah> {
     // TODO: Tie libraries to the compile SDK?
     //private static final String LATEST = GradleImport.CURRENT_COMPILE_VERSION + ".0.0";
     private static final String LATEST = "+";
@@ -67,7 +67,7 @@ abstract class ImportModule implements Comparable<ImportModule> {
     private static final String SHERLOCK_DEP = "com.actionbarsherlock:actionbarsherlock:4.4.0@aar";
     private static final String PLAY_SERVICES_DEP = "com.google.android.gms:play-services:+";
 
-    protected final GradleImport mImporter;
+    protected final PlainGradleImport mImporter;
     protected final List<GradleCoordinate> mDependencies = Lists.newArrayList();
     protected final List<GradleCoordinate> mTestDependencies = Lists.newArrayList();
     protected final List<File> mJarDependencies = Lists.newArrayList();
@@ -75,7 +75,7 @@ abstract class ImportModule implements Comparable<ImportModule> {
     protected List<GradleCoordinate> mReplaceWithDependencies;
     private String mModuleName;
 
-    public ImportModule(@NonNull GradleImport importer) {
+    public PlainImportModuleBlah(@NonNull PlainGradleImport importer) {
         mImporter = importer;
     }
 
@@ -98,8 +98,8 @@ abstract class ImportModule implements Comparable<ImportModule> {
     @NonNull protected abstract List<File> getLocalProguardFiles();
     @NonNull protected abstract List<File> getSdkProguardFiles();
     @NonNull protected abstract String getLanguageLevel();
-    @NonNull protected abstract List<ImportModule> getDirectDependencies();
-    @NonNull protected abstract List<ImportModule> getAllDependencies();
+    @NonNull protected abstract List<PlainImportModuleBlah> getDirectDependencies();
+    @NonNull protected abstract List<PlainImportModuleBlah> getAllDependencies();
     @Nullable protected abstract String getPackage();
     @Nullable protected abstract File getLintXml();
     @Nullable protected abstract File getOutputDir();
@@ -283,7 +283,7 @@ abstract class ImportModule implements Comparable<ImportModule> {
         if (jar.isAbsolute()) {
             File relative;
             try {
-                relative = GradleImport.computeRelativePath(getCanonicalModuleDir(), jar);
+                relative = PlainGradleImport.computeRelativePath(getCanonicalModuleDir(), jar);
             } catch (IOException ioe) {
                 relative = null;
             }
@@ -302,7 +302,7 @@ abstract class ImportModule implements Comparable<ImportModule> {
     }
 
     public void copyInto(@NonNull File destDir) throws IOException {
-        ImportSummary summary = mImporter.getSummary();
+        PlainImportSummary summary = mImporter.getSummary();
 
         Set<File> copied = Sets.newHashSet();
 
@@ -354,7 +354,7 @@ abstract class ImportModule implements Comparable<ImportModule> {
                 destJava = new File(main, srcJava.getName());
             }
 
-            mImporter.copyDir(srcJava, destJava, new GradleImport.CopyHandler() {
+            mImporter.copyDir(srcJava, destJava, new PlainGradleImport.CopyHandler() {
                 // Handle moving .rs/.rsh/.fs files to main/rs/ and .aidl files to the
                 // corresponding aidl package under main/aidl
                 @Override
@@ -363,16 +363,15 @@ abstract class ImportModule implements Comparable<ImportModule> {
                     String sourcePath = source.getPath();
                     if (sourcePath.endsWith(DOT_AIDL)) {
                         File aidlDir = new File(main, FD_AIDL);
-                        File relative = GradleImport.computeRelativePath(srcJava, source);
+                        File relative = PlainGradleImport.computeRelativePath(srcJava, source);
                         if (relative == null) {
-                            relative = GradleImport.computeRelativePath(
-                                    srcJava.getCanonicalFile(), source);
+                            relative = PlainGradleImport.computeRelativePath(srcJava.getCanonicalFile(), source);
                         }
                         if (relative != null) {
                             File destAidl = new File(aidlDir, relative.getPath());
                             mImporter.mkdirs(destAidl.getParentFile());
                             Files.copy(source, destAidl);
-                            mImporter.getSummary().reportMoved(ImportModule.this, source,
+                            mImporter.getSummary().reportMoved(PlainImportModuleBlah.this, source,
                                     destAidl);
                             return true;
                         }
@@ -385,7 +384,7 @@ abstract class ImportModule implements Comparable<ImportModule> {
                                 source.getName());
                         mImporter.mkdirs(destRs.getParentFile());
                         Files.copy(source, destRs);
-                        mImporter.getSummary().reportMoved(ImportModule.this, source, destRs);
+                        mImporter.getSummary().reportMoved(PlainImportModuleBlah.this, source, destRs);
                         return true;
                     }
                     return false;
@@ -538,7 +537,7 @@ abstract class ImportModule implements Comparable<ImportModule> {
         if (isDirectory) {
             // Don't recursively list contents of .git etc
             if (depth == 1) {
-                if (GradleImport.isIgnoredFile(file)) {
+                if (PlainGradleImport.isIgnoredFile(file)) {
                     return false;
                 }
             }
@@ -553,7 +552,7 @@ abstract class ImportModule implements Comparable<ImportModule> {
         }
 
         if (depth > 0 && !ignore) {
-            File relative = GradleImport.computeRelativePath(getCanonicalModuleDir(), file);
+            File relative = PlainGradleImport.computeRelativePath(getCanonicalModuleDir(), file);
             if (relative == null) {
                 relative = file;
             }
@@ -585,10 +584,10 @@ abstract class ImportModule implements Comparable<ImportModule> {
 
     @Nullable
     public File computeProjectRelativePath(@NonNull File file) throws IOException {
-        return GradleImport.computeRelativePath(getCanonicalModuleDir(), file);
+        return PlainGradleImport.computeRelativePath(getCanonicalModuleDir(), file);
     }
 
-    protected abstract boolean dependsOn(@NonNull ImportModule other);
+    protected abstract boolean dependsOn(@NonNull PlainImportModuleBlah other);
 
     protected abstract boolean dependsOnLibrary(@NonNull String pkg);
 
@@ -619,7 +618,7 @@ abstract class ImportModule implements Comparable<ImportModule> {
 
     // Sort by dependency order
     @Override
-    public int compareTo(@NonNull ImportModule other) {
+    public int compareTo(@NonNull PlainImportModuleBlah other) {
         if (dependsOn(other)) {
             return 1;
         } else if (other.dependsOn(this)) {

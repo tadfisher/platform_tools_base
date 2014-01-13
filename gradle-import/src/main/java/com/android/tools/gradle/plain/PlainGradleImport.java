@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.tools.gradle.eclipse;
+package com.android.tools.gradle.plain;
 
 import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.ANDROID_URI;
@@ -106,7 +106,27 @@ import javax.xml.parsers.DocumentBuilderFactory;
  *     <li>Consider making the export create an HTML file and open in browser?</li>
  * </ul>
  */
-public class GradleImport {
+
+
+
+
+
+
+
+
+
+
+// BUG:
+  // If your settings.gradle has an include ':app' without a trailing CR/LF, the import/merge will put the second include on the same
+  // line and it will fail with a syntax error: include ':app'include ':newlibrary'. Does it not use my nice settings.gradle merge or is
+  // that merge buggy?
+
+
+
+
+
+
+public class PlainGradleImport {
     public static final String NL = SdkUtils.getLineSeparator();
     public static final int CURRENT_COMPILE_VERSION = 19;
     public static final String CURRENT_BUILD_TOOLS_VERSION = "19.0.1";
@@ -136,9 +156,9 @@ public class GradleImport {
      */
     static final boolean DECLARE_GLOBAL_REPOSITORIES = true;
 
-    private List<? extends ImportModule> mRootModules;
-    private Set<ImportModule> mModules;
-    private ImportSummary mSummary;
+    private List<? extends PlainImportModuleBlah> mRootModules;
+    private Set<PlainImportModuleBlah> mModules;
+    private PlainImportSummary mSummary;
     private File mWorkspaceLocation;
     private File mGradleWrapperLocation;
     private File mSdkLocation;
@@ -160,7 +180,7 @@ public class GradleImport {
     private final List<String> mErrors = Lists.newArrayList();
     private Map<String, File> mPathMap = Maps.newTreeMap();
 
-  public GradleImport() {
+  public PlainGradleImport() {
         String workspace = System.getProperty(WORKSPACE_PROPERTY);
         if (workspace != null) {
             mWorkspaceLocation = new File(workspace);
@@ -175,7 +195,7 @@ public class GradleImport {
      * @throws IOException if something is wrong
      */
     public void importProjects(@NonNull List<File> projectDirs) throws IOException {
-        mSummary = new ImportSummary(this);
+        mSummary = new PlainImportSummary(this);
         mProjectMap.clear();
         mHandledJars.clear();
         mWarnings.clear();
@@ -192,12 +212,12 @@ public class GradleImport {
 
             guessWorkspace(file);
 
-            if (isAdtProjectDir(file)) {
+            if (isPlainProjectDir(file)) {
                 guessSdk(file);
                 guessNdk(file);
 
                 try {
-                    EclipseProject.getProject(this, file);
+                    PlainProject.getProject(this, file);
                 } catch (ImportException e) {
                     // Already recorded
                     return;
@@ -213,9 +233,9 @@ public class GradleImport {
 
         // Find unique projects. (We can register projects under multiple paths
         // if the dir and the canonical dir differ, so pick unique values here)
-        Set<EclipseProject> projects = Sets.newHashSet(mProjectMap.values());
-        mRootModules = EclipseProject.performImport(this, projects);
-        for (ImportModule module : mRootModules) {
+        Set<PlainProject> projects = Sets.newHashSet(mProjectMap.values());
+        mRootModules = PlainProject.performImport(this, projects);
+        for (PlainImportModuleBlah module : mRootModules) {
             mModules.add(module);
             mModules.addAll(module.getAllDependencies());
         }
@@ -240,14 +260,14 @@ public class GradleImport {
 
     /** Sets location of gradle wrapper to copy into exported project, if known */
     @NonNull
-    public GradleImport setGradleWrapperLocation(@NonNull File gradleWrapper) {
+    public PlainGradleImport setGradleWrapperLocation(@NonNull File gradleWrapper) {
         mGradleWrapperLocation = gradleWrapper;
         return this;
     }
 
     /** Sets location of the SDK to use with the import, if known */
     @NonNull
-    public GradleImport setSdkLocation(@Nullable File sdkLocation) {
+    public PlainGradleImport setSdkLocation(@Nullable File sdkLocation) {
         mSdkLocation = sdkLocation;
         return this;
     }
@@ -260,7 +280,7 @@ public class GradleImport {
 
     /** Sets SDK manager to use with the import, if known */
     @NonNull
-    public GradleImport setSdkManager(@NonNull SdkManager sdkManager) {
+    public PlainGradleImport setSdkManager(@NonNull SdkManager sdkManager) {
         mSdkManager = sdkManager;
         mSdkLocation = new File(sdkManager.getLocation());
         return this;
@@ -278,7 +298,7 @@ public class GradleImport {
 
     /** Sets location of the SDK to use with the import, if known */
     @NonNull
-    public GradleImport setNdkLocation(@Nullable File ndkLocation) {
+    public PlainGradleImport setNdkLocation(@Nullable File ndkLocation) {
         mNdkLocation = ndkLocation;
         return this;
     }
@@ -290,7 +310,7 @@ public class GradleImport {
     }
 
     /** Sets location of Eclipse workspace, if known */
-    public GradleImport setEclipseWorkspace(@NonNull File workspace) {
+    public PlainGradleImport setEclipseWorkspace(@NonNull File workspace) {
         mWorkspaceLocation = workspace;
         assert mWorkspaceLocation.exists() : workspace.getPath();
         mWorkspaceProjects = null;
@@ -305,7 +325,7 @@ public class GradleImport {
 
     /** Whether import should attempt to replace jars with dependencies */
     @NonNull
-    public GradleImport setReplaceJars(boolean replaceJars) {
+    public PlainGradleImport setReplaceJars(boolean replaceJars) {
         mReplaceJars = replaceJars;
         return this;
     }
@@ -321,14 +341,14 @@ public class GradleImport {
     }
 
     /** Whether import should attempt to replace inlined library projects with dependencies */
-    public GradleImport setReplaceLibs(boolean replaceLibs) {
+    public PlainGradleImport setReplaceLibs(boolean replaceLibs) {
         mReplaceLibs = replaceLibs;
         return this;
     }
 
     /** Whether import should lower-case module names from ADT project names */
     @NonNull
-    public GradleImport setGradleNameStyle(boolean lowerCase) {
+    public PlainGradleImport setGradleNameStyle(boolean lowerCase) {
         mGradleNameStyle = lowerCase;
         return this;
     }
@@ -434,7 +454,7 @@ public class GradleImport {
     }
 
     @Nullable
-    public File resolveWorkspacePath(@Nullable EclipseProject fromProject, @NonNull String path, boolean record) {
+    public File resolveWorkspacePath(@Nullable PlainProject fromProject, @NonNull String path, boolean record) {
         if (path.isEmpty()) {
             return null;
         }
@@ -512,7 +532,7 @@ public class GradleImport {
                                     }
                                 }
                             } catch (IOException e) {
-                                reportWarning((ImportModule) null, location,
+                                reportWarning((PlainImportModuleBlah) null, location,
                                         "Can't read .location file");
                             }
                         }
@@ -570,7 +590,7 @@ public class GradleImport {
           exportLocalProperties(destDir);
         }
 
-        for (ImportModule module : mRootModules) {
+        for (PlainImportModuleBlah module : mRootModules) {
             exportModule(new File(destDir, module.getModuleName()), module);
         }
 
@@ -583,7 +603,7 @@ public class GradleImport {
             copyDir(new File(mGradleWrapperLocation, "gradlew"), gradlewDest, null);
             boolean madeExecutable = gradlewDest.setExecutable(true);
             if (!madeExecutable) {
-                reportWarning((ImportModule)null, gradlewDest,
+                reportWarning((PlainImportModuleBlah)null, gradlewDest,
                         "Could not make gradle wrapper script executable");
             }
             copyDir(new File(mGradleWrapperLocation, "gradlew.bat"), new File(destDir,
@@ -621,7 +641,7 @@ public class GradleImport {
 
     /** Returns true if this project appears to need the NDK */
     public boolean needsNdk() {
-        for (ImportModule module : mModules) {
+        for (PlainImportModuleBlah module : mModules) {
             if (module.isNdkProject()) {
                 return true;
             }
@@ -630,7 +650,7 @@ public class GradleImport {
         return false;
     }
 
-    private void exportModule(File destDir, ImportModule module) throws IOException {
+    private void exportModule(File destDir, PlainImportModuleBlah module) throws IOException {
         mkdirs(destDir);
         createModuleBuildGradle(new File(destDir, FN_BUILD_GRADLE), module);
         module.copyInto(destDir);
@@ -647,7 +667,7 @@ public class GradleImport {
         }
     }
 
-    private void createModuleBuildGradle(@NonNull File file, ImportModule module)
+    private void createModuleBuildGradle(@NonNull File file, PlainImportModuleBlah module)
             throws IOException {
         StringBuilder sb = new StringBuilder(500);
 
@@ -686,7 +706,7 @@ public class GradleImport {
             }
 
             String languageLevel = module.getLanguageLevel();
-            if (!languageLevel.equals(EclipseProject.DEFAULT_LANGUAGE_LEVEL)) {
+            if (!languageLevel.equals(PlainProject.DEFAULT_LANGUAGE_LEVEL)) {
                 sb.append("        compileOptions {").append(NL);
                 String level = languageLevel.replace('.','_'); // 1.6 => 1_6
                 sb.append("            sourceCompatibility JavaVersion.VERSION_").append(level)
@@ -790,7 +810,7 @@ public class GradleImport {
             sb.append("apply plugin: 'java'").append(NL);
 
             String languageLevel = module.getLanguageLevel();
-            if (!languageLevel.equals(EclipseProject.DEFAULT_LANGUAGE_LEVEL)) {
+            if (!languageLevel.equals(PlainProject.DEFAULT_LANGUAGE_LEVEL)) {
                 sb.append(NL);
                 sb.append("sourceCompatibility = \"");
                 sb.append(languageLevel);
@@ -847,7 +867,7 @@ public class GradleImport {
     }
 
     private static void appendDependencies(@NonNull StringBuilder sb,
-            @NonNull ImportModule module)
+            @NonNull PlainImportModuleBlah module)
             throws IOException {
         if (!module.getDirectDependencies().isEmpty()
                 || !module.getDependencies().isEmpty()
@@ -856,7 +876,7 @@ public class GradleImport {
                 || !module.getTestJarDependencies().isEmpty()) {
             sb.append(NL);
             sb.append("dependencies {").append(NL);
-            for (ImportModule lib : module.getDirectDependencies()) {
+            for (PlainImportModuleBlah lib : module.getDirectDependencies()) {
                 if (lib.isReplacedWithDependency()) {
                     continue;
                 }
@@ -942,7 +962,7 @@ public class GradleImport {
     private void createSettingsGradle(@NonNull File file) throws IOException {
         StringBuilder sb = new StringBuilder();
 
-        for (ImportModule module : mRootModules) {
+        for (PlainImportModuleBlah module : mRootModules) {
             sb.append("include '");
             sb.append(module.getModuleReference());
             sb.append("'");
@@ -1003,14 +1023,14 @@ public class GradleImport {
 
     @SuppressWarnings("MethodMayBeStatic")
     public void reportError(
-            @Nullable EclipseProject project,
+            @Nullable PlainProject project,
             @Nullable File file,
             @NonNull String message) {
         reportError(project, file, message, true);
     }
 
     public void reportError(
-            @Nullable EclipseProject project,
+            @Nullable PlainProject project,
             @Nullable File file,
             @NonNull String message,
             boolean abort) {
@@ -1022,7 +1042,7 @@ public class GradleImport {
     }
 
     public void reportWarning(
-            @Nullable ImportModule module,
+            @Nullable PlainImportModuleBlah module,
             @Nullable File file,
             @NonNull String message)  {
         String moduleName = module != null ? module.getOriginalName() : null;
@@ -1030,7 +1050,7 @@ public class GradleImport {
     }
 
     public void reportWarning(
-            @Nullable EclipseProject project,
+            @Nullable PlainProject project,
             @Nullable File file,
             @NonNull String message)  {
         String moduleName = project != null ? project.getName() : null;
@@ -1056,7 +1076,7 @@ public class GradleImport {
     }
 
     @Nullable
-    File resolvePathVariable(@Nullable EclipseProject fromProject, @NonNull String name, boolean record) throws IOException {
+    File resolvePathVariable(@Nullable PlainProject fromProject, @NonNull String name, boolean record) throws IOException {
         File file = mPathMap.get(name);
         if (file != null) {
             return file;
@@ -1169,17 +1189,17 @@ public class GradleImport {
         return properties;
     }
 
-    private Map<File, EclipseProject> mProjectMap = Maps.newHashMap();
+    private Map<File, PlainProject> mProjectMap = Maps.newHashMap();
 
-    Map<File, EclipseProject> getProjectMap() {
+    Map<File, PlainProject> getProjectMap() {
         return mProjectMap;
     }
 
-    public ImportSummary getSummary() {
+    public PlainImportSummary getSummary() {
         return mSummary;
     }
 
-    void registerProject(@NonNull EclipseProject project) {
+    void registerProject(@NonNull PlainProject project) {
         // Register not just this directory but the canonical versions too, since library
         // references in project.properties can be relative and can be made canonical;
         // we want to make sure that a project known by any of these versions of the paths
@@ -1191,7 +1211,7 @@ public class GradleImport {
 
     int getModuleCount() {
         int moduleCount = 0;
-        for (ImportModule module : mModules) {
+        for (PlainImportModuleBlah module : mModules) {
             if (!module.isReplacedWithDependency()) {
                 moduleCount++;
             }
@@ -1315,7 +1335,7 @@ public class GradleImport {
     }
 
     private boolean haveArtifact(String groupId) {
-        for (ImportModule module : mRootModules) {
+        for (PlainImportModuleBlah module : mRootModules) {
             for (GradleCoordinate dependency : module.getDependencies()) {
                 if (groupId.equals(dependency.getGroupId())) {
                     return true;
