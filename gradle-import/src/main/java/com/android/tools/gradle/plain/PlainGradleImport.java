@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.tools.gradle.eclipse;
+package com.android.tools.gradle.plain;
 
 import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.ANDROID_URI;
@@ -61,12 +61,10 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.util.Collections;
 import java.util.List;
@@ -108,7 +106,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
  *     <li>Consider making the export create an HTML file and open in browser?</li>
  * </ul>
  */
-public class GradleImport {
+
+public class PlainGradleImport {
     public static final String NL = SdkUtils.getLineSeparator();
     public static final int CURRENT_COMPILE_VERSION = 19;
     public static final String CURRENT_BUILD_TOOLS_VERSION = "19.0.1";
@@ -138,16 +137,16 @@ public class GradleImport {
      */
     static final boolean DECLARE_GLOBAL_REPOSITORIES = true;
 
-    private List<? extends ImportModule> mRootModules;
-    private Set<ImportModule> mModules;
-    private ImportSummary mSummary;
-    private File mWorkspaceLocation;
+    private List<? extends PlainImportModuleBlah> mRootModules;
+    private Set<PlainImportModuleBlah> mModules;
+    private PlainImportSummary mSummary;
+    //private File mWorkspaceLocation;
     private File mGradleWrapperLocation;
     private File mSdkLocation;
     private File mNdkLocation;
     private SdkManager mSdkManager;
-    private Set<String> mHandledJars = Sets.newHashSet();
-    private Map<String,File> mWorkspaceProjects;
+    //private Set<String> mHandledJars = Sets.newHashSet();
+    //private Map<String,File> mWorkspaceProjects;
 
     /** Whether we should convert project names to lowercase module names */
     private boolean mGradleNameStyle = true;
@@ -162,11 +161,11 @@ public class GradleImport {
     private final List<String> mErrors = Lists.newArrayList();
     private Map<String, File> mPathMap = Maps.newTreeMap();
 
-    public GradleImport() {
-        String workspace = System.getProperty(WORKSPACE_PROPERTY);
-        if (workspace != null) {
-            mWorkspaceLocation = new File(workspace);
-        }
+  public PlainGradleImport() {
+        //String workspace = System.getProperty(WORKSPACE_PROPERTY);
+        //if (workspace != null) {
+        //    mWorkspaceLocation = new File(workspace);
+        //}
     }
 
     /** Imports the given projects. Note that this just reads in the project state;
@@ -177,12 +176,12 @@ public class GradleImport {
      * @throws IOException if something is wrong
      */
     public void importProjects(@NonNull List<File> projectDirs) throws IOException {
-        mSummary = new ImportSummary(this);
+        mSummary = new PlainImportSummary(this);
         mProjectMap.clear();
-        mHandledJars.clear();
+        //mHandledJars.clear();
         mWarnings.clear();
         mErrors.clear();
-        mWorkspaceProjects = null;
+        //mWorkspaceProjects = null;
         mRootModules = Collections.emptyList();
         mModules = Sets.newHashSet();
 
@@ -192,14 +191,14 @@ public class GradleImport {
                 file = file.getParentFile();
             }
 
-            guessWorkspace(file);
+            //guessWorkspace(file);
 
-            if (isAdtProjectDir(file)) {
+            if (isPlainProjectDir(file)) {
                 guessSdk(file);
                 guessNdk(file);
 
                 try {
-                    EclipseProject.getProject(this, file);
+                    PlainProject.getProject(this, file);
                 } catch (ImportException e) {
                     // Already recorded
                     return;
@@ -215,26 +214,26 @@ public class GradleImport {
 
         // Find unique projects. (We can register projects under multiple paths
         // if the dir and the canonical dir differ, so pick unique values here)
-        Set<EclipseProject> projects = Sets.newHashSet(mProjectMap.values());
-        mRootModules = EclipseProject.performImport(this, projects);
-        for (ImportModule module : mRootModules) {
+        Set<PlainProject> projects = Sets.newHashSet(mProjectMap.values());
+        mRootModules = PlainProject.performImport(this, projects);
+        for (PlainImportModuleBlah module : mRootModules) {
             mModules.add(module);
-            mModules.addAll(module.getAllDependencies());
+            //mModules.addAll(module.getAllDependencies());
         }
     }
 
-    public static boolean isEclipseProjectDir(@Nullable File file) {
-        return file != null && file.isDirectory()
-                && new File(file, ECLIPSE_DOT_CLASSPATH).exists()
-                && new File(file, ECLIPSE_DOT_PROJECT).exists();
-    }
+    //public static boolean isEclipseProjectDir(@Nullable File file) {
+    //    return file != null && file.isDirectory()
+    //            && new File(file, ECLIPSE_DOT_CLASSPATH).exists()
+    //            && new File(file, ECLIPSE_DOT_PROJECT).exists();
+    //}
 
-    public static boolean isAdtProjectDir(@Nullable File file) {
-        return new File(file, ANDROID_MANIFEST_XML).exists() &&
-                (isEclipseProjectDir(file) ||
-                        (new File(file, FD_RES).exists() &&
-                         new File(file, FD_SOURCES).exists()));
-    }
+    //public static boolean isAdtProjectDir(@Nullable File file) {
+    //    return new File(file, ANDROID_MANIFEST_XML).exists() &&
+    //            (isEclipseProjectDir(file) ||
+    //                    (new File(file, FD_RES).exists() &&
+    //                     new File(file, FD_SOURCES).exists()));
+    //}
 
     public static boolean isPlainProjectDir(@Nullable File file) {
         return new File(file, FD_SOURCES).exists();
@@ -242,14 +241,14 @@ public class GradleImport {
 
     /** Sets location of gradle wrapper to copy into exported project, if known */
     @NonNull
-    public GradleImport setGradleWrapperLocation(@NonNull File gradleWrapper) {
+    public PlainGradleImport setGradleWrapperLocation(@NonNull File gradleWrapper) {
         mGradleWrapperLocation = gradleWrapper;
         return this;
     }
 
     /** Sets location of the SDK to use with the import, if known */
     @NonNull
-    public GradleImport setSdkLocation(@Nullable File sdkLocation) {
+    public PlainGradleImport setSdkLocation(@Nullable File sdkLocation) {
         mSdkLocation = sdkLocation;
         return this;
     }
@@ -260,27 +259,19 @@ public class GradleImport {
         return mSdkLocation;
     }
 
-    /** Sets SDK manager to use with the import, if known */
-    @NonNull
-    public GradleImport setSdkManager(@NonNull SdkManager sdkManager) {
-        mSdkManager = sdkManager;
-        mSdkLocation = new File(sdkManager.getLocation());
-        return this;
+  @Nullable
+  public SdkManager getSdkManager() {
+    if (mSdkManager == null && mSdkLocation != null && mSdkLocation.exists()) {
+      ILogger logger = new StdLogger(StdLogger.Level.INFO);
+      mSdkManager = SdkManager.createManager(mSdkLocation.getPath(), logger);
     }
 
-    @Nullable
-    public SdkManager getSdkManager() {
-        if (mSdkManager == null && mSdkLocation != null && mSdkLocation.exists()) {
-            ILogger logger = new StdLogger(StdLogger.Level.INFO);
-            mSdkManager = SdkManager.createManager(mSdkLocation.getPath(), logger);
-        }
-
-        return mSdkManager;
-    }
+    return mSdkManager;
+  }
 
     /** Sets location of the SDK to use with the import, if known */
     @NonNull
-    public GradleImport setNdkLocation(@Nullable File ndkLocation) {
+    public PlainGradleImport setNdkLocation(@Nullable File ndkLocation) {
         mNdkLocation = ndkLocation;
         return this;
     }
@@ -292,45 +283,45 @@ public class GradleImport {
     }
 
     /** Sets location of Eclipse workspace, if known */
-    public GradleImport setEclipseWorkspace(@NonNull File workspace) {
-        mWorkspaceLocation = workspace;
-        assert mWorkspaceLocation.exists() : workspace.getPath();
-        mWorkspaceProjects = null;
-        return this;
-    }
+    //public PlainGradleImport setEclipseWorkspace(@NonNull File workspace) {
+    //    mWorkspaceLocation = workspace;
+    //    assert mWorkspaceLocation.exists() : workspace.getPath();
+    //    mWorkspaceProjects = null;
+    //    return this;
+    //}
 
     /** Gets location of Eclipse workspace, if known */
-    @Nullable
-    public File getEclipseWorkspace() {
-        return mWorkspaceLocation;
-    }
+    //@Nullable
+    //public File getEclipseWorkspace() {
+    //    return mWorkspaceLocation;
+    //}
 
     /** Whether import should attempt to replace jars with dependencies */
-    @NonNull
-    public GradleImport setReplaceJars(boolean replaceJars) {
-        mReplaceJars = replaceJars;
-        return this;
-    }
+    //@NonNull
+    //public PlainGradleImport setReplaceJars(boolean replaceJars) {
+    //    mReplaceJars = replaceJars;
+    //    return this;
+    //}
 
     /** Whether import should attempt to replace jars with dependencies */
-    public boolean isReplaceJars() {
-        return mReplaceJars;
-    }
+    //public boolean isReplaceJars() {
+    //    return mReplaceJars;
+    //}
 
     /** Whether import should attempt to replace inlined library projects with dependencies */
-    public boolean isReplaceLibs() {
-        return mReplaceLibs;
-    }
+    //public boolean isReplaceLibs() {
+    //    return mReplaceLibs;
+    //}
 
     /** Whether import should attempt to replace inlined library projects with dependencies */
-    public GradleImport setReplaceLibs(boolean replaceLibs) {
-        mReplaceLibs = replaceLibs;
-        return this;
-    }
+    //public PlainGradleImport setReplaceLibs(boolean replaceLibs) {
+    //    mReplaceLibs = replaceLibs;
+    //    return this;
+    //}
 
     /** Whether import should lower-case module names from ADT project names */
     @NonNull
-    public GradleImport setGradleNameStyle(boolean lowerCase) {
+    public PlainGradleImport setGradleNameStyle(boolean lowerCase) {
         mGradleNameStyle = lowerCase;
         return this;
     }
@@ -340,27 +331,27 @@ public class GradleImport {
         return mGradleNameStyle;
     }
 
-    private void guessWorkspace(@NonNull File projectDir) {
-        if (mWorkspaceLocation == null) {
-            File dir = projectDir.getParentFile();
-            while (dir != null) {
-                if (isEclipseWorkspaceDir(dir)) {
-                    setEclipseWorkspace(dir);
-                    break;
-                }
-                dir = dir.getParentFile();
-            }
-        }
-    }
+    //private void guessWorkspace(@NonNull File projectDir) {
+    //    if (mWorkspaceLocation == null) {
+    //        File dir = projectDir.getParentFile();
+    //        while (dir != null) {
+    //            if (isEclipseWorkspaceDir(dir)) {
+    //                setEclipseWorkspace(dir);
+    //                break;
+    //            }
+    //            dir = dir.getParentFile();
+    //        }
+    //    }
+    //}
 
     private void guessSdk(@NonNull File projectDir) {
         if (mSdkLocation == null) {
             mSdkLocation = getDirFromLocalProperties(projectDir, PROPERTY_SDK);
 
-            if (mSdkLocation == null && mWorkspaceLocation != null) {
-                mSdkLocation = getDirFromWorkspaceSetting(getAdtSettingsFile(),
-                        "com.android.ide.eclipse.adt.sdk");
-            }
+            //if (mSdkLocation == null && mWorkspaceLocation != null) {
+            //    mSdkLocation = getDirFromWorkspaceSetting(getAdtSettingsFile(),
+            //            "com.android.ide.eclipse.adt.sdk");
+            //}
         }
     }
 
@@ -368,9 +359,9 @@ public class GradleImport {
         if (mNdkLocation == null) {
             mNdkLocation = getDirFromLocalProperties(projectDir, PROPERTY_NDK);
 
-            if (mNdkLocation == null && mWorkspaceLocation != null) {
-                mNdkLocation = getDirFromWorkspaceSetting(getNdkSettingsFile(), "ndkLocation");
-            }
+            //if (mNdkLocation == null && mWorkspaceLocation != null) {
+            //    mNdkLocation = getDirFromWorkspaceSetting(getNdkSettingsFile(), "ndkLocation");
+            //}
         }
     }
 
@@ -403,40 +394,40 @@ public class GradleImport {
         return null;
     }
 
-    private File getDirFromWorkspaceSetting(@NonNull File settings, @NonNull String property) {
-        //noinspection VariableNotUsedInsideIf
-        if (mWorkspaceLocation != null) {
-            if (settings.exists()) {
-                try {
-                    Properties properties = getProperties(settings);
-                    if (properties != null) {
-                        String path = properties.getProperty(property);
-                        File dir = new File(path);
-                        if (dir.exists()) {
-                            return dir;
-                        } else {
-                            dir = new File(path.replace('/', separatorChar));
-                            if (dir.exists()) {
-                                return dir;
-                            }
-                        }
-                    }
-                } catch (IOException e) {
-                    // Ignore workspace data
-                }
-            }
-        }
+    //private File getDirFromWorkspaceSetting(@NonNull File settings, @NonNull String property) {
+    //    //noinspection VariableNotUsedInsideIf
+    //    if (mWorkspaceLocation != null) {
+    //        if (settings.exists()) {
+    //            try {
+    //                Properties properties = getProperties(settings);
+    //                if (properties != null) {
+    //                    String path = properties.getProperty(property);
+    //                    File dir = new File(path);
+    //                    if (dir.exists()) {
+    //                        return dir;
+    //                    } else {
+    //                        dir = new File(path.replace('/', separatorChar));
+    //                        if (dir.exists()) {
+    //                            return dir;
+    //                        }
+    //                    }
+    //                }
+    //            } catch (IOException e) {
+    //                // Ignore workspace data
+    //            }
+    //        }
+    //    }
+    //
+    //    return null;
+    //}
 
-        return null;
-    }
-
-    public static boolean isEclipseWorkspaceDir(@NonNull File file) {
-        return file.isDirectory() &&
-                new File(file, ".metadata" + separator + "version.ini").exists();
-    }
+    //public static boolean isEclipseWorkspaceDir(@NonNull File file) {
+    //    return file.isDirectory() &&
+    //            new File(file, ".metadata" + separator + "version.ini").exists();
+    //}
 
     @Nullable
-    public File resolveWorkspacePath(@Nullable EclipseProject fromProject, @NonNull String path, boolean record) {
+    public File resolveWorkspacePath(@Nullable PlainProject fromProject, @NonNull String path, boolean record) {
         if (path.isEmpty()) {
             return null;
         }
@@ -461,11 +452,11 @@ public class GradleImport {
             }
         }
 
-        if (fromProject != null && mWorkspaceLocation == null) {
-            guessWorkspace(fromProject.getDir());
-        }
+        //if (fromProject != null && mWorkspaceLocation == null) {
+        //    guessWorkspace(fromProject.getDir());
+        //}
 
-        if (mWorkspaceLocation != null) {
+        /*if (mWorkspaceLocation != null) {
             // Is the file present directly in the workspace?
             char first = path.charAt(0);
             if (first != '/') {
@@ -514,7 +505,7 @@ public class GradleImport {
                                     }
                                 }
                             } catch (IOException e) {
-                                reportWarning((ImportModule) null, location,
+                                reportWarning((PlainImportModuleBlah) null, location,
                                         "Can't read .location file");
                             }
                         }
@@ -553,7 +544,7 @@ public class GradleImport {
             if (record) {
                 mPathMap.put(path, null);
             }
-        } else if (record) {
+        } else*/ if (record) {
             // Record path as one we need to resolve
             mPathMap.put(path, null);
         }
@@ -572,7 +563,7 @@ public class GradleImport {
           exportLocalProperties(destDir);
         }
 
-        for (ImportModule module : mRootModules) {
+        for (PlainImportModuleBlah module : mRootModules) {
             exportModule(new File(destDir, module.getModuleName()), module);
         }
 
@@ -585,7 +576,7 @@ public class GradleImport {
             copyDir(new File(mGradleWrapperLocation, "gradlew"), gradlewDest, null);
             boolean madeExecutable = gradlewDest.setExecutable(true);
             if (!madeExecutable) {
-                reportWarning((ImportModule)null, gradlewDest,
+                reportWarning((PlainImportModuleBlah)null, gradlewDest,
                         "Could not make gradle wrapper script executable");
             }
             copyDir(new File(mGradleWrapperLocation, "gradlew.bat"), new File(destDir,
@@ -623,7 +614,7 @@ public class GradleImport {
 
     /** Returns true if this project appears to need the NDK */
     public boolean needsNdk() {
-        for (ImportModule module : mModules) {
+        for (PlainImportModuleBlah module : mModules) {
             if (module.isNdkProject()) {
                 return true;
             }
@@ -632,9 +623,13 @@ public class GradleImport {
         return false;
     }
 
-    private void exportModule(File destDir, ImportModule module) throws IOException {
+    private void exportModule(File destDir, PlainImportModuleBlah module) throws IOException {
         mkdirs(destDir);
         createModuleBuildGradle(new File(destDir, FN_BUILD_GRADLE), module);
+
+       // If it's an Android project, create AndroidManifest.xml if it doesn't exist.
+
+
         module.copyInto(destDir);
     }
 
@@ -649,7 +644,7 @@ public class GradleImport {
         }
     }
 
-    private void createModuleBuildGradle(@NonNull File file, ImportModule module)
+    private void createModuleBuildGradle(@NonNull File file, PlainImportModuleBlah module)
             throws IOException {
         StringBuilder sb = new StringBuilder(500);
 
@@ -688,7 +683,7 @@ public class GradleImport {
             }
 
             String languageLevel = module.getLanguageLevel();
-            if (!languageLevel.equals(EclipseProject.DEFAULT_LANGUAGE_LEVEL)) {
+            if (!languageLevel.equals(PlainProject.DEFAULT_LANGUAGE_LEVEL)) {
                 sb.append("        compileOptions {").append(NL);
                 String level = languageLevel.replace('.','_'); // 1.6 => 1_6
                 sb.append("            sourceCompatibility JavaVersion.VERSION_").append(level)
@@ -781,7 +776,7 @@ public class GradleImport {
                 }
             }
             sb.append("}").append(NL);
-            appendDependencies(sb, module);
+            //appendDependencies(sb, module);
 
         } else if (module.isJavaLibrary()) {
             //noinspection PointlessBooleanExpression,ConstantConditions
@@ -792,7 +787,7 @@ public class GradleImport {
             sb.append("apply plugin: 'java'").append(NL);
 
             String languageLevel = module.getLanguageLevel();
-            if (!languageLevel.equals(EclipseProject.DEFAULT_LANGUAGE_LEVEL)) {
+            if (!languageLevel.equals(PlainProject.DEFAULT_LANGUAGE_LEVEL)) {
                 sb.append(NL);
                 sb.append("sourceCompatibility = \"");
                 sb.append(languageLevel);
@@ -802,7 +797,7 @@ public class GradleImport {
                 sb.append("\"").append(NL);
             }
 
-            appendDependencies(sb, module);
+            //appendDependencies(sb, module);
         } else {
             assert false : module;
         }
@@ -848,43 +843,43 @@ public class GradleImport {
         return sb.toString();
     }
 
-    private static void appendDependencies(@NonNull StringBuilder sb,
-            @NonNull ImportModule module)
-            throws IOException {
-        if (!module.getDirectDependencies().isEmpty()
-                || !module.getDependencies().isEmpty()
-                || !module.getJarDependencies().isEmpty()
-                || !module.getTestDependencies().isEmpty()
-                || !module.getTestJarDependencies().isEmpty()) {
-            sb.append(NL);
-            sb.append("dependencies {").append(NL);
-            for (ImportModule lib : module.getDirectDependencies()) {
-                if (lib.isReplacedWithDependency()) {
-                    continue;
-                }
-                sb.append("    compile project('").append(lib.getModuleReference()).append("')")
-                        .append(NL);
-            }
-            for (GradleCoordinate dependency : module.getDependencies()) {
-                sb.append("    compile '").append(dependency.toString()).append("'").append(NL);
-            }
-            for (File jar : module.getJarDependencies()) {
-                String path = jar.getPath().replace(separatorChar, '/'); // Always / in gradle
-                sb.append("    compile files('").append(escapeGroovyStringLiteral(path))
-                        .append("')").append(NL);
-            }
-            for (GradleCoordinate dependency : module.getTestDependencies()) {
-                sb.append("    instrumentTestCompile '").append(dependency.toString()).append("'")
-                        .append(NL);
-            }
-            for (File jar : module.getTestJarDependencies()) {
-                String path = jar.getPath().replace(separatorChar, '/');
-                sb.append("    instrumentTestCompile files('")
-                        .append(escapeGroovyStringLiteral(path)).append("')").append(NL);
-            }
-            sb.append("}").append(NL);
-        }
-    }
+    //private static void appendDependencies(@NonNull StringBuilder sb,
+    //        @NonNull PlainImportModuleBlah module)
+    //        throws IOException {
+    //    if (!module.getDirectDependencies().isEmpty()
+    //            || !module.getDependencies().isEmpty()
+    //            || !module.getJarDependencies().isEmpty()
+    //            || !module.getTestDependencies().isEmpty()
+    //            || !module.getTestJarDependencies().isEmpty()) {
+    //        sb.append(NL);
+    //        sb.append("dependencies {").append(NL);
+    //        for (PlainImportModuleBlah lib : module.getDirectDependencies()) {
+    //            if (lib.isReplacedWithDependency()) {
+    //                continue;
+    //            }
+    //            sb.append("    compile project('").append(lib.getModuleReference()).append("')")
+    //                    .append(NL);
+    //        }
+    //        for (GradleCoordinate dependency : module.getDependencies()) {
+    //            sb.append("    compile '").append(dependency.toString()).append("'").append(NL);
+    //        }
+    //        for (File jar : module.getJarDependencies()) {
+    //            String path = jar.getPath().replace(separatorChar, '/'); // Always / in gradle
+    //            sb.append("    compile files('").append(escapeGroovyStringLiteral(path))
+    //                    .append("')").append(NL);
+    //        }
+    //        for (GradleCoordinate dependency : module.getTestDependencies()) {
+    //            sb.append("    instrumentTestCompile '").append(dependency.toString()).append("'")
+    //                    .append(NL);
+    //        }
+    //        for (File jar : module.getTestJarDependencies()) {
+    //            String path = jar.getPath().replace(separatorChar, '/');
+    //            sb.append("    instrumentTestCompile files('")
+    //                    .append(escapeGroovyStringLiteral(path)).append("')").append(NL);
+    //        }
+    //        sb.append("}").append(NL);
+    //    }
+    //}
 
     private static String escapeGroovyStringLiteral(String s) {
         StringBuilder sb = new StringBuilder(s.length() + 5);
@@ -943,8 +938,10 @@ public class GradleImport {
 
     private void createSettingsGradle(@NonNull File file) throws IOException {
         StringBuilder sb = new StringBuilder();
-
-        for (ImportModule module : mRootModules) {
+        if (file.exists()) {
+          Files.append(NL, file, UTF_8);
+        }
+        for (PlainImportModuleBlah module : mRootModules) {
             sb.append("include '");
             sb.append(module.getModuleReference());
             sb.append("'");
@@ -1005,14 +1002,14 @@ public class GradleImport {
 
     @SuppressWarnings("MethodMayBeStatic")
     public void reportError(
-            @Nullable EclipseProject project,
+            @Nullable PlainProject project,
             @Nullable File file,
             @NonNull String message) {
         reportError(project, file, message, true);
     }
 
     public void reportError(
-            @Nullable EclipseProject project,
+            @Nullable PlainProject project,
             @Nullable File file,
             @NonNull String message,
             boolean abort) {
@@ -1024,7 +1021,7 @@ public class GradleImport {
     }
 
     public void reportWarning(
-            @Nullable ImportModule module,
+            @Nullable PlainImportModuleBlah module,
             @Nullable File file,
             @NonNull String message)  {
         String moduleName = module != null ? module.getOriginalName() : null;
@@ -1032,7 +1029,7 @@ public class GradleImport {
     }
 
     public void reportWarning(
-            @Nullable EclipseProject project,
+            @Nullable PlainProject project,
             @Nullable File file,
             @NonNull String message)  {
         String moduleName = project != null ? project.getName() : null;
@@ -1058,27 +1055,27 @@ public class GradleImport {
     }
 
     @Nullable
-    File resolvePathVariable(@Nullable EclipseProject fromProject, @NonNull String name, boolean record) throws IOException {
+    File resolvePathVariable(@Nullable PlainProject fromProject, @NonNull String name, boolean record) throws IOException {
         File file = mPathMap.get(name);
         if (file != null) {
             return file;
         }
 
-        if (fromProject != null && mWorkspaceLocation == null) {
-            guessWorkspace(fromProject.getDir());
-        }
+        //if (fromProject != null && mWorkspaceLocation == null) {
+        //    guessWorkspace(fromProject.getDir());
+        //}
 
         String value = null;
-        Properties properties = getJdtSettingsProperties(false);
-        if (properties != null) {
-            value = properties.getProperty("org.eclipse.jdt.core.classpathVariable." + name);
-        }
-        if (value == null) {
-            properties = getPathSettingsProperties(false);
-            if (properties != null) {
-                value = properties.getProperty("pathvariable." + name);
-            }
-        }
+        //Properties properties = getJdtSettingsProperties(false);
+        //if (properties != null) {
+        //    value = properties.getProperty("org.eclipse.jdt.core.classpathVariable." + name);
+        //}
+        //if (value == null) {
+        //    properties = getPathSettingsProperties(false);
+        //    if (properties != null) {
+        //        value = properties.getProperty("pathvariable." + name);
+        //    }
+        //}
 
         if (value == null) {
             if (record) {
@@ -1092,59 +1089,59 @@ public class GradleImport {
         return file;
     }
 
-    @Nullable
-    private Properties getJdtSettingsProperties(boolean mustExist) throws IOException {
-        File settings = getJdtSettingsFile();
-        if (!settings.exists()) {
-            if (mustExist) {
-                reportError(null, settings, "Settings file does not exist");
-            }
-            return null;
-        }
+    //@Nullable
+    //private Properties getJdtSettingsProperties(boolean mustExist) throws IOException {
+    //    File settings = getJdtSettingsFile();
+    //    if (!settings.exists()) {
+    //        if (mustExist) {
+    //            reportError(null, settings, "Settings file does not exist");
+    //        }
+    //        return null;
+    //    }
+    //
+    //    return getProperties(settings);
+    //}
 
-        return getProperties(settings);
-    }
+    //private File getRuntimeSettingsDir() {
+    //    return new File(getWorkspaceLocation(),
+    //            ".metadata" + separator +
+    //            ".plugins" + separator +
+    //            "org.eclipse.core.runtime" + separator +
+    //            ".settings");
+    //}
 
-    private File getRuntimeSettingsDir() {
-        return new File(getWorkspaceLocation(),
-                ".metadata" + separator +
-                ".plugins" + separator +
-                "org.eclipse.core.runtime" + separator +
-                ".settings");
-    }
+    //private File getJdtSettingsFile() {
+    //    return new File(getRuntimeSettingsDir(), "org.eclipse.jdt.core.prefs");
+    //}
+    //
+    //private File getPathSettingsFile() {
+    //    return new File(getRuntimeSettingsDir(), "org.eclipse.core.resources.prefs");
+    //}
+    //
+    //private File getNdkSettingsFile() {
+    //    return new File(getRuntimeSettingsDir(), "com.android.ide.eclipse.ndk.prefs");
+    //}
+    //
+    //private File getAdtSettingsFile() {
+    //    return new File(getRuntimeSettingsDir(), "com.android.ide.eclipse.adt.prefs");
+    //}
 
-    private File getJdtSettingsFile() {
-        return new File(getRuntimeSettingsDir(), "org.eclipse.jdt.core.prefs");
-    }
+    //@Nullable
+    //private Properties getPathSettingsProperties(boolean mustExist) throws IOException {
+    //    File settings = getPathSettingsFile();
+    //    if (!settings.exists()) {
+    //        if (mustExist) {
+    //            reportError(null, settings, "Settings file does not exist");
+    //        }
+    //        return null;
+    //    }
+    //
+    //    return getProperties(settings);
+    //}
 
-    private File getPathSettingsFile() {
-        return new File(getRuntimeSettingsDir(), "org.eclipse.core.resources.prefs");
-    }
-
-    private File getNdkSettingsFile() {
-        return new File(getRuntimeSettingsDir(), "com.android.ide.eclipse.ndk.prefs");
-    }
-
-    private File getAdtSettingsFile() {
-        return new File(getRuntimeSettingsDir(), "com.android.ide.eclipse.adt.prefs");
-    }
-
-    @Nullable
-    private Properties getPathSettingsProperties(boolean mustExist) throws IOException {
-        File settings = getPathSettingsFile();
-        if (!settings.exists()) {
-            if (mustExist) {
-                reportError(null, settings, "Settings file does not exist");
-            }
-            return null;
-        }
-
-        return getProperties(settings);
-    }
-
-    private File getWorkspaceLocation() {
-        return mWorkspaceLocation;
-    }
+    //private File getWorkspaceLocation() {
+    //    return mWorkspaceLocation;
+    //}
 
     Document getXmlDocument(File file, boolean namespaceAware) throws IOException {
         String xml = Files.toString(file, UTF_8);
@@ -1165,23 +1162,23 @@ public class GradleImport {
 
     static Properties getProperties(File file) throws IOException {
         Properties properties = new Properties();
-        InputStreamReader reader = new InputStreamReader(new BufferedInputStream(new FileInputStream(file)), Charsets.UTF_8);
+        FileReader reader = new FileReader(file);
         properties.load(reader);
         Closeables.close(reader, true);
         return properties;
     }
 
-    private Map<File, EclipseProject> mProjectMap = Maps.newHashMap();
+    private Map<File, PlainProject> mProjectMap = Maps.newHashMap();
 
-    Map<File, EclipseProject> getProjectMap() {
+    Map<File, PlainProject> getProjectMap() {
         return mProjectMap;
     }
 
-    public ImportSummary getSummary() {
+    public PlainImportSummary getSummary() {
         return mSummary;
     }
 
-    void registerProject(@NonNull EclipseProject project) {
+    void registerProject(@NonNull PlainProject project) {
         // Register not just this directory but the canonical versions too, since library
         // references in project.properties can be relative and can be made canonical;
         // we want to make sure that a project known by any of these versions of the paths
@@ -1193,10 +1190,10 @@ public class GradleImport {
 
     int getModuleCount() {
         int moduleCount = 0;
-        for (ImportModule module : mModules) {
-            if (!module.isReplacedWithDependency()) {
+        for (PlainImportModuleBlah module : mModules) {
+            //if (!module.isReplacedWithDependency()) {
                 moduleCount++;
-            }
+            //}
         }
         return moduleCount;
     }
@@ -1277,13 +1274,13 @@ public class GradleImport {
         return null;
     }
 
-    void markJarHandled(@NonNull File file) {
-        mHandledJars.add(file.getName());
-    }
-
-    boolean isJarHandled(@NonNull File file) {
-        return mHandledJars.contains(file.getName());
-    }
+    //void markJarHandled(@NonNull File file) {
+    //    mHandledJars.add(file.getName());
+    //}
+    //
+    //boolean isJarHandled(@NonNull File file) {
+    //    return mHandledJars.contains(file.getName());
+    //}
 
     private boolean haveLocalRepository(String vendor) {
         SdkManager sdkManager = getSdkManager();
@@ -1317,13 +1314,13 @@ public class GradleImport {
     }
 
     private boolean haveArtifact(String groupId) {
-        for (ImportModule module : mRootModules) {
-            for (GradleCoordinate dependency : module.getDependencies()) {
-                if (groupId.equals(dependency.getGroupId())) {
-                    return true;
-                }
-            }
-        }
+        //for (PlainImportModuleBlah module : mRootModules) {
+        //    for (GradleCoordinate dependency : module.getDependencies()) {
+        //        if (groupId.equals(dependency.getGroupId())) {
+        //            return true;
+        //        }
+        //    }
+        //}
 
         return false;
     }

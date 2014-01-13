@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.tools.gradle.eclipse;
+package com.android.tools.gradle.plain;
 
 import static com.android.SdkConstants.ANDROID_LIBRARY;
 import static com.android.SdkConstants.ANDROID_LIBRARY_REFERENCE_FORMAT;
@@ -77,10 +77,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /** Provides information about an Eclipse project */
-class EclipseProject implements Comparable<EclipseProject> {
+class PlainProject implements Comparable<PlainProject> {
     static final String DEFAULT_LANGUAGE_LEVEL = "1.6";
 
-    private final GradleImport mImporter;
+    private final PlainGradleImport mImporter;
     private final File mDir;
     private final File mCanonicalDir;
     private boolean mLibrary;
@@ -94,7 +94,7 @@ class EclipseProject implements Comparable<EclipseProject> {
     private AndroidVersion mVersion;
     private String mName;
     private String mLanguageLevel;
-    private List<EclipseProject> mDirectLibraries;
+    private List<PlainProject> mDirectLibraries;
     private List<File> mSourcePaths;
     private List<File> mJarPaths;
     private List<File> mInstrumentationJarPaths;
@@ -105,15 +105,13 @@ class EclipseProject implements Comparable<EclipseProject> {
     private String mPackage;
     private List<File> mLocalProguardFiles;
     private List<File> mSdkProguardFiles;
-    private List<EclipseProject> mAllLibraries;
-    private EclipseImportModule mModule;
+    private List<PlainProject> mAllLibraries;
+    private PlainImportModule mModule;
     private Map<String,String> mProjectVariableMap;
     private Map<String,String> mLinkedResourceMap;
     private File mInstrumentationDir;
 
-    private EclipseProject(
-            @NonNull GradleImport importer,
-            @NonNull File dir) throws IOException {
+    private PlainProject(@NonNull PlainGradleImport importer, @NonNull File dir) throws IOException {
         mImporter = importer;
         mDir = dir;
         mCanonicalDir = dir.getCanonicalFile();
@@ -136,7 +134,7 @@ class EclipseProject implements Comparable<EclipseProject> {
             initMinSdkVersion();
             initInstrumentation();
         } else {
-            mDirectLibraries = new ArrayList<EclipseProject>(4);
+            mDirectLibraries = new ArrayList<PlainProject>(4);
         }
 
         initClassPathEntries();
@@ -144,10 +142,10 @@ class EclipseProject implements Comparable<EclipseProject> {
     }
 
     @NonNull
-    public static EclipseProject getProject(@NonNull GradleImport importer, @NonNull File dir)
+    public static PlainProject getProject(@NonNull PlainGradleImport importer, @NonNull File dir)
             throws IOException {
-        Map<File,EclipseProject> mProjectMap = importer.getProjectMap();
-        EclipseProject project = mProjectMap.get(dir);
+        Map<File,PlainProject> mProjectMap = importer.getProjectMap();
+        PlainProject project = mProjectMap.get(dir);
 
         if (project == null) {
             project = createProject(importer, dir);
@@ -162,10 +160,10 @@ class EclipseProject implements Comparable<EclipseProject> {
     }
 
     @NonNull
-    private static EclipseProject createProject(@NonNull GradleImport importer, @NonNull File dir)
+    private static PlainProject createProject(@NonNull PlainGradleImport importer, @NonNull File dir)
             throws IOException {
         // Read the .classpath, .project, project.properties and local.properties files (if there)
-        return new EclipseProject(importer, dir);
+        return new PlainProject(importer, dir);
     }
 
     private void initVersion(Properties properties) {
@@ -176,7 +174,7 @@ class EclipseProject implements Comparable<EclipseProject> {
     }
 
     private void initLibraries(Properties properties) throws IOException {
-        mDirectLibraries = new ArrayList<EclipseProject>(4);
+        mDirectLibraries = new ArrayList<PlainProject>(4);
 
         for (int i = 1; i < 1000; i++) {
             String key = String.format(ANDROID_LIBRARY_REFERENCE_FORMAT, i);
@@ -188,7 +186,7 @@ class EclipseProject implements Comparable<EclipseProject> {
 
             File libraryDir = new File(mDir, library).getCanonicalFile();
 
-            EclipseProject libraryPrj = getProject(mImporter, libraryDir);
+            PlainProject libraryPrj = getProject(mImporter, libraryDir);
             mDirectLibraries.add(libraryPrj);
         }
     }
@@ -206,7 +204,7 @@ class EclipseProject implements Comparable<EclipseProject> {
             if (!mergeManifests) {
                 // See if we (transitively) depend on libraries, and if any of them are
                 // android library projects with non-empty manifests
-                for (EclipseProject library : getAllLibraries()) {
+                for (PlainProject library : getAllLibraries()) {
                     if (library.isAndroidProject() && library.isLibrary() &&
                             library.getManifestFile().exists() &&
                             library.getManifestDoc().getDocumentElement() != null &&
@@ -238,26 +236,25 @@ class EclipseProject implements Comparable<EclipseProject> {
         }
     }
 
-  private void initProjectName() throws IOException {
-    Document document = getProjectDocument();
-    if (document == null) {
-      return;
-    }
-    NodeList names = document.getElementsByTagName("name");
+    private void initProjectName() throws IOException {
+        Document document = getProjectDocument();
+        if (document != null) {
+          NodeList names = document.getElementsByTagName("name");
 
-    for (int i = 0; i < names.getLength(); i++) {
-      Node element = names.item(i);
-      mName = getStringValue((Element) element);
-      //noinspection VariableNotUsedInsideIf
-      if (mName != null) {
-        break;
+          for (int i = 0; i < names.getLength(); i++) {
+            Node element = names.item(i);
+            mName = getStringValue((Element) element);
+            //noinspection VariableNotUsedInsideIf
+            if (mName != null) {
+              break;
+            }
+          }
+        }
+
+      if (mName == null) {
+        mName = mDir.getName();
       }
     }
-
-    if (mName == null) {
-      mName = mDir.getName();
-    }
-  }
 
     private static int getApiVersion(Element usesSdk, String attribute, int defaultApiLevel) {
         String valueString = null;
@@ -372,7 +369,7 @@ class EclipseProject implements Comparable<EclipseProject> {
 
     @Nullable
     private static String getInstrumentationTarget(
-            @NonNull GradleImport importer,
+            @NonNull PlainGradleImport importer,
             @NonNull File manifest) throws IOException {
         Document doc = importer.getXmlDocument(manifest, true);
         NodeList list = doc.getElementsByTagName(NODE_INSTRUMENTATION);
@@ -425,7 +422,7 @@ class EclipseProject implements Comparable<EclipseProject> {
                         if (resolved != null) {
                             if (path.startsWith("/") && isEclipseProjectDir(resolved)) {
                                 // It's pointing to another project. Just add a dependency.
-                                EclipseProject lib = getProject(mImporter, resolved);
+                                PlainProject lib = getProject(mImporter, resolved);
                                 if (!mDirectLibraries.contains(lib)) {
                                     mDirectLibraries.add(lib);
                                     mAllLibraries = null; // force refresh if already consulted
@@ -498,7 +495,7 @@ class EclipseProject implements Comparable<EclipseProject> {
                 if (!(mJarPaths.contains(relative) || mJarPaths.contains(lib))) {
                     // Skip jars that are the result of a library project dependency
                     boolean isLibraryJar = false;
-                    for (EclipseProject project : getAllLibraries()) {
+                    for (PlainProject project : getAllLibraries()) {
                         if (!project.isAndroidProject()) {
                             continue;
                         }
@@ -600,8 +597,8 @@ class EclipseProject implements Comparable<EclipseProject> {
             return mDir;
         } else if (path.equals("PARENT_LOC")) {
             return mDir.getParentFile();
-        } else if (path.equals("WORKSPACE_LOC")) {
-            return mImporter.getEclipseWorkspace();
+        //} else if (path.equals("WORKSPACE_LOC")) {
+        //    return mImporter.getEclipseWorkspace();
         } else if (path.startsWith("PARENT-")) {
             Pattern pattern = Pattern.compile("PARENT-(\\d+)-(.+)");
             Matcher matcher = pattern.matcher(path);
@@ -759,11 +756,19 @@ class EclipseProject implements Comparable<EclipseProject> {
         return null;
     }
 
+
+
+   // TODO: This needs to become more sophisticated. It can't look for an Android nature but should look for the presence of Android includes
+  // in Java.
+
+
+
+
     private void initAndroidProject() throws IOException {
         mAndroidProject = hasNature("com.android.ide.eclipse.adt.AndroidNature");
-        if (!mAndroidProject && getProjectDocument() == null) {
-            mAndroidProject = GradleImport.isAdtProjectDir(mDir);
-        }
+        //if (!mAndroidProject && getProjectDocument() == null) {
+        //    mAndroidProject = PlainGradleImport.isAdtProjectDir(mDir);
+        //}
         mNdkProject = mAndroidProject && (
                 hasNature("org.eclipse.cdt.core.cnature") ||
                 hasNature("org.eclipse.cdt.core.ccnature") ||
@@ -792,7 +797,7 @@ class EclipseProject implements Comparable<EclipseProject> {
             mLanguageLevel = DEFAULT_LANGUAGE_LEVEL; // default
             File file = new File(mDir, ".settings" + separator + "org.eclipse.jdt.core.prefs");
             if (file.exists()) {
-                Properties properties = GradleImport.getProperties(file);
+                Properties properties = PlainGradleImport.getProperties(file);
                 if (properties != null) {
                     String source =
                             properties.getProperty("org.eclipse.jdt.core.compiler.source");
@@ -907,7 +912,7 @@ class EclipseProject implements Comparable<EclipseProject> {
             assert isAndroidProject();
             File file = getProjectPropertiesFile();
             if (file.exists()) {
-                mProjectProperties = GradleImport.getProperties(file);
+                mProjectProperties = PlainGradleImport.getProperties(file);
             } else {
                 mProjectProperties = new Properties();
             }
@@ -1028,20 +1033,20 @@ class EclipseProject implements Comparable<EclipseProject> {
     }
 
     @NonNull
-    public List<EclipseProject> getDirectLibraries() {
+    public List<PlainProject> getDirectLibraries() {
         return mDirectLibraries;
     }
 
     @NonNull
-    public List<EclipseProject> getAllLibraries() {
+    public List<PlainProject> getAllLibraries() {
         if (mAllLibraries == null) {
             if (mDirectLibraries.isEmpty()) {
                 return mDirectLibraries;
             }
 
-            List<EclipseProject> all = new ArrayList<EclipseProject>();
-            Set<EclipseProject> seen = Sets.newHashSet();
-            Set<EclipseProject> path = Sets.newHashSet();
+            List<PlainProject> all = new ArrayList<PlainProject>();
+            Set<PlainProject> seen = Sets.newHashSet();
+            Set<PlainProject> path = Sets.newHashSet();
             seen.add(this);
             path.add(this);
             addLibraryProjects(all, seen, path);
@@ -1051,9 +1056,9 @@ class EclipseProject implements Comparable<EclipseProject> {
         return mAllLibraries;
     }
 
-    private void addLibraryProjects(@NonNull Collection<EclipseProject> collection,
-            @NonNull Set<EclipseProject> seen, @NonNull Set<EclipseProject> path) {
-        for (EclipseProject library : mDirectLibraries) {
+    private void addLibraryProjects(@NonNull Collection<PlainProject> collection,
+            @NonNull Set<PlainProject> seen, @NonNull Set<PlainProject> path) {
+        for (PlainProject library : mDirectLibraries) {
             if (seen.contains(library)) {
                 if (path.contains(library)) {
                     mImporter.reportWarning(library, library.getDir(),
@@ -1072,7 +1077,7 @@ class EclipseProject implements Comparable<EclipseProject> {
     }
 
     @Override
-    public int compareTo(@NonNull EclipseProject other) {
+    public int compareTo(@NonNull PlainProject other) {
         return mDir.compareTo(other.mDir);
     }
 
@@ -1085,40 +1090,40 @@ class EclipseProject implements Comparable<EclipseProject> {
      * Creates a list of modules from the given set of projects. The returned list
      * is in dependency order.
      */
-    public static List<? extends ImportModule> performImport(
-            @NonNull GradleImport importer,
-            @NonNull Collection<EclipseProject> projects) {
-        List<EclipseImportModule> modules = Lists.newArrayList();
-        List<EclipseImportModule> replacedByDependencies = Lists.newArrayList();
+    public static List<? extends PlainImportModuleBlah> performImport(
+            @NonNull PlainGradleImport importer,
+            @NonNull Collection<PlainProject> projects) {
+        List<PlainImportModule> modules = Lists.newArrayList();
+        List<PlainImportModule> replacedByDependencies = Lists.newArrayList();
 
-        for (EclipseProject project : projects) {
-            EclipseImportModule module = new EclipseImportModule(importer, project);
+        for (PlainProject project : projects) {
+            PlainImportModule module = new PlainImportModule(importer, project);
             module.initialize();
-            if (module.isReplacedWithDependency()) {
-                replacedByDependencies.add(module);
-            } else {
+            //if (module.isReplacedWithDependency()) {
+            //    replacedByDependencies.add(module);
+            //} else {
                 modules.add(module);
-            }
+            //}
         }
 
         // Some libraries may be replaced by just a dependency (for example,
         // instead of copying in a whole copy of ActionBarSherlock, just
         // replace by the corresponding dependency.
-        for (EclipseImportModule replaced : replacedByDependencies) {
-            assert replaced.getReplaceWithDependencies() != null;
-            EclipseProject project = replaced.getProject();
-            for (EclipseImportModule module : modules) {
-                if (module.getProject().getAllLibraries().contains(project)) {
-                    module.addDependencies(replaced.getReplaceWithDependencies());
-                }
-            }
-        }
+        //for (PlainImportModule replaced : replacedByDependencies) {
+        //    assert replaced.getReplaceWithDependencies() != null;
+        //    PlainProject project = replaced.getProject();
+        //    for (PlainImportModule module : modules) {
+        //        if (module.getProject().getAllLibraries().contains(project)) {
+        //            module.addDependencies(replaced.getReplaceWithDependencies());
+        //        }
+        //    }
+        //}
 
         // Strip out .jar files from the libs/ folder if already implied by
         // library dependencies
-        for (EclipseImportModule module : modules) {
-            module.removeJarDependencies();
-        }
+        //for (PlainImportModule module : modules) {
+        //    module.removeJarDependencies();
+        //}
 
         // Sort by dependency order
         Collections.sort(modules);
@@ -1127,11 +1132,11 @@ class EclipseProject implements Comparable<EclipseProject> {
     }
 
     @Nullable
-    public EclipseImportModule getModule() {
+    public PlainImportModule getModule() {
         return mModule;
     }
 
-    public void setModule(@Nullable EclipseImportModule module) {
+    public void setModule(@Nullable PlainImportModule module) {
         mModule = module;
     }
 }
