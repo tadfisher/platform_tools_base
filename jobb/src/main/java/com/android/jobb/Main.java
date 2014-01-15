@@ -1,17 +1,15 @@
 /*
- * Copyright (C) 2012 The Android Open Source Project 
+ * Copyright (C) 2012-2014 The Android Open Source Project
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software 
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and 
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
  */
 
 package com.android.jobb;
@@ -50,7 +48,7 @@ public class Main {
     private static final int BLOCK_SIZE = 512; // MUST BE 512
 
     public static void printArgs() {
-        System.out.println("Jobb -- Create OBB files for use on Android");
+        System.out.println("Jobb " + Main.class.getPackage().getImplementationVersion() + " -- Create OBB files for use on Android");
         System.out.println();
         System.out.println(" -d <directory> Use <directory> as input/output for OBB files");
         System.out.println(" -k <key>       Use <key> as password to encrypt/decrypt OBB file");
@@ -60,7 +58,12 @@ public class Main {
         System.out.println(" -pn <package>  Package name for OBB file");
         System.out.println(" -pv <version>  Package version for OBB file");
         System.out.println(" -ov            Set overlay flag");
-        System.out.println(" -dump <file>   Parse and dump OBB file");        
+        System.out.println(" -size <size>   Use this value for the total filesystem size");
+        System.out.println(" -salt <salt>   Use this salt value for the encryption");
+        System.out.println(" -onepass       Do not use two passes through creating the OBB file");
+        System.out.println(" -dump <file>   Parse and dump OBB file");
+        System.out.println(" -deout <file>  Decrypt file to this name");
+        System.out.println(" -encr <file>   Encrypt an existing OBB file");
         System.out.println(" -about         Notices about this tool");
         System.out.println();
         System.out.println("Example: Dump the contents of the encrypted OBB file to the directory");
@@ -75,6 +78,8 @@ public class Main {
     static boolean sHasOutputDirectory;
     static String sKey;
     static String sOutputFile;
+    static String sOutputDecrypted;
+    static String sOutputEncrypted;
     static boolean sVerboseMode;
     static String sPackageName;
     static int sPackageVersion = -1;
@@ -83,45 +88,165 @@ public class Main {
     static int sFlags;
     static String sInputFile;
     static byte[] sFishKey;
+    static long sFileSize;
+    static boolean sTwoPass = true;
 
     private interface FileProcessor {
-        void processFile(File f);
+        void processFile(File f) throws IOException;
 
-        void processDirectory(File f);
+        void processDirectory(File f) throws IOException;
 
-		/**
-		 * @param dir
-		 */
-		void endDirectory(File dir);
+        /**
+         * @param dir
+         */
+        void endDirectory(File dir);
     }
 
-    static ByteBuffer sTempBuf = ByteBuffer.allocate(1024*1024);
-    
-    static public void dumpDirectory(FsDirectory dir, int tabStop, File curDirectory) throws IOException {
+    static ByteBuffer sTempBuf = ByteBuffer.allocate(1024 * 1024);
+
+    static private class FATDirectoryFileProcessor implements FileProcessor {
+        final FatFileSystem mFs;
+        final String mRootPath;
+
+        Stack<FatLfnDirectory> mCurDir = new Stack<FatLfnDirectory>();
+
+        FATDirectoryFileProcessor(FatFileSystem fs, String rootPath) {
+            this.mFs = fs;
+            this.mRootPath = rootPath;
+        }
+
+        @Override
+        public void processDirectory(File curFile) throws IOException {
+            String directory = curFile.getAbsolutePath().substring(mRootPath.length());
+            if (sVerboseMode) {
+                System.out.println("Processing Directory: " + directory + " at cluster "
+                        + mFs.getFat().getLastFreeCluster());
+            }
+            FatLfnDirectory curDir = mFs.getRoot();
+            if (directory.length() > 0) {
+                File tempFile = new File(directory);
+                Stack<String> pathStack = new Stack<String>();
+                do {
+                    pathStack.push(tempFile.getName());
+                } while (null != (tempFile = tempFile.getParentFile()));
+                while (!pathStack.empty()) {
+                    String name = pathStack.pop();
+                    if (0 == name.length()) {
+                        continue;
+                    }
+                    FatLfnDirectoryEntry entry = curDir.getEntry(name);
+                    if (null != entry) {
+                        if (!entry.isDirectory()) {
+                            throw new RuntimeException(
+                                    "File path not FAT compatible - naming conflict!");
+                        }
+                    } else {
+                        try {
+                            if (sVerboseMode) {
+                                System.out.println("Adding Directory: " + name);
+                            }
+                            entry = curDir.addDirectory(name);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            throw new RuntimeException("Error adding directory!");
+                        }
+                    }
+                    try {
+                        curDir = entry.getDirectory();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        throw new RuntimeException("Error getting directory");
+                    }
+                }
+            }
+            mCurDir.push(curDir);
+        }
+
+        @Override
+        public void processFile(File curFile) throws IOException {
+            FatLfnDirectoryEntry entry;
+            FatLfnDirectory curDir = mCurDir.peek();
+            try {
+                if (sVerboseMode) {
+                    System.out.println("Adding file: "
+                            + curFile.getAbsolutePath().substring(mRootPath.length())
+                            + " with length "
+                            + curFile.length() + " at cluster "
+                            + mFs.getFat().getLastFreeCluster());
+                }
+                entry = curDir.addFile(curFile.getName());
+            } catch (IOException e) {
+                System.err.println("Error adding file with name: " + curFile.getName());
+                throw e;
+            }
+            ReadableByteChannel channel = null;
+            try {
+                FatFile f = entry.getFile();
+                channel = new FileInputStream(curFile).getChannel();
+                ByteBuffer buf = ByteBuffer.allocateDirect(1024 * 512);
+                int numRead = 0;
+                long offset = 0;
+                while (true) {
+                    buf.clear();
+                    numRead = channel.read(buf);
+                    if (numRead < 0) {
+                        break;
+                    }
+                    buf.rewind();
+                    buf.limit(numRead);
+                    f.write(offset, buf);
+                    offset += numRead;
+                }
+                f.flush();
+            } catch (IOException e) {
+                System.err.println("Error getting/writing file with name: " + curFile.getName());
+                throw e;
+            } finally {
+                if (null != channel) {
+                    try {
+                        channel.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+
+        @Override
+        public void endDirectory(File dir) {
+            mCurDir.pop();
+        }
+
+    }
+
+    static public void dumpDirectory(FsDirectory dir, int tabStop, File curDirectory)
+            throws IOException {
         Iterator<FsDirectoryEntry> i = dir.iterator();
         while (i.hasNext()) {
             final FsDirectoryEntry e = i.next();
             if (e.isDirectory()) {
                 for (int idx = 0; idx < tabStop; idx++)
                     System.out.print(' ');
-                if (e.getName().equals(".") || e.getName().equals(".."))
+                if (e.getName().equals(".") || e.getName().equals("..")) {
                     continue;
+                }
                 for (int idx = 0; idx < tabStop; idx++)
                     System.out.print("  ");
                 System.out.println("[" + e + "]");
                 dumpDirectory(e.getDirectory(), tabStop + 1, new File(curDirectory, e.getName()));
             } else {
-                for ( int idx = 0; idx < tabStop; idx++ ) System.out.print("  ");
-                System.out.println( e );
-                if ( sHasOutputDirectory ) {
-                    if ( !curDirectory.exists() ) {
-                        if ( false == curDirectory.mkdirs() ) {
-                            throw new IOException("Unable to create directory: " + curDirectory);                            
+                for (int idx = 0; idx < tabStop; idx++)
+                    System.out.print("  ");
+                System.out.println(e);
+                if (sHasOutputDirectory) {
+                    if (!curDirectory.exists()) {
+                        if (false == curDirectory.mkdirs()) {
+                            throw new IOException("Unable to create directory: " + curDirectory);
                         }
                     }
                     File curFile = new File(curDirectory, e.getName());
-                    if ( curFile.exists() ) {
-                        throw new IOException("File exists: " + curFile); 
+                    if (curFile.exists()) {
+                        throw new IOException("File exists: " + curFile);
                     } else {
                         FsFile f = e.getFile();
                         FileOutputStream fos = null;
@@ -130,18 +255,22 @@ public class Main {
                             FileChannel outputChannel = fos.getChannel();
                             int capacity = sTempBuf.capacity();
                             long length = f.getLength();
-                            for ( long pos = 0; pos < length; pos++ ) {
-                                int readLength = (int)(length-pos > capacity ? capacity : length-pos);
+                            for (long pos = 0; pos < length;) {
+                                int readLength = (int) (length - pos > capacity ? capacity
+                                        : length - pos);
                                 sTempBuf.rewind();
                                 sTempBuf.limit(readLength);
                                 f.read(pos, sTempBuf);
                                 sTempBuf.rewind();
-                                while(sTempBuf.remaining() > 0)
+                                int justReadLength = sTempBuf.remaining();
+                                while (sTempBuf.remaining() > 0)
                                     outputChannel.write(sTempBuf);
-                                pos += readLength;
+                                pos += justReadLength;
                             }
                         } finally {
-                            if ( null != fos ) fos.close();
+                            if (null != fos) {
+                                fos.close();
+                            }
                         }
                     }
                 }
@@ -184,46 +313,73 @@ public class Main {
                     String saltString = args[++i];
                     BigInteger bi = new BigInteger(saltString, 16);
                     sSalt = bi.toByteArray();
-                    if ( sSalt.length != PBKDF.SALT_LEN ) {
+                    if (sSalt.length != PBKDF.SALT_LEN) {
                         displayHelp = true;
                     }
+                } else if (curArg.equals("-deout")) {
+                    sOutputDecrypted = args[++i];
+                } else if (curArg.equals("-encr")) {
+                    sOutputEncrypted = args[++i];
+                } else if (curArg.equals("-size")) {
+                    sFileSize = Long.parseLong(args[++i]);
+                } else if (curArg.equals("-onepass")) {
+                    sTwoPass = false;
                 } else if (curArg.equals("-about")) {
-                    System.out.println("-------------------------------------------------------------------------------");
-                    System.out.println("Portions of this code:");             
-                    System.out.println("-------------------------------------------------------------------------------");
+                    System.out.println(
+                            "-------------------------------------------------------------------------------");
+                    System.out.println("Portions of this code:");
+                    System.out.println(
+                            "-------------------------------------------------------------------------------");
                     System.out.println("Copyright (c) 2000 The Legion Of The Bouncy Castle");
                     System.out.println("(http://www.bouncycastle.org)");
                     System.out.println();
-                    System.out.println("Permission is hereby granted, free of charge, to any person obtaining");
-                    System.out.println("a copy of this software and associated documentation files (the \"Software\"");
-                    System.out.println("to deal in the Software without restriction, including without limitation");
-                    System.out.println("the rights to use, copy, modify, merge, publish, distribute, sublicense");
-                    System.out.println("and/or sell copies of the Software, and to permit persons to whom the Software");
-                    System.out.println("is furnished to do so, subject to the following conditions:");
+                    System.out.println(
+                            "Permission is hereby granted, free of charge, to any person obtaining");
+                    System.out.println(
+                            "a copy of this software and associated documentation files (the \"Software\"");
+                    System.out.println(
+                            "to deal in the Software without restriction, including without limitation");
+                    System.out.println(
+                            "the rights to use, copy, modify, merge, publish, distribute, sublicense");
+                    System.out.println(
+                            "and/or sell copies of the Software, and to permit persons to whom the Software");
+                    System.out.println(
+                            "is furnished to do so, subject to the following conditions:");
                     System.out.println();
-                    System.out.println("The above copyright notice and this permission notice shall be included in all");
+                    System.out.println(
+                            "The above copyright notice and this permission notice shall be included in all");
                     System.out.println("copies or substantial portions of the Software.");
-                    System.out.println("-------------------------------------------------------------------------------");
-                    System.out.println("Twofish is uncopyrighted and license-free, and was created and analyzed by:");                   
+                    System.out.println(
+                            "-------------------------------------------------------------------------------");
+                    System.out.println(
+                            "Twofish is uncopyrighted and license-free, and was created and analyzed by:");
                     System.out.println("Bruce Schneier - John Kelsey - Doug Whiting");
                     System.out.println("David Wagner - Chris Hall - Niels Ferguson");
-                    System.out.println("-------------------------------------------------------------------------------");
+                    System.out.println(
+                            "-------------------------------------------------------------------------------");
                     System.out.println("Cryptix General License");
                     System.out.println();
                     System.out.println("Copyright (c) 1995-2005 The Cryptix Foundation Limited.");
                     System.out.println("All rights reserved.");
                     System.out.println("");
-                    System.out.println("Redistribution and use in source and binary forms, with or without");
-                    System.out.println("modification, are permitted provided that the following conditions are");
+                    System.out.println(
+                            "Redistribution and use in source and binary forms, with or without");
+                    System.out.println(
+                            "modification, are permitted provided that the following conditions are");
                     System.out.println("met:");
                     System.out.println();
-                    System.out.println(" 1. Redistributions of source code must retain the copyright notice,");
+                    System.out.println(
+                            " 1. Redistributions of source code must retain the copyright notice,");
                     System.out.println("    this list of conditions and the following disclaimer.");
-                    System.out.println(" 2. Redistributions in binary form must reproduce the above copyright");
-                    System.out.println("    notice, this list of conditions and the following disclaimer in");
-                    System.out.println("    the documentation and/or other materials provided with the");
+                    System.out.println(
+                            " 2. Redistributions in binary form must reproduce the above copyright");
+                    System.out.println(
+                            "    notice, this list of conditions and the following disclaimer in");
+                    System.out.println(
+                            "    the documentation and/or other materials provided with the");
                     System.out.println("    distribution.");
-                    System.out.println("-------------------------------------------------------------------------------");
+                    System.out.println(
+                            "-------------------------------------------------------------------------------");
                     return;
                 }
             }
@@ -236,20 +392,20 @@ public class Main {
             System.out.print("Package Name: ");
             System.out.println(obbFile.mPackageName);
             System.out.print("Package Version: ");
-            System.out.println(obbFile.mPackageVersion);            
+            System.out.println(obbFile.mPackageVersion);
             if (0 != (obbFile.mFlags & ObbFile.OBB_SALTED)) {
                 System.out.print("SALT: ");
                 BigInteger bi = new BigInteger(obbFile.mSalt);
                 System.out.println(bi.toString(16));
                 System.out.println();
-                if ( null == sKey ) {
+                if (null == sKey) {
                     System.out.println("Encrypted file. Please add password.");
                     return;
                 }
                 try {
-                    sFishKey = PBKDF.getKey(sKey,obbFile.mSalt);
+                    sFishKey = PBKDF.getKey(sKey, obbFile.mSalt);
                     bi = new BigInteger(sFishKey);
-                    System.out.println(bi.toString(16));                    
+                    System.out.println(bi.toString(16));
                 } catch (InvalidKeyException e) {
                     e.printStackTrace();
                 } catch (NoSuchAlgorithmException e) {
@@ -265,11 +421,57 @@ public class Main {
 
             BlockDevice fd;
             try {
-                if ( isEncrypted ) {
-                    EncryptedBlockFile ebf = new EncryptedBlockFile(sFishKey, obbInputFile, "r");
-                    fd = new FileDisk(ebf, ebf.getEncryptedFileChannel(), true);
+                if (isEncrypted) {
+                    // Old method: Realtime Decryption
+                    // EncryptedBlockFile ebf = new EncryptedBlockFile(sFishKey,
+                    // obbInputFile, "r");
+                    File outFile;
+                    if (null != sOutputDecrypted) {
+                        outFile = new File(sOutputDecrypted);
+                    } else {
+                        outFile = File.createTempFile("decr", ".obb");
+                        outFile.deleteOnExit();
+                    }
+                    System.out.print("Decrypting Filesystem: ");
+                    ObbFile.decrypt(obbInputFile, outFile, sFishKey);
+                    System.out.print("Decryption Complete");
+                    fd = new FileDisk(outFile, true);
                 } else {
                     fd = new FileDisk(obbInputFile, true);
+                    if (null != sOutputEncrypted) {
+                        if (null == sKey) {
+                            System.out.println("A key is required to encrypt a filesystem.");
+                            printArgs();
+                            return;
+                        }
+                        File outFile = new File(sOutputEncrypted);
+                        if (null == sSalt) {
+                            sSalt = PBKDF.getRandomSalt();
+                        }
+                        try {
+                            sFishKey = PBKDF.getKey(sKey, sSalt);
+                            BigInteger bi = new BigInteger(sFishKey);
+                            System.out.print("SALT: ");
+                            System.out.println(bi.toString(16));
+                            System.out.print("\t");
+                            System.out.print("KEY: ");
+                            for (byte b : sFishKey) {
+                                int out = b & 0xFF;
+                                System.out.print(Integer.toHexString(out));
+                                System.out.print(" ");
+                            }
+                            System.out.println();
+                            System.out.print("Encrypting Filesystem: ");
+                            ObbFile.encrypt(obbInputFile, sFishKey, sSalt, outFile);
+                            System.out.print("Encryption Complete. ");
+                        } catch (InvalidKeyException e) {
+                            e.printStackTrace();
+                        } catch (NoSuchAlgorithmException e) {
+                            e.printStackTrace();
+                        } catch (UnsupportedEncodingException e) {
+                            e.printStackTrace();
+                        }
+                    }
                 }
                 final FatFileSystem fatFs = FatFileSystem.read(fd, true);
                 final BootSector bs = fatFs.getBootSector();
@@ -292,6 +494,8 @@ public class Main {
                     System.out.println(bs.getBytesPerSector());
                     System.out.print("Sectors per cluster: ");
                     System.out.println(bs.getSectorsPerCluster());
+                    System.out.print("Bytes per cluster: ");
+                    System.out.println(bs.getBytesPerCluster());
                     System.out.print("   Reserved Sectors: ");
                     System.out.println(bs.getNrReservedSectors());
                     System.out.print("               Fats: ");
@@ -315,34 +519,36 @@ public class Main {
                 dumpDirectory(rootDir, 0, sDirectoryFile);
             } catch (IOException e) {
                 e.printStackTrace();
-            } catch (InvalidKeyException e) {
-                e.printStackTrace();
             }
             return;
         }
         boolean printArgs;
         if (displayHelp) {
-        	printArgs = true;
-        } else if ( null == sDirectory ) {
-        	printArgs = true;
-        	System.out.println("A directory to be recursed through [-d directory] is required when creating an OBB filesystem.");
-        } else if ( null == sOutputFile ) {
-        	printArgs = true;
-        	System.out.println("An output filename [-o outputfile] is required when creating an OBB filesystem.");        	
-        } else if ( null == sPackageName ) {
-        	printArgs = true;
-        	System.out.println("A package name [-pn package] is required when creating an OBB filesystem.");        	        	
-        } else if ( -1 == sPackageVersion ) {
-        	printArgs = true;        	
-        	System.out.println("A package version [-pv package] is required when creating an OBB filesystem.");        	        	
+            printArgs = true;
+        } else if (null == sDirectory) {
+            printArgs = true;
+            System.out.println(
+                    "A directory to be recursed through [-d directory] is required when creating an OBB filesystem.");
+        } else if (null == sOutputFile) {
+            printArgs = true;
+            System.out.println(
+                    "An output filename [-o outputfile] is required when creating an OBB filesystem.");
+        } else if (null == sPackageName) {
+            printArgs = true;
+            System.out.println(
+                    "A package name [-pn package] is required when creating an OBB filesystem.");
+        } else if (-1 == sPackageVersion) {
+            printArgs = true;
+            System.out.println(
+                    "A package version [-pv package] is required when creating an OBB filesystem.");
         } else {
-        	printArgs = false;
+            printArgs = false;
         }
         if (printArgs) {
             printArgs();
         } else {
             if (null != sKey) {
-                if ( null == sSalt ) {
+                if (null == sSalt) {
                     sSalt = PBKDF.getRandomSalt();
                 }
                 try {
@@ -374,151 +580,65 @@ public class Main {
                 System.out.println("Scanning directory: " + sDirectory);
             }
             final File f = new File(sDirectory);
-            
-            long fileSize = getTotalFileSize(f, 0);
-            fileSize = getTotalFileSize(f, BLOCK_SIZE*SuperFloppyFormatter.clusterSizeFromSize(fileSize, BLOCK_SIZE));
-            if (sVerboseMode) {
-                System.out.println("Total Files: " + fileSize);
+
+            long filesystemSize;
+            if (0 == sFileSize) {
+                long fileSize = getTotalFileSize(f, 0);
+                fileSize = getTotalFileSize(
+                        f, BLOCK_SIZE
+                                * SuperFloppyFormatter.clusterSizeFromSize(fileSize, BLOCK_SIZE));
+                if (sVerboseMode) {
+                    System.out.println("Total Files: " + fileSize);
+                }
+                long numSectors = fileSize / BLOCK_SIZE;
+                long clusterSize = SuperFloppyFormatter.clusterSizeFromSize(fileSize, BLOCK_SIZE);
+                long fatOverhead = 2 * numSectors / clusterSize * 4;
+                fatOverhead += clusterSize * BLOCK_SIZE - fatOverhead % (clusterSize * BLOCK_SIZE);
+                fatOverhead += 2 * clusterSize; // start at second cluster
+                if (sVerboseMode) {
+                    System.out.println("FAT Overhead: " + fatOverhead);
+                }
+                long clusterSizeInBytes = clusterSize * BLOCK_SIZE;
+                filesystemSize = ((numSectors) * BLOCK_SIZE + fatOverhead + clusterSizeInBytes - 1)
+                        / clusterSizeInBytes * clusterSizeInBytes;
+                if (sTwoPass) {
+                    // just to make absolutely certain there will be enough
+                    // space, add another 20% overhead
+                    filesystemSize += BLOCK_SIZE * (filesystemSize / 5 / BLOCK_SIZE);
+                }
+            } else {
+                filesystemSize = sFileSize;
             }
-            long numSectors = fileSize / BLOCK_SIZE;
-            long clusterSize = SuperFloppyFormatter.clusterSizeFromSize(fileSize, BLOCK_SIZE);
-            long fatOverhead = 2*numSectors/clusterSize*4;
-            fatOverhead += clusterSize*BLOCK_SIZE - fatOverhead % (clusterSize*BLOCK_SIZE);
-            fatOverhead += 2*clusterSize; //start at second cluster
-            if (sVerboseMode) {
-                System.out.println("FAT Overhead: " + fatOverhead);
-            }
-            long clusterSizeInBytes = clusterSize * BLOCK_SIZE;
-            long filesystemSize = (( numSectors ) * BLOCK_SIZE + fatOverhead + clusterSizeInBytes -1 ) / clusterSizeInBytes * clusterSizeInBytes;            
             if (sVerboseMode) {
                 System.out.println("Filesystem Size: " + filesystemSize);
             }
-            File fsFile = new File(sOutputFile);
-            if (fsFile.exists())
-                fsFile.delete();
             try {
-                BlockDevice fd;
-                if ( isEncrypted ) {
-                    try {
-                        EncryptedBlockFile ebf = new EncryptedBlockFile(sFishKey, fsFile, "rw");
-                        ebf.setLength(filesystemSize);
-                        fd = new FileDisk(ebf, ebf.getEncryptedFileChannel(), false);
-                    } catch (InvalidKeyException e) {
-                        e.printStackTrace();
-                        return;
-                    }
-                } else {
-                    fd = FileDisk.create(fsFile, filesystemSize);
-                }
-                // fat type set based on device size by SuperFloppyFormatter
-                final FatFileSystem fs = SuperFloppyFormatter.get(fd).format();
-                final String rootPath = f.getAbsolutePath();
-                // add the files into the filesystem
-                processAllFiles(f, new FileProcessor() {
-                    Stack<FatLfnDirectory> mCurDir = new Stack<FatLfnDirectory>();
+                long totalSpace = createFileSystem(f, isEncrypted, filesystemSize);
 
-                    @Override
-                    public void processDirectory(File curFile) {
-                        String directory = curFile.getAbsolutePath().substring(rootPath.length());
-                        if (sVerboseMode) {
-                            System.out.println("Processing Directory: " + directory + " at cluster " + fs.getFat().getLastFreeCluster());
-                        }
-                        FatLfnDirectory curDir = fs.getRoot();
-                        if (directory.length() > 0) {
-                            File tempFile = new File(directory);
-                            Stack<String> pathStack = new Stack<String>();
-                            do {
-                                pathStack.push(tempFile.getName());
-                            } while (null != (tempFile = tempFile.getParentFile()));
-                            while (!pathStack.empty()) {
-                                String name = pathStack.pop();
-                                if (0 == name.length())
-                                    continue;
-                                FatLfnDirectoryEntry entry = curDir.getEntry(name);
-                                if (null != entry) {
-                                    if (!entry.isDirectory()) {
-                                        throw new RuntimeException(
-                                                "File path not FAT compatible - naming conflict!");
-                                    }
-                                } else {
-                                    try {
-                                        if (sVerboseMode) {
-                                            System.out.println("Adding Directory: " + name);
-                                        }
-                                        entry = curDir.addDirectory(name);
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                        throw new RuntimeException("Error adding directory!");
-                                    }
-                                }
-                                try {
-                                    curDir = entry.getDirectory();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                    throw new RuntimeException("Error getting directory");
-                                }
-                            }
-                        }
-                        mCurDir.push(curDir);
+                if (sTwoPass) {
+                    if (sVerboseMode) {
+                        System.out.println("Recreating Filesystem with Size: " + filesystemSize);
                     }
-
-                    @Override
-                    public void processFile(File curFile) {
-                        FatLfnDirectoryEntry entry;
-                        FatLfnDirectory curDir = mCurDir.peek();
+                    filesystemSize = totalSpace;
+                    do {
                         try {
+                            createFileSystem(f, isEncrypted, filesystemSize);
+                            break;
+                        } catch (IOException e) {
+                            // add approximately one cluster each time
+                            filesystemSize += 16 * BLOCK_SIZE;
                             if (sVerboseMode) {
-                                System.out.println("Adding file: "
-                                        + curFile.getAbsolutePath().substring(rootPath.length())
-                                        + " with length " + curFile.length() + " at cluster " + fs.getFat().getLastFreeCluster());
+                                System.out.println("Error: Recreating Filesystem with Size: "
+                                        + filesystemSize);
                             }
-                            entry = curDir.addFile(curFile.getName());
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            throw new RuntimeException("Error adding file with name: "
-                                    + curFile.getName());
                         }
-                        ReadableByteChannel channel = null;
-                        try {
-                            FatFile f = entry.getFile();
-                            channel = new FileInputStream(curFile).getChannel();
-                            ByteBuffer buf = ByteBuffer.allocateDirect(1024 * 512);
-                            int numRead = 0;
-                            long offset = 0;
-                            while (true) {
-                                buf.clear();
-                                numRead = channel.read(buf);
-                                if (numRead < 0)
-                                    break;
-                                buf.rewind();
-                                buf.limit(numRead);
-                                f.write(offset, buf);
-                                offset += numRead;
-                            }
-                            f.flush();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            throw new RuntimeException("Error getting/writing file with name: "
-                                    + curFile.getName());
-                        } finally {
-                            if (null != channel)
-                                try {
-                                    channel.close();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-                        }
-                    }
-
-					@Override
-					public void endDirectory(File dir) {
-						mCurDir.pop();
-					}
-					
-                });
-                fs.flush();
-                fs.close();
-                Fat fat = fs.getFat();
+                    } while (true);
+                }
+                File fsFile = new File(sOutputFile);
+                if (isEncrypted) {
+                    System.out.println("Encrypting Filesystem");
+                    ObbFile.encrypt(fsFile, sFishKey);
+                }
                 ObbFile ob = new ObbFile();
                 ob.setPackageName(sPackageName);
                 ob.setPackageVersion(sPackageVersion);
@@ -526,73 +646,104 @@ public class Main {
                 if (null != sSalt) {
                     ob.setSalt(sSalt);
                 }
-                ob.writeTo(fsFile);                
-                if (sVerboseMode) {
-                    System.out.println("Success!");
-                    System.out.println("" + fs.getTotalSpace() + " bytes total");
-                    System.out.println("" + fs.getFreeSpace() + " bytes free");
-                }
+                ob.writeTo(fsFile);
+            } catch (InvalidKeyException e) {
+                e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
 
+    /**
+     * @param filesystemSize
+     */
+    private static long createFileSystem(File f, boolean isEncrypted, long filesystemSize)
+            throws InvalidKeyException, IOException {
+        File fsFile = new File(sOutputFile);
+        if (fsFile.exists()) {
+            fsFile.delete();
+        }
+
+        BlockDevice fd = FileDisk.create(fsFile, filesystemSize);
+
+        // fat type set based on device size by SuperFloppyFormatter
+        FatFileSystem fs = SuperFloppyFormatter.get(fd).format();
+        String rootPath = f.getAbsolutePath();
+
+        FATDirectoryFileProcessor fdfp = new FATDirectoryFileProcessor(fs, rootPath);
+        // add the files into the filesystem
+        processAllFiles(f, fdfp);
+        fs.flush();
+        fs.close();
+        if (sVerboseMode) {
+            System.out.println("Success!");
+            System.out.println("" + fs.getTotalSpace() + " bytes total");
+            System.out.println("" + fs.getFreeSpace() + " bytes free");
+        }
+        return filesystemSize - fs.getFreeSpace();
+    }
+
     public static long getTotalFileSize(File dir, final int clusterSize) {
         final long[] mSize = new long[3];
         final boolean calculateSlop = clusterSize > 0;
-        processAllFiles(dir, new FileProcessor() {
-            Stack<int[]> mDirLen = new Stack<int[]>();
-            
-            @Override
-            public void processFile(File f) {
-                if (sVerboseMode) {
-                    System.out.println("Adding size for file: " + f.getAbsolutePath());
-                }
-                long length = f.length();
-                if ( calculateSlop && length > 0 ) {
-                    int[] dirLen = mDirLen.peek();
-                	long realLength = ((clusterSize-1)+length) / clusterSize*clusterSize;
-                    long slop = realLength-length;
-                    length += slop;
-                	mSize[0] += length;
-                    mSize[1] += slop;
-                    dirLen[0] += f.getName().length()/13+3;
-                } else {
-                	mSize[0] += length;
-                }
-            }
+        try {
+            processAllFiles(dir, new FileProcessor() {
+                Stack<int[]> mDirLen = new Stack<int[]>();
 
-            @Override
-            public void processDirectory(File f) {
-            	if ( calculateSlop ) {
-            		int[] dirLen = new int[1];
-                    dirLen[0] += f.getName().length()/13+4;
-            		mDirLen.push(dirLen);
-            	}
-            }
+                    @Override
+                public void processFile(File f) throws IOException {
+                    if (sVerboseMode) {
+                        System.out.println("Adding size for file: " + f.getAbsolutePath());
+                    }
+                    long length = f.length();
+                    if (calculateSlop && length > 0) {
+                        int[] dirLen = mDirLen.peek();
+                        long realLength = ((clusterSize - 1) + length) / clusterSize * clusterSize;
+                        long slop = realLength - length;
+                        length += slop;
+                        mSize[0] += length;
+                        mSize[1] += slop;
+                        dirLen[0] += f.getName().length() / 13 + 3;
+                    } else {
+                        mSize[0] += length;
+                    }
+                }
 
-			@Override
-			public void endDirectory(File dir) {
-            	if ( calculateSlop ) {
-            		int[] dirLen = mDirLen.pop();
-            		long lastDirLen = dirLen[0] * 32;
-            		if ( lastDirLen != 0 ) {
-                    	long realLength = ((clusterSize-1)+lastDirLen) / clusterSize*clusterSize;
-                		long slop = realLength-lastDirLen;
-                		mSize[0] += lastDirLen + slop;
-                		mSize[1] += slop;
-                		mSize[2] += lastDirLen;
-            		}
-            	}				
-			}
-        });
-        System.out.println("Slop: " + mSize[1] + "   Directory Overhead: " + mSize[2] );
+                    @Override
+                public void processDirectory(File f) throws IOException {
+                    if (calculateSlop) {
+                        int[] dirLen = new int[1];
+                        dirLen[0] += f.getName().length() / 13 + 4;
+                        mDirLen.push(dirLen);
+                    }
+                }
+
+                    @Override
+                public void endDirectory(File dir) {
+                    if (calculateSlop) {
+                        int[] dirLen = mDirLen.pop();
+                        long lastDirLen = dirLen[0] * 32;
+                        if (lastDirLen != 0) {
+                            long realLength = ((clusterSize - 1) + lastDirLen) / clusterSize
+                                    * clusterSize;
+                            long slop = realLength - lastDirLen;
+                            mSize[0] += lastDirLen + slop;
+                            mSize[1] += slop;
+                            mSize[2] += lastDirLen;
+                        }
+                    }
+                }
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.out.println("Slop: " + mSize[1] + "   Directory Overhead: " + mSize[2]);
         return mSize[0];
     }
 
     // Process all files and directories under dir
-    public static void processAllFiles(File dir, FileProcessor fp) {
+    public static void processAllFiles(File dir, FileProcessor fp) throws IOException {
         if (dir.isDirectory()) {
             fp.processDirectory(dir);
             String[] children = dir.list();
