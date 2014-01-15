@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 The Android Open Source Project 
+ * Copyright (C) 2012-2014 The Android Open Source Project 
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ public class EncryptedBlockFile extends RandomAccessFile {
 
     private final class EncryptedBlockFileChannel extends FileChannel {
         final FileChannel mFC;
-        
+
         protected EncryptedBlockFileChannel(FileChannel wrappedFC) {
             super();
             mFC = wrappedFC;
@@ -63,7 +63,7 @@ public class EncryptedBlockFile extends RandomAccessFile {
 
         @Override
         public FileChannel position(long newPosition) throws IOException {
-            mFC.position(newPosition);            
+            mFC.position(newPosition);
             return this;
         }
 
@@ -71,7 +71,7 @@ public class EncryptedBlockFile extends RandomAccessFile {
         public int read(ByteBuffer dst) throws IOException {
             long position = position();
             int read = read(dst, position);
-            if ( read >= 0 ) {
+            if (read >= 0) {
                 position += read;
                 position(position);
             }
@@ -93,9 +93,9 @@ public class EncryptedBlockFile extends RandomAccessFile {
 
             int alignmentOff;
             int firstSector = (int) position / BYTES_PER_SECTOR;
-            if ( 0 != (alignmentOff = (int)(position % BYTES_PER_SECTOR ))) {
+            if (0 != (alignmentOff = (int) (position % BYTES_PER_SECTOR))) {
                 toRead += alignmentOff;
-                numSectors = toRead/BYTES_PER_SECTOR;
+                numSectors = toRead / BYTES_PER_SECTOR;
                 isMisaligned = true;
                 doubleBuffer = true;
                 System.out.println("Alignment off reading from sector: " + firstSector);
@@ -104,36 +104,36 @@ public class EncryptedBlockFile extends RandomAccessFile {
                 doubleBuffer = false;
                 alignmentOff = 0;
             }
-            
+
             int partialReadSize;
-            if ( 0 != (partialReadSize = (int)(toRead % BYTES_PER_SECTOR ))) {
+            if (0 != (partialReadSize = (int) (toRead % BYTES_PER_SECTOR))) {
                 isPartial = true;
                 doubleBuffer = true;
-                numSectors = toRead/BYTES_PER_SECTOR + 1;
+                numSectors = toRead / BYTES_PER_SECTOR + 1;
                 System.out.println("Partial read from sector: " + firstSector);
             } else {
                 isPartial = false;
             }
 
             ByteBuffer tempDest;
-            if ( doubleBuffer ) {
+            if (doubleBuffer) {
                 tempDest = ByteBuffer.allocate(BYTES_PER_SECTOR);
             } else {
                 tempDest = null;
             }
             int lastSector = firstSector + numSectors;
-            if ( isMisaligned ) {
+            if (isMisaligned) {
                 // first sector is misaligned. Read and decrypt into temp dest
                 readDecryptedSector(firstSector++, tempDest);
                 tempDest.position(alignmentOff);
                 // special case -- small sector;
-                if ( firstSector == lastSector && isPartial ) {
+                if (firstSector == lastSector && isPartial) {
                     tempDest.limit(partialReadSize);
                 }
                 dest.put(tempDest);
             }
-            for ( int i = firstSector; i < lastSector; i++ ) {
-                if ( firstSector+1 == lastSector && isPartial ) {
+            for (int i = firstSector; i < lastSector; i++) {
+                if (firstSector + 1 == lastSector && isPartial) {
                     readDecryptedSector(i, tempDest);
                     tempDest.rewind();
                     tempDest.limit(partialReadSize);
@@ -175,14 +175,14 @@ public class EncryptedBlockFile extends RandomAccessFile {
 
         @Override
         public FileLock tryLock(long position, long size, boolean shared) throws IOException {
-            return mFC.tryLock(position, size, shared);            
+            return mFC.tryLock(position, size, shared);
         }
 
         @Override
         public int write(ByteBuffer src) throws IOException {
             long position = position();
             int write = write(src, position);
-            if ( write >= 0 ) {
+            if (write >= 0) {
                 position += write;
                 position(position);
             }
@@ -198,37 +198,38 @@ public class EncryptedBlockFile extends RandomAccessFile {
 
             boolean fixAccess = false;
             long readOffset;
-            if ( 0 != position % BYTES_PER_SECTOR ) {
+            if (0 != position % BYTES_PER_SECTOR) {
                 long alignmentOff = (position % BYTES_PER_SECTOR);
-                readOffset = position - alignmentOff;            
+                readOffset = position - alignmentOff;
                 toWrite += alignmentOff;
-                numSectors = toWrite/BYTES_PER_SECTOR;
+                numSectors = toWrite / BYTES_PER_SECTOR;
                 fixAccess = true;
                 System.out.println("Alignment off writing to sector: " + firstSector);
             } else {
                 readOffset = position;
             }
-            
-            if ( 0 != toWrite % BYTES_PER_SECTOR ) {
-                numSectors = toWrite/BYTES_PER_SECTOR + 1;
+
+            if (0 != toWrite % BYTES_PER_SECTOR) {
+                numSectors = toWrite / BYTES_PER_SECTOR + 1;
                 fixAccess = true;
-                System.out.println("Partial Sector [" + toWrite % BYTES_PER_SECTOR + "] writing to sector: " + firstSector);
+                System.out.println("Partial Sector [" + toWrite % BYTES_PER_SECTOR
+                        + "] writing to sector: " + firstSector);
             }
 
-            if ( fixAccess ) {
+            if (fixAccess) {
                 ByteBuffer dest = ByteBuffer.allocate(numSectors * BYTES_PER_SECTOR);
                 read(dest, readOffset);
-                int bufOffset = (int)(position - readOffset);
+                int bufOffset = (int) (position - readOffset);
                 dest.position(bufOffset);
                 dest.put(src);
-                
+
                 src = dest;
                 src.rewind();
             }
-                    
+
             int lastSector = firstSector + numSectors;
-            
-            for ( int i = firstSector; i < lastSector; i++ ) {
+
+            for (int i = firstSector; i < lastSector; i++) {
                 writeEncryptedSector(i, src);
             }
             return targetWrite;
@@ -242,7 +243,7 @@ public class EncryptedBlockFile extends RandomAccessFile {
         @Override
         protected void implCloseChannel() throws IOException {
             // TODO Auto-generated method stub
-            
+
         }
 
         /**
@@ -250,23 +251,23 @@ public class EncryptedBlockFile extends RandomAccessFile {
          * sector number, padded with zeros if necessary.
          */
         private void cryptIVPlainGen(int sector, byte[] out) {
-          Arrays.fill(out, (byte)0);
-          out[0] = (byte)(sector & 0xff);
-          out[1] = (byte)(sector >> 8 & 0xff);
-          out[2] = (byte)(sector >> 16 & 0xff);
-          out[3] = (byte)(sector >>> 24);
+            Arrays.fill(out, (byte) 0);
+            out[0] = (byte) (sector & 0xff);
+            out[1] = (byte) (sector >> 8 & 0xff);
+            out[2] = (byte) (sector >> 16 & 0xff);
+            out[3] = (byte) (sector >>> 24);
         }
-        
+
         private void readDecryptedSector(int sector, ByteBuffer dest) throws IOException {
             ByteBuffer temp = ByteBuffer.allocate(BYTES_PER_SECTOR);
             int toRead = BYTES_PER_SECTOR;
-            int devOffset = BYTES_PER_SECTOR*sector;
-            
+            int devOffset = BYTES_PER_SECTOR * sector;
+
             // number of chained twofish blocks
             int blockSize = Twofish_Algorithm.blockSize();
             byte[] bufLast = new byte[blockSize];
             int numBlocks = toRead / blockSize;
-            
+
             // read unencrypted sector
             while (toRead > 0) {
                 final int read = mFC.read(temp, devOffset);
@@ -279,11 +280,12 @@ public class EncryptedBlockFile extends RandomAccessFile {
 
             // set initialization vector
             cryptIVPlainGen(sector, bufLast);
-            
+
             byte[] buf = new byte[blockSize];
             for (int i = 0; i < numBlocks; i++) {
                 temp.get(buf);
-                // decrypt with chained blocks --- xor with the previous encrypted block
+                // decrypt with chained blocks --- xor with the previous
+                // encrypted block
                 byte[] decryptBuf = Twofish_Algorithm.blockDecrypt(buf, 0, mKey);
                 for (int j = 0; j < blockSize; j++) {
                     decryptBuf[j] ^= bufLast[j];
@@ -292,12 +294,12 @@ public class EncryptedBlockFile extends RandomAccessFile {
                 dest.put(decryptBuf);
             }
         }
-        
+
         private void writeEncryptedSector(int sector, ByteBuffer src) throws IOException {
             byte[] sectorBuf = new byte[BYTES_PER_SECTOR];
             int toRead = BYTES_PER_SECTOR;
-            int devOffset = BYTES_PER_SECTOR*sector;
-            
+            int devOffset = BYTES_PER_SECTOR * sector;
+
             // number of chained twofish blocks
             int blockSize = Twofish_Algorithm.blockSize();
             byte[] bufLast = new byte[blockSize];
@@ -305,15 +307,16 @@ public class EncryptedBlockFile extends RandomAccessFile {
 
             // fetch unencrypted sector
             src.get(sectorBuf);
-            
+
             // set initialization vector
             cryptIVPlainGen(sector, bufLast);
-            
+
             int pos = 0;
             byte[] buf = new byte[blockSize];
             for (int i = 0; i < numBlocks; i++) {
                 System.arraycopy(sectorBuf, pos, buf, 0, blockSize);
-                // encrypt with chained blocks --- xor with the previous encrypted block
+                // encrypt with chained blocks --- xor with the previous
+                // encrypted block
                 for (int j = 0; j < blockSize; j++) {
                     buf[j] ^= bufLast[j];
                 }
@@ -331,32 +334,32 @@ public class EncryptedBlockFile extends RandomAccessFile {
                 pos += blockSize;
             }
         }
-                
-        
+
     }
-    
+
     public EncryptedBlockFileChannel getEncryptedFileChannel() {
         return mEBFC;
     }
-    
+
     /**
-     * This will clear the file as well as set the length.  It would be easy enough
-     * to preserve the blocks, but that is not the intention of this class.
+     * This will clear the file as well as set the length. It would be easy
+     * enough to preserve the blocks, but that is not the intention of this
+     * class.
      */
     @Override
     public void setLength(long newLength) throws IOException {
-        int numsectors = (int)newLength/BYTES_PER_SECTOR;
-        if ( newLength % BYTES_PER_SECTOR != 0 ) {
+        int numsectors = (int) newLength / BYTES_PER_SECTOR;
+        if (newLength % BYTES_PER_SECTOR != 0) {
             throw new IOException("Invalid file size!");
         }
         super.setLength(newLength);
         // write encrypted empty sectors into the block storage
         byte[] byteBuf = new byte[BYTES_PER_SECTOR];
         ByteBuffer buf = ByteBuffer.wrap(byteBuf);
-        for ( int i = 0; i < numsectors; i++ ) {
+        for (int i = 0; i < numsectors; i++) {
             buf.rewind();
             mEBFC.write(buf);
-        }        
+        }
     }
 
     /**
