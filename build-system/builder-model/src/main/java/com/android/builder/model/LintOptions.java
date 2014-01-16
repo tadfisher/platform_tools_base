@@ -70,6 +70,15 @@ import java.util.Set;
  *          htmlReport true
  *          // optional path to report (default will be lint-results.html in the builddir)
  *          htmlOutput file("lint-report.html")
+ *          // Set the severity of the given issues to fatal (which means they will be
+ *          // checked during release builds (even if the lint target is not included)
+ *          fatal 'NewApi', 'InlineApi'
+ *          // Set the severity of the given issues to error
+ *          error 'Wakelock', 'TextViewEdits'
+ *          // Set the severity of the given issues to warning
+ *          warning 'ResourceAsColor'
+ *          // Set the severity of the given issues to ignore (same as disabling the check)
+ *          ignore 'TypographyQuotes'
  *     }
  * }
  * </pre>

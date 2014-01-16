@@ -25,6 +25,8 @@ import com.android.tools.lint.LintCliFlags
 import com.android.tools.lint.Reporter
 import com.android.tools.lint.TextReporter
 import com.android.tools.lint.XmlReporter
+import com.android.tools.lint.detector.api.Severity
+import com.google.common.collect.Maps
 import com.google.common.collect.Sets
 import org.gradle.api.GradleException
 import org.gradle.api.Project
@@ -76,6 +78,8 @@ public class LintOptionsImpl implements LintOptions, Serializable {
     private boolean xmlReport = true
     @OutputFile
     private File xmlOutput
+
+    private Map<String,Severity> severities = Maps.newHashMap();
 
     public LintOptionsImpl() {
     }
@@ -403,6 +407,7 @@ public class LintOptionsImpl implements LintOptions, Serializable {
         flags.setWarningsAsErrors(warningsAsErrors)
         flags.setShowEverything(showAll)
         flags.setDefaultConfiguration(lintConfig)
+        flags.setSeverityOverrides(severities)
 
         if (report || flags.isFatalOnly()) {
             if (textReport || flags.isFatalOnly()) {
@@ -544,5 +549,45 @@ public class LintOptionsImpl implements LintOptions, Serializable {
     // For textOutput file()
     void textOutput(File textOutput) {
         this.textOutput = textOutput;
+    }
+
+    public void fatal(String id) {
+        severities.put(id, Severity.FATAL)
+    }
+
+    public void fatal(String... ids) {
+        for (String id : ids) {
+            fatal(id);
+        }
+    }
+
+    public void error(String id) {
+        severities.put(id, Severity.ERROR)
+    }
+
+    public void error(String... ids) {
+        for (String id : ids) {
+            error(id);
+        }
+    }
+
+    public void warning(String id) {
+        severities.put(id, Severity.WARNING)
+    }
+
+    public void warning(String... ids) {
+        for (String id : ids) {
+            warning(id);
+        }
+    }
+
+    public void ignore(String id) {
+        severities.put(id, Severity.IGNORE)
+    }
+
+    public void ignore(String... ids) {
+        for (String id : ids) {
+            ignore(id);
+        }
     }
 }
