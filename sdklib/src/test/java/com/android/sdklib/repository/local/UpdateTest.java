@@ -26,7 +26,6 @@ import com.android.sdklib.repository.NoPreviewRevision;
 import com.android.sdklib.repository.descriptors.IPkgDesc;
 import com.android.sdklib.repository.descriptors.PkgDesc;
 import com.android.sdklib.repository.descriptors.PkgType;
-import com.android.sdklib.repository.local.Update.Result;
 import com.android.sdklib.repository.remote.RemotePkgInfo;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.TreeMultimap;
@@ -106,7 +105,7 @@ public class UpdateTest extends TestCase {
         addRemoteSample  (api19, new MajorRevision(4), new FullRevision(23));
         addRemoteSysImg  (api19, new MajorRevision(4), "eabi");
 
-        Result result = Update.computeUpdates(
+        UpdateResult result = Update.computeUpdates(
                 mLS.getPkgsInfos(PkgType.PKG_ALL),
                 mRemotePkgs);
 
