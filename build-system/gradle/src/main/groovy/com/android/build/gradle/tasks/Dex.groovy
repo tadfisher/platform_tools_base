@@ -31,10 +31,10 @@ public class Dex extends IncrementalTask {
     // ----- PRIVATE TASK API -----
 
     @InputFiles
-    Iterable<File> inputFiles
+    Collection<File> inputFiles
 
     @InputFiles
-    Iterable<File> preDexedLibraries
+    Collection<File> preDexedLibraries
 
     @Nested
     DexOptionsImpl dexOptions

@@ -25,6 +25,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 
 import org.w3c.dom.Document;
@@ -391,13 +392,7 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
         } catch (SAXException e) {
             throw new MergingException(e).setFile(file);
         } finally {
-            try {
-                if (stream != null) {
-                    stream.close();
-                }
-            } catch (IOException e) {
-                // ignore
-            }
+            Closeables.closeQuietly(stream);
         }
     }
 

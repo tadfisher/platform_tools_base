@@ -1249,7 +1249,7 @@ public abstract class BasePlugin {
 
             // then dexing task
             dexTask.dependsOn variantData.proguardTask
-            dexTask.conventionMapping.inputFiles = { project.files(outFile) }
+            dexTask.conventionMapping.inputFiles = { project.files(outFile).files }
             dexTask.conventionMapping.preDexedLibraries = { Collections.emptyList() }
 
         } else {
@@ -1266,7 +1266,7 @@ public abstract class BasePlugin {
                 preDexTask.dexOptions = extension.dexOptions
 
                 preDexTask.conventionMapping.inputFiles = {
-                    project.files(getAndroidBuilder(variantData).getPackagedJars(variantConfig))
+                    project.files(getAndroidBuilder(variantData).getPackagedJars(variantConfig)).files
                 }
                 preDexTask.conventionMapping.outputFolder = {
                     project.file(
@@ -1280,14 +1280,14 @@ public abstract class BasePlugin {
                 dexTask.dependsOn preDexTask
             }
 
-            dexTask.conventionMapping.inputFiles = { variantData.javaCompileTask.outputs.files }
+            dexTask.conventionMapping.inputFiles = { variantData.javaCompileTask.outputs.files.files }
             if (runPreDex) {
                 dexTask.conventionMapping.preDexedLibraries = {
                     project.fileTree(preDexTask.outputFolder).files
                 }
             } else {
                 dexTask.conventionMapping.preDexedLibraries = {
-                    project.files(getAndroidBuilder(variantData).getPackagedJars(variantConfig))
+                    project.files(getAndroidBuilder(variantData).getPackagedJars(variantConfig)).files
                 }
             }
         }
