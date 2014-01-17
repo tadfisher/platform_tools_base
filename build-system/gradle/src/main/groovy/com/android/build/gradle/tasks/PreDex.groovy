@@ -31,6 +31,7 @@ import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs
+import org.gradle.api.tasks.incremental.InputFileDetails
 
 import java.util.concurrent.Callable
 
@@ -68,12 +69,12 @@ public class PreDex extends BaseTask {
         final WaitableExecutor<Void> executor = new WaitableExecutor<Void>()
 
         taskInputs.outOfDate { change ->
-
+            final InputFileDetails ifd = change
             executor.execute(new Callable<Void>() {
                 @Override
                 public Void call() throws Exception {
                     // TODO remove once we can properly add a library as a dependency of its test.
-                    String hash = getFileHash(change.file)
+                    String hash = getFileHash(ifd.file)
 
                     synchronized (hashs) {
                         if (hashs.contains(hash)) {
@@ -84,7 +85,7 @@ public class PreDex extends BaseTask {
                     }
 
                     //noinspection GroovyAssignabilityCheck
-                    File preDexedFile = getDexFileName(outFolder, change.file)
+                    File preDexedFile = getDexFileName(outFolder, ifd.file)
                     //noinspection GroovyAssignabilityCheck
                     builder.preDexLibrary(change.file, preDexedFile, options)
 

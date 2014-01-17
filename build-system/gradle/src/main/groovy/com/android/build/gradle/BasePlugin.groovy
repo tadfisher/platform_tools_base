@@ -1926,6 +1926,7 @@ public abstract class BasePlugin {
                 if (compileFiles.contains(f)) {
                     // if also in compile
                     JarDependency jarDep = jars.get(f);
+                    // or local-compile
                     if (jarDep == null) {
                         jarDep = localJars.get(f);
                     }

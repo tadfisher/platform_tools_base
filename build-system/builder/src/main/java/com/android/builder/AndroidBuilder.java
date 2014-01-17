@@ -30,6 +30,8 @@ import com.android.builder.internal.SymbolLoader;
 import com.android.builder.internal.SymbolWriter;
 import com.android.builder.internal.TestManifestGenerator;
 import com.android.builder.internal.compiler.AidlProcessor;
+import com.android.builder.internal.compiler.DexWrapper;
+import com.android.builder.internal.compiler.DexWrapperPool;
 import com.android.builder.internal.compiler.LeafFolderGatherer;
 import com.android.builder.internal.compiler.RenderScriptProcessor;
 import com.android.builder.internal.compiler.SourceSearcher;
@@ -106,6 +108,9 @@ public class AndroidBuilder {
             return true;
         }
     };
+
+
+    private static final DexWrapperPool sDexPool = new DexWrapperPool();
 
     private final SdkParser mSdkParser;
     private final ILogger mLogger;
@@ -999,8 +1004,8 @@ public class AndroidBuilder {
      * @throws LoggedErrorException
      */
     public void convertByteCode(
-            @NonNull Iterable<File> inputs,
-            @NonNull Iterable<File> preDexedLibraries,
+            @NonNull Collection<File> inputs,
+            @NonNull Collection<File> preDexedLibraries,
             @NonNull File outDexFolder,
             @NonNull DexOptions dexOptions,
             @Nullable List<String> additionalParameters,
@@ -1011,71 +1016,44 @@ public class AndroidBuilder {
         checkNotNull(dexOptions, "dexOptions cannot be null.");
         checkArgument(outDexFolder.isDirectory(), "outDexFolder must be a folder");
 
-        // launch dx: create the command line
-        ArrayList<String> command = Lists.newArrayList();
+        String dxJar = mBuildTools.getPath(BuildToolInfo.PathId.DX_JAR);
+        File dxFile = new File(dxJar);
+        DexWrapper wrapper = sDexPool.acquire(dxFile);
 
-        String dx = mBuildTools.getPath(BuildToolInfo.PathId.DX);
-        if (dx == null || !new File(dx).isFile()) {
-            throw new IllegalStateException("dx is missing");
+        // clean up input list
+        List<String> inputList = Lists.newArrayListWithCapacity(inputs.size() + preDexedLibraries.size());
+        for (File f : inputs) {
+            if (f != null && f.exists()) {
+                String path = f.getAbsolutePath();
+                inputList.add(path);
+                mLogger.verbose("Dex input: " + path);
+            }
         }
 
-        command.add(dx);
+        // clean up and add library inputs.
+        for (File f : preDexedLibraries) {
+            if (f != null && f.exists()) {
+                String path = f.getAbsolutePath();
+                inputList.add(path);
+                mLogger.verbose("Dex pre-dexed input: " + path);
+            }
+        }
+        int returnCode = wrapper.run(outDexFolder, inputList, dexOptions.getJumboMode(), mVerboseExec,
+                System.out, //TODO
+                System.err);
 
-        if (dexOptions.getJavaMaxHeapSize() != null) {
-            command.add("-JXmx" + dexOptions.getJavaMaxHeapSize());
+        if (returnCode != 0) {
+            throw new RuntimeException("dx failed to run, check output for details. Error code was " + returnCode);
         }
 
-        command.add("--dex");
-
-        if (mVerboseExec) {
-            command.add("--verbose");
-        }
-
-        if (dexOptions.getJumboMode()) {
-            command.add("--force-jumbo");
-        }
+        sDexPool.release(wrapper, dxFile);
+/*
+TODO support these dx options
 
         if (incremental) {
             command.add("--incremental");
             command.add("--no-strict");
-        }
-
-        if (additionalParameters != null) {
-            for (String arg : additionalParameters) {
-                command.add(arg);
-            }
-        }
-
-        command.add("--output");
-        command.add(outDexFolder.getAbsolutePath());
-
-        // clean up input list
-        List<String> inputList = Lists.newArrayList();
-        for (File f : inputs) {
-            if (f != null && f.exists()) {
-                inputList.add(f.getAbsolutePath());
-            }
-        }
-
-        if (!inputList.isEmpty()) {
-            mLogger.verbose("Dex inputs: " + inputList);
-            command.addAll(inputList);
-        }
-
-        // clean up and add library inputs.
-        List<String> libraryList = Lists.newArrayList();
-        for (File f : preDexedLibraries) {
-            if (f != null && f.exists()) {
-                libraryList.add(f.getAbsolutePath());
-            }
-        }
-
-        if (!libraryList.isEmpty()) {
-            mLogger.verbose("Dex pre-dexed inputs: " + libraryList);
-            command.addAll(libraryList);
-        }
-
-        mCmdLineRunner.runCmdLine(command, null);
+        }*/
     }
 
     /**
@@ -1097,36 +1075,22 @@ public class AndroidBuilder {
         checkNotNull(outFile, "outFile cannot be null.");
         checkNotNull(dexOptions, "dexOptions cannot be null.");
 
-        // launch dx: create the command line
-        ArrayList<String> command = Lists.newArrayList();
+        String dxJar = mBuildTools.getPath(BuildToolInfo.PathId.DX_JAR);
+        File dxFile = new File(dxJar);
+        DexWrapper wrapper = sDexPool.acquire(dxFile);
 
-        String dx = mBuildTools.getPath(BuildToolInfo.PathId.DX);
-        if (dx == null || !new File(dx).isFile()) {
-            throw new IllegalStateException("dx is missing");
+        int returnCode = wrapper.run(outFile,
+                Collections.singletonList(inputFile.getAbsolutePath()),
+                dexOptions.getJumboMode(),
+                mVerboseExec,
+                System.out, //TODO
+                System.err);
+
+        if (returnCode != 0) {
+            throw new RuntimeException("dx failed to run, check output for details. Error code was " + returnCode);
         }
 
-        command.add(dx);
-
-        if (dexOptions.getJavaMaxHeapSize() != null) {
-            command.add("-JXmx" + dexOptions.getJavaMaxHeapSize());
-        }
-
-        command.add("--dex");
-
-        if (mVerboseExec) {
-            command.add("--verbose");
-        }
-
-        if (dexOptions.getJumboMode()) {
-            command.add("--force-jumbo");
-        }
-
-        command.add("--output");
-        command.add(outFile.getAbsolutePath());
-
-        command.add(inputFile.getAbsolutePath());
-
-        mCmdLineRunner.runCmdLine(command, null);
+        sDexPool.release(wrapper, dxFile);
     }
 
     /**
