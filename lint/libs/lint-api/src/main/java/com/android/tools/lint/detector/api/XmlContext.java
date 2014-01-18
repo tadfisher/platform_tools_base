@@ -116,7 +116,7 @@ public class XmlContext extends Context {
             @Nullable Location location,
             @NonNull String message,
             @Nullable Object data) {
-        if (scope != null && mDriver.isSuppressed(issue, scope)) {
+        if (scope != null && mDriver.isSuppressed(this, issue, scope)) {
             return;
         }
         super.report(issue, location, message, data);
@@ -135,7 +135,7 @@ public class XmlContext extends Context {
         //        + " was reported without a scope node: Can't be suppressed.");
 
         // For now just check the document root itself
-        if (document != null && mDriver.isSuppressed(issue, document)) {
+        if (document != null && mDriver.isSuppressed(this, issue, document)) {
             return;
         }
 
@@ -150,5 +150,27 @@ public class XmlContext extends Context {
     @Nullable
     public ResourceFolderType getResourceFolderType() {
         return mFolderType;
+    }
+
+    @Override
+    @Nullable
+    protected String getSuppressCommentPrefix() {
+        return "<!--suppress AndroidLint"; //$NON-NLS-1$
+    }
+
+    public boolean isSuppressed(@NonNull Node node, @NonNull Issue issue) {
+        // Check whether there is a comment marker
+        String contents = getContents();
+        assert contents != null; // otherwise we wouldn't be here
+
+        if (parser != null) {
+            int start = parser.getNodeStartOffset(this, node);
+            if (start != -1) {
+                return isSuppressedWithComment(start, issue);
+            }
+
+        }
+
+        return false;
     }
 }
