@@ -16,6 +16,8 @@
 
 package com.android.builder;
 
+import static java.io.File.separatorChar;
+
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -57,11 +59,15 @@ public class PlatformSdkParser implements SdkParser {
             mBuildToolInfo = new BuildToolInfo(buildToolRevision, new File(mPlatformRootFolder),
                     new File(getHostToolsFolder(), SdkConstants.FN_AAPT),
                     new File(getHostToolsFolder(), SdkConstants.FN_AIDL),
-                    new File(mPlatformRootFolder, "prebuilts/sdk/tools/dx"),
-                    new File(mPlatformRootFolder, "prebuilts/sdk/tools/lib/dx.jar"),
+                    new File(mPlatformRootFolder, "prebuilts/sdk/tools/dx".replace('/',
+                            separatorChar)),
+                    new File(mPlatformRootFolder, "prebuilts/sdk/tools/lib/dx.jar".replace('/',
+                            separatorChar)),
                     new File(getHostToolsFolder(), SdkConstants.FN_RENDERSCRIPT),
-                    new File(mPlatformRootFolder, "prebuilts/sdk/renderscript/include"),
-                    new File(mPlatformRootFolder, "prebuilts/sdk/renderscript/clang-include"),
+                    new File(mPlatformRootFolder, "prebuilts/sdk/renderscript/include".replace('/',
+                            separatorChar)),
+                    new File(mPlatformRootFolder, "prebuilts/sdk/renderscript/clang-include"
+                            .replace('/',separatorChar)),
                     new File(getHostToolsFolder(), SdkConstants.FN_BCC_COMPAT),
                     new File(getHostToolsFolder(), "arm-linux-androideabi-ld"),
                     new File(getHostToolsFolder(), "i686-linux-android-ld"),
@@ -100,7 +106,8 @@ public class PlatformSdkParser implements SdkParser {
             throw new IllegalStateException("Windows is not supported for platform development");
         }
 
-        return mPlatformRootFolder + "/out/host/" + host + "/framework/annotations.jar";
+        return mPlatformRootFolder + ("/out/host/" + host + "/framework/annotations.jar").
+                replace('/',separatorChar);
     }
 
     @Override
@@ -125,9 +132,11 @@ public class PlatformSdkParser implements SdkParser {
         if (mAdb == null) {
 
             if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_DARWIN) {
-                mAdb = new File(mPlatformRootFolder, "out/host/darwin-x86/bin/adb");
+                mAdb = new File(mPlatformRootFolder, "out/host/darwin-x86/bin/adb".replace('/',
+                        separatorChar));
             } else if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_LINUX) {
-                mAdb = new File(mPlatformRootFolder, "out/host/linux-x86/bin/adb");
+                mAdb = new File(mPlatformRootFolder, "out/host/linux-x86/bin/adb".replace('/',
+                        separatorChar));
             } else {
                 throw new IllegalStateException(
                         "Windows is not supported for platform development");
@@ -141,14 +150,16 @@ public class PlatformSdkParser implements SdkParser {
     @Override
     public List<File> getRepositories() {
         List<File> repositories = Lists.newArrayList();
-        repositories.add(new File(mPlatformRootFolder + "/prebuilts/sdk/m2repository"));
+        repositories.add(new File(mPlatformRootFolder, "prebuilts/sdk/m2repository".replace('/',
+                separatorChar)));
 
         return repositories;
     }
 
     private File getHostToolsFolder() {
         if (mHostTools == null) {
-            File tools = new File(mPlatformRootFolder, "prebuilts/sdk/tools");
+            File tools = new File(mPlatformRootFolder, "prebuilts/sdk/tools".replace('/',
+                    separatorChar));
             if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_DARWIN) {
                 mHostTools = new File(tools, "darwin");
             } else if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_LINUX) {
