@@ -90,7 +90,7 @@ import java.util.Set;
  * {@link #processTestManifest(String, int, int, String, String, Boolean, Boolean, java.util.List, String)}
  * {@link #processResources(java.io.File, java.io.File, java.io.File, java.util.List, String, String, String, String, String, com.android.builder.VariantConfiguration.Type, boolean, com.android.builder.model.AaptOptions, java.util.Collection)}
  * {@link #compileAllAidlFiles(java.util.List, java.io.File, java.util.List, com.android.builder.compiling.DependencyFileProcessor)}
- * {@link #convertByteCode(Iterable, Iterable, File, DexOptions, boolean)}
+ * {@link #convertByteCode(Iterable, Iterable, java.io.File, DexOptions, java.util.List, boolean)}
  * {@link #packageApk(String, String, java.util.List, String, java.util.Collection, java.util.Set, boolean, com.android.builder.model.SigningConfig, com.android.builder.model.PackagingOptions, String)}
  *
  * Java compilation is not handled but the builder provides the bootclasspath with
@@ -991,6 +991,7 @@ public class AndroidBuilder {
      * @param preDexedLibraries the list of pre-dexed libraries
      * @param outDexFile the location of the output classes.dex file
      * @param dexOptions dex options
+     * @param additionalParameters
      * @param incremental true if it should attempt incremental dex if applicable
      *
      * @throws IOException
@@ -1002,6 +1003,7 @@ public class AndroidBuilder {
             @NonNull Iterable<File> preDexedLibraries,
             @NonNull File outDexFile,
             @NonNull DexOptions dexOptions,
+            @Nullable List<String> additionalParameters,
             boolean incremental) throws IOException, InterruptedException, LoggedErrorException {
         checkNotNull(inputs, "inputs cannot be null.");
         checkNotNull(preDexedLibraries, "preDexedLibraries cannot be null.");
@@ -1039,6 +1041,12 @@ public class AndroidBuilder {
         if (incremental) {
             command.add("--incremental");
             command.add("--no-strict");
+        }
+
+        if (additionalParameters != null) {
+            for (String arg : additionalParameters) {
+                command.add(arg);
+            }
         }
 
         command.add("--output");
