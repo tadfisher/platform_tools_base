@@ -282,6 +282,11 @@ public abstract class BasePlugin {
         }
         hasCreatedTasks = true
 
+        // check on the build tools version.
+        if (extension.buildToolsRevision.major < 19) {
+            throw new RuntimeException("Build Tools Revision 19.0.0+ is required.")
+        }
+
         doCreateAndroidTasks()
         createReportTasks()
 
@@ -1235,9 +1240,8 @@ public abstract class BasePlugin {
         dexTask.plugin = this
         dexTask.variant = variantData
 
-        dexTask.conventionMapping.outputFile = {
-            project.file(
-                    "${project.buildDir}/libs/${project.archivesBaseName}-${variantData.variantConfiguration.baseName}.dex")
+        dexTask.conventionMapping.outputFolder = {
+            project.file("${project.buildDir}/dex/${variantConfig.dirName}")
         }
         dexTask.dexOptions = extension.dexOptions
 
@@ -1305,7 +1309,7 @@ public abstract class BasePlugin {
         packageApp.conventionMapping.resourceFile = {
             variantData.processResourcesTask.packageOutputFile
         }
-        packageApp.conventionMapping.dexFile = { dexTask.outputFile }
+        packageApp.conventionMapping.dexFolder = { dexTask.outputFolder }
         packageApp.conventionMapping.packagedJars = { getAndroidBuilder(variantData).getPackagedJars(variantConfig) }
         packageApp.conventionMapping.javaResourceDir = {
             getOptionalDir(variantData.processJavaResourcesTask.destinationDir)

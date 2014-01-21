@@ -17,16 +17,18 @@ package com.android.build.gradle.tasks
 import com.android.build.gradle.internal.dsl.DexOptionsImpl
 import com.android.build.gradle.internal.tasks.IncrementalTask
 import com.android.ide.common.res2.FileStatus
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
-import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.OutputDirectory
 
 public class Dex extends IncrementalTask {
 
     // ----- PUBLIC TASK API -----
 
-    @OutputFile
-    File outputFile
+    @OutputDirectory
+    File outputFolder
 
     // ----- PRIVATE TASK API -----
 
@@ -39,13 +41,21 @@ public class Dex extends IncrementalTask {
     @Nested
     DexOptionsImpl dexOptions
 
+    @Input @Optional
+    List<String> additionalParameters
+
     @Override
     protected void doFullTaskAction() {
+        File outFolder = getOutputFolder()
+
+        emptyFolder(getOutputFolder())
+
         getBuilder().convertByteCode(
                 getInputFiles(),
                 getPreDexedLibraries(),
-                getOutputFile(),
+                outFolder,
                 getDexOptions(),
+                getAdditionalParameters(),
                 false)
     }
 
@@ -54,8 +64,9 @@ public class Dex extends IncrementalTask {
         getBuilder().convertByteCode(
                 getInputFiles(),
                 getPreDexedLibraries(),
-                getOutputFile(),
+                getOutputFolder(),
                 getDexOptions(),
+                getAdditionalParameters(),
                 true)
     }
 
