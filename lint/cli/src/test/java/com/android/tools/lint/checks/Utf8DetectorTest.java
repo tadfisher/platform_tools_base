@@ -53,4 +53,13 @@ public class Utf8DetectorTest extends AbstractCheckTest {
             lintProject("res/layout/layout1.xml"));
     }
 
+    public void testBomInMiddle() throws Exception {
+        // See issue b.android.com/65103
+        assertEquals(""
+                + "res/values-zh-rCN/bom.xml:3: Warning: Found byte-order-mark in the middle of a file [ByteOrderMark]\n"
+                + " <string name=\"hanping_chinese\uFEFF_lite\uFEFF_app_name\">(Translated name)</string>\n"
+                + "                              ~\n"
+                + "0 errors, 1 warnings\n",
+                lintProject("res/values-zh-rCN/bom.xml"));
+    }
 }

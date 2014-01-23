@@ -20,8 +20,8 @@ import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
@@ -33,9 +33,15 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Checks that the encoding used in resource files is always UTF-8.
+ * Checks that the encoding used in resource files is always UTF-8, and that byte order marks
+ * do not appear in the middle of files.
  */
-public class Utf8Detector extends LayoutDetector {
+public class Utf8Detector extends ResourceXmlDetector {
+
+    private static final Implementation IMPLEMENTATION = new Implementation(
+            Utf8Detector.class,
+            Scope.RESOURCE_FILE_SCOPE);
+
     /** Detects non-utf8 encodings */
     public static final Issue ISSUE = Issue.create(
             "EnforceUTF8", //$NON-NLS-1$
@@ -46,11 +52,23 @@ public class Utf8Detector extends LayoutDetector {
             "apps use UTF-8, so by using UTF-8 you can protect yourself against subtle " +
             "bugs when using non-ASCII characters.",
             Category.I18N,
-            2,
+            5,
             Severity.WARNING,
-            new Implementation(
-                    Utf8Detector.class,
-                    Scope.RESOURCE_FILE_SCOPE));
+            IMPLEMENTATION);
+
+    /** Detects BOM characters in the middle of files */
+    public static final Issue BOM = Issue.create(
+            "ByteOrderMark", //$NON-NLS-1$
+            "Byte order mark inside files",
+            "Looks for byte order mark characters in the middle of files",
+            "Lint will flag any byte-order-mark (BOM) characters it finds in the middle " +
+            "of a file. Since we expect files to be encoded with UTF-8 (see the EnforceUTF8 " +
+            "issue), the BOM characters are not necessary, and they are not handled correctly " +
+            "by all tools so are best left out.",
+            Category.I18N,
+            8,
+            Severity.WARNING,
+            IMPLEMENTATION).addMoreInfo("http://en.wikipedia.org/wiki/Byte_order_mark");
 
     /** See http://www.w3.org/TR/REC-xml/#NT-EncodingDecl */
     private static final Pattern ENCODING_PATTERN =
@@ -63,7 +81,7 @@ public class Utf8Detector extends LayoutDetector {
     @NonNull
     @Override
     public Speed getSpeed() {
-        return Speed.FAST;
+        return Speed.NORMAL;
     }
 
     @Override
@@ -89,12 +107,26 @@ public class Utf8Detector extends LayoutDetector {
                     && (xml.charAt(i + 2) == 'f' || xml.charAt(i + 2) == 'F')
                     && (xml.charAt(i + 3) == '-' || xml.charAt(i + 3) == '_')
                     && (xml.charAt(i + 4) == '8')) {
+
+                // Look for BOMs
+                if (context.isEnabled(BOM)) {
+                    for (int j = 1, n = xml.length(); j < n; j++) {
+                        char c = xml.charAt(j);
+                        if (c == '\uFEFF') {
+                            Location location = Location.create(context.file, xml, j, j + 1);
+                            String message = "Found byte-order-mark in the middle of a file";
+                            context.report(BOM, null, location, message, null);
+                            break;
+                        }
+                    }
+                }
+
                 return;
             }
         }
 
         int encodingIndex = xml.lastIndexOf("encoding", lineEnd); //$NON-NLS-1$
-        if (encodingIndex != -1) {
+        if (encodingIndex != -1 && context.isEnabled(ISSUE)) {
             Matcher matcher = ENCODING_PATTERN.matcher(xml);
             if (matcher.find(encodingIndex)) {
                 String encoding = matcher.group(1);
