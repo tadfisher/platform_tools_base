@@ -1,5 +1,7 @@
 apply plugin: 'java'
-apply plugin: 'distrib'
+apply plugin: 'sdk-java-lib'
+apply plugin: 'sdk-java-lib'
+
 
 dependencies {
     compile 'com.google.guava:guava:15.0'

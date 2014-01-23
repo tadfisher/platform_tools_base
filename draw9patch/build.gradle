@@ -1,5 +1,7 @@
 apply plugin: 'java'
-apply plugin: 'distrib'
+apply plugin: 'sdk-java-lib'
+apply plugin: 'sdk-java-lib'
+
 
 group = 'com.android.tools'
 archivesBaseName = 'draw9patch'
@@ -17,6 +19,6 @@ shipping {
     launcherScripts = ['etc/draw9patch', 'etc/draw9patch.bat']
 }
 
-buildDistributionJar.manifest.attributes("Main-Class": "com.android.draw9patch.Application")
+buildSdkJar.manifest.attributes("Main-Class": "com.android.draw9patch.Application")
 
 apply from: "$rootDir/buildSrc/base/baseVersion.gradle"

@@ -14,5 +14,7 @@ apply from: "$rootDir/buildSrc/base/buildVersion.gradle"
 apply from: "$rootDir/buildSrc/base/publish.gradle"
 apply from: "$rootDir/buildSrc/base/javadoc.gradle"
 
-apply plugin: 'distrib'
+apply plugin: 'sdk-java-lib'
+apply plugin: 'sdk-java-lib'
+
 shipping.isShipping = false

@@ -33,5 +33,7 @@ apply from: "$rootDir/buildSrc/base/javadoc.gradle"
 jar.manifest.attributes("Builder-Version": version)
 publishLocal.dependsOn ':builder-model:publishLocal', ':builder-test-api:publishLocal'
 
-apply plugin: 'distrib'
+apply plugin: 'sdk-java-lib'
+apply plugin: 'sdk-java-lib'
+
 shipping.isShipping = false

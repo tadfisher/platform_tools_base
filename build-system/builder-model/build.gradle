@@ -1,6 +1,8 @@
 apply plugin: 'java'
 apply plugin: 'clone-artifacts'
-apply plugin: 'distrib'
+apply plugin: 'sdk-java-lib'
+apply plugin: 'sdk-java-lib'
+
 
 dependencies {
     compile project(':common')

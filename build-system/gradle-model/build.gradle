@@ -38,5 +38,7 @@ idea {
     }
 }
 
-apply plugin: 'distrib'
+apply plugin: 'sdk-java-lib'
+apply plugin: 'sdk-java-lib'
+
 shipping.isShipping = false
