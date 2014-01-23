@@ -606,7 +606,9 @@ public class AndroidManifestParser {
 
             ManifestHandler manifestHandler = new ManifestHandler(manifestFile,
                     data, errorHandler);
-            parser.parse(new InputSource(manifestFile.getContents()), manifestHandler);
+            InputStream is = manifestFile.getContents();
+            parser.parse(new InputSource(is), manifestHandler);
+            is.close();
 
             return data;
         }
