@@ -23,9 +23,11 @@ import com.android.build.gradle.tasks.PackageApplication;
 import com.android.build.gradle.tasks.ZipAlign;
 import com.android.builder.DefaultProductFlavor;
 import com.android.builder.model.SigningConfig;
+
 import org.gradle.api.DefaultTask;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -74,6 +76,9 @@ public interface ApkVariant extends BaseVariant {
 
     @NonNull
     ZipAlign createZipAlignTask(@NonNull String taskName, @NonNull File inputFile, @NonNull File outputFile);
+
+    Collection<File> getCompileLibraries();
+    Collection<File> getApkLibraries();
 
     /**
      * Returns the installation task.

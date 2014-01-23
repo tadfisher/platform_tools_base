@@ -29,6 +29,7 @@ import com.android.builder.model.SigningConfig;
 import org.gradle.api.DefaultTask;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.List;
 
 public abstract class ApkVariantImpl extends BaseVariantImpl implements ApkVariant {
@@ -121,5 +122,16 @@ public abstract class ApkVariantImpl extends BaseVariantImpl implements ApkVaria
         variantData.assembleTask.dependsOn(task);
 
         return task;
+    }
+
+    @Override
+    public Collection<File> getCompileLibraries() {
+        return plugin.getAndroidBuilder(getVariantData()).getCompileClasspath(
+                getVariantData().getVariantConfiguration());
+    }
+
+    @Override
+    public Collection<File> getApkLibraries() {
+        return plugin.getAndroidBuilder(getVariantData()).getPackagedJars(getVariantData().getVariantConfiguration());
     }
 }
