@@ -455,8 +455,10 @@ public class ProjectProperties implements IPropertySource {
     public static Map<String, String> parsePropertyFile(
             @NonNull IAbstractFile propFile,
             @Nullable ILogger log) {
+        InputStream is = null;
         try {
-            return parsePropertyStream(propFile.getContents(),
+            is = propFile.getContents();
+            return parsePropertyStream(is,
                                        propFile.getOsLocation(),
                                        log);
         } catch (StreamException e) {
@@ -465,7 +467,12 @@ public class ProjectProperties implements IPropertySource {
                         propFile.getOsLocation(),
                         e.getMessage());
             }
+        } finally {
+            if (is != null) {
+                Closeables.closeQuietly(is);
+            }
         }
+
 
         return null;
     }
