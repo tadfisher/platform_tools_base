@@ -126,7 +126,6 @@ class ProductFlavorImpl implements ProductFlavor, Serializable {
         return mRenderscriptSupportMode;
     }
 
-    @Override
     public boolean getRenderscriptNdkMode() {
         return mRenderscriptNdkMode;
     }
@@ -158,6 +157,12 @@ class ProductFlavorImpl implements ProductFlavor, Serializable {
     @NonNull
     @Override
     public Map<String, ClassField> getBuildConfigFields() {
+        return Collections.emptyMap();
+    }
+
+    @NonNull
+    @Override
+    public Map<String, ClassField> getResValues() {
         return Collections.emptyMap();
     }
 
