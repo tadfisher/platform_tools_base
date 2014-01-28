@@ -26,7 +26,7 @@ public class ExtraPackageTest_Base extends PackageTest {
 
     @Override
     public void testCreate() {
-        Properties props = createProps();
+        Properties props = createExpectedProps();
 
         MockExtraPackage p = new MockExtraPackage(
                 null, //source
@@ -47,7 +47,7 @@ public class ExtraPackageTest_Base extends PackageTest {
 
     @Override
     public void testSaveProperties() {
-        Properties props = createProps();
+        Properties props = createExpectedProps();
 
         MockExtraPackage p = new MockExtraPackage(
                 null, //source
@@ -70,8 +70,8 @@ public class ExtraPackageTest_Base extends PackageTest {
     }
 
     @Override
-    protected Properties createProps() {
-        Properties props = super.createProps();
+    protected Properties createExpectedProps() {
+        Properties props = super.createExpectedProps();
 
         props.setProperty(PkgProps.EXTRA_VENDOR_ID,      "vendor");
         props.setProperty(PkgProps.EXTRA_VENDOR_DISPLAY, "vendor");

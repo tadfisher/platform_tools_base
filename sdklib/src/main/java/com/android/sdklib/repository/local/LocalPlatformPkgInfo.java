@@ -309,6 +309,11 @@ public class LocalPlatformPkgInfo extends LocalPkgInfo {
         Set<ISystemImage> found = new TreeSet<ISystemImage>();
         Set<String> abiFound = new HashSet<String>();
 
+
+        // ************************************************************************
+        // TODO RM look in sys-img/platform/tag/abi **********************************
+        // ************************************************************************
+
         // First look in the SDK/system-image/platform-n/abi folders.
         // If we find multiple occurrences of the same platform/abi, the first one read wins.
 
@@ -320,6 +325,7 @@ public class LocalPlatformPkgInfo extends LocalPkgInfo {
                     found.add(new SystemImage(
                             pkg.getLocalDir(),
                             LocationType.IN_SYSTEM_IMAGE,
+                            SystemImage.DEFAULT_TAG,
                             abi));
                     abiFound.add(abi);
                 }
@@ -341,6 +347,7 @@ public class LocalPlatformPkgInfo extends LocalPkgInfo {
                     found.add(new SystemImage(
                             file,
                             LocationType.IN_PLATFORM_SUBFOLDER,
+                            SystemImage.DEFAULT_TAG,
                             abi));
                     abiFound.add(abi);
                 }
@@ -360,6 +367,7 @@ public class LocalPlatformPkgInfo extends LocalPkgInfo {
             found.add(new SystemImage(
                     imgDir,
                     LocationType.IN_PLATFORM_LEGACY,
+                    SystemImage.DEFAULT_TAG,
                     SdkConstants.ABI_ARMEABI));
         }
 

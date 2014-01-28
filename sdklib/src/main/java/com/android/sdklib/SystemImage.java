@@ -17,8 +17,10 @@
 package com.android.sdklib;
 
 import com.android.SdkConstants;
+import com.android.annotations.NonNull;
 import com.android.sdklib.internal.androidTarget.PlatformTarget;
 import com.android.sdklib.io.FileOp;
+import com.android.sdklib.repository.descriptors.IdDisplay;
 
 import java.io.File;
 import java.util.Locale;
@@ -26,13 +28,17 @@ import java.util.Locale;
 
 /**
  * Describes a system image as used by an {@link IAndroidTarget}.
- * A system image has an installation path, a location type and an ABI type.
+ * A system image has an installation path, a location type, a tag and an ABI type.
  */
 public class SystemImage implements ISystemImage {
 
-    public static final String ANDROID_PREFIX = "android-";     //$NON-NLS-1$
+    public static final String ANDROID_PREFIX = "android-";                 //$NON-NLS-1$
+
+    public static final IdDisplay DEFAULT_TAG = new IdDisplay("default",    //$NON-NLS-1$
+                                                              "Default");   //$NON-NLS-1$
 
     private final LocationType mLocationtype;
+    private final IdDisplay mTag;
     private final String mAbiType;
     private final File mLocation;
 
@@ -41,13 +47,19 @@ public class SystemImage implements ISystemImage {
      *
      * @param location The location of an installed system image.
      * @param locationType Where the system image folder is located for this ABI.
+     * @param tag The tag of the system-image. Use {@link #DEFAULT_TAG} for backward compatibility.
      * @param abiType The ABI type. For example, one of {@link SdkConstants#ABI_ARMEABI},
      *          {@link SdkConstants#ABI_ARMEABI_V7A}, {@link SdkConstants#ABI_INTEL_ATOM} or
      *          {@link SdkConstants#ABI_MIPS}.
      */
-    public SystemImage(File location, LocationType locationType, String abiType) {
+    public SystemImage(
+            @NonNull File location,
+            @NonNull LocationType locationType,
+            @NonNull IdDisplay tag,
+            @NonNull String abiType) {
         mLocation = location;
         mLocationtype = locationType;
+        mTag = tag;
         mAbiType = abiType;
     }
 
@@ -57,6 +69,7 @@ public class SystemImage implements ISystemImage {
      *
      * @param sdkManager The current SDK manager.
      * @param locationType Where the system image folder is located for this ABI.
+     * @param tag The tag of the system-image. Use {@link #DEFAULT_TAG} for backward compatibility.
      * @param abiType The ABI type. For example, one of {@link SdkConstants#ABI_ARMEABI},
      *          {@link SdkConstants#ABI_ARMEABI_V7A}, {@link SdkConstants#ABI_INTEL_ATOM} or
      *          {@link SdkConstants#ABI_MIPS}.
@@ -64,11 +77,13 @@ public class SystemImage implements ISystemImage {
      *         {@link ISystemImage.LocationType#IN_SYSTEM_IMAGE} is not a {@link PlatformTarget}.
      */
     public SystemImage(
-            SdkManager sdkManager,
-            IAndroidTarget target,
-            LocationType locationType,
-            String abiType) {
+            @NonNull SdkManager sdkManager,
+            @NonNull IAndroidTarget target,
+            @NonNull LocationType locationType,
+            @NonNull IdDisplay tag,
+            @NonNull String abiType) {
         mLocationtype = locationType;
+        mTag = tag;
         mAbiType = abiType;
 
         File location = null;
@@ -110,6 +125,7 @@ public class SystemImage implements ISystemImage {
      * @return A file that represents the location of the canonical system-image folder
      *         for this configuration.
      */
+    @NonNull
     public static File getCanonicalFolder(
             String sdkOsPath,
             AndroidVersion platformVersion,
@@ -127,14 +143,23 @@ public class SystemImage implements ISystemImage {
 
     /** Returns the actual location of an installed system image. */
     @Override
+    @NonNull
     public File getLocation() {
         return mLocation;
     }
 
     /** Indicates the location strategy for this system image in the SDK. */
     @Override
+    @NonNull
     public LocationType getLocationType() {
         return mLocationtype;
+    }
+
+    /** Returns the tag of the system image. */
+    @Override
+    @NonNull
+    public IdDisplay getTag() {
+        return mTag;
     }
 
     /**
@@ -144,6 +169,7 @@ public class SystemImage implements ISystemImage {
      * Cannot be null nor empty.
      */
     @Override
+    @NonNull
     public String getAbiType() {
         return mAbiType;
     }
@@ -161,6 +187,7 @@ public class SystemImage implements ISystemImage {
      * {@inheritDoc}
      */
     @Override
+    @NonNull
     public String toString() {
         return String.format("SystemImage ABI=%s, location %s='%s'",           //$NON-NLS-1$
                 mAbiType,
