@@ -468,6 +468,7 @@ public class LocalSdk {
      * Retrieve all the info about the requested package type.
      * This is used for the package types that have one or more instances, each with different
      * versions.
+     * The resulting array is sorted according to the PkgInfo's sort order.
      * <p/>
      * Note: you can use this with {@link PkgType#PKG_TOOLS}, {@link PkgType#PKG_PLATFORM_TOOLS} and
      * {@link PkgType#PKG_DOCS} but since there can only be one package of these types, it is
@@ -485,6 +486,7 @@ public class LocalSdk {
      * Retrieve all the info about the requested package types.
      * This is used for the package types that have one or more instances, each with different
      * versions.
+     * The resulting array is sorted according to the PkgInfo's sort order.
      * <p/>
      * To force the LocalSdk parser to load <b>everything</b>, simply call this method
      * with the {@link PkgType#PKG_ALL} argument to load all the known package types.
@@ -562,6 +564,7 @@ public class LocalSdk {
             }
         }
 
+        Collections.sort(list);
         return list.toArray(new LocalPkgInfo[list.size()]);
     }
 

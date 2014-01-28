@@ -115,10 +115,14 @@ public class SdkManagerTest extends SdkManagerTestCase {
         // This disables the "legacy" mode, which means that although the armeabi
         // target from above is present, it is no longer visible.
 
-        makeSystemImageFolder(new SystemImage(
-                sdkman, t, LocationType.IN_PLATFORM_SUBFOLDER, SdkConstants.ABI_ARMEABI_V7A));
-        makeSystemImageFolder(new SystemImage(
-                sdkman, t, LocationType.IN_PLATFORM_SUBFOLDER, SdkConstants.ABI_INTEL_ATOM));
+        makeSystemImageFolder(new SystemImage(sdkman, t,
+                LocationType.IN_PLATFORM_SUBFOLDER,
+                SystemImage.DEFAULT_TAG,
+                SdkConstants.ABI_ARMEABI_V7A));
+        makeSystemImageFolder(new SystemImage(sdkman, t,
+                LocationType.IN_PLATFORM_SUBFOLDER,
+                SystemImage.DEFAULT_TAG,
+                SdkConstants.ABI_INTEL_ATOM));
 
         sdkman.reloadSdk(getLog());
         assertEquals("[PlatformTarget API 0 rev 1]", Arrays.toString(sdkman.getTargets()));
@@ -134,10 +138,14 @@ public class SdkManagerTest extends SdkManagerTestCase {
         // The armeabi one from the legacy folder is overridden by the new one.
         // The armeabi-v7a one from the platform subfolder is overridden by the new one.
 
-        makeSystemImageFolder(new SystemImage(
-                sdkman, t, LocationType.IN_SYSTEM_IMAGE, SdkConstants.ABI_ARMEABI));
-        makeSystemImageFolder(new SystemImage(
-                sdkman, t, LocationType.IN_SYSTEM_IMAGE, SdkConstants.ABI_ARMEABI_V7A));
+        makeSystemImageFolder(new SystemImage(sdkman, t,
+                LocationType.IN_SYSTEM_IMAGE,
+                SystemImage.DEFAULT_TAG,
+                SdkConstants.ABI_ARMEABI));
+        makeSystemImageFolder(new SystemImage(sdkman, t,
+                LocationType.IN_SYSTEM_IMAGE,
+                SystemImage.DEFAULT_TAG,
+                SdkConstants.ABI_ARMEABI_V7A));
 
         sdkman.reloadSdk(getLog());
         assertEquals("[PlatformTarget API 0 rev 1]", Arrays.toString(sdkman.getTargets()));
@@ -166,8 +174,10 @@ public class SdkManagerTest extends SdkManagerTestCase {
         // (to contrast: having at least one sub-folder in the platform's legacy images folder
         //  will hide the legacy system image. Whereas this does not happen with the new type.)
 
-        makeSystemImageFolder(new SystemImage(
-                sdkman, t, LocationType.IN_SYSTEM_IMAGE, SdkConstants.ABI_INTEL_ATOM));
+        makeSystemImageFolder(new SystemImage(sdkman, t,
+                LocationType.IN_SYSTEM_IMAGE,
+                SystemImage.DEFAULT_TAG,
+                SdkConstants.ABI_INTEL_ATOM));
 
         sdkman.reloadSdk(getLog());
         assertEquals("[PlatformTarget API 0 rev 1]", Arrays.toString(sdkman.getTargets()));
@@ -181,8 +191,10 @@ public class SdkManagerTest extends SdkManagerTestCase {
         // Now if we have one new system-image using the same ABI type, it will override the
         // legacy one. This gives us a good path for updates.
 
-        makeSystemImageFolder(new SystemImage(
-                sdkman, t, LocationType.IN_SYSTEM_IMAGE, SdkConstants.ABI_ARMEABI));
+        makeSystemImageFolder(new SystemImage(sdkman, t,
+                LocationType.IN_SYSTEM_IMAGE,
+                SystemImage.DEFAULT_TAG,
+                SdkConstants.ABI_ARMEABI));
 
 
         sdkman.reloadSdk(getLog());
