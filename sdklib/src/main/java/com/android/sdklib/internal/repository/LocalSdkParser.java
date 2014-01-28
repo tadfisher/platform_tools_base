@@ -42,6 +42,7 @@ import com.android.sdklib.repository.descriptors.PkgType;
 import com.android.sdklib.repository.local.LocalAddonPkgInfo;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
+import com.google.common.collect.Lists;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -49,6 +50,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -557,26 +559,41 @@ public class LocalSdkParser {
                 visited.add(platformDir);
 
                 // In the platform directory, we expect a list of abi folders
+                // or a list of tag/abi folders. Basically parse any folder that has
+                // a source.prop file within 2 levels.
+                List<File> propFiles = Lists.newArrayList();
+
                 File[] platformFiles = platformDir.listFiles();
                 if (platformFiles != null) {
-                    for (File abiDir : platformFiles) {
-                        if (abiDir.isDirectory() && !visited.contains(abiDir)) {
-                            visited.add(abiDir);
-
-                            // Ignore empty directories
-                            File[] abiFiles = abiDir.listFiles();
-                            if (abiFiles != null && abiFiles.length > 0) {
-                                Properties props =
-                                    parseProperties(new File(abiDir, SdkConstants.FN_SOURCE_PROP));
-
-                                try {
-                                    Package pkg = SystemImagePackage.createBroken(abiDir, props);
-                                    packages.add(pkg);
-                                } catch (Exception e) {
-                                    log.error(e, null);
+                    for (File dir1 : platformFiles) {
+                        if (dir1.isDirectory() && !visited.contains(dir1)) {
+                            visited.add(dir1);
+                            File prop1 = new File(dir1, SdkConstants.FN_SOURCE_PROP);
+                            if (prop1.isFile()) {
+                                propFiles.add(prop1);
+                            } else {
+                                File[] dir1Files = dir1.listFiles();
+                                if (dir1Files != null) {
+                                    for (File dir2 : dir1Files) {
+                                        File prop2 = new File(dir2, SdkConstants.FN_SOURCE_PROP);
+                                        if (prop2.isFile()) {
+                                            propFiles.add(prop2);
+                                        }
+                                    }
                                 }
                             }
                         }
+                    }
+                }
+
+                for (File propFile : propFiles) {
+                    Properties props = parseProperties(propFile);
+                    try {
+                        Package pkg = SystemImagePackage.createBroken(propFile.getParentFile(),
+                                                                      props);
+                        packages.add(pkg);
+                    } catch (Exception e) {
+                        log.error(e, null);
                     }
                 }
             }
