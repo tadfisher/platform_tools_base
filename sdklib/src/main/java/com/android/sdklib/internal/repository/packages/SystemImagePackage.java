@@ -31,6 +31,7 @@ import com.android.sdklib.internal.repository.sources.SdkSource;
 import com.android.sdklib.repository.MajorRevision;
 import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.SdkRepoConstants;
+import com.android.sdklib.repository.SdkSysImgConstants;
 import com.android.sdklib.repository.descriptors.IPkgDesc;
 import com.android.sdklib.repository.descriptors.PkgDesc;
 
@@ -54,6 +55,11 @@ public class SystemImagePackage extends MajorRevisionPackage
     private final String mAbi;
 
     private final IPkgDesc mPkgDesc;
+
+    @NonNull
+    private final String mTagId;
+    @NonNull
+    private final String mTagDisplay;
 
     /**
      * Creates a new system-image package from the attributes and elements of the given XML node.
@@ -83,6 +89,20 @@ public class SystemImagePackage extends MajorRevisionPackage
         mAbi = PackageParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_ABI);
 
         mPkgDesc = PkgDesc.newSysImg(mVersion, mAbi, (MajorRevision) getRevision());
+
+        // tag id
+        String tagId = PackageParserUtils.getXmlString(packageNode,
+                                                       SdkSysImgConstants.ATTR_TAG_ID,
+                                                       SdkSysImgConstants.DEFAULT_TAG_ID);
+        String tagDisp = PackageParserUtils.getOptionalXmlString(packageNode,
+                                                       SdkSysImgConstants.ATTR_TAG_DISPLAY);
+        if (tagDisp == null || tagDisp.isEmpty()) {
+            tagDisp = tagIdToDisplay(tagId);
+        }
+        assert tagId   != null;
+        assert tagDisp != null;
+        mTagId = tagId;
+        mTagDisplay = tagDisp;
     }
 
     @VisibleForTesting(visibility=Visibility.PRIVATE)
@@ -121,6 +141,18 @@ public class SystemImagePackage extends MajorRevisionPackage
         mAbi = abi;
 
         mPkgDesc = PkgDesc.newSysImg(mVersion, mAbi, (MajorRevision) getRevision());
+
+        // tag id
+        String tagId   = getProperty(props, PkgProps.SYS_IMG_TAG_ID,
+                                            SdkSysImgConstants.DEFAULT_TAG_ID);
+        String tagDisp = getProperty(props, PkgProps.SYS_IMG_TAG_DISPLAY, "");      //$NON-NLS-1$
+        if (tagDisp == null || tagDisp.isEmpty()) {
+            tagDisp = tagIdToDisplay(tagId);
+        }
+        assert tagId   != null;
+        assert tagDisp != null;
+        mTagId = tagId;
+        mTagDisplay = tagDisp;
     }
 
     /**
@@ -215,7 +247,21 @@ public class SystemImagePackage extends MajorRevisionPackage
         super.saveProperties(props);
 
         mVersion.saveProperties(props);
-        props.setProperty(PkgProps.SYS_IMG_ABI, mAbi);
+        props.setProperty(PkgProps.SYS_IMG_ABI,         mAbi);
+        props.setProperty(PkgProps.SYS_IMG_TAG_ID,      mTagId);
+        props.setProperty(PkgProps.SYS_IMG_TAG_DISPLAY, mTagDisplay);
+    }
+
+    /** Returns the tag id of the system-image. */
+    @NonNull
+    public String getTagId() {
+        return mTagId;
+    }
+
+    /** Returns the tag display of the system-image. */
+    @NonNull
+    public String getTagDisplay() {
+        return mTagDisplay;
     }
 
     /** Returns the ABI of the system-image. Cannot be null nor empty. */
@@ -263,7 +309,9 @@ public class SystemImagePackage extends MajorRevisionPackage
      */
     @Override
     public String getListDescription() {
-        return String.format("%1$s System Image%2$s",
+        boolean isDefaultTag = SdkSysImgConstants.DEFAULT_TAG_ID.equals(mTagId);
+        return String.format("%1$s%2$s System Image%3$s",
+                isDefaultTag ? "" : (mTagDisplay + " "),
                 getAbiDisplayName(),
                 isObsolete() ? " (Obsolete)" : "");
     }
@@ -273,7 +321,9 @@ public class SystemImagePackage extends MajorRevisionPackage
      */
     @Override
     public String getShortDescription() {
-        return String.format("%1$s System Image, Android API %2$s, revision %3$s%4$s",
+        boolean isDefaultTag = SdkSysImgConstants.DEFAULT_TAG_ID.equals(mTagId);
+        return String.format("%1$s%2$s System Image, Android API %3$s, revision %4$s%5$s",
+                isDefaultTag ? "" : (mTagDisplay + " "),
                 getAbiDisplayName(),
                 mVersion.getApiString(),
                 getRevision().toShortString(),
@@ -308,7 +358,7 @@ public class SystemImagePackage extends MajorRevisionPackage
      * Computes a potential installation folder if an archive of this package were
      * to be installed right away in the given SDK root.
      * <p/>
-     * A system-image package is typically installed in SDK/systems/platform/abi.
+     * A system-image package is typically installed in SDK/systems/platform/tag/abi.
      * The name needs to be sanitized to be acceptable as a directory name.
      *
      * @param osSdkRoot The OS path of the SDK root folder.
@@ -320,7 +370,14 @@ public class SystemImagePackage extends MajorRevisionPackage
         File folder = new File(osSdkRoot, SdkConstants.FD_SYSTEM_IMAGES);
         folder = new File(folder, SystemImage.ANDROID_PREFIX + mVersion.getApiString());
 
-        // Computes a folder directory using the sanitized abi string.
+        // Computes a folder directory using the sanitized tag & abi strings.
+        String tag = mTagId;
+        tag = tag.toLowerCase(Locale.US);
+        tag = tag.replaceAll("[^a-z0-9_-]+", "_");      //$NON-NLS-1$ //$NON-NLS-2$
+        tag = tag.replaceAll("_+", "_");                //$NON-NLS-1$ //$NON-NLS-2$
+
+        folder = new File(folder, tag);
+
         String abi = mAbi;
         abi = abi.toLowerCase(Locale.US);
         abi = abi.replaceAll("[^a-z0-9_-]+", "_");      //$NON-NLS-1$ //$NON-NLS-2$
@@ -335,8 +392,9 @@ public class SystemImagePackage extends MajorRevisionPackage
         if (pkg instanceof SystemImagePackage) {
             SystemImagePackage newPkg = (SystemImagePackage)pkg;
 
-            // check they are the same abi and version.
-            return getAbi().equals(newPkg.getAbi()) &&
+            // check they are the same tag, abi and version.
+            return getTagId().equals(newPkg.getTagId()) &&
+                    getAbi().equals(newPkg.getAbi()) &&
                     getAndroidVersion().equals(newPkg.getAndroidVersion());
         }
 
@@ -347,6 +405,7 @@ public class SystemImagePackage extends MajorRevisionPackage
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
+        result = prime * result + ((mTagId == null) ? 0 : mTagId.hashCode());
         result = prime * result + ((mAbi == null) ? 0 : mAbi.hashCode());
         result = prime * result + ((mVersion == null) ? 0 : mVersion.hashCode());
         return result;
@@ -364,6 +423,13 @@ public class SystemImagePackage extends MajorRevisionPackage
             return false;
         }
         SystemImagePackage other = (SystemImagePackage) obj;
+        if (mTagId == null) {
+            if (other.mTagId != null) {
+                return false;
+            }
+        } else if (!mTagId.equals(other.mTagId)) {
+            return false;
+        }
         if (mAbi == null) {
             if (other.mAbi != null) {
                 return false;
@@ -382,7 +448,7 @@ public class SystemImagePackage extends MajorRevisionPackage
     }
 
     /**
-     * For sys img packages, we want to add abi to the sorting key
+     * For sys img packages, we want to add tag/abi to the sorting key
      * <em>before<em/> the revision number.
      * <p/>
      * {@inheritDoc}
@@ -393,8 +459,34 @@ public class SystemImagePackage extends MajorRevisionPackage
         int pos = s.indexOf("|r:");         //$NON-NLS-1$
         assert pos > 0;
         s = s.substring(0, pos) +
+            "|tag:" + getTagId() +          //$NON-NLS-1$
             "|abi:" + getAbiDisplayName() + //$NON-NLS-1$
             s.substring(pos);
         return s;
+    }
+
+    /**
+     * Computes a display-friendly tag string based on the tag id.
+     * This is typically used when there's no tag-display attribute.
+     *
+     * @param tagId A non-null tag id to sanitize for display.
+     * @return The tag id with all non-alphanum symbols replaced by spaces and trimmed.
+     */
+    @NonNull
+    private String tagIdToDisplay(@NonNull String tagId) {
+        String name;
+        name = tagId.replaceAll("[^A-Za-z0-9]+", " ");      //$NON-NLS-1$ //$NON-NLS-2$
+        name = name.replaceAll(" +", " ");                  //$NON-NLS-1$ //$NON-NLS-2$
+        name = name.trim();
+
+        if (name.length() > 0) {
+            char c = name.charAt(0);
+            if (!Character.isUpperCase(c)) {
+                StringBuilder sb = new StringBuilder(name);
+                sb.replace(0, 1, String.valueOf(c).toUpperCase(Locale.US));
+                name = sb.toString();
+            }
+        }
+        return name;
     }
 }

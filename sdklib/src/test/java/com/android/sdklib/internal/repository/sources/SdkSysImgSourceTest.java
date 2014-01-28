@@ -170,6 +170,87 @@ public class SdkSysImgSourceTest extends TestCase {
 
     }
 
+    /**
+     * Validate we can load a valid schema version 1
+     */
+    public void testLoadSysImgXml_2() throws Exception {
+        InputStream xmlStream =
+            getTestResource("/com/android/sdklib/testdata/sys_img_sample_2.xml");
+
+        // guess the version from the XML document
+        int version = mSource._getXmlSchemaVersion(xmlStream);
+        assertEquals(2, version);
+
+        Boolean[] validatorFound = new Boolean[] { Boolean.FALSE };
+        String[] validationError = new String[] { null };
+        String url = "not-a-valid-url://" + SdkSysImgConstants.URL_DEFAULT_FILENAME;
+
+        String uri = mSource._validateXml(xmlStream, url, version, validationError, validatorFound);
+        assertEquals(Boolean.TRUE, validatorFound[0]);
+        assertEquals(null, validationError[0]);
+        assertEquals(SdkSysImgConstants.getSchemaUri(2), uri);
+
+        // Validation was successful, load the document
+        MockMonitor monitor = new MockMonitor();
+        Document doc = mSource._getDocument(xmlStream, monitor);
+        assertNotNull(doc);
+
+        // Get the packages
+        assertTrue(mSource._parsePackages(doc, uri, monitor));
+
+        // Verbose log order matches the XML order and not the sorted display order.
+        assertEquals(
+                "Found Intel x86 Atom System Image, Android API 2, revision 1\n" +
+                "Found ARM EABI v7a System Image, Android API 2, revision 2\n" +
+                "Found Another tag name ARM EABI v7a System Image, Android API 2, revision 2\n" +
+                "Found ARM EABI System Image, Android API 42, revision 12\n" +
+                "Found MIPS System Image, Android API 42, revision 12\n" +
+                "Found This is an arbitrary string, MIPS System Image, Android API 44, revision 14\n" +
+                "Found Tag name is Sanitized if Display is Missing MIPS System Image, Android API 45, revision 15\n",
+                monitor.getCapturedVerboseLog());
+        assertEquals("", monitor.getCapturedLog());
+        assertEquals("", monitor.getCapturedErrorLog());
+
+        // check the packages we found...
+        // Note the order doesn't necessary match the one from the
+        // assertEquald(getCapturedVerboseLog) because packages are sorted using the
+        // Packages' sorting order, e.g. all platforms are sorted by descending API level, etc.
+        // Order is defined by
+        // com.android.sdklib.internal.repository.packages.SystemImagePackage.comparisonKey()
+
+        Package[] pkgs = mSource.getPackages();
+
+        assertEquals(7, pkgs.length);
+        for (Package p : pkgs) {
+            // We expected to find packages with each at least one archive.
+            assertTrue(p.getArchives().length >= 1);
+            // And only system images are supported by this source
+            assertTrue(p instanceof SystemImagePackage);
+        }
+
+        // Check the system-image packages
+        ArrayList<String> sysImgInfo = new ArrayList<String>();
+        for (Package p : pkgs) {
+            if (p instanceof SystemImagePackage) {
+                SystemImagePackage sip = (SystemImagePackage) p;
+                sysImgInfo.add(String.format("%1$s %2$s: %3$s [%4$s]",     //$NON-NLS-1$
+                        sip.getAndroidVersion().getApiString(),
+                        sip.getAbi(),
+                        sip.getTagId(),
+                        sip.getTagDisplay()));
+            }
+        }
+        assertEquals(
+                "[45 mips: tag-name---is-Sanitized----if-Display-is-Missing [Tag name is Sanitized if Display is Missing], " +
+                 "44 mips: mips-only [This is an arbitrary string,], " +
+                 "42 armeabi: default [Default], " +
+                 "42 mips: default [Default], " +
+                 "2 armeabi-v7a: default [Ignored in description for default tag], " +
+                 "2 x86: default [Default], " +
+                 "2 armeabi-v7a: other [Another tag name]]",
+                Arrays.toString(sysImgInfo.toArray()));
+    }
+
 
     //-----
 

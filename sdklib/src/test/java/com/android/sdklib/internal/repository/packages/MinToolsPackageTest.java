@@ -88,7 +88,7 @@ public class MinToolsPackageTest extends PackageTest {
 
     @Override
     public void testCreate() {
-        Properties props = createProps();
+        Properties props = createExpectedProps();
 
         MockMinToolsPackage p = new MockMinToolsPackage(
                 null, //source
@@ -107,7 +107,7 @@ public class MinToolsPackageTest extends PackageTest {
 
     @Override
     public void testSaveProperties() {
-        Properties props = createProps();
+        Properties props = createExpectedProps();
 
         MockMinToolsPackage p = new MockMinToolsPackage(
                 null, //source
@@ -128,8 +128,8 @@ public class MinToolsPackageTest extends PackageTest {
     }
 
     @Override
-    protected Properties createProps() {
-        Properties props = super.createProps();
+    protected Properties createExpectedProps() {
+        Properties props = super.createExpectedProps();
 
         // MinToolsPackage properties
         props.setProperty(PkgProps.MIN_TOOLS_REV, "3.0.1");
