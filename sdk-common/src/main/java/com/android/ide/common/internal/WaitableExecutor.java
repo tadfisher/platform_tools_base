@@ -51,7 +51,7 @@ public class WaitableExecutor<T> {
      */
     public WaitableExecutor(int nThreads) {
         if (nThreads < 1) {
-            nThreads = Runtime.getRuntime().availableProcessors() * 2;
+            nThreads = Runtime.getRuntime().availableProcessors();
         }
 
         mExecutorService = Executors.newFixedThreadPool(nThreads);
