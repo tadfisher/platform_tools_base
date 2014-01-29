@@ -44,6 +44,11 @@ public interface ApkVariant extends BaseVariant {
     @NonNull
     List<DefaultProductFlavor> getProductFlavors();
 
+    int getVersionCode();
+
+    @Nullable
+    String getVersionName();
+
     /**
      * Returns the {@link SigningConfig} for this build variant,
      * if one has been specified.
