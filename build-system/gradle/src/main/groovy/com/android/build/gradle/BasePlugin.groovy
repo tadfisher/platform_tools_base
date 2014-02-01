@@ -147,6 +147,7 @@ import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.specs.Specs
 import org.gradle.api.tasks.Copy
+import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.internal.reflect.Instantiator
 import org.gradle.language.jvm.tasks.ProcessResources
@@ -1385,20 +1386,100 @@ public abstract class BasePlugin {
         }
     }
 
-    // TODO - should compile src/lint/java from src/lint/java and jar it into build/lint/lint.jar
+    @SuppressWarnings("UnnecessaryQualifiedReference")
     public void createLintCompileTask() {
-        lintCompile = project.tasks.create("compileLint", Task)
-        File outputDir = new File("$project.buildDir/${FD_INTERMEDIATES}/lint")
+        // Remaining work:
+        //  * How do I add dependencies on the lint API's here? The plugin has them (since
+        //    the lint runner finds them); how do I obtain references to the .jar's?
+        //    (For now I've implemented it via findJar but surely there is a cleaner way)
+        //    (Also needs to be transitive.)
+        //  * I should hook this up to lintVital and the lintAll tasks such that the rules can be
+        //    found and used during local lint runs
+        //  * Should also add support for writing lint rule unit tests
+        //  * Add up-to-date check for lintCompile such that it doesn't do work in the normal case
 
-        lintCompile.doFirst{
-            // create the directory for lint output if it does not exist.
-            if (!outputDir.exists()) {
-                boolean mkdirs = outputDir.mkdirs();
-                if (!mkdirs) {
-                    throw new GradleException("Unable to create lint output directory.")
-                }
-            }
+        // src/ is hardcoded in BaseExtension, see setRoot call
+        def lintSrc = project.file("$project.projectDir/src/lint/java")
+        if (!lintSrc.exists()) {
+            return
         }
+
+        def compileTask = project.tasks.create("compileLintRuleClasses", JavaCompile)
+        compileTask.source = lintSrc.getPath()
+
+        compileTask.conventionMapping.classpath = {
+            List<Object> dependencyPaths = Lists.newArrayListWithExpectedSize(12);
+
+            // Add transitive lint API dependencies
+
+            // lint-api
+            dependencyPaths.add(findJar(com.android.tools.lint.detector.api.Issue.class));
+            // guava
+            dependencyPaths.add(findJar(com.google.common.io.Files.class));
+            // lombok AST
+            dependencyPaths.add(findJar(lombok.ast.Node.class));
+            // layoutlib-api
+            dependencyPaths.add(findJar(com.android.resources.ResourceFolderType.class));
+            // common
+            dependencyPaths.add(findJar(com.android.SdkConstants.class));
+            // asm-4.0
+            dependencyPaths.add(findJar(org.objectweb.asm.Opcodes.class));
+            // asm-tree-4.0
+            dependencyPaths.add(findJar(org.objectweb.asm.tree.ClassNode.class));
+            // asm-analysis-4.0
+            dependencyPaths.add(findJar(org.objectweb.asm.tree.analysis.Analyzer.class));
+            // lint-checks
+            dependencyPaths.add(findJar(com.android.tools.lint.checks.BuiltinIssueRegistry.class));
+            // sdk-common
+            dependencyPaths.add(findJar(com.android.ide.common.res2.ResourceItem.class));
+            // builder-model
+            dependencyPaths.add(findJar(com.android.builder.model.AndroidProject.class));
+
+            Object[] dirs = dependencyPaths.toArray()
+            project.files(dirs)
+        }
+
+        compileTask.conventionMapping.destinationDir = {
+            project.file("$project.buildDir/${FD_INTERMEDIATES}/classes/lint")
+        }
+        compileTask.conventionMapping.dependencyCacheDir = {
+            project.file("$project.buildDir/${FD_INTERMEDIATES}/dependency-cache/lint")
+        }
+        compileTask.conventionMapping.sourceCompatibility = {
+            extension.compileOptions.sourceCompatibility.toString()
+        }
+        compileTask.conventionMapping.targetCompatibility = {
+            extension.compileOptions.targetCompatibility.toString()
+        }
+        compileTask.options.encoding = extension.compileOptions.encoding
+
+        Jar jar = project.tasks.create("compileLintRules", Jar);
+        jar.description = "Compiles local lint rules"
+        jar.group = JavaBasePlugin.VERIFICATION_GROUP
+        jar.dependsOn compileTask
+        jar.from(compileTask.outputs);
+        jar.destinationDir = project.file("$project.buildDir/${FD_INTERMEDIATES}/lint")
+
+        def manifest = new File(lintSrc, "META-INF" + separator + "MANIFEST.MF");
+        if (manifest.exists()) {
+            jar.manifest.from(manifest.getPath())
+        } else {
+            throw new BuildException(
+                "Did not find manifest file " + manifest + "\n" +
+                "Should exist and contain the lines\n\n" +
+                "Manifest-Version: 1.0\n" +
+                "Lint-Registry: fully.qualified.pkg.name.of.YourIssueRegistry\n\n" +
+                "where your issue registry extends com.android.tools.lint.client.api.IssueRegistry",
+                null)
+        }
+        jar.archiveName = "lint.jar"
+        lintCompile = jar
+    }
+
+    // Returns the .jar file path containing the given class
+    @NonNull
+    protected static String findJar(@NonNull Class clz) {
+        return clz.getProtectionDomain().getCodeSource().getLocation().getFile();
     }
 
     /** Is the given variant relevant for lint? */

@@ -1,0 +1,30 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 19
+    buildToolsVersion "19.1"
+
+    defaultConfig {
+        minSdkVersion 8
+        targetSdkVersion 19
+        versionCode 1
+        versionName "1.0"
+    }
+
+    lintOptions {
+        // Ensure we don't use the builtin appcompat detector; it's based on this earlier lint.jar detector
+        ignore 'AppCompatMethod','GradleDeprecated', 'GradleDependency', 'GradleDynamicVersion'
+    }
+}
+
+/*
+dependencies {
+    compile project(':lib')
+}
+*/
+
+dependencies {
+    compile project(':lib')
+    compile 'com.android.support:appcompat-v7:+'
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+}
