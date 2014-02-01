@@ -290,13 +290,18 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
                     "$project.buildDir/$DIR_BUNDLES/${variantData.variantConfiguration.dirName}/$LibraryBundle.FN_PROGUARD_TXT")
         }
 
-        // copy lint.jar into the bundle folder
-        Copy lintCopy = project.tasks.create(
-                "copy${variantData.variantConfiguration.fullName.capitalize()}Lint",
-                Copy)
-        lintCopy.dependsOn lintCompile
-        lintCopy.from("$project.buildDir/lint/lint.jar")
-        lintCopy.into("$project.buildDir/$DIR_BUNDLES/$variantData.variantConfiguration.dirName")
+        def lintCopy
+        if (lintCompile != null) {
+            // copy lint.jar into the bundle folder
+            lintCopy = project.tasks.create(
+                    "copy${variantData.variantConfiguration.fullName.capitalize()}Lint",
+                    Copy)
+            lintCopy.dependsOn lintCompile
+            lintCopy.from("$project.buildDir/lint/lint.jar")
+            lintCopy.into("$project.buildDir/$DIR_BUNDLES/$variantData.variantConfiguration.dirName")
+        } else {
+            lintCopy = null
+        }
 
         Zip bundle = project.tasks.create(
                 "bundle${variantData.variantConfiguration.fullName.capitalize()}",
@@ -309,7 +314,7 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
             // hack since bundle can't depend on variantData.proguardTask
             mergeProGuardFileTask.dependsOn variantData.proguardTask
 
-            bundle.dependsOn packageRes, packageAidl, packageRenderscript, mergeProGuardFileTask, lintCopy, packageJniLibs
+            bundle.dependsOn packageRes, packageAidl, packageRenderscript, mergeProGuardFileTask, packageJniLibs
         } else {
             Sync packageLocalJar = project.tasks.create(
                     "package${variantData.variantConfiguration.fullName.capitalize()}LocalJar",
@@ -341,7 +346,10 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
             jar.exclude(packageName + "/BuildConfig.class")
 
             bundle.dependsOn packageRes, jar, packageAidl, packageRenderscript, packageLocalJar,
-                    mergeProGuardFileTask, lintCopy, packageJniLibs
+                    mergeProGuardFileTask, packageJniLibs
+        }
+        if (lintCopy != null) {
+            bundle.dependsOn lintCopy
         }
 
         bundle.setDescription("Assembles a bundle containing the library in ${variantData.variantConfiguration.fullName.capitalize()}.");

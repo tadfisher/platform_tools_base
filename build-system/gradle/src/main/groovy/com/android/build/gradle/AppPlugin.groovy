@@ -198,6 +198,9 @@ class AppPlugin extends com.android.build.gradle.BasePlugin implements Plugin<Pr
      */
     @Override
     protected void doCreateAndroidTasks() {
+        // Add a compile lint task before creating assembly task since lintVital in there needs it
+        createLintCompileTask()
+
         if (productFlavors.isEmpty()) {
             createTasksForDefaultBuild()
         } else {
@@ -234,9 +237,6 @@ class AppPlugin extends com.android.build.gradle.BasePlugin implements Plugin<Pr
                 createTasksForMultiFlavoredBuilds(array, 0, map)
             }
         }
-
-        // Add a compile lint task
-        createLintCompileTask()
 
         // create the lint tasks.
         createLintTasks()

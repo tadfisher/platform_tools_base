@@ -1,0 +1,24 @@
+buildscript {
+    repositories {
+        maven { url '../../../../../out/host/gradle/repo' }
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:0.8.1-SNAPSHOT'
+    }
+}
+
+apply plugin: 'android-library'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile 'com.google.guava:guava:11.0.2'
+    compile 'com.android.support:appcompat-v7:+'
+}
+
+android {
+    compileSdkVersion 15
+    buildToolsVersion "19.0.1"
+}
