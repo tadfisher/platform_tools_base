@@ -120,12 +120,15 @@ import org.gradle.api.artifacts.result.DependencyResult
 import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.artifacts.result.UnresolvedDependencyResult
+import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.internal.project.ProjectInternal
+import org.gradle.api.internal.file.DefaultSourceDirectorySet
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.specs.Specs
 import org.gradle.api.tasks.Copy
+import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.internal.reflect.Instantiator
 import org.gradle.language.jvm.tasks.ProcessResources
@@ -151,6 +154,7 @@ import static com.android.builder.BuilderConstants.FD_REPORTS
 import static com.android.builder.BuilderConstants.INSTRUMENT_TEST
 import static com.android.builder.BuilderConstants.RELEASE
 import static com.android.builder.VariantConfiguration.Type.TEST
+import static java.io.File.pathSeparator
 import static java.io.File.separator
 /**
  * Base class for all Android plugins
@@ -471,7 +475,7 @@ public abstract class BasePlugin {
 
 
     protected String getRuntimeJars() {
-        return runtimeJarList.join(File.pathSeparator)
+        return runtimeJarList.join(pathSeparator)
     }
 
     public List<String> getRuntimeJarList() {
@@ -1063,20 +1067,100 @@ public abstract class BasePlugin {
         }
     }
 
-    // TODO - should compile src/lint/java from src/lint/java and jar it into build/lint/lint.jar
+    @SuppressWarnings("UnnecessaryQualifiedReference")
     public void createLintCompileTask() {
-        lintCompile = project.tasks.create("compileLint", Task)
-        File outputDir = new File("$project.buildDir/lint")
+        // Remaining work:
+        //  * How do I add dependencies on the lint API's here? The plugin has them (since
+        //    the lint runner finds them); how do I obtain references to the .jar's?
+        //    (For now I've implemented it via findJar but surely there is a cleaner way)
+        //    (Also needs to be transitive.)
+        //  * I should hook this up to lintVital and the lintAll tasks such that the rules can be
+        //    found and used during local lint runs
+        //  * Should also add support for writing lint rule unit tests
+        //  * Add up-to-date check for lintCompile such that it doesn't do work in the normal case
 
-        lintCompile.doFirst{
-            // create the directory for lint output if it does not exist.
-            if (!outputDir.exists()) {
-                boolean mkdirs = outputDir.mkdirs();
-                if (!mkdirs) {
-                    throw new GradleException("Unable to create lint output directory.")
-                }
-            }
+        // src/ is hardcoded in BaseExtension, see setRoot call
+        def lintSrc = project.file("$project.projectDir/src/lint/java")
+        if (!lintSrc.exists()) {
+            return
         }
+
+        def compileTask = project.tasks.create("compileLintRuleClasses", JavaCompile)
+        compileTask.source = lintSrc.getPath()
+
+        compileTask.conventionMapping.classpath = {
+            List<Object> dependencyPaths = Lists.newArrayListWithExpectedSize(12);
+
+            // Add transitive lint API dependencies
+
+            // lint-api
+            dependencyPaths.add(findJar(com.android.tools.lint.detector.api.Issue.class));
+            // guava
+            dependencyPaths.add(findJar(com.google.common.io.Files.class));
+            // lombok AST
+            dependencyPaths.add(findJar(lombok.ast.Node.class));
+            // layoutlib-api
+            dependencyPaths.add(findJar(com.android.resources.ResourceFolderType.class));
+            // common
+            dependencyPaths.add(findJar(com.android.SdkConstants.class));
+            // asm-4.0
+            dependencyPaths.add(findJar(org.objectweb.asm.Opcodes.class));
+            // asm-tree-4.0
+            dependencyPaths.add(findJar(org.objectweb.asm.tree.ClassNode.class));
+            // asm-analysis-4.0
+            dependencyPaths.add(findJar(org.objectweb.asm.tree.analysis.Analyzer.class));
+            // lint-checks
+            dependencyPaths.add(findJar(com.android.tools.lint.checks.BuiltinIssueRegistry.class));
+            // sdk-common
+            dependencyPaths.add(findJar(com.android.ide.common.sdk.SdkVersionInfo.class));
+            // builder-model
+            dependencyPaths.add(findJar(com.android.builder.model.AndroidProject.class));
+
+            Object[] dirs = dependencyPaths.toArray()
+            project.files(dirs)
+        }
+
+        compileTask.conventionMapping.destinationDir = {
+            project.file("$project.buildDir/classes/lint")
+        }
+        compileTask.conventionMapping.dependencyCacheDir = {
+            project.file("$project.buildDir/dependency-cache/lint")
+        }
+        compileTask.conventionMapping.sourceCompatibility = {
+            extension.compileOptions.sourceCompatibility.toString()
+        }
+        compileTask.conventionMapping.targetCompatibility = {
+            extension.compileOptions.targetCompatibility.toString()
+        }
+        compileTask.options.encoding = extension.compileOptions.encoding
+
+        Jar jar = project.tasks.create("compileLintRules", Jar);
+        jar.description = "Compiles local lint rules"
+        jar.group = JavaBasePlugin.VERIFICATION_GROUP
+        jar.dependsOn compileTask
+        jar.from(compileTask.outputs);
+        jar.destinationDir = project.file("$project.buildDir/lint")
+
+        def manifest = new File(lintSrc, "META-INF" + separator + "MANIFEST.MF");
+        if (manifest.exists()) {
+            jar.manifest.from(manifest.getPath())
+        } else {
+            throw new BuildException(
+                "Did not find manifest file " + manifest + "\n" +
+                "Should exist and contain the lines\n\n" +
+                "Manifest-Version: 1.0\n" +
+                "Lint-Registry: fully.qualified.pkg.name.of.YourIssueRegistry\n\n" +
+                "where your issue registry extends com.android.tools.lint.client.api.IssueRegistry",
+                null)
+        }
+        jar.archiveName = "lint.jar"
+        lintCompile = jar
+    }
+
+    // Returns the .jar file path containing the given class
+    @NonNull
+    protected static String findJar(@NonNull Class clz) {
+        return clz.getProtectionDomain().getCodeSource().getLocation().getFile();
     }
 
     /** Is the given variant relevant for lint? */
@@ -1104,12 +1188,18 @@ public abstract class BasePlugin {
             }
 
             // wire the main lint task dependency.
-            lint.dependsOn baseVariantData.javaCompileTask, lintCompile
+            lint.dependsOn baseVariantData.javaCompileTask
+            if (lintCompile != null) {
+                lint.dependsOn lintCompile
+            }
 
             String variantName = baseVariantData.variantConfiguration.fullName
             def capitalizedVariantName = variantName.capitalize()
             Lint variantLintCheck = project.tasks.create("lint" + capitalizedVariantName, Lint)
-            variantLintCheck.dependsOn baseVariantData.javaCompileTask, lintCompile
+            variantLintCheck.dependsOn baseVariantData.javaCompileTask
+            if (lintCompile != null) {
+                variantLintCheck.dependsOn lintCompile
+            }
             // Note that we don't do "lint.dependsOn lintCheck"; the "lint" target will
             // on its own run through all variants (and compare results), it doesn't delegate
             // to the individual tasks (since it needs to coordinate data collection and
@@ -1128,7 +1218,10 @@ public abstract class BasePlugin {
             def capitalizedVariantName = variantName.capitalize()
             def taskName = "lintVital" + capitalizedVariantName
             Lint lintReleaseCheck = project.tasks.create(taskName, Lint)
-            // TODO: Make this task depend on lintCompile too (resolve initialization order first)
+            if (lintCompile != null) {
+                lintReleaseCheck.dependsOn lintCompile
+            }
+
             lintReleaseCheck.dependsOn variantData.javaCompileTask
             lintReleaseCheck.setPlugin(this)
             lintReleaseCheck.setVariantName(variantName)

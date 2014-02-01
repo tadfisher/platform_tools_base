@@ -190,12 +190,18 @@ public class LibraryVariantFactory implements VariantFactory {
         }
 
         // copy lint.jar into the bundle folder
-        Copy lintCopy = project.tasks.create(
-                "copy${fullName.capitalize()}Lint",
-                Copy)
-        lintCopy.dependsOn basePlugin.lintCompile
-        lintCopy.from("$project.buildDir/lint/lint.jar")
-        lintCopy.into("$project.buildDir/$DIR_BUNDLES/$dirName")
+        def lintCopy
+        if (lintCompile != null) {
+            // copy lint.jar into the bundle folder
+            lintCopy = project.tasks.create(
+                    "copy${fullName.capitalize()}Lint",
+                    Copy)
+            lintCopy.dependsOn basePlugin.lintCompile
+            lintCopy.from("$project.buildDir/lint/lint.jar")
+            lintCopy.into("$project.buildDir/$DIR_BUNDLES/$dirName")
+        } else {
+            lintCopy = null
+        }
 
         Zip bundle = project.tasks.create(
                 "bundle${fullName.capitalize()}",
@@ -208,7 +214,7 @@ public class LibraryVariantFactory implements VariantFactory {
             // hack since bundle can't depend on variantData.proguardTask
             mergeProGuardFileTask.dependsOn variantData.proguardTask
 
-            bundle.dependsOn packageRes, packageAidl, packageRenderscript, mergeProGuardFileTask, lintCopy, packageJniLibs
+            bundle.dependsOn packageRes, packageAidl, packageRenderscript, mergeProGuardFileTask, packageJniLibs
         } else {
             Sync packageLocalJar = project.tasks.create(
                     "package${fullName.capitalize()}LocalJar",
@@ -240,7 +246,10 @@ public class LibraryVariantFactory implements VariantFactory {
             jar.exclude(packageName + "/BuildConfig.class")
 
             bundle.dependsOn packageRes, jar, packageAidl, packageRenderscript, packageLocalJar,
-                    mergeProGuardFileTask, lintCopy, packageJniLibs
+                    mergeProGuardFileTask, packageJniLibs
+        }
+        if (lintCopy != null) {
+            bundle.dependsOn lintCopy
         }
 
         bundle.setDescription("Assembles a bundle containing the library in ${fullName.capitalize()}.");
