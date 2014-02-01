@@ -47,6 +47,7 @@ public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider
     private final SourceDirectorySet javaSource;
     private final SourceDirectorySet allJavaSource;
     private final SourceDirectorySet javaResources;
+    private final SourceDirectorySet lintSource;
     private final AndroidSourceFile manifest;
     private final AndroidSourceDirectorySet assets;
     private final AndroidSourceDirectorySet res;
@@ -104,6 +105,10 @@ public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider
 
         String libsDisplayName = String.format("%s jniLibs", displayName);
         jniLibs = new DefaultAndroidSourceDirectorySet(libsDisplayName, fileResolver);
+
+        String lintDisplayName = String.format("%s lint rule sources", displayName);
+        lintSource = new DefaultSourceDirectorySet(lintDisplayName, fileResolver);
+        lintSource.getFilter().include("**/*.java");
     }
 
     @Override
@@ -251,6 +256,12 @@ public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider
 
     @Override
     @NonNull
+    public SourceDirectorySet getLint() {
+        return lintSource;
+    }
+
+    @Override
+    @NonNull
     public AndroidSourceSet java(Closure configureClosure) {
         ConfigureUtil.configure(configureClosure, getJava());
         return this;
@@ -293,6 +304,7 @@ public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider
         renderscript.setSrcDirs(Collections.singletonList(path + "/rs"));
         jni.setSrcDirs(Collections.singletonList(path + "/jni"));
         jniLibs.setSrcDirs(Collections.singletonList(path + "/jniLibs"));
+        lintSource.setSrcDirs(Collections.singletonList(path + "/lint"));
         return this;
     }
 

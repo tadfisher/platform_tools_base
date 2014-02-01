@@ -110,11 +110,13 @@ import org.gradle.api.artifacts.result.DependencyResult
 import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.artifacts.result.UnresolvedDependencyResult
+import org.gradle.api.internal.file.DefaultSourceDirectorySet
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.specs.Specs
 import org.gradle.api.tasks.Copy
+import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.internal.reflect.Instantiator
 import org.gradle.language.jvm.tasks.ProcessResources
@@ -138,6 +140,7 @@ import static com.android.builder.BuilderConstants.FD_INSTRUMENT_TESTS
 import static com.android.builder.BuilderConstants.FD_REPORTS
 import static com.android.builder.BuilderConstants.INSTRUMENT_TEST
 import static com.android.builder.VariantConfiguration.Type.TEST
+import static java.io.File.pathSeparator
 import static java.io.File.separator
 
 /**
@@ -364,7 +367,7 @@ public abstract class BasePlugin {
 
 
     protected String getRuntimeJars() {
-        return runtimeJarList.join(File.pathSeparator)
+        return runtimeJarList.join(pathSeparator)
     }
 
     public List<String> getRuntimeJarList() {
@@ -956,20 +959,85 @@ public abstract class BasePlugin {
         }
     }
 
-    // TODO - should compile src/lint/java from src/lint/java and jar it into build/lint/lint.jar
     protected void createLintCompileTask() {
-        lintCompile = project.tasks.create("compileLint", Task)
-        File outputDir = new File("$project.buildDir/lint")
+        // Remaining work:
+        //  * I should move the sources out from the main source set and over to its own location
+        //    which has nothing to do with Android source sets (e.g. mv src/main/lint to
+        //    src/lint/java)
+        //  * How do I add dependencies on the lint API's here? The plugin has them (since
+        //    the lint runner finds them); how do I obtain references to the .jar's?
+        //    (Also needs to be transitive.)
+        //  * I should hook this up to lintVital and the lintAll tasks such that the rules can be
+        //    found and used during local lint runs
+        //  * If there are no lint rule sources, we should not create and package a lint.jar
+        //  * The LibraryPlugin's AAR packaging task should depend on this task such that
+        //    at library build time the lint.jar is included into the AAR
+        //  * Should also add support for writing lint rule unit tests
 
-        lintCompile.doFirst{
-            // create the directory for lint output if it does not exist.
-            if (!outputDir.exists()) {
-                boolean mkdirs = outputDir.mkdirs();
-                if (!mkdirs) {
-                    throw new GradleException("Unable to create lint output directory.")
-                }
+        def compileTask = project.tasks.create("compileLintRuleClasses", JavaCompile)
+        def config = defaultConfigData.sourceSet;
+        List<Object> sourceList = Lists.newArrayList()
+        def sourceSet = ((AndroidSourceSet) config).lint
+        sourceList.add(sourceSet)
+        compileTask.source = sourceList.toArray()
+
+        // Add lint API dependency
+        // TODO: How do I find the lint API jars?
+        String root = "/Volumes/android/open-master/out/host/gradle/";
+        String baseV = "-22.5.1-SNAPSHOT";
+        def lintApiJars =
+                root + "tools/base/lint-api/libs/lint-api" + baseV + ".jar" + pathSeparator +
+                root + "tools/base/lint-checks/libs/lint-checks" + baseV + ".jar" + pathSeparator +
+                root + "repo/org/ow2/asm/asm/4.0/asm-4.0.jar" + pathSeparator +
+                root + "repo/org/ow2/asm/asm-tree/4.0/asm-tree-4.0.jar" + pathSeparator +
+                root + "repo/org/ow2/asm/asm-analysis/4.0/asm-analysis-4.0.jar" + pathSeparator +
+                root + "repo/com/android/tools/external/lombok/lombok-ast/0.2.2/lombok-ast-0.2.2.jar" + pathSeparator +
+                root + "repo/com/google/guava/guava/15.0/guava-15.0.jar";
+        // Should include more jars, but ran into  > File name too long
+        // so these are hidden for now:
+        //        root + "tools/base/builder-model/libs/builder-model-0.8.1-SNAPSHOT.jar" + File.pathSeparator +
+        //        root + "tools/base/tools/base/common/libs/common" + baseV + ".jar" + File.pathSeparator +
+        //        root + "tools/base/sdk-common/libs/sdk-common" + baseV + ".jar" + File.pathSeparator +
+        //        root + "tools/base/layoutlib-api/libs/layoutlib-api" + baseV + ".jar" + File.pathSeparator +
+
+        compileTask.conventionMapping.classpath = {
+            project.files(lintApiJars)
+        }
+
+        compileTask.conventionMapping.destinationDir = {
+            project.file("$project.buildDir/classes/lint")
+        }
+        compileTask.conventionMapping.dependencyCacheDir = {
+            project.file("$project.buildDir/dependency-cache/lint")
+        }
+        compileTask.conventionMapping.sourceCompatibility = {
+            extension.compileOptions.sourceCompatibility.toString()
+        }
+        compileTask.conventionMapping.targetCompatibility = {
+            extension.compileOptions.targetCompatibility.toString()
+        }
+        compileTask.options.encoding = extension.compileOptions.encoding
+
+        Jar jar = project.tasks.create("compileLintRules", Jar);
+        jar.description = "Compiles local lint rules"
+        jar.group = JavaBasePlugin.VERIFICATION_GROUP
+        jar.dependsOn compileTask
+        jar.from(compileTask.outputs);
+        jar.destinationDir = project.file("$project.buildDir/lint")
+
+        List<String> manifests = Lists.newArrayList()
+        for (File dir : sourceSet.srcDirs) {
+            // TODO: File separator conversion on dir?
+            def manifest = new File(dir, "META-INF" + separator + "MANIFEST.MF");
+            if (manifest.exists()) {
+                manifests.add(manifest.getPath())
             }
         }
+        if (!manifests.isEmpty()) {
+            jar.manifest.from(manifests.toArray())
+        }
+        jar.archiveName = "lint.jar"
+        lintCompile = jar
     }
 
     /** Is the given variant relevant for lint? */

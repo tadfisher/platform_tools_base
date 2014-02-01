@@ -262,4 +262,12 @@ public interface AndroidSourceSet {
      */
     @NonNull
     AndroidSourceSet setRoot(String path);
+
+    /**
+     * Returns the Java source for custom lint rules applicable to this code
+     *
+     * @return the Java source. Never returns null.
+     */
+    @NonNull
+    SourceDirectorySet getLint();
 }
