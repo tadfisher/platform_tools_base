@@ -218,4 +218,14 @@ public class StringFormatDetectorTest  extends AbstractCheckTest {
                         "res/values/formatstrings7.xml",
                         "src/test/pkg/StringFormat5.java.txt=>src/test/pkg/StringFormat5.java"));
     }
+
+    public void testNewlineChar() throws Exception {
+        // https://code.google.com/p/android/issues/detail?id=65692
+        assertEquals(""
+                + "No warnings.",
+
+                lintProject(
+                        "res/values/formatstrings8.xml",
+                        "src/test/pkg/StringFormat8.java.txt=>src/test/pkg/StringFormat8.java"));
+    }
 }

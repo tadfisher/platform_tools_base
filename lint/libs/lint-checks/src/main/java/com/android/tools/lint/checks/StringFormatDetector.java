@@ -293,7 +293,9 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
 
                 String conversion = matcher.group(6);
                 int conversionClass = getConversionClass(conversion.charAt(0));
-                if (conversionClass == CONVERSION_CLASS_UNKNOWN || matcher.group(5) != null) {
+                if (conversionClass == CONVERSION_CLASS_UNKNOWN
+                        || conversionClass == CONVERSION_CLASS_NEWLINE
+                        || matcher.group(5) != null) {
                     if (mIgnoreStrings == null) {
                         mIgnoreStrings = new HashSet<String>();
                     }
