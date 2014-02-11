@@ -28,6 +28,7 @@ import com.android.sdklib.SystemImage;
 import com.android.sdklib.io.FileOp;
 import com.android.sdklib.repository.descriptors.IdDisplay;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 
@@ -59,7 +60,7 @@ public class MockAddonTarget implements IAndroidTarget {
     }
 
     @Override
-    public String getDefaultSkin() {
+    public File getDefaultSkin() {
         return null;
     }
 
@@ -116,6 +117,11 @@ public class MockAddonTarget implements IAndroidTarget {
     }
 
     @Override
+    public File getFile(int pathId) {
+        return new File(getPath(pathId));
+    }
+
+    @Override
     public BuildToolInfo getBuildToolInfo() {
         return null;
     }
@@ -156,8 +162,8 @@ public class MockAddonTarget implements IAndroidTarget {
     }
 
     @Override
-    public String[] getSkins() {
-        return null;
+    public File[] getSkins() {
+        return new File[0];
     }
 
     @Override

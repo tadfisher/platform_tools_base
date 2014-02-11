@@ -37,17 +37,15 @@ import com.android.sdklib.repository.descriptors.IPkgDesc;
 import com.android.sdklib.repository.descriptors.IdDisplay;
 import com.android.sdklib.repository.descriptors.PkgDesc;
 import com.android.sdklib.repository.descriptors.PkgType;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimaps;
-import com.google.common.collect.Multiset;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.TreeMultimap;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -276,9 +274,20 @@ public class LocalPlatformPkgInfo extends LocalPkgInfo {
                 platformProp,
                 sdk.getLatestBuildTool());
 
-        // add the skins.
-        String[] skins = parseSkinFolder(pt.getPath(IAndroidTarget.SKINS));
-        pt.setSkins(skins);
+        // add the skins from the platform
+        List<File> skins = parseSkinFolder(pt.getFile(IAndroidTarget.SKINS));
+
+        // add the system-image specific skins, if any.
+        for (ISystemImage systemImage : systemImages) {
+            if (systemImage.getLocationType().equals(LocationType.IN_SYSTEM_IMAGE)) {
+                File sysImgFolder = systemImage.getLocation();
+                File folder = new File(sysImgFolder, SdkConstants.FD_SKINS);
+                if (fileOp.isDirectory(folder)) {
+                    skins.addAll(parseSkinFolder(folder));
+                }
+            }
+        }
+        pt.setSkins(skins.toArray(new File[skins.size()]));
 
         // add path to the non-legacy samples package if it exists
         LocalPkgInfo samples = sdk.getPkgInfo(PkgType.PKG_SAMPLES, getDesc().getAndroidVersion());
@@ -381,15 +390,14 @@ public class LocalPlatformPkgInfo extends LocalPkgInfo {
 
     /**
      * Parses the skin folder and builds the skin list.
-     * @param osPath The path of the skin root folder.
+     * @param skinRootFolder The path to the skin root folder.
      */
     @NonNull
-    protected String[] parseSkinFolder(@NonNull String osPath) {
+    protected List<File> parseSkinFolder(@NonNull File skinRootFolder) {
         IFileOp fileOp = getLocalSdk().getFileOp();
-        File skinRootFolder = new File(osPath);
 
         if (fileOp.isDirectory(skinRootFolder)) {
-            ArrayList<String> skinList = new ArrayList<String>();
+            ArrayList<File> skinList = new ArrayList<File>();
 
             File[] files = fileOp.listFiles(skinRootFolder);
 
@@ -401,15 +409,15 @@ public class LocalPlatformPkgInfo extends LocalPkgInfo {
                     if (fileOp.isFile(layout)) {
                         // for now we don't parse the content of the layout and
                         // simply add the directory to the list.
-                        skinList.add(skinFolder.getName());
+                        skinList.add(skinFolder);
                     }
                 }
             }
 
-            return skinList.toArray(new String[skinList.size()]);
+            return skinList;
         }
 
-        return new String[0];
+        return Collections.emptyList();
     }
 
 
