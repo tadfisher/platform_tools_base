@@ -57,7 +57,7 @@ public class SdkManagerTest extends SdkManagerTestCase {
             v = Sets.newTreeSet(v);
         }
 
-        assertEquals("[]", getLog().toString());  // no errors in the logger
+        assertEquals("", getLog().toString());  // no errors in the logger
         assertEquals("[3.0.0, 3.0.1, 18.3.4 rc5]", Arrays.toString(v.toArray()));
 
         assertEquals(new FullRevision(18, 3, 4, 5),

@@ -33,8 +33,8 @@ import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.io.IFileOp;
 import com.android.sdklib.repository.FullRevision;
 import com.android.sdklib.repository.MajorRevision;
-import com.android.sdklib.repository.descriptors.IPkgDesc;
 import com.android.sdklib.repository.descriptors.IAddonDesc;
+import com.android.sdklib.repository.descriptors.IPkgDesc;
 import com.android.sdklib.repository.descriptors.PkgDesc;
 import com.android.sdklib.repository.descriptors.PkgType;
 import com.android.utils.Pair;
@@ -42,6 +42,7 @@ import com.android.utils.Pair;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -306,13 +307,19 @@ public class LocalAddonPkgInfo extends LocalPlatformPkgInfo {
                     baseTarget);
 
             // need to parse the skins.
-            String[] skins = parseSkinFolder(target.getPath(IAndroidTarget.SKINS));
+            File targetSkinFolder = target.getFile(IAndroidTarget.SKINS);
+            List<File> skins = parseSkinFolder(targetSkinFolder);
 
-            // get the default skin, or take it from the base platform if needed.
-            String defaultSkin = propertyMap.get(ADDON_DEFAULT_SKIN);
-            if (defaultSkin == null) {
-                if (skins.length == 1) {
-                    defaultSkin = skins[0];
+            // get the default skin
+            File defaultSkin = null;
+            String defaultSkinName = propertyMap.get(ADDON_DEFAULT_SKIN);
+            if (defaultSkinName != null) {
+                defaultSkin = new File(targetSkinFolder, defaultSkinName);
+            } else {
+                // No default skin name specified, use the first one from the addon
+                // or the default from the platform.
+                if (skins.size() == 1) {
+                    defaultSkin = skins.get(0);
                 } else {
                     defaultSkin = baseTarget.getDefaultSkin();
                 }
@@ -324,7 +331,7 @@ public class LocalAddonPkgInfo extends LocalPlatformPkgInfo {
                 target.setUsbVendorId(usbVendorId);
             }
 
-            target.setSkins(skins, defaultSkin);
+            target.setSkins(skins.toArray(new File[skins.size()]), defaultSkin);
 
             return target;
 
