@@ -987,7 +987,9 @@ public abstract class BasePlugin {
     // Add tasks for running lint on individual variants. We've already added a
     // lint task earlier which runs on all variants.
     protected void createLintTasks() {
-        Lint lint = project.tasks.create("lint", Lint)
+        Lint lint = project.tasks.create("lint", Lint) {
+            inputDir = ""
+        }
         lint.description = "Runs lint on all variants."
         lint.group = JavaBasePlugin.VERIFICATION_GROUP
         lint.setPlugin(this)

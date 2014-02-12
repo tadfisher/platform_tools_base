@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.dsl.LintOptionsImpl
 import com.android.build.gradle.internal.model.ModelBuilder
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.Variant
+import com.android.ide.common.res2.FileStatus
 import com.android.tools.lint.LintCliFlags
 import com.android.tools.lint.Reporter
 import com.android.tools.lint.Warning
@@ -36,12 +37,16 @@ import com.google.common.collect.Maps
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.Project
+import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.incremental.IncrementalTaskInputs
 
 public class Lint extends DefaultTask {
     @NonNull private BasePlugin mPlugin
     @Nullable private String mVariantName
     private boolean mFatalOnly
+
+   @InputDirectory def File inputDir;
 
     public void setPlugin(@NonNull BasePlugin plugin) {
         mPlugin = plugin
@@ -57,6 +62,33 @@ public class Lint extends DefaultTask {
 
     @SuppressWarnings("GroovyUnusedDeclaration")
     @TaskAction
+    public void execute(IncrementalTaskInputs inputs) {
+        if (!inputs.isIncremental()) {
+            lint()
+            return
+        }
+// TODO: Editing lintOptions should mark it changed!
+        Map<File, FileStatus> changedInputs = Maps.newHashMap()
+        boolean hasRelevantChange = false
+        inputs.outOfDate { change ->
+            //noinspection GroovyAssignabilityCheck
+            println "changed: " + change.file + " with isAdded=" + change.isAdded()
+            hasRelevantChange = true
+        }
+
+        inputs.removed { change ->
+            //noinspection GroovyAssignabilityCheck
+            println "removed: " + change.file
+            hasRelevantChange = true
+        }
+
+        if (hasRelevantChange) {
+            lint()
+        } else {
+            println "Skipping lint: Nothing to do!"
+        }
+    }
+
     public void lint() {
         assert project == mPlugin.getProject()
 

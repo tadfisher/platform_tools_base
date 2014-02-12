@@ -70,6 +70,7 @@ android {
         ignoreAssetsPattern "!.svn:!.git:!.ds_store:!*.scc:.*:<dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"
     }
 
+/*
     lintOptions {
         // set to true to turn off analysis progress reporting by lint
         quiet true
@@ -108,4 +109,5 @@ android {
         // optional path to report (default will be lint-results.html in the builddir)
         htmlOutput file("lint-report.html")
     }
+*/
 }
