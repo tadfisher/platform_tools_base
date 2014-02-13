@@ -16,6 +16,10 @@
 
 package com.android.tools.lint.client.api;
 
+import static com.android.SdkConstants.CURRENT_PLATFORM;
+import static com.android.SdkConstants.PLATFORM_WINDOWS;
+
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Context;
@@ -51,6 +55,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -78,6 +85,8 @@ public class DefaultConfiguration extends Configuration {
     @NonNull
     private static final String ATTR_PATH = "path"; //$NON-NLS-1$
     @NonNull
+    private static final String ATTR_REGEXP = "regexp"; //$NON-NLS-1$
+    @NonNull
     private static final String TAG_IGNORE = "ignore"; //$NON-NLS-1$
     @NonNull
     private static final String VALUE_ALL = "all"; //$NON-NLS-1$
@@ -89,6 +98,9 @@ public class DefaultConfiguration extends Configuration {
 
     /** Map from id to list of project-relative paths for suppressed warnings */
     private Map<String, List<String>> mSuppressed;
+
+    /** Map from id to regular expressions. */
+    private Map<String, List<Pattern>> mRegexps;
 
     /**
      * Map from id to custom {@link Severity} override
@@ -171,11 +183,35 @@ public class DefaultConfiguration extends Configuration {
             }
         }
 
-        if (mParent != null) {
-            return mParent.isIgnored(context, issue, location, message, data);
+        List<Pattern> regexps = mRegexps.get(id);
+        if (regexps == null) {
+            regexps = mRegexps.get(VALUE_ALL);
+        }
+        if (regexps != null && location != null) {
+            File file = location.getFile();
+            String relativePath = context.getProject().getRelativePath(file);
+            boolean checkUnixPath = false;
+            for (Pattern regexp : regexps) {
+                Matcher matcher = regexp.matcher(relativePath);
+                if (matcher.find()) {
+                    return true;
+                } else if (regexp.pattern().indexOf('/') != -1) {
+                    checkUnixPath = true;
+                }
+            }
+
+            if (checkUnixPath && CURRENT_PLATFORM == PLATFORM_WINDOWS) {
+                relativePath = relativePath.replace('\\', '/');
+                for (Pattern regexp : regexps) {
+                    Matcher matcher = regexp.matcher(relativePath);
+                    if (matcher.find()) {
+                        return true;
+                    }
+                }
+            }
         }
 
-        return false;
+        return mParent != null && mParent.isIgnored(context, issue, location, message, data);
     }
 
     @NonNull
@@ -232,6 +268,7 @@ public class DefaultConfiguration extends Configuration {
 
     private void readConfig() {
         mSuppressed = new HashMap<String, List<String>>();
+        mRegexps = new HashMap<String, List<Pattern>>();
         mSeverity = new HashMap<String, Severity>();
 
         if (!mConfigFile.exists()) {
@@ -290,8 +327,26 @@ public class DefaultConfiguration extends Configuration {
                             Element ignore = (Element) child;
                             String path = ignore.getAttribute(ATTR_PATH);
                             if (path.isEmpty()) {
-                                formatError("Missing required %1$s attribute under %2$s",
-                                    ATTR_PATH, idList);
+                                String regexp = ignore.getAttribute(ATTR_REGEXP);
+                                if (regexp.isEmpty()) {
+                                    formatError("Missing required attribute %1$s or %2$s under %3$s",
+                                        ATTR_PATH, ATTR_REGEXP, idList);
+                                } else {
+                                    try {
+                                        Pattern pattern = Pattern.compile(regexp);
+                                        for (String id : ids) {
+                                            List<Pattern> paths = mRegexps.get(id);
+                                            if (paths == null) {
+                                                paths = new ArrayList<Pattern>(n / 2 + 1);
+                                                mRegexps.put(id, paths);
+                                            }
+                                            paths.add(pattern);
+                                        }
+                                    } catch (PatternSyntaxException e) {
+                                        formatError("Invalid pattern %1$s under %2$s: %3$s",
+                                                regexp, idList, e.getDescription());
+                                    }
+                                }
                             } else {
                                 // Normalize path format to File.separator. Also
                                 // handle the file format containing / or \.
@@ -360,17 +415,29 @@ public class DefaultConfiguration extends Configuration {
                                 severity.name().toLowerCase(Locale.US));
                     }
 
+                    List<Pattern> regexps = mRegexps.get(id);
                     List<String> paths = mSuppressed.get(id);
-                    if (paths != null && !paths.isEmpty()) {
+                    if (paths != null && !paths.isEmpty()
+                            || regexps != null && !regexps.isEmpty()) {
                         writer.write('>');
                         writer.write('\n');
                         // The paths are already kept in sorted order when they are modified
                         // by ignore(...)
-                        for (String path : paths) {
-                            writer.write("        <");                   //$NON-NLS-1$
-                            writer.write(TAG_IGNORE);
-                            writeAttribute(writer, ATTR_PATH, path.replace('\\', '/'));
-                            writer.write(" />\n");                       //$NON-NLS-1$
+                        if (paths != null) {
+                            for (String path : paths) {
+                                writer.write("        <");                   //$NON-NLS-1$
+                                writer.write(TAG_IGNORE);
+                                writeAttribute(writer, ATTR_PATH, path.replace('\\', '/'));
+                                writer.write(" />\n");                       //$NON-NLS-1$
+                            }
+                        }
+                        if (regexps != null) {
+                            for (Pattern regexp : regexps) {
+                                writer.write("        <");                   //$NON-NLS-1$
+                                writer.write(TAG_IGNORE);
+                                writeAttribute(writer, ATTR_REGEXP, regexp.pattern());
+                                writer.write(" />\n");                       //$NON-NLS-1$
+                            }
                         }
                         writer.write("    </");                          //$NON-NLS-1$
                         writer.write(TAG_ISSUE);
