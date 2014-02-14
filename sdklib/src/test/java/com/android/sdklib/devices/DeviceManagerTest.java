@@ -50,6 +50,9 @@ public class DeviceManagerTest extends SdkManagerTestCase {
         // no user devices defined in the test's custom .android home folder
         assertEquals("[]", dm.getDevices(EnumSet.of(DeviceFilter.USER)).toString());
 
+        // no system-images devices defined in the SDK by default
+        assertEquals("[]", dm.getDevices(EnumSet.of(DeviceFilter.SYSTEM_IMAGES)).toString());
+
         // this list comes from devices.xml bundled in the JAR
         // cf /sdklib/src/main/java/com/android/sdklib/devices/devices.xml
         assertEquals(
@@ -108,8 +111,11 @@ public class DeviceManagerTest extends SdkManagerTestCase {
 
         assertEquals("My Custom Tablet", dm.getDevice("MyCustomTablet", "OEM").toString());
 
-        // no user devices defined in the test's custom .android home folder
+        // 1 user device defined in the test's custom .android home folder
         assertEquals("[My Custom Tablet]", dm.getDevices(EnumSet.of(DeviceFilter.USER)).toString());
+
+        // no system-images devices defined in the SDK by default
+        assertEquals("[]", dm.getDevices(EnumSet.of(DeviceFilter.SYSTEM_IMAGES)).toString());
 
         // this list comes from devices.xml bundled in the JAR
         // cf /sdklib/src/main/java/com/android/sdklib/devices/devices.xml
@@ -137,6 +143,44 @@ public class DeviceManagerTest extends SdkManagerTestCase {
                  "Nexus One, Nexus S, Galaxy Nexus, Nexus 7 (2012), " +
                  "Nexus 4, Nexus 10, Nexus 7, Nexus 5]",
                 dm.getDevices(DeviceManager.ALL_DEVICES).toString());
+    }
+
+    public final void testGetDevices_SysImgDevice() throws Exception {
+        // this adds a devices.xml with one device
+        makeSystemImageFolder(TARGET_DIR_NAME_0, "tag-1", "x86");
+
+        // no user devices defined in the test's custom .android home folder
+        assertEquals("[]", dm.getDevices(EnumSet.of(DeviceFilter.USER)).toString());
+
+        // no system-images devices defined in the SDK by default
+        assertEquals("[]", dm.getDevices(EnumSet.of(DeviceFilter.SYSTEM_IMAGES)).toString());
+
+        // this list comes from devices.xml bundled in the JAR
+        // cf /sdklib/src/main/java/com/android/sdklib/devices/devices.xml
+        assertEquals(
+                "[2.7\" QVGA, 2.7\" QVGA slider, 3.2\" HVGA slider (ADP1), 3.2\" QVGA (ADP2), " +
+                 "3.3\" WQVGA, 3.4in WQVGA, 3.7\" WVGA (Nexus One), 3.7\" FWVGA slider, " +
+                 "4\" WVGA (Nexus S), 4.65\" 720p (Galaxy Nexus), 4.7\" WXGA, 5.1\" WVGA, " +
+                 "5.4\" FWVGA, 7\" WSVGA (Tablet), 10.1\" WXGA (Tablet)]",
+                dm.getDevices(EnumSet.of(DeviceFilter.DEFAULT)).toString());
+
+
+        // this list comes from the nexus.xml bundled in the JAR
+        // cf /sdklib/src/main/java/com/android/sdklib/devices/nexus.xml
+        assertEquals(
+                "[Nexus One, Nexus S, Galaxy Nexus, Nexus 7 (2012), " +
+                 "Nexus 4, Nexus 10, Nexus 7, Nexus 5]",
+                dm.getDevices(EnumSet.of(DeviceFilter.VENDOR)).toString());
+
+        assertEquals(
+                "[2.7\" QVGA, 2.7\" QVGA slider, 3.2\" HVGA slider (ADP1), 3.2\" QVGA (ADP2), " +
+                 "3.3\" WQVGA, 3.4in WQVGA, 3.7\" WVGA (Nexus One), 3.7\" FWVGA slider, " +
+                 "4\" WVGA (Nexus S), 4.65\" 720p (Galaxy Nexus), 4.7\" WXGA, 5.1\" WVGA, " +
+                 "5.4\" FWVGA, 7\" WSVGA (Tablet), 10.1\" WXGA (Tablet), " +
+                 "Nexus One, Nexus S, Galaxy Nexus, Nexus 7 (2012), " +
+                 "Nexus 4, Nexus 10, Nexus 7, Nexus 5]",
+                dm.getDevices(DeviceManager.ALL_DEVICES).toString());
+
     }
 
 }
