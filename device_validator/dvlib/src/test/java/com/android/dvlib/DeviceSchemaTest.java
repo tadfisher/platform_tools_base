@@ -54,8 +54,11 @@ public class DeviceSchemaTest extends TestCase {
         assertFalse(
                 "Validation Assertion Failed, XML failed to validate when it was expected to pass\n",
                 DeviceSchema.validate(xmlStream, baos, null));
-        assertTrue(String.format("Regex Assertion Failed:\nExpected: %s\nActual: %s\n", regex, baos
-                .toString().trim()), baos.toString().trim().matches(regex));
+        String actual = baos.toString().trim();
+        actual = actual.replace("\r\n", "\n");  // Fix Windows CRLF
+        assertTrue(
+                String.format("Regex Assertion Failed:\nExpected: %s\nActual: %s\n", regex, actual),
+                actual.matches(regex));
     }
 
     private void checkFailure(String resource, String regex) throws Exception {
@@ -63,8 +66,11 @@ public class DeviceSchemaTest extends TestCase {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         assertFalse("Validation Assertion Failed, XML validated when it was expected to fail\n",
                 DeviceSchema.validate(xml, baos, null));
-        assertTrue(String.format("Regex Assertion Failed:\nExpected: %s\nActual: %s\n", regex, baos
-                .toString().trim()), baos.toString().trim().matches(regex));
+        String actual = baos.toString().trim();
+        actual = actual.replace("\r\n", "\n");  // Fix Windows CRLF
+        assertTrue(
+                String.format("Regex Assertion Failed:\nExpected: %s\nActual: %s\n", regex, actual),
+                actual.matches(regex));
     }
 
     private void checkSuccess(Map<String, String> replacements) throws Exception {
