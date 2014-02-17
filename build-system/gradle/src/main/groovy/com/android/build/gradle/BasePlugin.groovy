@@ -83,6 +83,7 @@ import com.android.builder.DefaultBuildType
 import com.android.builder.DefaultProductFlavor
 import com.android.builder.SdkParser
 import com.android.builder.VariantConfiguration
+import com.android.builder.dependency.DependencyContainer
 import com.android.builder.dependency.JarDependency
 import com.android.builder.dependency.LibraryDependency
 import com.android.builder.model.AndroidArtifact
@@ -154,7 +155,7 @@ import static java.io.File.separator
  * Base class for all Android plugins
  */
 public abstract class BasePlugin {
-    protected final static String DIR_BUNDLES = "bundles";
+    public final static String DIR_BUNDLES = "bundles";
 
     public static final String GRADLE_MIN_VERSION = "1.10"
     public static final String[] GRADLE_SUPPORTED_VERSIONS = [ GRADLE_MIN_VERSION ]
@@ -193,7 +194,8 @@ public abstract class BasePlugin {
     protected Task assembleTest
     protected Task deviceCheck
     protected Task connectedCheck
-    protected Task lintCompile
+
+    public Task lintCompile
     protected Task lintAll
     protected Task lintVital
 
@@ -633,7 +635,7 @@ public abstract class BasePlugin {
         variantData.mergeResourcesTask = mergeResourcesTask
     }
 
-    protected MergeResources basicCreateMergeResourcesTask(
+    public MergeResources basicCreateMergeResourcesTask(
             @NonNull BaseVariantData variantData,
             @NonNull String taskNamePrefix,
             @NonNull String outputLocation,
@@ -777,7 +779,7 @@ public abstract class BasePlugin {
                 generateResourcePackage)
     }
 
-    protected void createProcessResTask(
+    public void createProcessResTask(
             @NonNull BaseVariantData variantData,
             @NonNull final String symbolLocation,
             boolean generateResourcePackage) {
@@ -1598,7 +1600,8 @@ public abstract class BasePlugin {
      * @return outFile file outputted by proguard
      */
     @NonNull
-    protected File createProguardTasks(@NonNull BaseVariantData variantData,
+    public
+    File createProguardTasks(@NonNull BaseVariantData variantData,
                                        @Nullable BaseVariantData testedVariantData) {
         VariantConfiguration variantConfig = variantData.variantConfiguration
 
@@ -1681,7 +1684,7 @@ public abstract class BasePlugin {
                 Set<File> packagedJars = getAndroidBuilder(variantData).getPackagedJars(variantConfig)
 
                 // injar: the local dependencies, filter out local jars from packagedJars
-                Object[] jars = LibraryPlugin.getLocalJarFileList(variantData.variantDependency)
+                Object[] jars = getLocalJarFileList(variantData.variantDependency)
                 for (Object inJar : jars) {
                     if (packagedJars.contains(inJar)) {
                         packagedJars.remove(inJar);
@@ -1954,6 +1957,16 @@ public abstract class BasePlugin {
                 sourceProvider, null)
         extraJavaArtifacts.put(variant.name, artifact)
     }
+
+    public static Object[] getLocalJarFileList(DependencyContainer dependencyContainer) {
+        Set<File> files = Sets.newHashSet()
+        for (JarDependency jarDependency : dependencyContainer.localDependencies) {
+            files.add(jarDependency.jarFile)
+        }
+
+        return files.toArray()
+    }
+
 
     //----------------------------------------------------------------------------------------------
     //------------------------------ START DEPENDENCY STUFF ----------------------------------------

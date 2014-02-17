@@ -38,9 +38,11 @@ public class VariantDependencies implements DependencyContainer, ConfigurationPr
     final String name
 
     @NonNull
-    final Configuration compileConfiguration
+    private final Configuration compileConfiguration
     @NonNull
-    final Configuration packageConfiguration
+    private final Configuration packageConfiguration
+    @NonNull
+    private final Configuration publishConfiguration
 
     @NonNull
     private final List<LibraryDependencyImpl> libraries = []
@@ -68,20 +70,28 @@ public class VariantDependencies implements DependencyContainer, ConfigurationPr
         }
 
         Configuration compile = project.configurations.create("_${name}Compile")
+        compile.description = "## Internal use, do not manually configure ##"
         compile.setExtendsFrom(compileConfigs)
 
         Configuration apk = project.configurations.create("_${name}Apk")
+        apk.description = "## Internal use, do not manually configure ##"
         apk.setExtendsFrom(apkConfigs)
 
-        return new VariantDependencies(name, compile, apk);
+        Configuration publish = project.configurations.create("publish${name.capitalize()}")
+        publish.description = "Publishing Configuration for flavor ${name}"
+        publish.setExtendsFrom(compileConfigs)
+
+        return new VariantDependencies(name, compile, apk, publish);
     }
 
     private VariantDependencies(@NonNull String name,
                                 @NonNull Configuration compileConfiguration,
-                                @NonNull Configuration packageConfiguration) {
+                                @NonNull Configuration packageConfiguration,
+                                @NonNull Configuration publishConfiguration) {
         this.name = name
         this.compileConfiguration = compileConfiguration
         this.packageConfiguration = packageConfiguration
+        this.publishConfiguration = publishConfiguration
     }
 
     public String getName() {
@@ -89,8 +99,23 @@ public class VariantDependencies implements DependencyContainer, ConfigurationPr
     }
 
     @Override
+    Configuration getCompileConfiguration() {
+        return compileConfiguration
+    }
+
+    @Override
+    Configuration getPackageConfiguration() {
+        return packageConfiguration
+    }
+
+    @Override
     Configuration getProvidedConfiguration() {
         return null
+    }
+
+    @NonNull
+    Configuration getPublishConfiguration() {
+        return publishConfiguration
     }
 
     void addLibraries(@NonNull List<LibraryDependencyImpl> list) {

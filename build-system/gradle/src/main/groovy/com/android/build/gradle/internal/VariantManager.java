@@ -23,7 +23,6 @@ import static com.android.builder.BuilderConstants.UI_TEST;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.api.AndroidSourceSet;
@@ -156,9 +155,8 @@ public class VariantManager {
      * Task creation entry point.
      */
     public void createAndroidTasks() {
-        if (!(extension instanceof AppExtension)) {
-            throw new RuntimeException("Impossible to create task for libraries in VariantManager");
-        }
+        // Add a compile lint task
+        basePlugin.createLintCompileTask();
 
         if (productFlavors.isEmpty()) {
             createTasksForDefaultBuild();
@@ -201,9 +199,6 @@ public class VariantManager {
                 createTasksForMultiFlavoredBuilds(array, 0, map);
             }
         }
-
-        // Add a compile lint task
-        basePlugin.createLintCompileTask();
 
         // create the lint tasks.
         basePlugin.createLintTasks();
