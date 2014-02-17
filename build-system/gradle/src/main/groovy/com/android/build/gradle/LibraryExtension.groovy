@@ -32,6 +32,8 @@ public class LibraryExtension extends BaseExtension {
     private final DefaultDomainObjectSet<LibraryVariant> libraryVariantList =
         new DefaultDomainObjectSet<LibraryVariant>(LibraryVariant.class)
 
+    String defaultPublishConfig = "release"
+
     LibraryExtension(BasePlugin plugin, ProjectInternal project, Instantiator instantiator,
             NamedDomainObjectContainer<DefaultBuildType> buildTypes,
             NamedDomainObjectContainer<DefaultProductFlavor> productFlavors,
