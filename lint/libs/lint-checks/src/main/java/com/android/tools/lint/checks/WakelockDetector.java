@@ -32,6 +32,7 @@ import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 
+import com.google.common.io.Files;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
@@ -43,6 +44,7 @@ import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.analysis.AnalyzerException;
 
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 
 /**
@@ -74,7 +76,7 @@ public class WakelockDetector extends Detector implements ClassScanner {
             Severity.WARNING,
             new Implementation(
                     WakelockDetector.class,
-                    Scope.CLASS_FILE_SCOPE));
+                    Scope.ALL_CLASSES_AND_LIBRARIES));
 
     private static final String WAKELOCK_OWNER = "android/os/PowerManager$WakeLock"; //$NON-NLS-1$
     private static final String RELEASE_METHOD = "release"; //$NON-NLS-1$
@@ -97,7 +99,7 @@ public class WakelockDetector extends Detector implements ClassScanner {
     public void afterCheckProject(@NonNull Context context) {
         if (mHasAcquire && !mHasRelease && context.getDriver().getPhase() == 1) {
             // Gather positions of the acquire calls
-            context.getDriver().requestRepeat(this, Scope.CLASS_FILE_SCOPE);
+            context.getDriver().requestRepeat(this, Scope.ALL_CLASSES_AND_LIBRARIES);
         }
     }
 
@@ -126,6 +128,9 @@ public class WakelockDetector extends Detector implements ClassScanner {
         if (call.owner.equals(WAKELOCK_OWNER)) {
             String name = call.name;
             if (name.equals(ACQUIRE_METHOD)) {
+                if (call.desc.equals("(J)V")) { // acquire(long timeout) does not require a corresponding release
+                    return;
+                }
                 mHasAcquire = true;
 
                 if (context.getDriver().getPhase() == 2) {

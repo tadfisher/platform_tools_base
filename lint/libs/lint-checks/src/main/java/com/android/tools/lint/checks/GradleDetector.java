@@ -382,7 +382,8 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         boolean isObsolete = false;
         if ("com.android.tools.build".equals(dependency.getGroupId()) &&
                 "gradle".equals(dependency.getArtifactId())) {
-            if (isOlderThan(dependency, 0, 7, 3)) {
+            // TODO: Merge this with the constant SdkConstants#GRADLE_PLUGIN_LATEST_VERSION
+            if (isOlderThan(dependency, 0, 8, 3)) {
                 isObsolete = true;
             }
         } else if ("com.google.guava".equals(dependency.getGroupId()) &&
