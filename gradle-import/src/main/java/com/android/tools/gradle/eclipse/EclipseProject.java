@@ -186,7 +186,8 @@ class EclipseProject implements Comparable<EclipseProject> {
                 break;
             }
 
-            File path = new File(library.replace('/', File.separatorChar));
+            File path = new File(library.replace('\\', File.separatorChar).replace('/',
+                    File.separatorChar));
             File joined = path.isAbsolute() ? path : new File(mDir, library);
             File libraryDir = joined.getCanonicalFile();
             if (!libraryDir.exists()) {
