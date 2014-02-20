@@ -46,58 +46,7 @@ import org.xml.sax.helpers.DefaultHandler;
 
 public class DeviceSchemaTest extends TestCase {
 
-    private void checkFailure(Map<String, String> replacements, String regex) throws Exception {
-        // Generate XML stream with replacements
-        InputStream xmlStream = getReplacedStream(replacements);
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        assertFalse(
-                "Validation Assertion Failed, XML failed to validate when it was expected to pass\n",
-                DeviceSchema.validate(xmlStream, baos, null));
-        String actual = baos.toString().trim();
-        actual = actual.replace("\r\n", "\n");  // Fix Windows CRLF
-        assertTrue(
-                String.format("Regex Assertion Failed:\nExpected: %s\nActual: %s\n", regex, actual),
-                actual.matches(regex));
-    }
-
-    private void checkFailure(String resource, String regex) throws Exception {
-        InputStream xml = DeviceSchemaTest.class.getResourceAsStream(resource);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        assertFalse("Validation Assertion Failed, XML validated when it was expected to fail\n",
-                DeviceSchema.validate(xml, baos, null));
-        String actual = baos.toString().trim();
-        actual = actual.replace("\r\n", "\n");  // Fix Windows CRLF
-        assertTrue(
-                String.format("Regex Assertion Failed:\nExpected: %s\nActual: %s\n", regex, actual),
-                actual.matches(regex));
-    }
-
-    private void checkSuccess(Map<String, String> replacements) throws Exception {
-        InputStream xmlStream = getReplacedStream(replacements);
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        assertTrue(DeviceSchema.validate(xmlStream, baos, null));
-        assertTrue(baos.toString().trim().matches(""));
-    }
-
-    public static InputStream getReplacedStream(Map<String, String> replacements) throws Exception {
-        InputStream xml = DeviceSchema.class.getResourceAsStream("devices_minimal.xml");
-        SAXParserFactory factory = SAXParserFactory.newInstance();
-        factory.setNamespaceAware(true);
-        SAXParser parser = factory.newSAXParser();
-        ReplacementHandler replacer = new ReplacementHandler(replacements);
-        parser.parse(xml, replacer);
-        Document doc = replacer.getGeneratedDocument();
-        Transformer tf = TransformerFactory.newInstance().newTransformer();
-        // Add indents so we're closer to user generated output
-        tf.setOutputProperty(OutputKeys.INDENT, "yes");
-        DOMSource source = new DOMSource(doc);
-        StringWriter out = new StringWriter();
-        StreamResult result = new StreamResult(out);
-        tf.transform(source, result);
-        return new ByteArrayInputStream(out.toString().getBytes("UTF-8"));
-    }
+    //---- actual tests -----
 
     public void testValidXml() throws Exception {
         InputStream xml = DeviceSchemaTest.class.getResourceAsStream("devices.xml");
@@ -105,10 +54,12 @@ public class DeviceSchemaTest extends TestCase {
         boolean result = DeviceSchema.validate(xml, baos, null);
         String output = baos.toString().trim();
         assertTrue(
-                String.format(
-                        "Validation Assertion Failed, XML failed to validate when it was expected to pass\n%s\n",output), result);
-        assertTrue(String.format("Regex Assertion Failed\nExpected No Output\nActual: %s\n", baos
-                .toString().trim()), baos.toString().trim().matches(""));
+                String.format("Validation Assertion Failed, XML failed to validate when it was expected to pass\n%s\n", output),
+                result);
+        assertTrue(String.format(
+                "Regex Assertion Failed\nExpected No Output\nActual: %s\n",
+                baos.toString().trim()),
+                baos.toString().trim().matches(""));
     }
 
     public void testNoHardware() throws Exception {
@@ -168,7 +119,6 @@ public class DeviceSchemaTest extends TestCase {
 
         checkFailure(replacements, "Error: cvc-minInclusive-valid: Value '-1.0'.*\n"
                 + "Error: cvc-type.3.1.3: The value '-1.0' of element 'd:diagonal-length'.*");
-
     }
 
     public void testInvalidOpenGLVersion() throws Exception {
@@ -208,6 +158,91 @@ public class DeviceSchemaTest extends TestCase {
         replacements.put(DeviceSchema.NODE_GPU, "");
         checkFailure(replacements, "Error: cvc-minLength-valid: Value '' with length = '0'.*\n"
                 + "Error: cvc-type.3.1.3: The value '' of element 'd:gpu' is not valid.*");
+    }
+
+    public void testInvalidTagId() throws Exception {
+        Map<String, String> replacements = new HashMap<String, String>();
+        replacements.put(DeviceSchema.NODE_TAG_ID, "tag id");
+        checkFailure(replacements, "Error: cvc-pattern-valid: Value 'tag id' is not facet-valid with respect to pattern.*\n" +
+                "Error: cvc-type.3.1.3: The value 'tag id' of element 'd:tag-id' is not valid.*");
+    }
+
+    public void testInvalidBootProperty() throws Exception {
+        Map<String, String> replacements = new HashMap<String, String>();
+        replacements.put(DeviceSchema.NODE_PROP_NAME, "boot.prop.can't.use.=");
+        checkFailure(replacements, "Error: cvc-pattern-valid: Value 'boot.prop.can't.use.=' is not facet-valid with respect to pattern.*\n" +
+                "Error: cvc-type.3.1.3: The value 'boot.prop.can't.use.=' of element 'd:prop-name' is not valid.*");
+
+        replacements = new HashMap<String, String>();
+        replacements.put(DeviceSchema.NODE_PROP_NAME, "no white space");
+        checkFailure(replacements, "Error: cvc-pattern-valid: Value 'no white space' is not facet-valid with respect to pattern.*\n" +
+                "Error: cvc-type.3.1.3: The value 'no white space' of element 'd:prop-name' is not valid.*");
+
+        replacements = new HashMap<String, String>();
+        replacements.put(DeviceSchema.NODE_PROP_NAME, "no\nwhite\tspace\rallowed");
+        checkFailure(replacements, "Error: cvc-pattern-valid: Value 'no white space allowed' is not facet-valid with respect to pattern.*\n" +
+                "Error: cvc-type.3.1.3: The value 'no white space allowed' of element 'd:prop-name' is not valid.*");
+    }
+
+    public void testInvalidBootPropValue() throws Exception {
+        Map<String, String> replacements = new HashMap<String, String>();
+        replacements.put(DeviceSchema.NODE_PROP_VALUE, "   Any   random string\n with its \r\n whitespace \t is left intact.   ");
+        checkSuccess(replacements);
+    }
+
+    //---- helper methods -----
+
+    private void checkFailure(Map<String, String> replacements, String regex) throws Exception {
+        // Generate XML stream with replacements
+        InputStream xmlStream = getReplacedStream(replacements);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        assertFalse(
+                "Validation Assertion Failed, XML failed to validate when it was expected to pass\n",
+                DeviceSchema.validate(xmlStream, baos, null));
+        String actual = baos.toString().trim();
+        actual = actual.replace("\r\n", "\n");  // Fix Windows CRLF
+        assertTrue(
+                String.format("Regex Assertion Failed:\nExpected: %s\nActual: %s\n", regex, actual),
+                actual.matches(regex));
+    }
+
+    private void checkFailure(String resource, String regex) throws Exception {
+        InputStream xml = DeviceSchemaTest.class.getResourceAsStream(resource);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        assertFalse("Validation Assertion Failed, XML validated when it was expected to fail\n",
+                DeviceSchema.validate(xml, baos, null));
+        String actual = baos.toString().trim();
+        actual = actual.replace("\r\n", "\n");  // Fix Windows CRLF
+        assertTrue(
+                String.format("Regex Assertion Failed:\nExpected: %s\nActual: %s\n", regex, actual),
+                actual.matches(regex));
+    }
+
+    private void checkSuccess(Map<String, String> replacements) throws Exception {
+        InputStream xmlStream = getReplacedStream(replacements);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        assertTrue(DeviceSchema.validate(xmlStream, baos, null));
+        assertTrue(baos.toString().trim().matches(""));
+    }
+
+    public static InputStream getReplacedStream(Map<String, String> replacements) throws Exception {
+        InputStream xml = DeviceSchema.class.getResourceAsStream("devices_minimal.xml");
+        SAXParserFactory factory = SAXParserFactory.newInstance();
+        factory.setNamespaceAware(true);
+        SAXParser parser = factory.newSAXParser();
+        ReplacementHandler replacer = new ReplacementHandler(replacements);
+        parser.parse(xml, replacer);
+        Document doc = replacer.getGeneratedDocument();
+        Transformer tf = TransformerFactory.newInstance().newTransformer();
+        // Add indents so we're closer to user generated output
+        tf.setOutputProperty(OutputKeys.INDENT, "yes");
+        DOMSource source = new DOMSource(doc);
+        StringWriter out = new StringWriter();
+        StreamResult result = new StreamResult(out);
+        tf.transform(source, result);
+        return new ByteArrayInputStream(out.toString().getBytes("UTF-8"));
     }
 
     /**
