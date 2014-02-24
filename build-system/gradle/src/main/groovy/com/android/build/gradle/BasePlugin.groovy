@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.ProductFlavorData
 import com.android.build.gradle.internal.Sdk
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
+import com.android.build.gradle.internal.dependency.ClassifiedJarDependency
 import com.android.build.gradle.internal.dependency.DependencyChecker
 import com.android.build.gradle.internal.dependency.LibraryDependencyImpl
 import com.android.build.gradle.internal.dependency.ManifestDependencyImpl
@@ -2052,6 +2053,7 @@ public abstract class BasePlugin {
                     !(dep instanceof ProjectDependency)) {
                 Set<File> files = ((SelfResolvingDependency) dep).resolve()
                 for (File f : files) {
+                    println(">>>2: " + f)
                     localJars.put(f, new JarDependency(f, true /*compiled*/, false /*packaged*/))
                 }
             }
@@ -2079,6 +2081,7 @@ public abstract class BasePlugin {
                 }
 
                 if (f.getName().toLowerCase().endsWith(".jar")) {
+                    println(">>>3: " + f)
                     jars.put(f, new JarDependency(f, false /*compiled*/, true /*packaged*/))
                 } else {
                     throw new RuntimeException("Package-only dependency '" +
@@ -2164,8 +2167,14 @@ public abstract class BasePlugin {
                     bundlesForThisModule << adep
                     reverseMap.put(adep, configDependencies)
                 } else {
+                    println(">>>1: ${artifact.file} : ${artifact.classifier}")
                     jars.put(artifact.file,
-                            new JarDependency(artifact.file, true /*compiled*/, false /*packaged*/))
+                            new ClassifiedJarDependency(
+                                    artifact.file,
+                                    true /*compiled*/,
+                                    false /*packaged*/,
+                                    true /*proguarded*/,
+                                    artifact.classifier))
                 }
             }
 
