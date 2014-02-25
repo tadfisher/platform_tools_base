@@ -35,6 +35,7 @@ import static com.android.SdkConstants.VIEW_INCLUDE;
 import static com.android.SdkConstants.VIEW_TAG;
 
 import com.android.annotations.NonNull;
+import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.tools.lint.client.api.SdkInfo;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
@@ -235,9 +236,24 @@ public class InefficientWeightDetector extends LayoutDetector {
         } else if (children.isEmpty() && (orientation == null || orientation.isEmpty())
                 && context.isEnabled(ORIENTATION)
                 && element.hasAttributeNS(ANDROID_URI, ATTR_ID)) {
-            String message = "No orientation specified, and the default is horizontal. "
-                    + "This is a common source of bugs when children are added dynamically.";
-            context.report(ORIENTATION, element, context.getLocation(element), message, null);
+            boolean ignore;
+            if (element.hasAttribute(ATTR_STYLE)) {
+                if (context.getClient().supportsProjectResources()) {
+                    List<ResourceValue> values = LintUtils.getStyleAttributes(
+                            context.getMainProject(), context.getClient(),
+                            element.getAttribute(ATTR_STYLE), ANDROID_URI, ATTR_ORIENTATION);
+                    ignore = values != null && !values.isEmpty();
+                } else {
+                    ignore = true;
+                }
+            } else {
+                ignore = false;
+            }
+            if (!ignore) {
+                String message = "No orientation specified, and the default is horizontal. "
+                        + "This is a common source of bugs when children are added dynamically.";
+                context.report(ORIENTATION, element, context.getLocation(element), message, null);
+            }
         }
 
         if (context.isEnabled(BASELINE_WEIGHTS) && weightChild != null

@@ -134,4 +134,30 @@ public class InefficientWeightDetectorTest extends AbstractCheckTest {
 
                 lintFiles("res/layout/orientation.xml"));
     }
+
+    public void testIncremental1() throws Exception {
+        assertEquals(""
+                + "res/layout/orientation2.xml:5: Error: No orientation specified, and the default is horizontal. This is a common source of bugs when children are added dynamically. [Orientation]\n"
+                + "    <LinearLayout\n"
+                + "    ^\n"
+                + "1 errors, 0 warnings\n",
+
+                lintProjectIncrementally("res/layout/orientation2.xml",
+                        "res/layout/orientation2.xml"));
+    }
+
+    public void testIncremental2() throws Exception {
+        assertEquals("No warnings.",
+
+                lintProjectIncrementally("res/layout/orientation2.xml",
+                        "res/layout/orientation2.xml",
+                        "res/values/styles-inherited-orientation.xml"));
+    }
+
+    public void testIncremental3() throws Exception {
+        assertEquals("No warnings.",
+                lintProjectIncrementally("res/layout/orientation2.xml",
+                        "res/layout/orientation2.xml",
+                        "res/values/styles-orientation.xml"));
+    }
 }
