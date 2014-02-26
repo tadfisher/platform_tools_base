@@ -435,7 +435,7 @@ public class VariantManager {
                 if (flavorDataList.length > 1) {
                     DefaultAndroidSourceSet multiFlavorSourceSet = (DefaultAndroidSourceSet) sourceSetsContainer.maybeCreate(variantConfig.getFlavorName());
                     variantConfig.setMultiFlavorSourceProvider(multiFlavorSourceSet);
-                    // TODO: hmm this won't work
+                            // TODO: hmm this won't work
                     //variantProviders.add(new ConfigurationProviderImpl(project, multiFlavorSourceSet))
                 }
 
