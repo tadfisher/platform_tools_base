@@ -66,4 +66,21 @@ public class ScreenSizeQualifierTest extends TestCase {
         assertEquals(ScreenSize.XLARGE, config.getScreenSizeQualifier().getValue());
         assertEquals("xlarge", config.getScreenSizeQualifier().toString()); //$NON-NLS-1$
     }
+
+    public void testMatch() {
+        // create qualifiers for normal, large and xlarge sizes.
+        ScreenSizeQualifier normalQ = new ScreenSizeQualifier(ScreenSize.NORMAL);
+        ScreenSizeQualifier largeQ = new ScreenSizeQualifier(ScreenSize.LARGE);
+        ScreenSizeQualifier xlargeQ = new ScreenSizeQualifier(ScreenSize.XLARGE);
+
+        // test isMatchFor()
+        assertTrue(normalQ.isMatchFor(largeQ));
+        assertFalse(largeQ.isMatchFor(normalQ));
+
+        // test isBetterMatchThan()
+        assertTrue(largeQ.isBetterMatchThan(normalQ, xlargeQ));
+        assertTrue(xlargeQ.isBetterMatchThan(normalQ, xlargeQ));
+        assertFalse(normalQ.isBetterMatchThan(largeQ, xlargeQ));
+    }
+
 }
