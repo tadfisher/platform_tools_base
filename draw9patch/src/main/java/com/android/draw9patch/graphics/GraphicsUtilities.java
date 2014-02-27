@@ -17,13 +17,11 @@
 package com.android.draw9patch.graphics;
 
 import javax.imageio.ImageIO;
+
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.Raster;
-import java.awt.GraphicsConfiguration;
-import java.awt.GraphicsEnvironment;
-import java.awt.Graphics;
-import java.awt.Transparency;
 import java.net.URL;
 import java.io.IOException;
 
