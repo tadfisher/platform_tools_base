@@ -27,6 +27,9 @@ public class AaptOptionsImpl implements AaptOptions {
     @Input
     private List<String> noCompressList
 
+    @Input
+    private boolean useJavaCruncher = true;
+
     public void setIgnoreAssetsPattern(String ignoreAssetsPattern) {
         this.ignoreAssetsPattern = ignoreAssetsPattern
     }
@@ -47,6 +50,19 @@ public class AaptOptionsImpl implements AaptOptions {
     @Override
     Collection<String> getNoCompress() {
         return noCompressList
+    }
+
+    public void useJavaCruncher(boolean value) {
+        useJavaCruncher = value;
+    }
+
+    public void setUseJavaCruncher(boolean value) {
+        useJavaCruncher = value;
+    }
+
+    @Override
+    public boolean getJavaCruncher() {
+        return useJavaCruncher;
     }
 
     // -- DSL Methods. TODO remove once the instantiator does what I expect it to do.
