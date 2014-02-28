@@ -655,6 +655,8 @@ public abstract class BasePlugin {
 
         mergeResourcesTask.process9Patch = process9Patch
 
+        mergeResourcesTask.conventionMapping.useAaptCruncher = { extension.aaptOptions.useAaptPngCruncher }
+
         mergeResourcesTask.conventionMapping.inputResourceSets = {
             variantData.variantConfiguration.getResourceSets(
                     [ variantData.renderscriptCompileTask.getResOutputDir(),
