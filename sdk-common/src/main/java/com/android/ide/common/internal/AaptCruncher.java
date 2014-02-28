@@ -22,7 +22,7 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * Instances of this class are able to run aapt command.
+ * Implementation of the PngCruncher using aapt underneath.
  */
 public class AaptCruncher implements PngCruncher {
 
