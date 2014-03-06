@@ -16,101 +16,67 @@
 
 package com.android.manifmerger;
 
-import com.android.utils.StdLogger;
+import com.android.sdklib.mock.MockLog;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import junit.framework.TestCase;
 
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
+import org.xml.sax.SAXException;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+
+import javax.xml.parsers.ParserConfigurationException;
 
 /**
- * Tests for the {@link com.android.manifmerger.ManifestMerger2} class
+ * Tests for the {@link com.android.manifmerger.ManifestMergerTest} class
  */
-public class ManifestMerger2Test extends ManifestMergerTest {
+public class ManifestMerger2Test extends TestCase {
 
-    // so far, I only support 3 original tests.
-    private static String[] sDataFiles = new String[]{
-            "00_noop",
-            "10_activity_merge",
-            "11_activity_dup",
-    };
+    public void testValidationFailure()
+            throws ParserConfigurationException, SAXException, IOException,
+            ManifestMerger2.MergeFailureException {
 
-    /**
-     * This overrides the default test suite created by junit. The test suite is a bland TestSuite
-     * with a dedicated name. We inject as many instances of {@link ManifestMergerTest} in the suite
-     * as we have declared data files above.
-     *
-     * @return A new {@link junit.framework.TestSuite}.
-     */
-    public static Test suite() {
-        TestSuite suite = new TestSuite();
-        // Give a non-generic name to our test suite, for better unit reports.
-        suite.setName("ManifestMergerTestSuite");
+        MockLog mockLog = new MockLog();
+        String input = ""
+                + "<manifest\n"
+                + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                + "    package=\"com.example.lib3\">\n"
+                + "\n"
+                + "    <application android:label=\"@string/lib_name\" />\n"
+                + "\n"
+                + "        <activity android:name=\"activityOne\" "
+                + "             tools:replace=\"exported\"/>\n"
+                + "\n"
+                + "</manifest>";
 
-        for (String fileName : sDataFiles) {
-            suite.addTest(TestSuite.createTest(ManifestMerger2Test.class, fileName));
-        }
+        File tmpFile = inputAsFile("ManifestMerger2Test_testValidationFailure", input);
+        assertTrue(tmpFile.exists());
 
-        return suite;
-    }
-
-    public ManifestMerger2Test(String testName) {
-        super(testName);
-    }
-
-    /**
-     * Processes the data from the given
-     * {@link com.android.manifmerger.ManifestMergerTest.TestFiles} by invoking {@link
-     * ManifestMerger#process(java.io.File, java.io.File, java.io.File[], java.util.Map, String)}:
-     * the given library files are applied consecutively to the main XML document and the output is
-     * generated. <p/> Then the expected and actual outputs are loaded into a DOM, dumped again to a
-     * String using an XML transform and compared. This makes sure only the structure is checked and
-     * that any formatting is ignored in the comparison.
-     *
-     * @param testFiles The test files to process. Must not be null.
-     * @throws Exception when this go wrong.
-     */
-    @Override
-    void processTestFiles(TestFiles testFiles) throws Exception {
-
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        StdLogger stdLogger = new StdLogger(StdLogger.Level.VERBOSE);
-        MergingReport mergeReport = ManifestMerger2.newInvoker(testFiles.getMain(),
-                stdLogger)
-                .addLibraryManifests(testFiles.getLibs())
-                .merge();
-
-        assertTrue(mergeReport.getMergedDocument().isPresent());
-        XmlDocument actualResult = mergeReport.getMergedDocument().get();
-        actualResult.write(byteArrayOutputStream);
-
-        mergeReport.log(stdLogger);
-
-        XmlDocument expectedResult = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), testFiles.getMain().getName()),
-                testFiles.getExpectedResult());
-
-        // saves the result to the external file for easier human parsing.
-        OutputStream fos = null;
         try {
-            fos = new BufferedOutputStream(new FileOutputStream(testFiles.getActualResult()));
-            actualResult.write(fos);
+            MergingReport mergingReport = ManifestMerger2.newInvoker(tmpFile, mockLog).merge();
+            assertEquals(MergingReport.Result.ERROR, mergingReport.getResult());
+            // check the log complains about the incorrect "tools:replace"
+            assertTrue(mockLog.toString().contains("tools:replace"));
+            assertFalse(mergingReport.getMergedDocument().isPresent());
         } finally {
-            if (fos != null) fos.close();
+            assertTrue(tmpFile.delete());
         }
+    }
 
-        MergingReport.Builder comparingReport = new MergingReport.Builder(stdLogger);
-        stdLogger.info(byteArrayOutputStream.toString());
-        stdLogger.info(testFiles.getExpectedErrors());
-        // this is obviously quite hacky, refine once merge output is better defined.
-        boolean notExpectingError =
-                testFiles.getExpectedErrors().isEmpty() ||
-                testFiles.getExpectedErrors().charAt(0) != 'E';
-        assertEquals(notExpectingError,
-                expectedResult.compareXml(actualResult, comparingReport));
-
+    /**
+     * Utility method to save a {@link String} XML into a file.
+     */
+    private File inputAsFile(String testName, String input) throws IOException {
+        File tmpFile = File.createTempFile(testName, ".xml");
+        FileWriter fw = null;
+        try {
+            fw = new FileWriter(tmpFile);
+            fw.append(input);
+        } finally {
+            if (fw != null) fw.close();
+        }
+        return tmpFile;
     }
 }
