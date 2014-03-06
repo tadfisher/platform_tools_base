@@ -67,17 +67,24 @@ public class ManifestMerger2 {
         for (File inputFile : mFlavorsAndBuildTypeFiles) {
             mILogger.info("Merging flavors and build manifest " + inputFile.getPath());
             xmlDocumentOptional = merge(xmlDocumentOptional, inputFile, mergingReportBuilder);
+            if (!xmlDocumentOptional.isPresent()) {
+                return mergingReportBuilder.build();
+            }
         }
         mILogger.info("Merging main manifest" + mMainManifestFile.getPath());
         xmlDocumentOptional = merge(xmlDocumentOptional, mMainManifestFile, mergingReportBuilder);
+        if (!xmlDocumentOptional.isPresent()) {
+            return mergingReportBuilder.build();
+        }
         for (File inputFile : mLibraryFiles) {
             mILogger.info("Merging library manifest " + inputFile.getPath());
             xmlDocumentOptional = merge(xmlDocumentOptional, inputFile, mergingReportBuilder);
+            if (!xmlDocumentOptional.isPresent()) {
+                return mergingReportBuilder.build();
+            }
         }
 
-        if (xmlDocumentOptional.isPresent()) {
-            mergingReportBuilder.setMergedDocument(xmlDocumentOptional.get());
-        }
+        mergingReportBuilder.setMergedDocument(xmlDocumentOptional.get());
         return mergingReportBuilder.build();
     }
 
@@ -92,6 +99,12 @@ public class ManifestMerger2 {
             lowerPriorityDocument = XmlLoader.load(lowerPriorityXmlFile);
         } catch (Exception e) {
             throw new MergeFailureException(e);
+        }
+        MergingReport.Result validationResult = PreValidator
+                .validate(lowerPriorityDocument, mergingReportBuilder.getLogger());
+        if (validationResult == MergingReport.Result.ERROR) {
+            mergingReportBuilder.addError("Validation failed, exciting merging");
+            return Optional.absent();
         }
         Optional<XmlDocument> result = xmlDocument.isPresent()
                 ? xmlDocument.get().merge(lowerPriorityDocument, mergingReportBuilder)
