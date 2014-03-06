@@ -185,14 +185,14 @@ class ActionRecorder {
         private final List<NodeRecord> mNodeRecords = new ArrayList<NodeRecord>();
 
         // all attributes decisions indexed by attribute name.
-        private final Map<String, List<AttributeRecord>> mAttributeRecords =
-                new HashMap<String, List<AttributeRecord>>();
+        private final Map<XmlNode.NodeName, List<AttributeRecord>> mAttributeRecords =
+                new HashMap<XmlNode.NodeName, List<AttributeRecord>>();
 
         ImmutableList<NodeRecord> getNodeRecords() {
             return ImmutableList.copyOf(mNodeRecords);
         }
 
-        ImmutableMap<String, List<AttributeRecord>> getAttributesRecords() {
+        ImmutableMap<XmlNode.NodeName, List<AttributeRecord>> getAttributesRecords() {
             return ImmutableMap.copyOf(mAttributeRecords);
         }
 
@@ -235,9 +235,8 @@ class ActionRecorder {
             recordNodeAction(xmlElement, ActionType.ADDED);
             for (XmlAttribute xmlAttribute : xmlElement.getAttributes()) {
                 AttributeOperationType attributeOperation = xmlElement
-                        .getAttributeOperationType(xmlAttribute.getName().toString());
-                recordAttributeAction(
-                        xmlElement, xmlAttribute.getName(), ActionType.ADDED, attributeOperation);
+                        .getAttributeOperationType(xmlAttribute.getName());
+                recordAttributeAction(xmlAttribute, ActionType.ADDED, attributeOperation);
             }
             for (XmlElement childNode : xmlElement.getMergeableElements()) {
                 recordDefaultNodeAction(childNode);
@@ -284,33 +283,31 @@ class ActionRecorder {
 
     /**
      * Records an attribute action taken by the merging tool
-     * @param targetNode the xml element owning the attribute
-     * @param attributeName the attribute name
+     * @param attribute the attribute in question.
      * @param actionType the action's type
      * @param attributeOperationType the original tool annotation leading to the merging tool
      *                               decision.
      */
     synchronized void recordAttributeAction(
-            XmlElement targetNode,
-            XmlNode.NodeName attributeName,
+            XmlAttribute attribute,
             ActionType actionType,
             AttributeOperationType attributeOperationType) {
 
-        String storageKey = targetNode.getId();
+        XmlElement originElement = attribute.getOwnerElement();
+        String storageKey = originElement.getId();
         DecisionTreeRecord nodeDecisionTree = mRecords.get(storageKey);
         // by now the node should have been added for this element.
         Preconditions.checkState(nodeDecisionTree != null);
-        String attributeKey = attributeName.toString();
         List<AttributeRecord> attributeRecords =
-                nodeDecisionTree.mAttributeRecords.get(attributeKey);
+                nodeDecisionTree.mAttributeRecords.get(attribute.getName());
         if (attributeRecords == null) {
             attributeRecords = new ArrayList<AttributeRecord>();
-            nodeDecisionTree.mAttributeRecords.put(attributeKey, attributeRecords);
+            nodeDecisionTree.mAttributeRecords.put(attribute.getName(), attributeRecords);
         }
         AttributeRecord attributeRecord = new AttributeRecord(
                 actionType,
                 new ActionLocation(
-                        targetNode.getDocument().getSourceLocation(), targetNode.getPosition()),
+                        originElement.getDocument().getSourceLocation(), attribute.getPosition()),
                 attributeOperationType);
         attributeRecords.add(attributeRecord);
     }
@@ -342,7 +339,7 @@ class ActionRecorder {
                 nodeRecord.print(stringBuilder);
                 stringBuilder.append("\n");
             }
-            for (Map.Entry<String, List<AttributeRecord>> attributeRecords :
+            for (Map.Entry<XmlNode.NodeName, List<AttributeRecord>> attributeRecords :
                     record.getValue().mAttributeRecords.entrySet()) {
                 stringBuilder.append("\t").append(attributeRecords.getKey());
                 for (AttributeRecord attributeRecord : attributeRecords.getValue()) {
