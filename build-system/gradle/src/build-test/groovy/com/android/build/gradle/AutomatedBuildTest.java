@@ -31,7 +31,7 @@ public class AutomatedBuildTest extends BuildTest {
     private String gradleVersion;
     private TestType testType;
 
-    private static enum TestType { BUILD, REPORT }
+    private static enum TestType { BUILD, REPORT, BUILD_TRANSLATION }
 
     private static final String[] sBuiltProjects = new String[] {
             "aidl",
@@ -87,6 +87,8 @@ public class AutomatedBuildTest extends BuildTest {
             if (isIgnoredGradleVersion(gradleVersion)) {
                 continue;
             }
+            addTranslationBuild(suite, gradleVersion);
+
             // first the project we build on all available versions of Gradle
             for (String projectName : sBuiltProjects) {
                 String testName = "build_" + projectName + "_" + gradleVersion;
@@ -123,6 +125,18 @@ public class AutomatedBuildTest extends BuildTest {
             buildProject(projectName, gradleVersion);
         } else if (testType == TestType.REPORT) {
             runTasksOn(projectName, gradleVersion, "androidDependencies", "signingReport");
+        } else if (testType == TestType.BUILD_TRANSLATION) {
+            buildTranslationProject(projectName, gradleVersion);
         }
+    }
+
+    private static void addTranslationBuild(TestSuite suite, String gradleVersion) {
+        String projectName = sBuiltProjects[sBuiltProjects.length - 1];
+        String testName = "buildTranslation_" + projectName + "_" + gradleVersion;
+
+        AutomatedBuildTest test = (AutomatedBuildTest) TestSuite.createTest(
+                AutomatedBuildTest.class, testName);
+        test.setProjectInfo(projectName, gradleVersion, TestType.BUILD_TRANSLATION);
+        suite.addTest(test);
     }
 }

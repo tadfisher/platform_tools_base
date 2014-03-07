@@ -139,18 +139,21 @@ import java.lang.reflect.Method
 import java.util.jar.Attributes
 import java.util.jar.Manifest
 
+import static com.android.builder.BuilderConstants.ANDROID_TEST
 import static com.android.builder.BuilderConstants.CONNECTED
 import static com.android.builder.BuilderConstants.DEBUG
 import static com.android.builder.BuilderConstants.DEVICE
+import static com.android.builder.BuilderConstants.ENABLE_TRANSLATION_JVM_ARG
 import static com.android.builder.BuilderConstants.EXT_LIB_ARCHIVE
-import static com.android.builder.BuilderConstants.FD_FLAVORS
-import static com.android.builder.BuilderConstants.FD_FLAVORS_ALL
 import static com.android.builder.BuilderConstants.FD_ANDROID_RESULTS
 import static com.android.builder.BuilderConstants.FD_ANDROID_TESTS
+import static com.android.builder.BuilderConstants.FD_FLAVORS
+import static com.android.builder.BuilderConstants.FD_FLAVORS_ALL
 import static com.android.builder.BuilderConstants.FD_REPORTS
-import static com.android.builder.BuilderConstants.ANDROID_TEST
 import static com.android.builder.BuilderConstants.RELEASE
+import static com.android.builder.BuilderConstants.TRANSLATE
 import static com.android.builder.VariantConfiguration.Type.TEST
+import static com.android.SdkConstants.VALUE_TRUE
 import static java.io.File.separator
 /**
  * Base class for all Android plugins
@@ -270,6 +273,10 @@ public abstract class BasePlugin {
         signingConfigContainer.create(DEBUG)
         buildTypeContainer.create(DEBUG)
         buildTypeContainer.create(RELEASE)
+
+        if (translationEnabled()) {
+            buildTypeContainer.create(TRANSLATE);
+        }
 
         // map whenObjectRemoved on the containers to throw an exception.
         signingConfigContainer.whenObjectRemoved {
@@ -663,6 +670,12 @@ public abstract class BasePlugin {
         }
 
         mergeResourcesTask.conventionMapping.outputDir = { project.file(outputLocation) }
+
+        if ("${variantData.variantConfiguration.fullName}" == TRANSLATE) {
+            mergeResourcesTask.translateMode= true;
+        } else {
+            mergeResourcesTask.translateMode= false;
+        }
 
         return mergeResourcesTask
     }
@@ -2317,4 +2330,18 @@ public abstract class BasePlugin {
     public Project getProject() {
         return project
     }
+
+    private boolean translationEnabled() {
+        String enabledInSystemProp = System.getProperty(ENABLE_TRANSLATION_JVM_ARG);
+        if (enabledInSystemProp != null && enabledInSystemProp.equals(VALUE_TRUE)) {
+            return true;
+        }
+
+        if (project.hasProperty(ENABLE_TRANSLATION_JVM_ARG) &&
+                ((String) project.property(ENABLE_TRANSLATION_JVM_ARG)).equals(VALUE_TRUE)) {
+            return true;
+        }
+        return false
+    }
+
 }

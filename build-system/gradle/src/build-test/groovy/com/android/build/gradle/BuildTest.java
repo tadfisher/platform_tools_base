@@ -19,7 +19,10 @@ package com.android.build.gradle;
 import com.android.build.gradle.internal.test.BaseTest;
 import com.google.common.collect.Lists;
 
+import org.apache.commons.io.FileUtils;
+
 import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 
 /**
@@ -66,6 +69,24 @@ abstract class BuildTest extends BaseTest {
         // build the project
         runGradleTasks(sdkDir, ndkDir, gradleVersion, project, tasks);
 
+        return project;
+    }
+
+    protected File buildTranslationProject(String name, String gradleVersion) {
+        File project = new File(testDir, name);
+
+        File gradleProperties = new File(project, "gradle.properties");
+        assertFalse("Existing gradle.properties for " + name, gradleProperties.exists());
+        try {
+            gradleProperties.createNewFile();
+            FileUtils.writeStringToFile(gradleProperties, "enableTranslation=true");
+        } catch (IOException e) {
+            gradleProperties.delete();
+            return null;
+        }
+
+        runTasksOnProject(name, gradleVersion, "clean", "assembleTranslate", "lint");
+        gradleProperties.delete();
         return project;
     }
 }

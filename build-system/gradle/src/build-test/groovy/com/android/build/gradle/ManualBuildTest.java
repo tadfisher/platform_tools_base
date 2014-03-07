@@ -19,6 +19,8 @@ package com.android.build.gradle;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
+import org.apache.commons.io.FileUtils;
+
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -162,5 +164,18 @@ public class ManualBuildTest extends BuildTest {
             assertTrue("File '" + f.getAbsolutePath() + "' does not contain: " + expectedContent,
                 contents.contains(expectedContent));
         }
+    }
+
+    public void testBasicWithTranslationContent() throws Exception {
+        File project = buildTranslationProject("basic", BasePlugin.GRADLE_MIN_VERSION);
+        assertNotNull(project);
+
+        File translateFileOutput = new File(project, "build/res/all/translate/values/values.xml");
+        String fileContent = FileUtils.readFileToString(translateFileOutput);
+
+        char LRM = 0x200e;
+        char RLM = 0x200f;
+        assertNotSame(fileContent.indexOf(LRM), -1);
+        assertNotSame(fileContent.indexOf(RLM), -1);
     }
 }
