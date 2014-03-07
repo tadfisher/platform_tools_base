@@ -19,6 +19,7 @@ package com.android.build.gradle.internal;
 import static com.android.builder.BuilderConstants.DEBUG;
 import static com.android.builder.BuilderConstants.ANDROID_TEST;
 import static com.android.builder.BuilderConstants.LINT;
+import static com.android.builder.BuilderConstants.TRANSLATE;
 import static com.android.builder.BuilderConstants.UI_TEST;
 
 import com.android.annotations.NonNull;
@@ -111,11 +112,11 @@ public class VariantManager {
      * and adding it to the map.
      * @param buildType the build type.
      */
-    public void addBuildType(@NonNull BuildTypeDsl buildType) {
+    public void addBuildType(@NonNull BuildTypeDsl buildType, boolean translationEnabled) {
         buildType.init(signingConfigs.get(DEBUG));
 
         String name = buildType.getName();
-        checkName(name, "BuildType");
+        checkName(name, "BuildType", translationEnabled);
 
         if (productFlavors.containsKey(name)) {
             throw new RuntimeException("BuildType names cannot collide with ProductFlavor names");
@@ -135,9 +136,10 @@ public class VariantManager {
      *
      * @param productFlavor the product flavor
      */
-    public void addProductFlavor(@NonNull GroupableProductFlavorDsl productFlavor) {
+    public void addProductFlavor(@NonNull GroupableProductFlavorDsl productFlavor,
+            boolean translationEnabled) {
         String name = productFlavor.getName();
-        checkName(name, "ProductFlavor");
+        checkName(name, "ProductFlavor", translationEnabled);
 
         if (buildTypes.containsKey(name)) {
             throw new RuntimeException("ProductFlavor names cannot collide with BuildType names");
@@ -598,7 +600,8 @@ public class VariantManager {
         }
     }
 
-    private static void checkName(@NonNull String name, @NonNull String displayName) {
+    private static void checkName(@NonNull String name, @NonNull String displayName,
+            boolean translationEnabled) {
         if (name.startsWith(ANDROID_TEST)) {
             throw new RuntimeException(String.format(
                     "%1$s names cannot start with '%2$s'", displayName, ANDROID_TEST));
@@ -612,6 +615,11 @@ public class VariantManager {
         if (LINT.equals(name)) {
             throw new RuntimeException(String.format(
                     "%1$s names cannot be %2$s", displayName, LINT));
+        }
+
+        if (!translationEnabled && TRANSLATE.equals((name))) {
+            throw new RuntimeException(String.format(
+                    "%1$s names cannot be %2$s", displayName, TRANSLATE));
         }
     }
 }

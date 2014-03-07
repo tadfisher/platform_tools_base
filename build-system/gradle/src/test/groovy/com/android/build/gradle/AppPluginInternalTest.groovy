@@ -55,6 +55,7 @@ public class AppPluginInternalTest extends BaseTest {
         assertEquals(2, plugin.variantManager.buildTypes.size())
         assertNotNull(plugin.variantManager.buildTypes.get(BuilderConstants.DEBUG))
         assertNotNull(plugin.variantManager.buildTypes.get(BuilderConstants.RELEASE))
+        assertNull(plugin.variantManager.buildTypes.get(BuilderConstants.TRANSLATE))
         assertEquals(0, plugin.variantManager.productFlavors.size())
 
 
@@ -63,6 +64,67 @@ public class AppPluginInternalTest extends BaseTest {
 
         findNamedItem(variants, "debug", "variantData")
         findNamedItem(variants, "release", "variantData")
+        findNamedItem(variants, "debugTest", "variantData")
+    }
+
+    public void testBasicTranslationDisabled() {
+        Project project = ProjectBuilder.builder().withProjectDir(
+                new File(testDir, "basic")).build()
+
+        project.setProperty("enableTranslation", "false");
+        project.apply plugin: 'android'
+
+        project.android {
+            compileSdkVersion 15
+            buildToolsVersion "19"
+        }
+
+        AppPlugin plugin = AppPlugin.pluginHolder.plugin
+        plugin.createAndroidTasks(true /*force*/)
+
+        assertEquals(2, plugin.variantManager.buildTypes.size())
+        assertNotNull(plugin.variantManager.buildTypes.get(BuilderConstants.DEBUG))
+        assertNotNull(plugin.variantManager.buildTypes.get(BuilderConstants.RELEASE))
+        assertNull(plugin.variantManager.buildTypes.get(BuilderConstants.TRANSLATE))
+        assertEquals(0, plugin.variantManager.productFlavors.size())
+
+
+        List<BaseVariantData> variants = plugin.variantDataList
+        assertEquals(3, variants.size()) // includes the test variant(s)
+
+        findNamedItem(variants, "debug", "variantData")
+        findNamedItem(variants, "release", "variantData")
+        findNamedItem(variants, "debugTest", "variantData")
+    }
+
+    public void testBasicTranslationEnabled() {
+        Project project = ProjectBuilder.builder().withProjectDir(
+                new File(testDir, "basic")).build()
+
+        project.setProperty("enableTranslation", "true");
+        project.apply plugin: 'android'
+
+        project.android {
+            compileSdkVersion 15
+            buildToolsVersion "19"
+        }
+
+        AppPlugin plugin = AppPlugin.pluginHolder.plugin
+        plugin.createAndroidTasks(true /*force*/)
+
+        assertEquals(3, plugin.variantManager.buildTypes.size())
+        assertNotNull(plugin.variantManager.buildTypes.get(BuilderConstants.DEBUG))
+        assertNotNull(plugin.variantManager.buildTypes.get(BuilderConstants.RELEASE))
+        assertNotNull(plugin.variantManager.buildTypes.get(BuilderConstants.TRANSLATE))
+        assertEquals(0, plugin.variantManager.productFlavors.size())
+
+
+        List<BaseVariantData> variants = plugin.variantDataList
+        assertEquals(4, variants.size()) // includes the test variant(s)
+
+        findNamedItem(variants, "debug", "variantData")
+        findNamedItem(variants, "release", "variantData")
+        findNamedItem(variants, "translate", "variantData")
         findNamedItem(variants, "debugTest", "variantData")
     }
 

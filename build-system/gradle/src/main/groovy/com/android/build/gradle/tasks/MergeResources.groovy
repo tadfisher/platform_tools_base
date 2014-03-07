@@ -52,6 +52,9 @@ public class MergeResources extends IncrementalTask {
     // actual inputs
     List<ResourceSet> inputResourceSets
 
+    @Input
+    boolean translateMode
+
     private final FileValidity<ResourceSet> fileValidity = new FileValidity<ResourceSet>();
 
     @Override
@@ -83,7 +86,7 @@ public class MergeResources extends IncrementalTask {
 
             // get the merged set and write it down.
             MergedResourceWriter writer = new MergedResourceWriter(
-                    destinationDir, getProcess9Patch() ? getCruncher() : null)
+                    destinationDir, getProcess9Patch() ? getCruncher() : null, translateMode)
             writer.setInsertSourceMarkers(builder.isInsertSourceMarkers())
 
             merger.mergeData(writer, false /*doCleanUp*/)
@@ -142,9 +145,10 @@ public class MergeResources extends IncrementalTask {
             }
 
             MergedResourceWriter writer = new MergedResourceWriter(
-                    getOutputDir(), getProcess9Patch() ? getCruncher() : null)
+                    getOutputDir(), getProcess9Patch() ? getCruncher() : null, translateMode)
             writer.setInsertSourceMarkers(builder.isInsertSourceMarkers())
             merger.mergeData(writer, false /*doCleanUp*/)
+
             // No exception? Write the known state.
             merger.writeBlobTo(getIncrementalFolder(), writer)
         } catch (MergingException e) {
