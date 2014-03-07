@@ -134,14 +134,16 @@ public abstract class BaseTest extends TestCase {
     protected File runTasksOn(String name, String gradleVersion, String... tasks) {
         File project = new File(testDir, name)
 
-        runGradleTasks(sdkDir, ndkDir, gradleVersion, project, tasks)
+        runGradleTasks(sdkDir, ndkDir, gradleVersion, project, null, tasks)
 
         return project;
     }
 
     protected static void runGradleTasks(File sdkDir, File ndkDir,
                                          String gradleVersion,
-                                         File project, String... tasks) {
+                                         File project,
+                                         @Nullable List<String> jvmArgs,
+                                         String... tasks) {
         File localProp = createLocalProp(project, sdkDir, ndkDir)
 
         try {
@@ -153,7 +155,12 @@ public abstract class BaseTest extends TestCase {
                     .forProjectDirectory(project)
                     .connect()
             try {
-                connection.newBuild().forTasks(tasks).withArguments("-i").run()
+                org.gradle.tooling.BuildLauncher launcher =
+                    connection.newBuild().forTasks(tasks).withArguments("-i");
+                if (jvmArgs != null) {
+                    launcher.setJvmArguments(jvmArgs.toArray(new String[jvmArgs.size()]));
+                }
+                launcher.run()
             } finally {
                 connection.close()
             }

@@ -16,11 +16,15 @@
 
 package com.android.build.gradle;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.test.BaseTest;
 import com.google.common.collect.Lists;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Base class for build tests.
@@ -54,18 +58,26 @@ abstract class BuildTest extends BaseTest {
     }
 
     protected File buildProject(String name, String gradleVersion) {
-        return runTasksOnProject(name, gradleVersion, "clean", "assembleDebug", "lint");
+        return runTasksOnProject(name, gradleVersion, null, "clean", "assembleDebug", "lint");
     }
 
-    protected File runTasksOnProject(String name, String gradleVersion, String... tasks) {
+    protected File runTasksOnProject(String name, String gradleVersion,
+            @Nullable List<String> jvmArgs, String... tasks) {
         File project = new File(testDir, name);
 
         File buildGradle = new File(project, "build.gradle");
         assertTrue("Missing build.gradle for " + name, buildGradle.isFile());
 
         // build the project
-        runGradleTasks(sdkDir, ndkDir, gradleVersion, project, tasks);
+        runGradleTasks(sdkDir, ndkDir, gradleVersion, project, jvmArgs, tasks);
 
         return project;
+    }
+
+    protected File buildTranslationProject(@NonNull String name, String gradleVersion) {
+        List<String> jvmArgs = new ArrayList<String>();
+        jvmArgs.add("-DenableTranslation=true");
+        jvmArgs.add("-XX:MaxPermSize=128m");
+        return runTasksOnProject(name, gradleVersion, jvmArgs, "clean", "assembleTranslate", "lint");
     }
 }
