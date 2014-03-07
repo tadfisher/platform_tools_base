@@ -16,8 +16,6 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintUtils.assertionsEnabled;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.tools.lint.client.api.IssueRegistry;
@@ -25,18 +23,16 @@ import com.android.tools.lint.detector.api.Issue;
 import com.google.common.annotations.Beta;
 import com.google.common.collect.Sets;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+
+import static com.android.tools.lint.detector.api.LintUtils.assertionsEnabled;
 
 /** Registry which provides a list of checks to be performed on an Android project */
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
     static {
-        final int initialCapacity = 179;
+        final int initialCapacity = 180;
         List<Issue> issues = new ArrayList<Issue>(initialCapacity);
 
         issues.add(AccessibilityDetector.ISSUE);
@@ -218,6 +214,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(GradleDetector.GRADLE_GETTER);
         issues.add(GradleDetector.PLUS);
         issues.add(GradleDetector.COMPATIBILITY);
+        issues.add(GradleDetector.ANDROID_GRADLE_PLUGIN_VERSION);
 
         assert initialCapacity >= issues.size() : issues.size();
 
