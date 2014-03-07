@@ -21,7 +21,6 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.prefs.AndroidLocation;
-import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.prefs.AndroidLocation.EnvVar;
 import com.android.resources.Density;
 import com.android.resources.Keyboard;
@@ -33,10 +32,9 @@ import com.android.resources.ScreenRatio;
 import com.android.resources.ScreenSize;
 import com.android.resources.TouchScreen;
 import com.android.sdklib.ISystemImage.LocationType;
+import com.android.sdklib.devices.ButtonType;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.Device.Builder;
-import com.android.sdklib.devices.Storage.Unit;
-import com.android.sdklib.devices.ButtonType;
 import com.android.sdklib.devices.DeviceWriter;
 import com.android.sdklib.devices.Hardware;
 import com.android.sdklib.devices.Multitouch;
@@ -46,6 +44,7 @@ import com.android.sdklib.devices.ScreenType;
 import com.android.sdklib.devices.Software;
 import com.android.sdklib.devices.State;
 import com.android.sdklib.devices.Storage;
+import com.android.sdklib.devices.Storage.Unit;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.io.FileOp;
 import com.android.sdklib.mock.MockLog;
@@ -54,8 +53,6 @@ import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.sdklib.repository.local.LocalPlatformPkgInfo;
 import com.android.sdklib.repository.local.LocalSysImgPkgInfo;
-import com.android.utils.ILogger;
-import junit.framework.TestCase;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -64,9 +61,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactoryConfigurationError;
+import junit.framework.TestCase;
 
 /**
  * Test case that allocates a temporary SDK, a temporary AVD base folder
@@ -78,7 +73,7 @@ public class SdkManagerTestCase extends TestCase {
     private File mFakeSdk;
     private MockLog mLog;
     private SdkManager mSdkManager;
-    private TmpAvdManager mAvdManager;
+    private AvdManager mAvdManager;
     private int mRepoXsdLevel;
     private String mOldAndroidHomeProp;
     private File mAndroidHome;
@@ -94,7 +89,7 @@ public class SdkManagerTestCase extends TestCase {
     }
 
     /** Returns the {@link AvdManager} for this test case. */
-    public TmpAvdManager getAvdManager() {
+    public AvdManager getAvdManager() {
         return mAvdManager;
     }
 
@@ -109,8 +104,7 @@ public class SdkManagerTestCase extends TestCase {
         makeFakeSdk();
         mSdkManager = SdkManager.createManager(mFakeSdk.getAbsolutePath(), mLog);
         assertNotNull("SdkManager location was invalid", mSdkManager);
-
-        mAvdManager = new TmpAvdManager(mSdkManager, mLog);
+        mAvdManager = AvdManager.getInstance(mSdkManager.getLocalSdk(), mLog);
     }
 
     /**
@@ -136,42 +130,6 @@ public class SdkManagerTestCase extends TestCase {
      * like TestCase classes with no test methods.
      */
     public void testPlaceholder() {
-    }
-
-    /**
-     * An {@link AvdManager} that uses a temporary directory
-     * located <em>inside</em> the SDK directory for testing.
-     * The AVD list should be initially empty.
-     */
-    protected static class TmpAvdManager extends AvdManager {
-
-        /*
-         * Implementation detail:
-         * - When the super.AvdManager constructor is invoked, it will invoke
-         *   the buildAvdFilesList() to fill the initial AVD list, which will in
-         *   turn call getBaseAvdFolder().
-         * - That's why mTmpAvdRoot is initialized in getAvdRoot() rather than
-         *   in the constructor, since we can't initialize fields before the super()
-         *   call.
-         */
-
-        /**
-         * AVD Root, initialized "lazily" when the AVD root is first requested.
-         */
-        private File mTmpAvdRoot;
-
-        public TmpAvdManager(SdkManager sdkManager, ILogger log) throws AndroidLocationException {
-            super(sdkManager.getLocalSdk(), log);
-        }
-
-        @Override
-        public String getBaseAvdFolder() throws AndroidLocationException {
-            if (mTmpAvdRoot == null) {
-                mTmpAvdRoot = new File(getLocalSdk().getLocation(), "tmp_avds");
-                mTmpAvdRoot.mkdirs();
-            }
-            return mTmpAvdRoot.getAbsolutePath();
-        }
     }
 
     private void makeFakeAndroidHome() throws IOException {
