@@ -18,8 +18,9 @@ package com.android.build.gradle.internal.dsl
 
 import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.internal.test.BaseTest
-import com.android.builder.DefaultBuildType
+import com.android.build.gradle.internal.test.PluginHolder
 import com.android.builder.BuilderConstants
+import com.android.builder.DefaultBuildType
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 
@@ -27,6 +28,10 @@ import org.gradle.testfixtures.ProjectBuilder
  * test that the build type are properly initialized
  */
 public class BuildTypeDslTest extends BaseTest {
+    @Override
+    protected void setUp() throws Exception {
+        AppPlugin.pluginHolder = new PluginHolder();
+    }
 
     public void testDebug() {
         Project project = ProjectBuilder.builder().withProjectDir(
@@ -68,6 +73,58 @@ public class BuildTypeDslTest extends BaseTest {
         assertFalse(type.isJniDebugBuild())
         assertFalse(type.isRenderscriptDebugBuild())
         assertTrue(type.isZipAlign())
+    }
+
+    public void testTranslateDefault() {
+        Project project = ProjectBuilder.builder().withProjectDir(
+                new File(testDir, "basic")).build()
+
+        project.apply plugin: 'android'
+
+        project.android {
+            compileSdkVersion 15
+        }
+        AppPlugin plugin = AppPlugin.pluginHolder.plugin
+
+        assertNull(plugin.variantManager.buildTypes.get(BuilderConstants.TRANSLATE));
+    }
+
+    public void testTranslateDisabled() {
+        Project project = ProjectBuilder.builder().withProjectDir(
+                new File(testDir, "basic")).build()
+
+        project.setProperty("enableTranslation", "false");
+        project.apply plugin: 'android'
+
+        project.android {
+            compileSdkVersion 15
+        }
+        AppPlugin plugin = AppPlugin.pluginHolder.plugin
+
+        assertNull(plugin.variantManager.buildTypes.get(BuilderConstants.TRANSLATE));
+    }
+
+    public void testTranslateEnabled() {
+        Project project = ProjectBuilder.builder().withProjectDir(
+                new File(testDir, "basic")).build()
+
+        project.setProperty("enableTranslation", "true");
+        project.apply plugin: 'android'
+
+        project.android {
+            compileSdkVersion 15
+        }
+        AppPlugin plugin = AppPlugin.pluginHolder.plugin
+
+        DefaultBuildType type = plugin.variantManager.buildTypes.get(BuilderConstants.TRANSLATE).buildType
+
+        // Same as debug build type.
+        assertTrue(type.isDebuggable())
+        assertFalse(type.isJniDebugBuild())
+        assertFalse(type.isRenderscriptDebugBuild())
+        assertNotNull(type.getSigningConfig())
+        assertTrue(type.getSigningConfig().isSigningReady())
+        assertFalse(type.isZipAlign())
     }
 
     public void testInitWith() {

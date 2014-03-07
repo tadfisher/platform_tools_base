@@ -64,6 +64,9 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
 
     private boolean mInsertSourceMarkers = true;
 
+    // Whether the resource string will be wrapped with its message id.
+    private boolean mWrapResString;
+
     /**
      * map of XML values files to write after parsing all the files. the key is the qualifier.
      */
@@ -76,9 +79,11 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
      */
     private Set<String> mQualifierWithDeletedValues;
 
-    public MergedResourceWriter(@NonNull File rootFolder, @Nullable PngCruncher pngRunner) {
+    public MergedResourceWriter(@NonNull File rootFolder, @Nullable PngCruncher pngRunner,
+            boolean wrapResString) {
         super(rootFolder);
         mCruncher = pngRunner;
+        mWrapResString = wrapResString;
     }
 
     /**
@@ -230,6 +235,10 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
 
     @Override
     protected void postWriteAction() throws ConsumerException {
+        StrResWrapper strWrapper = null;
+        if (mWrapResString) {
+            strWrapper = new StrResWrapper();
+        }
 
         // now write the values files.
         for (String key : mValuesResMap.keySet()) {
@@ -293,6 +302,11 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                             rootNode.appendChild(document.createTextNode("\n"));
                         }
                         Node adoptedNode = NodeUtils.adoptNode(document, item.getValue());
+
+                        if (mWrapResString && item.isTouched()) {
+                            strWrapper.wrapResNode(adoptedNode, item, document);
+                        }
+
                         rootNode.appendChild(adoptedNode);
                     }
 

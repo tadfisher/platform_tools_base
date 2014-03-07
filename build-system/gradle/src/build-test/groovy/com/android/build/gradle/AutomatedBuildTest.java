@@ -31,7 +31,7 @@ public class AutomatedBuildTest extends BuildTest {
     private String gradleVersion;
     private TestType testType;
 
-    private static enum TestType { BUILD, REPORT }
+    private static enum TestType { BUILD, REPORT, BUILD_TRANSLATION }
 
     private static final String[] sBuiltProjects = new String[] {
             "aidl",
@@ -75,6 +75,48 @@ public class AutomatedBuildTest extends BuildTest {
             /*"autorepo"*/
     };
 
+    // removed tests api, flavors, and renderscriptMultiSrc which need to add new build.gradle to
+    // accommodate number of variants (for test api), or to add new source code to compile
+    // (for test flavors), or to add new script to build (for test renderscriptMultiSrc)
+    // for 'translation' mode.
+    private static final String[] sBuiltTranslateProjects = new String[] {
+            "aidl",
+            "applibtest",
+            "assets",
+            "attrOrder",
+            "basic",
+            "dependencies",
+            "dependencyChecker",
+            "filteredOutBuildType",
+            "flavored",
+            "flavorlib",
+            "flavoredlib",
+            "genFolderApi",
+            "libProguardJarDep",
+            "libProguardLibDep",
+            "libTestDep",
+            "libsTest",
+            "localJars",
+            "migrated",
+            "multiproject",
+            "multires",
+            "ndkSanAngeles",
+            "ndkJniLib",
+            "ndkPrebuilts",
+            "ndkLibPrebuilts",
+            "noPreDex",
+            "overlay1",
+            "overlay2",
+            "pkgOverride",
+            "proguard",
+            "proguardLib",
+            "renderscript",
+            "renderscriptInLib",
+            "rsSupportMode",
+            "sameNamedLibs",
+            "tictactoe",
+    };
+
     private static final String[] sReportProjects = new String[] {
             "basic", "flavorlib"
     };
@@ -87,6 +129,8 @@ public class AutomatedBuildTest extends BuildTest {
             if (isIgnoredGradleVersion(gradleVersion)) {
                 continue;
             }
+            addTranslationBuild(suite, gradleVersion);
+
             // first the project we build on all available versions of Gradle
             for (String projectName : sBuiltProjects) {
                 String testName = "build_" + projectName + "_" + gradleVersion;
@@ -123,6 +167,19 @@ public class AutomatedBuildTest extends BuildTest {
             buildProject(projectName, gradleVersion);
         } else if (testType == TestType.REPORT) {
             runTasksOn(projectName, gradleVersion, "androidDependencies", "signingReport");
+        } else if (testType == TestType.BUILD_TRANSLATION) {
+            buildTranslationProject(projectName, gradleVersion);
+        }
+    }
+
+    private static void addTranslationBuild(TestSuite suite, String gradleVersion) {
+        for (String projectName : sBuiltTranslateProjects) {
+            String testName = "buildTranslation_" + projectName + "_" + gradleVersion;
+
+            AutomatedBuildTest test = (AutomatedBuildTest) TestSuite.createTest(
+                    AutomatedBuildTest.class, testName);
+            test.setProjectInfo(projectName, gradleVersion, TestType.BUILD_TRANSLATION);
+            suite.addTest(test);
         }
     }
 }

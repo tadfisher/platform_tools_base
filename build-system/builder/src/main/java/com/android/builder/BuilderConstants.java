@@ -33,6 +33,8 @@ public class BuilderConstants {
 
     public static final String DEBUG = "debug";
     public static final String RELEASE = "release";
+    public static final String TRANSLATE = "translate";
+    public static final String ENABLE_TRANSLATION_JVM_ARG = "enableTranslation";
 
     public static final String LINT = "lint";
 

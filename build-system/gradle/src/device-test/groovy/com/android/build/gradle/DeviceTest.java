@@ -95,7 +95,7 @@ public class DeviceTest extends BuildTest {
     @Override
     protected void runTest() throws Throwable {
         try {
-            runTasksOnProject(projectName, gradleVersion, "clean", "connectedCheck");
+            runTasksOnProject(projectName, gradleVersion, null, "clean", "connectedCheck");
         } finally {
             // because runTasksOnProject will throw an exception if the gradle side fails, do this
             // in the finally block.
