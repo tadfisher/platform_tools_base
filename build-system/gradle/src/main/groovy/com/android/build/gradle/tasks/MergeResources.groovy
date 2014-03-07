@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.tasks
 
+import com.android.build.gradle.internal.StrResWrapper
 import com.android.build.gradle.internal.tasks.IncrementalTask
 import com.android.ide.common.internal.PngCruncher
 import com.android.ide.common.res2.FileStatus
@@ -47,6 +48,9 @@ public class MergeResources extends IncrementalTask {
 
     // actual inputs
     List<ResourceSet> inputResourceSets
+
+    @Input
+    boolean translateMode
 
     private final FileValidity<ResourceSet> fileValidity = new FileValidity<ResourceSet>();
 
@@ -82,6 +86,9 @@ public class MergeResources extends IncrementalTask {
 
             merger.mergeData(writer, false /*doCleanUp*/)
 
+            if (translateMode) {
+                wrapMessages(destinationDir);
+            }
             // No exception? Write the known state.
             merger.writeBlobTo(getIncrementalFolder(), writer)
         } catch (MergingException e) {
@@ -141,6 +148,11 @@ public class MergeResources extends IncrementalTask {
                     getOutputDir(), getProcess9Patch() ? cruncher : null)
             writer.setInsertSourceMarkers(builder.isInsertSourceMarkers())
             merger.mergeData(writer, false /*doCleanUp*/)
+
+            if (translateMode) {
+                wrapMessages(getOutputDir());
+            }
+
             // No exception? Write the known state.
             merger.writeBlobTo(getIncrementalFolder(), writer)
         } catch (MergingException e) {
@@ -148,5 +160,10 @@ public class MergeResources extends IncrementalTask {
             merger.cleanBlob(getIncrementalFolder())
             throw new ResourceException(e.getMessage(), e)
         }
+    }
+
+    private void wrapMessages(File destinationDir) {
+        StrResWrapper wrapper = new StrResWrapper(project.logger);
+        wrapper.wrapStringRes(destinationDir);
     }
 }
