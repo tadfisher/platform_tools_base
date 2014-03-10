@@ -466,4 +466,8 @@ public class XmlUtils {
     public static String camelCaseToConstantName(String camelCaseName) {
         return CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, camelCaseName);
     }
+
+    public static String constantNameToCamelCase(String constantName) {
+        return CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, constantName);
+    }
 }
