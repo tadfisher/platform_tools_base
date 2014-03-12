@@ -153,9 +153,9 @@ public class XmlDocumentTest extends TestCase {
                 new TestUtils.TestSourceLocation(getClass(), "testDiff1()"), main);
         XmlDocument libraryDocument = TestUtils.xmlDocumentFromString(
                 new TestUtils.TestSourceLocation(getClass(), "testDiff1()"), library);
-        assertFalse(
+        assertTrue(
                 mainDocument.getRootNode().compareTo(libraryDocument.getRootNode(),
-                        mergingReport));
+                        mergingReport).isPresent());
     }
 
     public void testDiff2()
@@ -184,8 +184,8 @@ public class XmlDocumentTest extends TestCase {
                 new TestUtils.TestSourceLocation(getClass(), "testDiff2()"), main);
         XmlDocument libraryDocument = TestUtils.xmlDocumentFromString(
                 new TestUtils.TestSourceLocation(getClass(), "testDiff2()"), library);
-        assertTrue(mainDocument.getRootNode().compareTo(
-                libraryDocument.getRootNode(), mergingReport));
+        assertFalse(mainDocument.getRootNode().compareTo(
+                libraryDocument.getRootNode(), mergingReport).isPresent());
     }
 
     public void testDiff3()
@@ -216,8 +216,8 @@ public class XmlDocumentTest extends TestCase {
                 new TestUtils.TestSourceLocation(getClass(), "testDiff3()"), main);
         XmlDocument libraryDocument = TestUtils.xmlDocumentFromString(
                 new TestUtils.TestSourceLocation(getClass(), "testDiff3()"), library);
-        assertTrue(mainDocument.getRootNode().compareTo(libraryDocument.getRootNode(),
-                mergingReport));
+        assertFalse(mainDocument.getRootNode().compareTo(libraryDocument.getRootNode(),
+                mergingReport).isPresent());
     }
 
     public void testWriting() throws ParserConfigurationException, SAXException, IOException {

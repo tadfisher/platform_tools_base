@@ -201,14 +201,19 @@ public class XmlElement extends XmlNode {
     /**
      * Get the node operation type as optionally specified by the user. If the user did not
      * explicitly specify how conflicting elements should be handled, a
-     * {@link com.android.manifmerger.NodeOperationType#STRICT} will be returned.
+     * {@link com.android.manifmerger.NodeOperationType#MERGE} will be returned.
      */
     public NodeOperationType getOperationType() {
         return mNodeOperationType != null
                 ? mNodeOperationType
-                : NodeOperationType.STRICT;
+                : NodeOperationType.MERGE;
     }
 
+    /**
+     * Get the attribute operation type as optionally specified by the user. If the user did not
+     * explicitly specify how conflicting attributes should be handled, a
+     * {@link AttributeOperationType#STRICT} will be returned.
+     */
     public AttributeOperationType getAttributeOperationType(NodeName attributeName) {
         return mAttributesOperationTypes.containsKey(attributeName)
                 ? mAttributesOperationTypes.get(attributeName)
@@ -256,8 +261,8 @@ public class XmlElement extends XmlNode {
      * For now, attributes will be merged. If present on both xml elements, a warning will be
      * issued and the attribute merge will be rejected.
      *
-     * @param lowerPriorityNode
-     * @param mergingReport
+     * @param lowerPriorityNode lower priority Xml element to merge with.
+     * @param mergingReport the merging report to log errors and actions.
      */
     public void mergeWithLowerPriorityNode(
             XmlElement lowerPriorityNode,
@@ -266,13 +271,14 @@ public class XmlElement extends XmlNode {
         mergingReport.getLogger().info("Merging " + getId()
                 + " with lower " + lowerPriorityNode.printPosition());
 
-        // merge attributes.
-        for (XmlAttribute lowerPriorityAttribute : lowerPriorityNode.getAttributes()) {
-            lowerPriorityAttribute.mergeInHigherPriorityElement(this, mergingReport);
+        if (getType().getMergeType() != MergeType.MERGE_CHILDREN_ONLY) {
+            // merge attributes.
+            for (XmlAttribute lowerPriorityAttribute : lowerPriorityNode.getAttributes()) {
+                lowerPriorityAttribute.mergeInHigherPriorityElement(this, mergingReport);
+            }
         }
         // merge children.
         mergeChildren(lowerPriorityNode, mergingReport);
-
     }
 
     public ImmutableList<XmlElement> getMergeableElements() {
@@ -293,7 +299,7 @@ public class XmlElement extends XmlNode {
     }
 
     // merge this higher priority node with a lower priority node.
-    public boolean mergeChildren(XmlElement lowerPriorityNode,
+    public void mergeChildren(XmlElement lowerPriorityNode,
             MergingReport.Builder mergingReport) {
 
         ILogger logger = mergingReport.getLogger();
@@ -305,31 +311,72 @@ public class XmlElement extends XmlNode {
                     lowerPriorityChild.getType().getMergeType() == MergeType.IGNORE) {
                 continue;
             }
-            Optional<XmlElement> thisChildNodeOptional =
+            Optional<XmlElement> thisChildOptional =
                     getNodeByTypeAndKey(lowerPriorityChild.getType(),lowerPriorityChild.getKey());
 
-            if (thisChildNodeOptional.isPresent()) {
+            if (thisChildOptional.isPresent()) {
                 // it's defined in both files
                 logger.verbose(
                         lowerPriorityChild.getId() + " defined in both files...");
-                XmlElement thisChildNode = thisChildNodeOptional.get();
-                // are we merging no matter what or the two nodes equals ?
-                if (thisChildNode.getType().getMergeType() != MergeType.MERGE
-                        && !thisChildNode.compareTo(lowerPriorityChild, mergingReport)) {
 
-                    String info = "Node abandoned : " + lowerPriorityChild.printPosition();
-                    mergingReport.addError(info);
-                    mergingReport.getActionRecorder().recordNodeAction(
-                            thisChildNode, ActionRecorder.ActionType.REJECTED, lowerPriorityChild);
-                    return false;
+                XmlElement thisChild = thisChildOptional.get();
+
+                if (thisChild.getType().getMergeType() == MergeType.CONFLICT) {
+                    mergingReport.addError(String.format(
+                            "Node %s cannot be present in more than one input file and it's "
+                                    + "present at %s and %s",
+                            thisChild.getType(),
+                            thisChild.printPosition(),
+                            lowerPriorityChild.printPosition()));
+                    return;
                 }
-                // this is a sophisticated xml element which attributes and children need be
-                // merged modulo tools instructions.
-                thisChildNodeOptional.get().mergeWithLowerPriorityNode(lowerPriorityChild, mergingReport);
+
+                // 2 nodes exist,
+                // possibilities :
+                //  higher priority one has a tools:node="remove", remove the low priority one
+                //  higher priority one has a tools:node="replace", replace the low priority one
+                //  higher priority one has a tools:node="strict", flag the error if not equals.
+
+                switch(thisChild.getOperationType()) {
+                    case MERGE:
+                        // record the action
+                        mergingReport.getActionRecorder().recordNodeAction(thisChild,
+                                ActionRecorder.ActionType.MERGED, lowerPriorityChild);
+                        // and perform the merge
+                        thisChildOptional.get().mergeWithLowerPriorityNode(lowerPriorityChild,
+                                mergingReport);
+                        break;
+                    case REMOVE:
+                    case REPLACE:
+                        // so far remove and replace and similar, the post validation will take
+                        // care of removing this node in the case of REMOVE.
+
+                        // just don't import the lower priority node and record the action.
+                        mergingReport.getActionRecorder().recordNodeAction(thisChild,
+                                ActionRecorder.ActionType.REJECTED, lowerPriorityChild);
+                        break;
+                    case STRICT:
+                        Optional<String> compareMessage =
+                                thisChild.compareTo(lowerPriorityChild, mergingReport);
+                        if (compareMessage.isPresent()) {
+                            // flag error.
+                            mergingReport.addError(String.format(
+                                    "Node %s at %s is tagged with tools:node=\"strict\", yet %s at "
+                                            + "%s is different : %s",
+                                    thisChild.getId(),
+                                    thisChild.printPosition(),
+                                    lowerPriorityChild.getId(),
+                                    lowerPriorityChild.printPosition(),
+                                    compareMessage.get()));
+                        }
+                        break;
+                    default:
+                        mergingReport.getLogger().error(null /* throwable */,
+                                "Unhandled node operation type %s", thisChild.getOperationType());
+                }
             } else {
                 List<Node> comments = getLeadingComments(lowerPriorityChild.getXml());
                 // only in the new file, just import it.
-                // TODO:need to check the prefixes...
                 Node node = mXml.getOwnerDocument().adoptNode(lowerPriorityChild.getXml());
                 mXml.appendChild(node);
 
@@ -344,75 +391,76 @@ public class XmlElement extends XmlNode {
                 logger.verbose("Adopted " + node);
             }
         }
-        return true;
     }
 
-    public boolean compareTo(XmlElement otherNode, MergingReport.Builder mergingReport) {
+    public Optional<String> compareTo(XmlElement otherNode, MergingReport.Builder mergingReport) {
 
-        ILogger logger = mergingReport.getLogger();
         // compare element names
         if (mXml.getNamespaceURI() != null) {
             if (!mXml.getLocalName().equals(otherNode.mXml.getLocalName())) {
-                logger.error(null /* throwable */, "Element names do not match: "
-                        + mXml.getLocalName() + " "
-                        + otherNode.mXml.getLocalName());
-                return false;
+                return Optional.of(
+                        String.format("Element names do not match: %s versus %s",
+                                mXml.getLocalName(),
+                                otherNode.mXml.getLocalName()));
             }
             // compare element ns
             String thisNS = mXml.getNamespaceURI();
             String otherNS = otherNode.mXml.getNamespaceURI();
             if ((thisNS == null && otherNS != null)
                     || (thisNS != null && !thisNS.equals(otherNS))) {
-                logger.error(null /* throwable */, "Element namespaces names do not match: "
-                        + thisNS + " " + otherNS);
-                return false;
+                return Optional.of(
+                        String.format("Element namespaces names do not match: %s versus %s",
+                                thisNS, otherNS));
             }
         } else {
             if (!mXml.getNodeName().equals(otherNode.mXml.getNodeName())) {
-                logger.error(null /* nullable */, "Element names do not match: "
-                        + mXml.getNodeName() + " "
-                        + otherNode.mXml.getNodeName());
-                return false;
+                return Optional.of(String.format("Element names do not match: %s versus %s",
+                        mXml.getNodeName(),
+                        otherNode.mXml.getNodeName()));
             }
         }
 
         // compare attributes, we do it twice to identify added/missing elements in both lists.
-        if (!checkAttributes(this, otherNode, mergingReport)) {
-            return false;
+        Optional<String> message = checkAttributes(this, otherNode);
+        if (message.isPresent()) {
+            return message;
         }
-        if (!checkAttributes(otherNode, this, mergingReport)) {
-            return false;
+        message = checkAttributes(otherNode, this);
+        if (message.isPresent()) {
+            return message;
         }
 
         // compare children
         List<Node> expectedChildren = filterUninterestingNodes(mXml.getChildNodes());
         List<Node> actualChildren = filterUninterestingNodes(otherNode.mXml.getChildNodes());
         if (expectedChildren.size() != actualChildren.size()) {
-            // TODO: i18n
-            String error = getId() + ": Number of children do not match up: "
-                + expectedChildren.size() + " versus " + actualChildren.size()
-                + " in " + otherNode.getId();
-            mergingReport.addError(error);
-            return false;
+            return Optional.of(String.format(
+                    "%s: Number of children do not match up: %d versus %d at %s",
+                    getId(),
+                    expectedChildren.size(),
+                    actualChildren.size(),
+                    otherNode.printPosition()));
         }
         for (Node expectedChild : expectedChildren) {
             if (expectedChild.getNodeType() == Node.ELEMENT_NODE) {
                 XmlElement expectedChildNode = new XmlElement((Element) expectedChild, mDocument);
-                if (!findAndCompareNode(actualChildren, expectedChildNode, mergingReport)) {
-                    // bail out.
-                    return false;
+                message = findAndCompareNode(otherNode, actualChildren,
+                        expectedChildNode, mergingReport);
+                if (message.isPresent()) {
+                    return message;
                 }
             }
         }
-        return true;
+        return Optional.absent();
     }
 
-    private boolean findAndCompareNode(
-            List<Node> actualChildren,
+    private Optional<String> findAndCompareNode(
+            XmlElement otherElement,
+            List<Node> otherElementChildren,
             XmlElement childNode,
             MergingReport.Builder mergingReport) {
 
-        for (Node potentialNode : actualChildren) {
+        for (Node potentialNode : otherElementChildren) {
             if (potentialNode.getNodeType() == Node.ELEMENT_NODE) {
                 XmlElement otherChildNode = new XmlElement((Element) potentialNode, mDocument);
                 if (childNode.getType() == otherChildNode.getType()
@@ -422,7 +470,9 @@ public class XmlElement extends XmlNode {
                 }
             }
         }
-        return false;
+        return Optional.of(String.format("Child %s not found in document %s",
+                childNode.getId(),
+                otherElement.printPosition()));
     }
 
     private static List<Node> filterUninterestingNodes(NodeList nodeList) {
@@ -442,10 +492,9 @@ public class XmlElement extends XmlNode {
         return interestingNodes;
     }
 
-    private static boolean checkAttributes(
+    private static Optional<String> checkAttributes(
             XmlElement expected,
-            XmlElement actual,
-            MergingReport.Builder mergingReport) {
+            XmlElement actual) {
 
         for (XmlAttribute expectedAttr : expected.getAttributes()) {
             XmlAttribute.NodeName attributeName = expectedAttr.getName();
@@ -455,23 +504,22 @@ public class XmlElement extends XmlNode {
             Optional<XmlAttribute> actualAttr = actual.getAttribute(attributeName);
             if (actualAttr.isPresent()) {
                 if (!expectedAttr.getValue().equals(actualAttr.get().getValue())) {
-                    mergingReport.addError(
-                            "Attribute " + expectedAttr.getId()
-                                    + " do not match:" + expectedAttr.getValue()
-                                    + " versus " + actualAttr.get().getValue() + " at " + actual.printPosition());
-                    return false;
+                    return Optional.of(
+                            String.format("Attribute %s do not match: %s versus %s at %s",
+                                    expectedAttr.getId(),
+                                    expectedAttr.getValue(),
+                                    actualAttr.get().getValue(),
+                                    actual.printPosition()));
                 }
             } else {
-                mergingReport.addError(
-                        "Attribute " + expectedAttr.getId() + " not found at " + actual.printPosition());
-                return false;
+                return Optional.of(String.format("Attribute %s not found at %s",
+                        expectedAttr.getId(), actual.printPosition()));
             }
         }
-        return true;
+        return Optional.absent();
     }
 
-    private ImmutableList<XmlElement> initMergeableChildren() {
-        ImmutableList.Builder<XmlElement> mergeableNodes = new ImmutableList.Builder<XmlElement>();
+    private ImmutableList<XmlElement> initMergeableChildren() {        ImmutableList.Builder<XmlElement> mergeableNodes = new ImmutableList.Builder<XmlElement>();
         NodeList nodeList = mXml.getChildNodes();
         for (int i = 0; i < nodeList.getLength(); i++) {
             Node node = nodeList.item(i);
@@ -487,7 +535,7 @@ public class XmlElement extends XmlNode {
      * Returns all leading comments in the source xml before the node to be adopted.
      * @param nodeToBeAdopted node that will be added as a child to this node.
      */
-    private List<Node> getLeadingComments(Node nodeToBeAdopted) {
+    private static List<Node> getLeadingComments(Node nodeToBeAdopted) {
         ImmutableList.Builder<Node> nodesToAdopt = new ImmutableList.Builder<Node>();
         Node previousSibling = nodeToBeAdopted.getPreviousSibling();
         while (previousSibling != null

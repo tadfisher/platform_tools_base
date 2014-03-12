@@ -108,25 +108,34 @@ public class XmlAttribute extends XmlNode {
             MergingReport.Builder mergingReport) {
 
         // does the higher priority has the same attribute as myself ?
-        Optional<XmlAttribute> higherPriorityAttribute =
+        Optional<XmlAttribute> higherPriorityAttributeOptional =
                 higherPriorityElement.getAttribute(getName());
 
-        if (higherPriorityAttribute.isPresent()) {
-            XmlAttribute myAttribute = higherPriorityAttribute.get();
+        AttributeOperationType attributeOperationType =
+                higherPriorityElement.getAttributeOperationType(getName());
+
+        if (higherPriorityAttributeOptional.isPresent()) {
+            XmlAttribute higherPriorityAttribute = higherPriorityAttributeOptional.get();
             // this is conflict, depending on tools:replace, tools:strict
             // for now we keep the higher priority value and log it.
-            String error = "Attribute " + myAttribute.getId()
-                    + " is also present at " + printPosition()
-                    + " use tools:replace to override it.";
-            mergingReport.addWarning(error);
-            mergingReport.getActionRecorder().recordAttributeAction(
-                    this,
-                    ActionRecorder.ActionType.REJECTED,
-                    AttributeOperationType.REMOVE);
+            if (attributeOperationType == AttributeOperationType.REPLACE) {
+                // record the fact the lower priority attribute was rejected.
+                mergingReport.getActionRecorder().recordAttributeAction(
+                        this,
+                        ActionRecorder.ActionType.REJECTED,
+                        AttributeOperationType.REPLACE);
+            } else {
+                // if the values are the same, then it's fine, otherwise flag the error.
+                if (!getValue().equals(higherPriorityAttribute.getValue())) {
+                    String error = "Attribute " + higherPriorityAttribute.getId()
+                            + " is also present at " + printPosition()
+                            + " use tools:replace to override it.";
+                    mergingReport.addError(error);
+                }
+            }
         } else {
             // it does not exist, verify if we are supposed to remove it.
-            AttributeOperationType attributeOperationType =
-                    higherPriorityElement.getAttributeOperationType(getName());
+
 
             // Strict being the default, and the attribute does not exist in the higher priority
             // element, we can safely merge it.

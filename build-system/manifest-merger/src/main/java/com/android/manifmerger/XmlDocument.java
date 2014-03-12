@@ -86,7 +86,9 @@ public class XmlDocument {
                 lowerPriorityDocument.getRootNode(), mergingReportBuilder);
 
         // force re-parsing as new nodes may have appeared.
-        return Optional.of(reparse());
+        return mergingReportBuilder.hasErrors()
+                ? Optional.<XmlDocument>absent()
+                : Optional.of(reparse());
     }
 
     /**
@@ -97,7 +99,7 @@ public class XmlDocument {
         return new XmlDocument(mPositionXmlParser, mSourceLocation, mRootElement);
     }
 
-    public boolean compareXml(
+    public Optional<String> compareXml(
             XmlDocument other,
             MergingReport.Builder mergingReport) throws Exception {
 
