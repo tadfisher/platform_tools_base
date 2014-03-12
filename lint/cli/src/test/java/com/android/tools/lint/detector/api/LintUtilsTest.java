@@ -24,7 +24,7 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.EcjParser;
 import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
-import com.android.tools.lint.client.api.IJavaParser;
+import com.android.tools.lint.client.api.JavaParser;
 import com.android.tools.lint.client.api.LintDriver;
 import com.google.common.collect.Iterables;
 
@@ -35,6 +35,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Locale;
 
 import lombok.ast.Node;
@@ -337,7 +338,8 @@ public class LintUtilsTest extends TestCase {
 
     public static Node getCompilationUnit(String javaSource) {
         TestContext context = new TestContext(javaSource, new File("test"));
-        IJavaParser parser = new EcjParser(new LintCliClient());
+        JavaParser parser = new EcjParser(new LintCliClient(), null);
+        parser.prepareJavaParse(Collections.<JavaContext>singletonList(context));
         Node compilationUnit = parser.parseJava(context);
         assertNotNull(javaSource, compilationUnit);
         return compilationUnit;
@@ -346,10 +348,11 @@ public class LintUtilsTest extends TestCase {
     private static class TestContext extends JavaContext {
         private final String mJavaSource;
         public TestContext(String javaSource, File file) {
+            //noinspection ConstantConditions
             super(new LintDriver(new BuiltinIssueRegistry(),
                     new LintCliClient()), new LintCliClient().getProject(new File("dummy"),
                     new File("dummy")),
-                    null, file);
+                    null, file, new LintCliClient().getJavaParser(null));
 
             mJavaSource = javaSource;
         }
