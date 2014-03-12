@@ -149,7 +149,7 @@ class ManifestModel {
          * {@link <a href=http://developer.android.com/guide/topics/manifest/action-element.html>
          *     Action Xml documentation</a>}
          */
-        ACTION(MergeType.CONFLICT, defaultNameAttributeResolver),
+        ACTION(MergeType.MERGE, defaultNameAttributeResolver),
 
         /**
          * Activity (contained in application)
@@ -168,7 +168,7 @@ class ManifestModel {
          * {@link <a href=http://developer.android.com/guide/topics/manifest/activity-alias-element.html>
          *     Activity-alias Xml documentation</a>}
          */
-        ACTIVITY_ALIAS(MergeType.RESPECT_TOOLS_INSTRUCTIONS, defaultNameAttributeResolver,
+        ACTIVITY_ALIAS(MergeType.MERGE, defaultNameAttributeResolver,
                 "targetActivity", "name"),
 
         /**
@@ -187,7 +187,7 @@ class ManifestModel {
          * {@link <a href=http://developer.android.com/guide/topics/manifest/category-element.html>
          *     Category Xml documentation</a>}
          */
-        CATEGORY(MergeType.RESPECT_TOOLS_INSTRUCTIONS, defaultNameAttributeResolver),
+        CATEGORY(MergeType.MERGE, defaultNameAttributeResolver),
 
         /**
          * Instrumentation (contained in intent-filter)
@@ -196,7 +196,7 @@ class ManifestModel {
          * {@link <a href=http://developer.android.com/guide/topics/manifest/instrumentation-element.html>
          *     Instrunentation Xml documentation</a>}
          */
-        INSTRUMENTATION(MergeType.RESPECT_TOOLS_INSTRUCTIONS, defaultNameAttributeResolver, "name"),
+        INSTRUMENTATION(MergeType.MERGE, defaultNameAttributeResolver, "name"),
 
         /**
          * Intent-filter (contained in activity, activity-alias, service, receiver)
@@ -206,7 +206,7 @@ class ManifestModel {
          *     Intent-filter Xml documentation</a>}
          */
         // TODO: key is provided by sub elements...
-        INTENT_FILTER(MergeType.RESPECT_TOOLS_INSTRUCTIONS, new NoKeyNodeResolver()),
+        INTENT_FILTER(MergeType.MERGE, new NoKeyNodeResolver()),
 
         /**
          * Manifest (top level node)
@@ -215,7 +215,7 @@ class ManifestModel {
          * {@link <a href=http://developer.android.com/guide/topics/manifest/manifest-element.html>
          *     Manifest Xml documentation</a>}
          */
-        MANIFEST(MergeType.RESPECT_TOOLS_INSTRUCTIONS, defaultNoKeyNodeResolver),
+        MANIFEST(MergeType.MERGE_CHILDREN_ONLY, defaultNoKeyNodeResolver),
 
         /**
          * Meta-data (contained in activity, activity-alias, application, provider, receiver)
@@ -224,7 +224,7 @@ class ManifestModel {
          * {@link <a href=http://developer.android.com/guide/topics/manifest/meta-data-element.html>
          *     Meta-data Xml documentation</a>}
          */
-        META_DATA(MergeType.RESPECT_TOOLS_INSTRUCTIONS, defaultNameAttributeResolver),
+        META_DATA(MergeType.MERGE, defaultNameAttributeResolver),
 
         /**
          * Provider (contained in application)
@@ -233,7 +233,7 @@ class ManifestModel {
          * {@link <a href=http://developer.android.com/guide/topics/manifest/provider-element.html>
          *     Provider Xml documentation</a>}
          */
-        PROVIDER(MergeType.RESPECT_TOOLS_INSTRUCTIONS, defaultNameAttributeResolver, "name"),
+        PROVIDER(MergeType.MERGE, defaultNameAttributeResolver, "name"),
 
         /**
          * Receiver (contained in application)
@@ -242,7 +242,7 @@ class ManifestModel {
          * {@link <a href=http://developer.android.com/guide/topics/manifest/receiver-element.html>
          *     Receiver Xml documentation</a>}
          */
-        RECEIVER(MergeType.RESPECT_TOOLS_INSTRUCTIONS, defaultNameAttributeResolver, "name"),
+        RECEIVER(MergeType.MERGE, defaultNameAttributeResolver, "name"),
 
         /**
          * Service (contained in application)
@@ -251,7 +251,7 @@ class ManifestModel {
          * {@link <a href=http://developer.android.com/guide/topics/manifest/application-element.html>
          *     Service Xml documentation</a>}
          */
-        SERVICE(MergeType.RESPECT_TOOLS_INSTRUCTIONS, defaultNameAttributeResolver, "name"),
+        SERVICE(MergeType.MERGE, defaultNameAttributeResolver, "name"),
 
         /**
          * Support-screens (contained in manifest)
@@ -260,7 +260,7 @@ class ManifestModel {
          * {@link <a href=http://developer.android.com/guide/topics/manifest/supports-screens-element.html>
          *     Support-screens Xml documentation</a>}
          */
-        SUPPORTS_SCREENS(MergeType.RESPECT_TOOLS_INSTRUCTIONS, defaultNoKeyNodeResolver),
+        SUPPORTS_SCREENS(MergeType.MERGE, defaultNoKeyNodeResolver),
 
         /**
          * Uses-feature (contained in manifest)
@@ -269,7 +269,7 @@ class ManifestModel {
          * {@link <a href=http://developer.android.com/guide/topics/manifest/uses-feature-element.html>
          *     Uses-feature Xml documentation</a>}
          */
-        USES_FEATURE(MergeType.RESPECT_TOOLS_INSTRUCTIONS, defaultNameAttributeResolver),
+        USES_FEATURE(MergeType.MERGE, defaultNameAttributeResolver),
 
         /**
          * Use-library (contained in application)
@@ -287,7 +287,7 @@ class ManifestModel {
          * {@link <a href=http://developer.android.com/guide/topics/manifest/uses-permission-element.html>
          *     Uses-permission Xml documentation</a>}
          */
-        USES_PERMISSION(MergeType.RESPECT_TOOLS_INSTRUCTIONS, defaultNameAttributeResolver),
+        USES_PERMISSION(MergeType.MERGE, defaultNameAttributeResolver),
 
         /**
          * Uses-sdk (contained in manifest)

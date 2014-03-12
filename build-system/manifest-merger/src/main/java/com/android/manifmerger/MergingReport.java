@@ -102,13 +102,18 @@ public class MergingReport {
         return mResult;
     }
 
+
+    public ImmutableList<Record> getLoggingRecords() {
+        return mRecords;
+    }
+
     /**
      * Log record. This is used to give users some information about what is happening and
      * what might have gone wrong.
      *
      * TODO: need to enhance to add SourceLocation, and make this more machine readable.
      */
-    private static class Record {
+    public static class Record {
 
         private Record(Type type, String mLog) {
             this.mType = type;
@@ -119,6 +124,11 @@ public class MergingReport {
 
         private final Type mType;
         private final String mLog;
+
+        @Override
+        public String toString() {
+            return mType.toString() + ":" + mLog;
+        }
     }
 
     /**
@@ -169,6 +179,13 @@ public class MergingReport {
         Builder addMergingStage(String xml) {
             mIntermediaryStages.add(xml);
             return this;
+        }
+
+        /**
+         * Returns true if some fatal errors were reported.
+         */
+        boolean hasErrors() {
+            return mHasErrors;
         }
 
         ActionRecorder.Builder getActionRecorder() {
