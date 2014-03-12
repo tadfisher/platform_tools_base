@@ -1330,6 +1330,7 @@
         </SOURCES>
       </library>
     </orderEntry>
+    <orderEntry type="module" module-name="lint-cli" />
   </component>
 </module>
 

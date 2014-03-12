@@ -18,7 +18,7 @@ package com.android.tools.lint;
 
 import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.checks.SdCardDetector;
-import com.android.tools.lint.client.api.IJavaParser;
+import com.android.tools.lint.client.api.JavaParser;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.LintUtilsTest;
 
@@ -29,7 +29,7 @@ import lombok.ast.printer.TextFormatter;
 public class EcjParserTest extends AbstractCheckTest {
     public void testTryCatchHang() throws Exception {
         // Ensure that we're really using this parser
-        IJavaParser javaParser = createClient().getJavaParser();
+        JavaParser javaParser = createClient().getJavaParser(null);
         assertNotNull(javaParser);
         assertTrue(javaParser.getClass().getName(), javaParser instanceof EcjParser);
 
