@@ -16,20 +16,32 @@
 
 package com.android.tools.lint;
 
+import static com.android.tools.lint.client.api.JavaParser.ResolvedClass;
+import static com.android.tools.lint.client.api.JavaParser.ResolvedField;
+import static com.android.tools.lint.client.api.JavaParser.ResolvedMethod;
+import static com.android.tools.lint.client.api.JavaParser.ResolvedNode;
+import static com.android.tools.lint.client.api.JavaParser.ResolvedVariable;
+
 import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.checks.SdCardDetector;
-import com.android.tools.lint.client.api.IJavaParser;
+import com.android.tools.lint.client.api.JavaParser;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.LintUtilsTest;
 
+import junit.framework.Assert;
+
+import java.io.File;
+
+import lombok.ast.DescribedNode;
 import lombok.ast.Node;
+import lombok.ast.printer.SourceFormatter;
 import lombok.ast.printer.SourcePrinter;
 import lombok.ast.printer.TextFormatter;
 
 public class EcjParserTest extends AbstractCheckTest {
     public void testTryCatchHang() throws Exception {
         // Ensure that we're really using this parser
-        IJavaParser javaParser = createClient().getJavaParser();
+        JavaParser javaParser = createClient().getJavaParser(null);
         assertNotNull(javaParser);
         assertTrue(javaParser.getClass().getName(), javaParser instanceof EcjParser);
 
@@ -156,8 +168,526 @@ public class EcjParserTest extends AbstractCheckTest {
                 actual);
     }
 
+    public void testResolution() throws Exception {
+        String source =
+                "package test.pkg;\n" +
+                "\n" +
+                "import java.io.File;\n" +
+                "\n" +
+                "public class TypeResolutionTest {\n" +
+                "    public static class Inner extends File {\n" +
+                "        public float myField = 5f;\n" +
+                "        public int[] myInts;\n" +
+                "\n" +
+                "        public Inner(File dir, String name) {\n" +
+                "            super(dir, name);\n" +
+                "        }\n" +
+                "\n" +
+                "        public void call(int arg1, double arg2) {\n" +
+                "            boolean x = super.canRead();\n" +
+                "            System.out.println(x);\n" +
+                "        }\n" +
+                "    }\n" +
+                "\n" +
+                "    @SuppressWarnings(\"all\")\n" +
+                "    public static class Other {\n" +
+                "         private void client(int z) {\n" +
+                "             int x = z;\n" +
+                "             int y = x + 5;\n" +
+                "             Inner inner = new Inner(null, null);\n" +
+                "             inner.myField = 6;\n" +
+                "             System.out.println(inner.myInts);\n" +
+                "         }\n" +
+                "    }\n" +
+                "}\n";
+
+        Node unit = LintUtilsTest.getCompilationUnit(source,
+                new File("src/test/pkg/TypeResolutionTest.java"));
+
+        JavaParser parser = new EcjParser(new LintCliClient(), null);
+        AstPrettyPrinter astPrettyPrinter = new AstPrettyPrinter(parser);
+        unit.accept(new SourcePrinter(astPrettyPrinter));
+        String actual = astPrettyPrinter.finish();
+        assertEquals(
+                "[CompilationUnit]\n" +
+                "  [PackageDeclaration]\n" +
+                "    [Identifier test]\n" +
+                "      PROPERTY: name = test\n" +
+                "    [Identifier pkg]\n" +
+                "      PROPERTY: name = pkg\n" +
+                "  [ImportDeclaration]\n" +
+                "    PROPERTY: static = false\n" +
+                "    PROPERTY: star = false\n" +
+                "    [Identifier java]\n" +
+                "      PROPERTY: name = java\n" +
+                "    [Identifier io]\n" +
+                "      PROPERTY: name = io\n" +
+                "    [Identifier File]\n" +
+                "      PROPERTY: name = File\n" +
+                "  [ClassDeclaration TypeResolutionTest], resolved class: test.pkg.TypeResolutionTest \n" +
+                "    [Modifiers], resolved class: test.pkg.TypeResolutionTest \n" +
+                "      [KeywordModifier public]\n" +
+                "        PROPERTY: modifier = public\n" +
+                "    typeName: [Identifier TypeResolutionTest], resolved class: test.pkg.TypeResolutionTest \n" +
+                "      PROPERTY: name = TypeResolutionTest\n" +
+                "    [NormalTypeBody], resolved class: test.pkg.TypeResolutionTest \n" +
+                "        [ClassDeclaration Inner], resolved class: test.pkg.TypeResolutionTest.Inner \n" +
+                "          [Modifiers], resolved class: test.pkg.TypeResolutionTest.Inner \n" +
+                "            [KeywordModifier public]\n" +
+                "              PROPERTY: modifier = public\n" +
+                "            [KeywordModifier static]\n" +
+                "              PROPERTY: modifier = static\n" +
+                "          typeName: [Identifier Inner], resolved class: test.pkg.TypeResolutionTest.Inner \n" +
+                "            PROPERTY: name = Inner\n" +
+                "          extends: [TypeReference File], type: java.io.File, resolved class: java.io.File \n" +
+                "            PROPERTY: WildcardKind = NONE\n" +
+                "            PROPERTY: arrayDimensions = 0\n" +
+                "            [TypeReferencePart], resolved class: java.io.File \n" +
+                "              [Identifier File]\n" +
+                "                PROPERTY: name = File\n" +
+                "          [NormalTypeBody], resolved class: test.pkg.TypeResolutionTest.Inner \n" +
+                "              [VariableDeclaration]\n" +
+                "                [VariableDefinition]\n" +
+                "                  PROPERTY: varargs = false\n" +
+                "                  [Modifiers]\n" +
+                "                    [KeywordModifier public]\n" +
+                "                      PROPERTY: modifier = public\n" +
+                "                  type: [TypeReference float], type: float, resolved class: float \n" +
+                "                    PROPERTY: WildcardKind = NONE\n" +
+                "                    PROPERTY: arrayDimensions = 0\n" +
+                "                    [TypeReferencePart], resolved class: float \n" +
+                "                      [Identifier float]\n" +
+                "                        PROPERTY: name = float\n" +
+                "                  [VariableDefinitionEntry]\n" +
+                "                    PROPERTY: arrayDimensions = 0\n" +
+                "                    varName: [Identifier myField]\n" +
+                "                      PROPERTY: name = myField\n" +
+                "                    [FloatingPointLiteral 5.0], type: float\n" +
+                "                      PROPERTY: value = 5f\n" +
+                "              [VariableDeclaration]\n" +
+                "                [VariableDefinition]\n" +
+                "                  PROPERTY: varargs = false\n" +
+                "                  [Modifiers]\n" +
+                "                    [KeywordModifier public]\n" +
+                "                      PROPERTY: modifier = public\n" +
+                "                  type: [TypeReference int[]], type: int[], resolved class: int[] \n" +
+                "                    PROPERTY: WildcardKind = NONE\n" +
+                "                    PROPERTY: arrayDimensions = 1\n" +
+                "                    [TypeReferencePart], resolved class: int[] \n" +
+                "                      [Identifier int]\n" +
+                "                        PROPERTY: name = int\n" +
+                "                  [VariableDefinitionEntry]\n" +
+                "                    PROPERTY: arrayDimensions = 0\n" +
+                "                    varName: [Identifier myInts]\n" +
+                "                      PROPERTY: name = myInts\n" +
+                "              [ConstructorDeclaration]\n" +
+                "                [Modifiers]\n" +
+                "                  [KeywordModifier public]\n" +
+                "                    PROPERTY: modifier = public\n" +
+                "                typeName: [Identifier Inner]\n" +
+                "                  PROPERTY: name = Inner\n" +
+                "                parameter: [VariableDefinition]\n" +
+                "                  PROPERTY: varargs = false\n" +
+                "                  [Modifiers]\n" +
+                "                  type: [TypeReference File], type: java.io.File, resolved class: java.io.File \n" +
+                "                    PROPERTY: WildcardKind = NONE\n" +
+                "                    PROPERTY: arrayDimensions = 0\n" +
+                "                    [TypeReferencePart], resolved class: java.io.File \n" +
+                "                      [Identifier File]\n" +
+                "                        PROPERTY: name = File\n" +
+                "                  [VariableDefinitionEntry]\n" +
+                "                    PROPERTY: arrayDimensions = 0\n" +
+                "                    varName: [Identifier dir]\n" +
+                "                      PROPERTY: name = dir\n" +
+                "                parameter: [VariableDefinition]\n" +
+                "                  PROPERTY: varargs = false\n" +
+                "                  [Modifiers]\n" +
+                "                  type: [TypeReference String], type: java.lang.String, resolved class: java.lang.String \n" +
+                "                    PROPERTY: WildcardKind = NONE\n" +
+                "                    PROPERTY: arrayDimensions = 0\n" +
+                "                    [TypeReferencePart], resolved class: java.lang.String \n" +
+                "                      [Identifier String]\n" +
+                "                        PROPERTY: name = String\n" +
+                "                  [VariableDefinitionEntry]\n" +
+                "                    PROPERTY: arrayDimensions = 0\n" +
+                "                    varName: [Identifier name]\n" +
+                "                      PROPERTY: name = name\n" +
+                "                [Block]\n" +
+                "                    [SuperConstructorInvocation], resolved method: java.io.File java.io.File\n" +
+                "                      [VariableReference], type: java.io.File, resolved variable: dir java.io.File\n" +
+                "                        [Identifier dir], resolved variable: dir java.io.File\n" +
+                "                          PROPERTY: name = dir\n" +
+                "                      [VariableReference], type: java.lang.String, resolved variable: name java.lang.String\n" +
+                "                        [Identifier name], resolved variable: name java.lang.String\n" +
+                "                          PROPERTY: name = name\n" +
+                "              [MethodDeclaration call]\n" +
+                "                [Modifiers]\n" +
+                "                  [KeywordModifier public]\n" +
+                "                    PROPERTY: modifier = public\n" +
+                "                returnType: [TypeReference void], type: void, resolved class: void \n" +
+                "                  PROPERTY: WildcardKind = NONE\n" +
+                "                  PROPERTY: arrayDimensions = 0\n" +
+                "                  [TypeReferencePart], resolved class: void \n" +
+                "                    [Identifier void]\n" +
+                "                      PROPERTY: name = void\n" +
+                "                methodName: [Identifier call]\n" +
+                "                  PROPERTY: name = call\n" +
+                "                parameter: [VariableDefinition]\n" +
+                "                  PROPERTY: varargs = false\n" +
+                "                  [Modifiers]\n" +
+                "                  type: [TypeReference int], type: int, resolved class: int \n" +
+                "                    PROPERTY: WildcardKind = NONE\n" +
+                "                    PROPERTY: arrayDimensions = 0\n" +
+                "                    [TypeReferencePart], resolved class: int \n" +
+                "                      [Identifier int]\n" +
+                "                        PROPERTY: name = int\n" +
+                "                  [VariableDefinitionEntry]\n" +
+                "                    PROPERTY: arrayDimensions = 0\n" +
+                "                    varName: [Identifier arg1]\n" +
+                "                      PROPERTY: name = arg1\n" +
+                "                parameter: [VariableDefinition]\n" +
+                "                  PROPERTY: varargs = false\n" +
+                "                  [Modifiers]\n" +
+                "                  type: [TypeReference double], type: double, resolved class: double \n" +
+                "                    PROPERTY: WildcardKind = NONE\n" +
+                "                    PROPERTY: arrayDimensions = 0\n" +
+                "                    [TypeReferencePart], resolved class: double \n" +
+                "                      [Identifier double]\n" +
+                "                        PROPERTY: name = double\n" +
+                "                  [VariableDefinitionEntry]\n" +
+                "                    PROPERTY: arrayDimensions = 0\n" +
+                "                    varName: [Identifier arg2]\n" +
+                "                      PROPERTY: name = arg2\n" +
+                "                [Block]\n" +
+                "                    [VariableDeclaration]\n" +
+                "                      [VariableDefinition]\n" +
+                "                        PROPERTY: varargs = false\n" +
+                "                        [Modifiers]\n" +
+                "                        type: [TypeReference boolean], type: boolean, resolved class: boolean \n" +
+                "                          PROPERTY: WildcardKind = NONE\n" +
+                "                          PROPERTY: arrayDimensions = 0\n" +
+                "                          [TypeReferencePart], resolved class: boolean \n" +
+                "                            [Identifier boolean]\n" +
+                "                              PROPERTY: name = boolean\n" +
+                "                        [VariableDefinitionEntry]\n" +
+                "                          PROPERTY: arrayDimensions = 0\n" +
+                "                          varName: [Identifier x]\n" +
+                "                            PROPERTY: name = x\n" +
+                "                          [MethodInvocation canRead], type: boolean, resolved method: canRead java.io.File\n" +
+                "                            operand: [Super], type: java.io.File\n" +
+                "                            methodName: [Identifier canRead], resolved method: canRead java.io.File\n" +
+                "                              PROPERTY: name = canRead\n" +
+                "                    [ExpressionStatement], type: void, resolved method: println java.io.PrintStream\n" +
+                "                      [MethodInvocation println], resolved method: println java.io.PrintStream\n" +
+                "                        operand: [Select], type: java.io.PrintStream, resolved field: out java.lang.System\n" +
+                "                          operand: [VariableReference], resolved field: out java.lang.System\n" +
+                "                            [Identifier System]\n" +
+                "                              PROPERTY: name = System\n" +
+                "                          selected: [Identifier out], resolved field: out java.lang.System\n" +
+                "                            PROPERTY: name = out\n" +
+                "                        methodName: [Identifier println]\n" +
+                "                          PROPERTY: name = println\n" +
+                "                        [VariableReference], type: boolean, resolved variable: x boolean\n" +
+                "                          [Identifier x], resolved variable: x boolean\n" +
+                "                            PROPERTY: name = x\n" +
+                "        [ClassDeclaration Other], resolved class: test.pkg.TypeResolutionTest.Other \n" +
+                "          [Modifiers], resolved class: test.pkg.TypeResolutionTest.Other \n" +
+                "            [Annotation SuppressWarnings], type: java.lang.SuppressWarnings, resolved class: java.lang.SuppressWarnings \n" +
+                "              [TypeReference SuppressWarnings], type: java.lang.SuppressWarnings, resolved class: java.lang.SuppressWarnings \n" +
+                "                PROPERTY: WildcardKind = NONE\n" +
+                "                PROPERTY: arrayDimensions = 0\n" +
+                "                [TypeReferencePart], resolved class: java.lang.SuppressWarnings \n" +
+                "                  [Identifier SuppressWarnings]\n" +
+                "                    PROPERTY: name = SuppressWarnings\n" +
+                "              [AnnotationElement null], resolved class: java.lang.SuppressWarnings \n" +
+                "                [StringLiteral all], type: java.lang.String\n" +
+                "                  PROPERTY: value = \"all\"\n" +
+                "            [KeywordModifier public]\n" +
+                "              PROPERTY: modifier = public\n" +
+                "            [KeywordModifier static]\n" +
+                "              PROPERTY: modifier = static\n" +
+                "          typeName: [Identifier Other], resolved class: test.pkg.TypeResolutionTest.Other \n" +
+                "            PROPERTY: name = Other\n" +
+                "          [NormalTypeBody], resolved class: test.pkg.TypeResolutionTest.Other \n" +
+                "              [MethodDeclaration client]\n" +
+                "                [Modifiers]\n" +
+                "                  [KeywordModifier private]\n" +
+                "                    PROPERTY: modifier = private\n" +
+                "                returnType: [TypeReference void], type: void, resolved class: void \n" +
+                "                  PROPERTY: WildcardKind = NONE\n" +
+                "                  PROPERTY: arrayDimensions = 0\n" +
+                "                  [TypeReferencePart], resolved class: void \n" +
+                "                    [Identifier void]\n" +
+                "                      PROPERTY: name = void\n" +
+                "                methodName: [Identifier client]\n" +
+                "                  PROPERTY: name = client\n" +
+                "                parameter: [VariableDefinition]\n" +
+                "                  PROPERTY: varargs = false\n" +
+                "                  [Modifiers]\n" +
+                "                  type: [TypeReference int], type: int, resolved class: int \n" +
+                "                    PROPERTY: WildcardKind = NONE\n" +
+                "                    PROPERTY: arrayDimensions = 0\n" +
+                "                    [TypeReferencePart], resolved class: int \n" +
+                "                      [Identifier int]\n" +
+                "                        PROPERTY: name = int\n" +
+                "                  [VariableDefinitionEntry]\n" +
+                "                    PROPERTY: arrayDimensions = 0\n" +
+                "                    varName: [Identifier z]\n" +
+                "                      PROPERTY: name = z\n" +
+                "                [Block]\n" +
+                "                    [VariableDeclaration]\n" +
+                "                      [VariableDefinition]\n" +
+                "                        PROPERTY: varargs = false\n" +
+                "                        [Modifiers]\n" +
+                "                        type: [TypeReference int], type: int, resolved class: int \n" +
+                "                          PROPERTY: WildcardKind = NONE\n" +
+                "                          PROPERTY: arrayDimensions = 0\n" +
+                "                          [TypeReferencePart], resolved class: int \n" +
+                "                            [Identifier int]\n" +
+                "                              PROPERTY: name = int\n" +
+                "                        [VariableDefinitionEntry]\n" +
+                "                          PROPERTY: arrayDimensions = 0\n" +
+                "                          varName: [Identifier x]\n" +
+                "                            PROPERTY: name = x\n" +
+                "                          [VariableReference], type: int, resolved variable: z int\n" +
+                "                            [Identifier z], resolved variable: z int\n" +
+                "                              PROPERTY: name = z\n" +
+                "                    [VariableDeclaration]\n" +
+                "                      [VariableDefinition]\n" +
+                "                        PROPERTY: varargs = false\n" +
+                "                        [Modifiers]\n" +
+                "                        type: [TypeReference int], type: int, resolved class: int \n" +
+                "                          PROPERTY: WildcardKind = NONE\n" +
+                "                          PROPERTY: arrayDimensions = 0\n" +
+                "                          [TypeReferencePart], resolved class: int \n" +
+                "                            [Identifier int]\n" +
+                "                              PROPERTY: name = int\n" +
+                "                        [VariableDefinitionEntry]\n" +
+                "                          PROPERTY: arrayDimensions = 0\n" +
+                "                          varName: [Identifier y]\n" +
+                "                            PROPERTY: name = y\n" +
+                "                          [BinaryExpression +], type: int\n" +
+                "                            PROPERTY: operator = +\n" +
+                "                            left: [VariableReference], type: int, resolved variable: x int\n" +
+                "                              [Identifier x], resolved variable: x int\n" +
+                "                                PROPERTY: name = x\n" +
+                "                            right: [IntegralLiteral 5], type: int\n" +
+                "                              PROPERTY: value = 5\n" +
+                "                    [VariableDeclaration]\n" +
+                "                      [VariableDefinition]\n" +
+                "                        PROPERTY: varargs = false\n" +
+                "                        [Modifiers]\n" +
+                "                        type: [TypeReference Inner], type: test.pkg.TypeResolutionTest.Inner, resolved class: test.pkg.TypeResolutionTest.Inner \n" +
+                "                          PROPERTY: WildcardKind = NONE\n" +
+                "                          PROPERTY: arrayDimensions = 0\n" +
+                "                          [TypeReferencePart], resolved class: test.pkg.TypeResolutionTest.Inner \n" +
+                "                            [Identifier Inner]\n" +
+                "                              PROPERTY: name = Inner\n" +
+                "                        [VariableDefinitionEntry]\n" +
+                "                          PROPERTY: arrayDimensions = 0\n" +
+                "                          varName: [Identifier inner]\n" +
+                "                            PROPERTY: name = inner\n" +
+                "                          [ConstructorInvocation Inner], type: void, resolved method: test.pkg.TypeResolutionTest.Inner test.pkg.TypeResolutionTest.Inner\n" +
+                "                            type: [TypeReference Inner], type: test.pkg.TypeResolutionTest.Inner, resolved class: test.pkg.TypeResolutionTest.Inner \n" +
+                "                              PROPERTY: WildcardKind = NONE\n" +
+                "                              PROPERTY: arrayDimensions = 0\n" +
+                "                              [TypeReferencePart], resolved class: test.pkg.TypeResolutionTest.Inner \n" +
+                "                                [Identifier Inner]\n" +
+                "                                  PROPERTY: name = Inner\n" +
+                "                            [NullLiteral], type: null\n" +
+                "                            [NullLiteral], type: null\n" +
+                "                    [ExpressionStatement], type: float\n" +
+                "                      [BinaryExpression =]\n" +
+                "                        PROPERTY: operator = =\n" +
+                "                        left: [Select], type: float, resolved variable: inner test.pkg.TypeResolutionTest.Inner\n" +
+                "                          operand: [VariableReference], resolved variable: inner test.pkg.TypeResolutionTest.Inner\n" +
+                "                            [Identifier inner]\n" +
+                "                              PROPERTY: name = inner\n" +
+                "                          selected: [Identifier myField], resolved variable: inner test.pkg.TypeResolutionTest.Inner\n" +
+                "                            PROPERTY: name = myField\n" +
+                "                        right: [IntegralLiteral 6], type: int\n" +
+                "                          PROPERTY: value = 6\n" +
+                "                    [ExpressionStatement], type: void, resolved method: println java.io.PrintStream\n" +
+                "                      [MethodInvocation println], resolved method: println java.io.PrintStream\n" +
+                "                        operand: [Select], type: java.io.PrintStream, resolved field: out java.lang.System\n" +
+                "                          operand: [VariableReference], resolved field: out java.lang.System\n" +
+                "                            [Identifier System]\n" +
+                "                              PROPERTY: name = System\n" +
+                "                          selected: [Identifier out], resolved field: out java.lang.System\n" +
+                "                            PROPERTY: name = out\n" +
+                "                        methodName: [Identifier println]\n" +
+                "                          PROPERTY: name = println\n" +
+                "                        [Select], type: int[], resolved variable: inner test.pkg.TypeResolutionTest.Inner\n" +
+                "                          operand: [VariableReference], resolved variable: inner test.pkg.TypeResolutionTest.Inner\n" +
+                "                            [Identifier inner]\n" +
+                "                              PROPERTY: name = inner\n" +
+                "                          selected: [Identifier myInts], resolved variable: inner test.pkg.TypeResolutionTest.Inner\n" +
+                "                            PROPERTY: name = myInts\n",
+                actual);
+    }
+
     @Override
     protected Detector getDetector() {
         return new SdCardDetector();
+    }
+
+    public static class AstPrettyPrinter implements SourceFormatter {
+
+        private final StringBuilder mOutput = new StringBuilder(1000);
+
+        private final JavaParser mResolver;
+
+        private int mIndent;
+
+        private String mName;
+
+        public AstPrettyPrinter(JavaParser resolver) {
+            mResolver = resolver;
+        }
+
+        private void add(String in, Object... args) {
+            for (int i = 0; i < mIndent; i++) {
+                mOutput.append("  ");
+            }
+            if (mName != null) {
+                mOutput.append(mName).append(": ");
+                mName = null;
+            }
+            if (args.length == 0) {
+                mOutput.append(in);
+            } else {
+                mOutput.append(String.format(in, args));
+            }
+        }
+
+        @Override
+        public void buildInline(Node node) {
+            buildNode(node);
+        }
+
+        @Override
+        public void buildBlock(Node node) {
+            buildNode(node);
+        }
+
+        private void buildNode(Node node) {
+            if (node == null) {
+                mIndent++;
+                return;
+            }
+            String name = node.getClass().getSimpleName();
+            String description = "";
+            if (node instanceof DescribedNode) {
+                description = " " + ((DescribedNode) node).getDescription();
+            }
+
+            String typeDescription = "";
+            String resolutionDescription = "";
+            JavaParser.TypeDescriptor t = mResolver.getType(null, node);
+            if (t != null) {
+                typeDescription = ", type: " + t.getName();
+            }
+            ResolvedNode resolved = mResolver.resolve(null, node);
+            if (resolved != null) {
+                String c = "unknown";
+                String extra = "";
+                if (resolved instanceof ResolvedClass) {
+                    c = "class";
+                } else if (resolved instanceof ResolvedMethod) {
+                    c = "method";
+                    ResolvedMethod method = (ResolvedMethod) resolved;
+                    extra = method.getContainingClass().getName();
+                } else if (resolved instanceof ResolvedField) {
+                    c = "field";
+                    ResolvedField field = (ResolvedField) resolved;
+                    extra = field.getContainingClass().getName();
+                } else if (resolved instanceof ResolvedVariable) {
+                    c = "variable";
+                    ResolvedVariable variable = (ResolvedVariable) resolved;
+                    extra = variable.getType().getName();
+                }
+                resolutionDescription = String.format(", resolved %1$s: %2$s %3$s",
+                        c, resolved.getName(), extra);
+            }
+
+            add("[%1$s%2$s]%3$s%4$s\n", name, description, typeDescription, resolutionDescription);
+
+            mIndent++;
+        }
+
+        @Override
+        public void fail(String fail) {
+            Assert.fail(fail);
+        }
+
+        @Override
+        public void property(String name, Object value) {
+            add("PROPERTY: %s = %s\n", name, value);
+        }
+
+        @Override
+        public void keyword(String text) {
+        }
+
+        @Override
+        public void operator(String text) {
+        }
+
+        @Override
+        public void verticalSpace() {
+        }
+
+        @Override
+        public void space() {
+        }
+
+        @Override
+        public void append(String text) {
+        }
+
+        @Override
+        public void startSuppressBlock() {
+        }
+
+        @Override
+        public void endSuppressBlock() {
+        }
+
+        @Override
+        public void startSuppressIndent() {
+        }
+
+        @Override
+        public void endSuppressIndent() {
+        }
+
+        @Override
+        public void closeInline() {
+            mIndent--;
+        }
+
+        @Override
+        public void closeBlock() {
+            mIndent--;
+        }
+
+        @Override
+        public void addError(int start, int end, String message) {
+            fail(message);
+        }
+
+        @Override
+        public String finish() {
+            return mOutput.toString();
+        }
+
+        @Override
+        public void setTimeTaken(long taken) {
+        }
+
+        @Override
+        public void nameNextElement(String name) {
+            mName = name;
+        }
     }
 }
