@@ -22,6 +22,7 @@ import com.android.utils.PositionXmlParser;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.io.OutputStream;
@@ -172,5 +173,9 @@ public class XmlDocument {
     public String getPackageName() {
         // TODO: allow injection through invocation parameters.
         return mRootElement.getAttribute("package");
+    }
+
+    public Document getXml() {
+        return mRootElement.getOwnerDocument();
     }
 }
