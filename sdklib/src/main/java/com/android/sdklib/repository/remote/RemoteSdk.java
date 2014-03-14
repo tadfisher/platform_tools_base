@@ -22,10 +22,15 @@ import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.sdklib.internal.repository.DownloadCache;
 import com.android.sdklib.internal.repository.NullTaskMonitor;
 import com.android.sdklib.internal.repository.packages.Package;
+import com.android.sdklib.internal.repository.sources.SdkRepoSource;
 import com.android.sdklib.internal.repository.sources.SdkSource;
+import com.android.sdklib.internal.repository.sources.SdkSourceCategory;
 import com.android.sdklib.internal.repository.sources.SdkSources;
 import com.android.sdklib.internal.repository.updater.SettingsController;
 import com.android.sdklib.internal.repository.updater.SettingsController.OnChangedListener;
+import com.android.sdklib.io.FileOp;
+import com.android.sdklib.io.IFileOp;
+import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.sdklib.repository.descriptors.IPkgDesc;
 import com.android.sdklib.repository.descriptors.PkgType;
 import com.android.utils.ILogger;
@@ -33,17 +38,53 @@ import com.android.utils.NullLogger;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
+import java.util.ArrayList;
+
 
 /**
  * This class keeps information on the remote SDK repository.
+ * <p/>
+ * It is intended to have a single instance per application.
  */
 public class RemoteSdk {
 
-    private DownloadCache mDownloadCache;
+    private final ArrayList<SdkSource> mSources = new ArrayList<SdkSource>();
     private final SettingsController mSettingsController;
+    private final IFileOp mFileOp;
+    private DownloadCache mDownloadCache;
 
     public RemoteSdk() {
+        this(new FileOp());
+    }
+
+    public RemoteSdk(@NonNull IFileOp fileOp) {
+        mFileOp = fileOp;
         mSettingsController = initSettingsController();
+    }
+
+    /**
+     * Initializes the remote source URLs if not defined yet.
+     *
+     * Sets up the default sources: <br/>
+     * - the default google SDK repository, <br/>
+     * - the user sources from prefs <br/>
+     * - the extra repo URLs from the environment. <br/>
+     */
+    public void initDefaultSources() {
+        // Load the conventional sources.
+
+        // For testing, the env var can be set to replace the default root download URL.
+        // It must end with a / and it's the location where the updater will look for
+        // the repository.xml, addons_list.xml and such files.
+
+        String baseUrl = System.getenv("SDK_TEST_BASE_URL");                        //$NON-NLS-1$
+        if (baseUrl == null || baseUrl.length() <= 0 || !baseUrl.endsWith("/")) {   //$NON-NLS-1$
+            baseUrl = SdkRepoConstants.URL_GOOGLE_SDK_SITE;
+        }
+
+        SdkRepoSource source = new SdkRepoSource(baseUrl, SdkSourceCategory.ANDROID_REPO.getUiName());
+        mSources.add(source);
+
     }
 
     /**
@@ -61,8 +102,7 @@ public class RemoteSdk {
      * @return A non-null potentially map of {@link PkgType} to {@link RemotePkgInfo}
      *         describing the remote packages available for install/download.
      */
-    public Multimap<PkgType, RemotePkgInfo> fetch(@NonNull SdkSources sources,
-                                                  @NonNull ILogger logger) {
+    public Multimap<PkgType, RemotePkgInfo> fetch(@NonNull ILogger logger) {
 
         // TODO loadRemoteAddonsList
         Multimap<PkgType, RemotePkgInfo> remotes = HashMultimap.create();
@@ -79,7 +119,7 @@ public class RemoteSdk {
         // It does mean however that this code needs to convert the old Package
         // type into the new RemotePkgInfo type.
 
-        for (SdkSource source : sources.getAllSources()) {
+        for (SdkSource source : mSources) {
             source.load(getDownloadCache(),
                         new NullTaskMonitor(logger),
                         forceHttp);
@@ -98,6 +138,9 @@ public class RemoteSdk {
 
         return remotes;
     }
+
+
+    //------------
 
     /**
      * Returns the {@link DownloadCache}
@@ -129,7 +172,8 @@ public class RemoteSdk {
      */
     @VisibleForTesting(visibility=Visibility.PRIVATE)
     protected SettingsController initSettingsController() {
-        SettingsController settingsController = new SettingsController(new NullLogger() /* TODO */);
+        SettingsController settingsController = new SettingsController(
+                mFileOp, new NullLogger() /* TODO */);
         settingsController.registerOnChangedListener(new OnChangedListener() {
             @Override
             public void onSettingsChanged(
