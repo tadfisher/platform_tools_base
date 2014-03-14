@@ -16,6 +16,8 @@
 
 package com.android.ddmlib;
 
+import com.android.SdkConstants;
+
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 
@@ -52,7 +54,7 @@ public abstract class MultiLineReceiver implements IShellOutputReceiver {
         if (!isCancelled()) {
             String s = null;
             try {
-                s = new String(data, offset, length, "UTF-8"); //$NON-NLS-1$
+                s = new String(data, offset, length, SdkConstants.UTF_8);
             } catch (UnsupportedEncodingException e) {
                 // normal encoding didn't work, try the default one
                 s = new String(data, offset,length);

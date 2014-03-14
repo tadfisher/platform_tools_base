@@ -16,6 +16,7 @@
 
 package com.android.ddmlib.log;
 
+import com.android.SdkConstants;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.MultiLineReceiver;
@@ -424,7 +425,7 @@ public final class EventLogParser {
 
                 // get the string
                 try {
-                    String str = new String(eventData, offset, strLen, "UTF-8"); //$NON-NLS-1$
+                    String str = new String(eventData, offset, strLen, SdkConstants.UTF_8);
                     list.add(str);
                 } catch (UnsupportedEncodingException e) {
                 }
