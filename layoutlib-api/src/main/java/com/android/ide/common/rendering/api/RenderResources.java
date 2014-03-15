@@ -43,8 +43,51 @@ public class RenderResources {
     /**
      * Returns the {@link StyleResourceValue} representing the current theme.
      * @return the theme or null if there is no current theme.
+     * @deprecated Use {@link #getDefaultTheme()}, {@link #getPrimaryTheme()} or
+     * {@link #getSecondaryTheme()}
      */
+    @Deprecated
     public StyleResourceValue getCurrentTheme() {
+        return null;
+    }
+
+    /**
+     * Returns the {@link StyleResourceValue} representing the default theme.
+     */
+    public StyleResourceValue getDefaultTheme() {
+        return getCurrentTheme();
+    }
+
+    /**
+     * Use this theme to resolve resources. If set to null, default theme is used
+     * to resolve resources. {@code force} specifies whether this theme should be used as
+     * primary theme or the default theme remains as the primary theme.
+     * <p/>
+     * Remember to reset the temporary theme to null, so that default theme may be restored.
+     * @param force If true, values in the style resource will always be used in the theme;
+     *              otherwise, they will only be used if not already defined in the theme.
+     */
+    public void setTemporaryTheme(StyleResourceValue theme, boolean force) {
+    }
+
+    /**
+     * Returns {@link StyleResourceValue} representing the primary theme if it has been set,
+     * null otherwise. This is initialized to be the default theme.
+     *
+     * @see #getDefaultTheme()
+     * @see #getSecondaryTheme()
+     */
+    public StyleResourceValue getPrimaryTheme() {
+        return null;
+    }
+
+    /**
+     * Returns the {@link StyleResourceValue} representing the secondary theme to be used for
+     * resolving attributes if they are not found in the primary theme
+     *
+     * @see #getPrimaryTheme()
+     */
+    public StyleResourceValue getSecondaryTheme() {
         return null;
     }
 
@@ -88,8 +131,10 @@ public class RenderResources {
     }
 
     /**
-     * Returns the {@link ResourceValue} matching a given name in the current theme. If the
+     * Returns the {@link ResourceValue} matching a given name in the primary theme. If the
      * item is not directly available in the theme, the method looks in its parent theme.
+     * If the item is not available in the primary theme, the method looks in the secondary
+     * theme and its parent theme.
      *
      * @param itemName the name of the item to search for.
      * @return the {@link ResourceValue} object or <code>null</code>
@@ -98,29 +143,46 @@ public class RenderResources {
      */
     @Deprecated
     public ResourceValue findItemInTheme(String itemName) {
-        StyleResourceValue currentTheme = getCurrentTheme();
+        StyleResourceValue currentTheme = getPrimaryTheme();
+        ResourceValue value = null;
         if (currentTheme != null) {
-            return findItemInStyle(currentTheme, itemName);
+            value = findItemInStyle(currentTheme, itemName);
+        }
+        if (value == null) {
+            currentTheme = getSecondaryTheme();
+            if (currentTheme != null) {
+                value = findItemInStyle(currentTheme, itemName);
+            }
+
         }
 
-        return null;
+        return value;
     }
 
     /**
-     * Returns the {@link ResourceValue} matching a given attribute in the current theme. If the
-     * item is not directly available in the theme, the method looks in its parent theme.
+     * Returns the {@link ResourceValue} matching a given attribute in the primary theme. If the
+     * item is not directly available in the theme, the method looks in its parent theme. If the
+     * item is not available in the primary theme, the method looks in the secondary theme and
+     * its parent theme.
      *
      * @param attrName the name of the attribute to search for.
      * @param isFrameworkAttr whether the attribute is a framework attribute
      * @return the {@link ResourceValue} object or <code>null</code>
      */
     public ResourceValue findItemInTheme(String attrName, boolean isFrameworkAttr) {
-        StyleResourceValue currentTheme = getCurrentTheme();
+        StyleResourceValue currentTheme = getPrimaryTheme();
+        ResourceValue value = null;
         if (currentTheme != null) {
-            return findItemInStyle(currentTheme, attrName, isFrameworkAttr);
+            value = findItemInStyle(currentTheme, attrName, isFrameworkAttr);
+        }
+        if (value == null) {
+            currentTheme = getSecondaryTheme();
+            if (currentTheme != null) {
+                value = findItemInStyle(currentTheme, attrName, isFrameworkAttr);
+            }
         }
 
-        return null;
+        return value;
     }
 
     /**

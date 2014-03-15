@@ -53,7 +53,9 @@ public class ResourceResolver extends RenderResources {
     private final Map<ResourceType, Map<String, ResourceValue>> mFrameworkResources;
     private final Map<StyleResourceValue, StyleResourceValue> mStyleInheritanceMap =
         new HashMap<StyleResourceValue, StyleResourceValue>();
-    private StyleResourceValue mTheme;
+    private StyleResourceValue mDefaultTheme;
+    private StyleResourceValue mPrimaryTheme;
+    private StyleResourceValue mSecondaryTheme;
     private FrameworkResourceIdProvider mFrameworkProvider;
     private LayoutLog mLogger;
     private String mThemeName;
@@ -121,8 +123,30 @@ public class ResourceResolver extends RenderResources {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public StyleResourceValue getCurrentTheme() {
-        return mTheme;
+        return mDefaultTheme;
+    }
+
+    @Override
+    public void setTemporaryTheme(StyleResourceValue theme, boolean force) {
+        if (force && theme != null) {
+            mPrimaryTheme = theme;
+            mSecondaryTheme = mDefaultTheme;
+        } else {
+            mPrimaryTheme = mDefaultTheme;
+            mSecondaryTheme = theme;
+        }
+    }
+
+    @Override
+    public StyleResourceValue getPrimaryTheme() {
+        return mPrimaryTheme;
+    }
+
+    @Override
+    public StyleResourceValue getSecondaryTheme() {
+        return mSecondaryTheme;
     }
 
     @Override
@@ -264,7 +288,7 @@ public class ResourceResolver extends RenderResources {
         if (resource != null && resource.hasValidName()) {
             if (resource.theme) {
                 // no theme? no need to go further!
-                if (mTheme == null) {
+                if (mPrimaryTheme == null) {
                     return null;
                 }
 
@@ -274,8 +298,12 @@ public class ResourceResolver extends RenderResources {
                 }
 
                 // Now look for the item in the theme, starting with the current one.
-                ResourceValue item = findItemInStyle(mTheme, resource.name,
+                ResourceValue item = findItemInStyle(mPrimaryTheme, resource.name,
                         forceFrameworkOnly || resource.framework);
+                if (item == null && mSecondaryTheme != null) {
+                    item = findItemInStyle(mSecondaryTheme, resource.name,
+                            forceFrameworkOnly || resource.framework);
+                }
                 if (item == null && mLogger != null) {
                     mLogger.warning(LayoutLog.TAG_RESOURCES_RESOLVE_THEME_ATTR,
                             String.format("Couldn't find theme resource %1$s for the current theme",
@@ -453,7 +481,7 @@ public class ResourceResolver extends RenderResources {
                         frameworkStyleMap);
             }
 
-            mTheme = (StyleResourceValue) theme;
+            mDefaultTheme = mPrimaryTheme = (StyleResourceValue) theme;
         }
     }
 
@@ -637,8 +665,10 @@ public class ResourceResolver extends RenderResources {
                 lookupChain, mProjectResources, mFrameworkResources, mThemeName, mIsProjectTheme);
         resolver.mFrameworkProvider = mFrameworkProvider;
         resolver.mLogger = mLogger;
-        resolver.mTheme = mTheme;
+        resolver.mDefaultTheme = mDefaultTheme;
         resolver.mStyleInheritanceMap.putAll(mStyleInheritanceMap);
+        resolver.mPrimaryTheme = mPrimaryTheme;
+        resolver.mSecondaryTheme = mSecondaryTheme;
         return resolver;
     }
 
