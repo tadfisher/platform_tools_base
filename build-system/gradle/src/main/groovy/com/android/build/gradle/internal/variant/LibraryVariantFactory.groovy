@@ -15,15 +15,19 @@
  */
 
 package com.android.build.gradle.internal.variant
+
 import com.android.SdkConstants
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable
 import com.android.build.gradle.BasePlugin
 import com.android.build.gradle.LibraryExtension
+import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.internal.api.LibraryVariantImpl
 import com.android.build.gradle.internal.tasks.MergeFileTask
+import com.android.build.gradle.tasks.ExtractAnnotations
 import com.android.build.gradle.tasks.MergeResources
+import com.android.build.gradle.tasks.annotations.Extractor
 import com.android.builder.BuilderConstants
 import com.android.builder.DefaultBuildType
 import com.android.builder.VariantConfiguration
@@ -31,6 +35,8 @@ import com.android.builder.dependency.LibraryBundle
 import com.android.builder.dependency.LibraryDependency
 import com.android.builder.dependency.ManifestDependency
 import com.android.builder.model.AndroidLibrary
+import com.android.builder.model.SourceProvider
+import com.google.common.collect.Lists
 import com.google.common.collect.Sets
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -46,6 +52,7 @@ import org.gradle.tooling.BuildException
 
 import static com.android.SdkConstants.LIBS_FOLDER
 import static com.android.build.gradle.BasePlugin.DIR_BUNDLES
+
 /**
  */
 public class LibraryVariantFactory implements VariantFactory {
@@ -258,6 +265,9 @@ public class LibraryVariantFactory implements VariantFactory {
         bundle.extension = BuilderConstants.EXT_LIB_ARCHIVE
         bundle.from(project.file("$project.buildDir/$DIR_BUNDLES/${dirName}"))
 
+        def extract = createExtractAnnotations(fullName, project, variantData)
+        bundle.dependsOn extract
+
         libVariantData.packageLibTask = bundle
         variantData.outputFile = bundle.archivePath
 
@@ -359,5 +369,56 @@ public class LibraryVariantFactory implements VariantFactory {
         }
 
         return configs
+    }
+
+    public Task createExtractAnnotations(
+            String fullName, Project project, BaseVariantData variantData) {
+        VariantConfiguration config = variantData.variantConfiguration
+        String dirName = config.dirName
+
+        ExtractAnnotations task = project.tasks.create(
+                "extract${fullName.capitalize()}Annotations",
+                ExtractAnnotations)
+        task.description =
+                "Extracts Android annotations for the ${fullName} variant into the archive file"
+        task.group = org.gradle.api.plugins.BasePlugin.BUILD_GROUP
+        task.plugin = basePlugin
+        task.variant = variantData
+        task.destinationDir = project.file("$project.buildDir/$DIR_BUNDLES/${dirName}")
+        task.output = new File(task.destinationDir, SdkConstants.FN_ANNOTATIONS_ZIP)
+
+        // Build the list of source folders.
+        List<Object> sourceList = Lists.newArrayList()
+
+        // First the actual source folders.
+        List<SourceProvider> providers = config.getSortedSourceProviders()
+        for (SourceProvider provider : providers) {
+            sourceList.add(((AndroidSourceSet) provider).java)
+        }
+
+        // Then all the generated src folders. We don't need this for
+        // annotations, but to resolve symbols properly
+        sourceList.add({ variantData.processResourcesTask.sourceOutputDir })
+        sourceList.add({ variantData.generateBuildConfigTask.sourceOutputDir })
+        sourceList.add({ variantData.aidlCompileTask.sourceOutputDir })
+        if (!config.mergedFlavor.renderscriptNdkMode) {
+            sourceList.add({ variantData.renderscriptCompileTask.sourceOutputDir })
+        }
+
+        task.source = sourceList.toArray()
+
+        task.encoding = extension.compileOptions.encoding
+        task.sourceCompatibility = extension.compileOptions.sourceCompatibility
+        task.classpath = project.files(basePlugin.getAndroidBuilder(variantData).getCompileClasspath(config))
+        task.dependsOn variantData.variantDependency.compileConfiguration.buildDependencies
+        task.dependsOn variantData.sourceGenTask
+
+        // Setup the boot classpath just before the task actually runs since this will
+        // force the sdk to be parsed. (Same as in compileTask)
+        task.doFirst {
+            task.bootClasspath = basePlugin.getRuntimeJarList()
+        }
+
+        return task
     }
 }

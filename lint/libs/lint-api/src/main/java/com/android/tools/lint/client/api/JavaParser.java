@@ -195,7 +195,11 @@ public abstract class JavaParser {
         }
     }
 
-    /** A resolved declaration from an AST Node reference */
+    /**
+     * A resolved declaration from an AST Node reference
+     *
+     * TODO: Make this a top level class?
+     * */
     public abstract static class ResolvedNode {
         @NonNull
         public abstract String getName();
