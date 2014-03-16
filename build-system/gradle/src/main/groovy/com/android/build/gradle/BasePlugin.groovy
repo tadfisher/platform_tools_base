@@ -905,26 +905,9 @@ public abstract class BasePlugin {
         variantData.javaCompileTask = compileTask
         compileTask.dependsOn variantData.sourceGenTask
 
+        compileTask.source = variantData.getJavaSources()
+
         VariantConfiguration config = variantData.variantConfiguration
-
-        // build the list of source folders.
-        List<Object> sourceList = Lists.newArrayList()
-
-        // first the actual source folders.
-        List<SourceProvider> providers = config.getSortedSourceProviders()
-        for (SourceProvider provider : providers) {
-            sourceList.add(((AndroidSourceSet) provider).java)
-        }
-
-        // then all the generated src folders.
-        sourceList.add({ variantData.processResourcesTask.sourceOutputDir })
-        sourceList.add({ variantData.generateBuildConfigTask.sourceOutputDir })
-        sourceList.add({ variantData.aidlCompileTask.sourceOutputDir })
-        if (!config.mergedFlavor.renderscriptNdkMode) {
-            sourceList.add({ variantData.renderscriptCompileTask.sourceOutputDir })
-        }
-
-        compileTask.source = sourceList.toArray()
 
         // if the tested variant is an app, add its classpath. For the libraries,
         // it's done automatically since the classpath includes the library output as a normal
