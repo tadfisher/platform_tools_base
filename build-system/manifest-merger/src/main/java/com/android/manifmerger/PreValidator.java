@@ -17,9 +17,10 @@
 package com.android.manifmerger;
 
 import com.android.annotations.NonNull;
-import com.android.utils.ILogger;
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -34,8 +35,6 @@ import java.util.Map;
  * attribute also declared on the same element (since we want to replace its value).
  */
 public class PreValidator {
-
-    private MergingReport.Result mResult = MergingReport.Result.SUCCESS;
 
     private PreValidator() {}
 
@@ -56,33 +55,90 @@ public class PreValidator {
      * A successful validation does not mean that the merging will be successful, it only means
      * that the {@link com.android.SdkConstants#TOOLS_URI} instructions are correct and consistent.
      *
+     * @param mergingReport report to log warnings and errors.
      * @param xmlDocument the loaded xml part.
-     * @param logger the logger to notify the user of possible inconsistencies.
      * @return one the {@link com.android.manifmerger.MergingReport.Result} value.
      */
     @NonNull
     public static MergingReport.Result validate(
-            @NonNull XmlDocument xmlDocument,
-            @NonNull ILogger logger) {
+            @NonNull MergingReport.Builder mergingReport,
+            @NonNull XmlDocument xmlDocument) {
 
-        return new PreValidator().validate(xmlDocument.getRootNode(), logger);
+        return new PreValidator().validate(mergingReport, xmlDocument.getRootNode());
     }
 
-    private MergingReport.Result validate(XmlElement xmlElement, ILogger logger) {
+    private MergingReport.Result validate(MergingReport.Builder mergingReport,
+            XmlElement xmlElement) {
 
-        // so far there is no node level validation.
-        updateResult(validateAttributeInstructions(xmlElement, logger));
+        validateAttributeInstructions(mergingReport, xmlElement);
 
+        validateAndroidAttributes(mergingReport, xmlElement);
+
+        // create a temporary hash map of children indexed by key to ensure key uniqueness.
+        Map<String, XmlElement> childrenKeys = new HashMap<String, XmlElement>();
         for (XmlElement childElement : xmlElement.getMergeableElements()) {
-            updateResult(validate(childElement, logger));
+
+            if (checkKeyPresence(mergingReport, childElement)) {
+
+                // combination of element type and key has to be unique.
+                String uniqueKey = childElement.getKey() != null
+                        ? childElement.getId() + ":" + childElement.getKey()
+                        : childElement.getId();
+
+                XmlElement twin = childrenKeys.get(uniqueKey);
+                if (twin != null) {
+                    // we have 2 elements with the same identity, if they are equals, issue a warning
+                    // if not, issue an error.
+                    String message = String.format(
+                            "Element %1$s at %2$s duplicated with element declared at %3$s",
+                            childElement.getId(),
+                            childElement.printPosition(),
+                            childrenKeys.get(uniqueKey).printPosition());
+                    if (twin.compareTo(childElement).isPresent()) {
+                        mergingReport.addError(message);
+                    } else {
+                        mergingReport.addWarning(message);
+                    }
+                }
+                childrenKeys.put(uniqueKey, childElement);
+                validate(mergingReport, childElement);
+            }
         }
-        return mResult;
+
+        return mergingReport.hasErrors()
+                ? MergingReport.Result.ERROR : MergingReport.Result.SUCCESS;
     }
 
-    private MergingReport.Result validateAttributeInstructions(XmlElement xmlElement,
-            ILogger logger) {
+    private boolean checkKeyPresence(MergingReport.Builder mergingReport, XmlElement xmlElement) {
+        ManifestModel.NodeKeyResolver nodeKeyResolver = xmlElement.getType().getNodeKeyResolver();
+        if (nodeKeyResolver.getKeyAttributeName() != null
+                && Strings.isNullOrEmpty(xmlElement.getKey())) {
+            // we should have a key but we don't.
+            mergingReport.addError(String.format(
+                    "Missing '%1$s' attribute on element %2$s at %3$s",
+                    nodeKeyResolver.getKeyAttributeName(),
+                    xmlElement.getId(),
+                    xmlElement.printPosition()));
+            return false;
+        }
+        return true;
+    }
 
-        MergingReport.Result result = MergingReport.Result.SUCCESS;
+    private void validateAndroidAttributes(MergingReport.Builder mergingReport,
+            XmlElement xmlElement) {
+        for (XmlAttribute xmlAttribute : xmlElement.getAttributes()) {
+            AttributeModel model = xmlAttribute.getModel();
+            if (model != null && model.getValidator() != null) {
+                model.getValidator().validates(
+                        mergingReport, xmlAttribute, xmlAttribute.getValue());
+            }
+        }
+    }
+
+    private void validateAttributeInstructions(
+            MergingReport.Builder mergingReport,
+            XmlElement xmlElement) {
+
         for (Map.Entry<XmlNode.NodeName, AttributeOperationType> attributeOperationTypeEntry :
                 xmlElement.getAttributeOperations()) {
 
@@ -94,25 +150,24 @@ public class PreValidator {
                 case REMOVE:
                     // check we are not provided a new value.
                     if (attribute.isPresent()) {
-                        logger.error(null /* throwable */,
+                        mergingReport.addError(String.format(
                                 "tools:remove specified at line:%d for attribute %s, but "
                                         + "attribute also declared at line:%d, "
                                         + "do you want to use tools:replace instead ?",
                                 xmlElement.getPosition().getLine(),
                                 attributeOperationTypeEntry.getKey(),
-                                attribute.get().getPosition().getLine());
-                        result = MergingReport.Result.ERROR;
+                                attribute.get().getPosition().getLine()));
                     }
                     break;
                 case REPLACE:
                     // check we are provided a new value
                     if (!attribute.isPresent()) {
-                        logger.error(null /* throwable */,
+                        mergingReport.addError(String.format(
                                 "tools:replace specified at line:%d for attribute %s, but "
                                         + "no new value specified",
                                 xmlElement.getPosition().getLine(),
-                                attributeOperationTypeEntry.getKey());
-                        result = MergingReport.Result.ERROR;
+                                attributeOperationTypeEntry.getKey()
+                        ));
                     }
                     break;
                 default:
@@ -120,16 +175,5 @@ public class PreValidator {
                             attributeOperationTypeEntry.getValue());
             }
         }
-        return result;
     }
-
-
-    private void updateResult(MergingReport.Result result) {
-        if (result == MergingReport.Result.ERROR
-                || (result == MergingReport.Result.WARNING
-                && mResult != MergingReport.Result.ERROR)) {
-            mResult = result;
-        }
-    }
-
 }
