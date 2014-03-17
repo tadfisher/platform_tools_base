@@ -118,7 +118,8 @@ public class XmlElement extends XmlNode {
             Node attribute = namedNodeMap.item(i);
             if (!SdkConstants.TOOLS_URI.equals(attribute.getNamespaceURI())) {
 
-                XmlAttribute xmlAttribute = new XmlAttribute(this, (Attr) attribute);
+                XmlAttribute xmlAttribute = new XmlAttribute(
+                        this, (Attr) attribute, mType.getAttributeModel(attribute.getLocalName()));
                 attributesListBuilder.add(xmlAttribute);
             }
 
