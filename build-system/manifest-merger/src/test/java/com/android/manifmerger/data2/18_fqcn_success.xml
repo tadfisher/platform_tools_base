@@ -11,13 +11,15 @@
 
 <manifest
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.example.app1"
     android:versionCode="100"
     android:versionName="1.0.0">
 
     <application
             android:name="TheApp"
-            android:backupAgent=".MyBackupAgent" >
+            android:backupAgent=".MyBackupAgent"
+            tools:replace="name, backupAgent">
         <activity android:name=".MainActivity" />
         <receiver android:name="AppReceiver" />
         <activity android:name="com.example.lib2.LibActivity" />
@@ -32,7 +34,7 @@
     package="com.example.lib1">
 
     <!-- App name is different, will not merge. -->
-    <application android:name="TheApp" >
+    <application>
         <activity android:name=".WidgetLibrary1" />
     </application>
 </manifest>
@@ -113,4 +115,3 @@
 </manifest>
 
 @errors
-ERROR:Attribute application@android:name value=(com.example.app1.TheApp) is also present at (6,18) file:ManifestMerger2Test1_lib1_widget.xml:6 value=(com.example.lib1.TheApp), use tools:replace to override it.

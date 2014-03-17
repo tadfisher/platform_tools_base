@@ -21,6 +21,7 @@
 
 <manifest
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.example.app1"
     android:versionCode="100"
     android:versionName="1.0.0">
@@ -33,7 +34,8 @@
         android:restoreAnyVersion="true"
         android:allowBackup="true"
         android:killAfterRestore="true"
-        android:name="com.example.TheApp" >
+        android:name="com.example.TheApp"
+        tools:replace="label">
 
         <receiver
             android:name="com.example.AppReceiver1"
@@ -151,6 +153,7 @@
             android:name="com.example.AppReceiver3"
             android:icon="@drawable/app_icon">
             <intent-filter>
+                <action android:name="com.example.action.ACTION_CUSTOM" />
                 <action android:name="com.example.action.ACTION_CUSTOM1" />
                 <action android:name="com.example.action.ACTION_CUSTOM2" />
                 <action android:name="com.example.action.ACTION_CUSTOM3" />
@@ -162,25 +165,3 @@
 </manifest>
 
 @errors
-
-P [ManifestMergerTest0_main.xml:6, ManifestMergerTest1_lib1.xml:6] Skipping identical /manifest/application/receiver[@name=com.example.AppReceiver1] element.
-E [ManifestMergerTest0_main.xml:12, ManifestMergerTest1_lib1.xml:13] Trying to merge incompatible /manifest/application/receiver[@name=com.example.AppReceiver2] element:
-  <receiver
---    @android:icon="@drawable/app_icon"
---    @android:name="com.example.AppReceiver2">
---    <intent-filter>
-  <receiver
-++    @android:name="com.example.AppReceiver2">
-++</receiver>
-++(end reached)
-E [ManifestMergerTest0_main.xml, ManifestMergerTest2_lib2.xml:6] Trying to merge incompatible /manifest/application/receiver[@name=com.example.AppReceiver3] element:
-  <receiver
-      @android:name="com.example.AppReceiver3">
-      <intent-filter>
-          <action
---            @android:name="com.example.action.ACTION_CUSTOM1">
-  <receiver
-      @android:name="com.example.AppReceiver3">
-      <intent-filter>
-          <action
-++            @android:name="com.example.action.ACTION_CUSTOM">
