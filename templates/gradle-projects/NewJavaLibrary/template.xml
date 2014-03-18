@@ -5,6 +5,8 @@
     name="Java Library"
     description="Creates a new Java library.">
 
+    <category value="Applications" />
+
     <thumbs>
         <thumb>template_new_project.png</thumb>
     </thumbs>
