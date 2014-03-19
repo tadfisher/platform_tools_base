@@ -339,41 +339,4 @@ public class XmlAttributeTest extends TestCase {
                 attributeRecord.getActionLocation().getSourceLocation().print(true));
         assertEquals(7, attributeRecord.getActionLocation().getPosition().getLine());
     }
-
-    public void testDefaultValueIllegalOverriding()
-            throws ParserConfigurationException, SAXException, IOException {
-        String higherPriority = ""
-                + "<manifest\n"
-                + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
-                + "    package=\"com.example.lib3\">\n"
-                + "\n"
-                        // implicit required=true attribute present.
-                + "    <uses-library android:name=\"libraryOne\"/>\n"
-                + "\n"
-                + "</manifest>";
-
-        String lowerPriority = ""
-                + "<manifest\n"
-                + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
-                + "    package=\"com.example.lib3\">\n"
-                + "\n"
-                + "    <uses-library android:name=\"libraryOne\" android:required=\"false\"/>\n"
-                + "\n"
-                + "</manifest>";
-
-        XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "higherPriority"), higherPriority);
-        XmlDocument otherDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "lowerPriority"), lowerPriority);
-
-        MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
-                new StdLogger(StdLogger.Level.VERBOSE));
-        Optional<XmlDocument> result = refDocument.merge(otherDocument, mergingReportBuilder);
-        assertFalse(result.isPresent());
-        MergingReport.Record errorRecord = mergingReportBuilder.build().getLoggingRecords().iterator()
-                .next();
-        assertTrue(errorRecord.toString().contains("android:required"));
-    }
 }
