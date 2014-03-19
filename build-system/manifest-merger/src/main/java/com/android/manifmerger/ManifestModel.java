@@ -346,7 +346,11 @@ class ManifestModel {
          * {@link <a href=http://developer.android.com/guide/topics/manifest/uses-feature-element.html>
          *     Uses-feature Xml documentation</a>}
          */
-        USES_FEATURE(MergeType.MERGE, DEFAULT_NAME_ATTRIBUTE_RESOLVER),
+        USES_FEATURE(MergeType.MERGE, DEFAULT_NAME_ATTRIBUTE_RESOLVER,
+                AttributeModel.newModel("required")
+                        .setDefaultValue("true")
+                        .setOnReadValidator(BOOLEAN_VALIDATOR)
+                        .setMergingPolicy(AttributeModel.OR_MERGING_POLICTY)),
 
         /**
          * Use-library (contained in application)
@@ -358,7 +362,8 @@ class ManifestModel {
         USES_LIBRARY(MergeType.MERGE, DEFAULT_NAME_ATTRIBUTE_RESOLVER,
                 AttributeModel.newModel("required")
                         .setDefaultValue("true")
-                        .setOnReadValidator(BOOLEAN_VALIDATOR)),
+                        .setOnReadValidator(BOOLEAN_VALIDATOR)
+                        .setMergingPolicy(AttributeModel.OR_MERGING_POLICTY)),
 
         /**
          * Uses-permission (contained in application)
@@ -412,11 +417,15 @@ class ManifestModel {
             return mNodeKeyResolver;
         }
 
+        ImmutableList<AttributeModel> getAttributeModels() {
+            return mAttributeModels.asList();
+        }
+
         @Nullable
-        AttributeModel getAttributeModel(String attributeLocalName) {
+        AttributeModel getAttributeModel(XmlNode.NodeName attributeName) {
             // mAttributeModels could be replaced with a Map if the number of models grows.
             for (AttributeModel attributeModel : mAttributeModels) {
-                if (attributeModel.getName().equals(attributeLocalName)) {
+                if (attributeModel.getName().equals(attributeName)) {
                     return attributeModel;
                 }
             }

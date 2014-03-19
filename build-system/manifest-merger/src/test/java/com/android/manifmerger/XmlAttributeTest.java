@@ -348,8 +348,8 @@ public class XmlAttributeTest extends TestCase {
                 + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
                 + "    package=\"com.example.lib3\">\n"
                 + "\n"
-                        // implicit required=true attribute present.
-                + "    <uses-library android:name=\"libraryOne\"/>\n"
+                        // implicit protectionLevel="normal" attribute present.
+                + "    <permission android:name=\"permissionOne\"/>\n"
                 + "\n"
                 + "</manifest>";
 
@@ -359,7 +359,8 @@ public class XmlAttributeTest extends TestCase {
                 + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
                 + "    package=\"com.example.lib3\">\n"
                 + "\n"
-                + "    <uses-library android:name=\"libraryOne\" android:required=\"false\"/>\n"
+                + "    <permission android:name=\"permissionOne\" "
+                + "         android:protectionLevel=\"dangerous\"/>\n"
                 + "\n"
                 + "</manifest>";
 
@@ -374,6 +375,6 @@ public class XmlAttributeTest extends TestCase {
         assertFalse(result.isPresent());
         MergingReport.Record errorRecord = mergingReportBuilder.build().getLoggingRecords().iterator()
                 .next();
-        assertTrue(errorRecord.toString().contains("android:required"));
+        assertTrue(errorRecord.toString().contains("XmlAttributeTest#higherPriority:6"));
     }
 }

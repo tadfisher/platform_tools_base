@@ -18,6 +18,7 @@ package com.android.manifmerger;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 
@@ -29,11 +30,12 @@ import java.util.regex.Pattern;
  */
 class AttributeModel {
 
-    @NonNull private final String mName;
+    @NonNull private final XmlNode.NodeName mName;
     private final boolean mIsPackageDependent;
     @Nullable private final String mDefaultValue;
     @Nullable private final Validator mOnReadValidator;
     @Nullable private final Validator mOnWriteValidator;
+    @NonNull private final MergingPolicy mMergingPolicy;
 
     /**
      * Define a new attribute with specific characteristics.
@@ -44,20 +46,22 @@ class AttributeModel {
      * @param defaultValue an optional default value.
      * @param onReadValidator an optional validator to validate values against.
      */
-    private AttributeModel(@NonNull String name,
+    private AttributeModel(@NonNull XmlNode.NodeName name,
             boolean isPackageDependent,
             @Nullable String defaultValue,
             @Nullable Validator onReadValidator,
-            @Nullable Validator onWriteValidator) {
+            @Nullable Validator onWriteValidator,
+            @NonNull MergingPolicy mergingPolicy) {
         mName = name;
         mIsPackageDependent = isPackageDependent;
         mDefaultValue = defaultValue;
         mOnReadValidator = onReadValidator;
         mOnWriteValidator = onWriteValidator;
+        mMergingPolicy = mergingPolicy;
     }
 
     @NonNull
-    String getName() {
+    XmlNode.NodeName getName() {
         return mName;
     }
 
@@ -98,6 +102,11 @@ class AttributeModel {
         return mOnWriteValidator;
     }
 
+    @NonNull
+    public MergingPolicy getMergingPolicy() {
+        return mMergingPolicy;
+    }
+
     /**
      * Creates a new {@link Builder} to describe an attribute.
      * @param attributeName the to be described attribute name
@@ -113,6 +122,7 @@ class AttributeModel {
         private String mDefaultValue;
         private Validator mOnReadValidator;
         private Validator mOnWriteValidator;
+        private MergingPolicy mMergingPolicy = STRICT_MERGING_POLICY;
 
         Builder(String name) {
             this.mName = name;
@@ -154,14 +164,66 @@ class AttributeModel {
             return this;
         }
 
+        Builder setMergingPolicy(MergingPolicy mergingPolicy) {
+            mMergingPolicy = mergingPolicy;
+            return this;
+        }
+
         /**
          * Build an immutable {@link com.android.manifmerger.AttributeModel}
          */
         AttributeModel build() {
             return new AttributeModel(
-                    mName, mIsPackageDependent, mDefaultValue, mOnReadValidator, mOnWriteValidator);
+                    XmlNode.fromXmlName("android:" + mName),
+                    mIsPackageDependent,
+                    mDefaultValue,
+                    mOnReadValidator,
+                    mOnWriteValidator,
+                    mMergingPolicy);
         }
     }
+
+    /**
+     * Defines a merging policy between two attribute values. Example of merging policies can be
+     * strict when it is illegal to try to merge or override a value by another. Another example
+     * is a OR merging policy on boolean attribute values.
+     */
+    static interface MergingPolicy {
+
+        /**
+         * Merges the two attributes values and returned the merged value. If the values cannot be
+         * merged, return null.
+         */
+        @Nullable
+        String merge(@NonNull String higherPriority, @NonNull String lowerPriority);
+    }
+
+    /**
+     * Standard attribute value merging policy, generates an error unless both values are equal.
+     */
+    static final MergingPolicy STRICT_MERGING_POLICY = new MergingPolicy() {
+        @Nullable
+        @Override
+        public String merge(@NonNull String higherPriority, @NonNull String lowerPriority) {
+            // it's ok if the values are equal, otherwise it's not.
+            return higherPriority.equals(lowerPriority)
+                    ? higherPriority
+                    : null;
+        }
+    };
+
+    /**
+     * Boolean OR merging policy.
+     */
+    static final MergingPolicy OR_MERGING_POLICTY = new MergingPolicy() {
+
+        @Nullable
+        @Override
+        public String merge(@NonNull String higherPriority, @NonNull String lowerPriority) {
+            return Boolean.toString(BooleanValidator.isTrue(higherPriority) ||
+                    BooleanValidator.isTrue(lowerPriority));
+        }
+    };
 
     /**
      * Validates an attribute value.
@@ -193,13 +255,19 @@ class AttributeModel {
     static class BooleanValidator implements Validator {
 
         // TODO: check with @xav where to find the acceptable values by runtime.
-        private static final Pattern PATTERN = Pattern.compile("true|false|TRUE|FALSE|True|False");
+        private static final Pattern TRUE_PATTERN = Pattern.compile("true|True|TRUE");
+        private static final Pattern FALSE_PATTERN = Pattern.compile("false|False|FALSE");
+
+        private static boolean isTrue(String value) {
+            return TRUE_PATTERN.matcher(value).matches();
+        }
 
         @Override
         public boolean validates(@NonNull MergingReport.Builder mergingReport,
                 @NonNull XmlAttribute attribute,
                 @NonNull String value) {
-            boolean matches = PATTERN.matcher(value).matches();
+            boolean matches = TRUE_PATTERN.matcher(value).matches() ||
+                    FALSE_PATTERN.matcher(value).matches();
             if (!matches) {
                 mergingReport.addError(
                         String.format(
