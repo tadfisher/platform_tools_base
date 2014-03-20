@@ -16,6 +16,7 @@
 
 package com.android.manifmerger;
 
+import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.manifmerger.AttributeModel.Hexadecimal32BitsWithMinimumValue;
 import static com.android.manifmerger.AttributeModel.MultiValueValidator;
 import static com.android.manifmerger.AttributeModel.ReferenceValidator;
@@ -127,7 +128,7 @@ class ManifestModel {
      * uses "android:name" as the attribute.
      */
     private static final NodeKeyResolver DEFAULT_NAME_ATTRIBUTE_RESOLVER =
-            new AttributeBasedNodeKeyResolver(SdkConstants.ANDROID_URI, SdkConstants.ATTR_NAME);
+            new AttributeBasedNodeKeyResolver(ANDROID_URI, SdkConstants.ATTR_NAME);
 
     private static final NoKeyNodeResolver DEFAULT_NO_KEY_NODE_RESOLVER = new NoKeyNodeResolver();
 
@@ -139,7 +140,7 @@ class ManifestModel {
     private static final NodeKeyResolver NAME_AND_GLESVERSION_KEY_RESOLVER = new NodeKeyResolver() {
         private final NodeKeyResolver nameAttrResolver = DEFAULT_NAME_ATTRIBUTE_RESOLVER;
         private final NodeKeyResolver glEsVersionResolver =
-                new AttributeBasedNodeKeyResolver(SdkConstants.ANDROID_URI, "glEsVersion");
+                new AttributeBasedNodeKeyResolver(ANDROID_URI, "glEsVersion");
 
         @Nullable
         @Override
@@ -244,6 +245,7 @@ class ManifestModel {
          */
         CATEGORY(MergeType.MERGE, DEFAULT_NAME_ATTRIBUTE_RESOLVER),
 
+        COMPATIBLE_SCREENS(MergeType.MERGE, DEFAULT_NO_KEY_NODE_RESOLVER),
         /**
          * Instrumentation (contained in intent-filter)
          * <br>
@@ -344,6 +346,8 @@ class ManifestModel {
         RECEIVER(MergeType.MERGE, DEFAULT_NAME_ATTRIBUTE_RESOLVER,
                 AttributeModel.newModel(SdkConstants.ATTR_NAME).setIsPackageDependent()),
 
+        SCREEN(MergeType.MERGE, new AttributeBasedNodeKeyResolver(ANDROID_URI, "screenSize")),
+
         /**
          * Service (contained in application)
          * <br>
@@ -362,6 +366,24 @@ class ManifestModel {
          *     Support-screens Xml documentation</a>}
          */
         SUPPORTS_SCREENS(MergeType.MERGE, DEFAULT_NO_KEY_NODE_RESOLVER),
+
+        /**
+         * Supports-gl-texture (contained in manifest)
+         * <br>
+         * <b>See also : </b>
+         * {@link <a href=http://developer.android.com/guide/topics/manifest/supports-gl-texture-element.html>
+         *     Support-screens Xml documentation</a>}
+         */
+        SUPPORTS_GL_TEXTURE(MergeType.MERGE, DEFAULT_NAME_ATTRIBUTE_RESOLVER),
+
+        /**
+         * Uses-configuration (contained in manifest)
+         * <br>
+         * <b>See also : </b>
+         * {@link <a href=http://developer.android.com/guide/topics/manifest/uses-configuration-element.html>
+         *     Support-screens Xml documentation</a>}
+         */
+        USES_CONFIGURATION(MergeType.MERGE, DEFAULT_NO_KEY_NODE_RESOLVER),
 
         /**
          * Uses-feature (contained in manifest)
