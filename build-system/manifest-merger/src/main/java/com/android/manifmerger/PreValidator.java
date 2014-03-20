@@ -16,9 +16,19 @@
 
 package com.android.manifmerger;
 
+import static com.android.SdkConstants.ANDROID_URI;
+
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.concurrency.Immutable;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
+
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -101,6 +111,8 @@ public class PreValidator {
             }
         }
 
+        splitUsesFeaturesDeclarations(mergingReport, xmlElement);
+
         return mergingReport.hasErrors()
                 ? MergingReport.Result.ERROR : MergingReport.Result.SUCCESS;
     }
@@ -113,14 +125,20 @@ public class PreValidator {
      */
     private static boolean checkKeyPresence(MergingReport.Builder mergingReport, XmlElement xmlElement) {
         ManifestModel.NodeKeyResolver nodeKeyResolver = xmlElement.getType().getNodeKeyResolver();
-        if (nodeKeyResolver.getKeyAttributeName() != null
-                && Strings.isNullOrEmpty(xmlElement.getKey())) {
+        ImmutableList<String> keyAttributesNames = nodeKeyResolver.getKeyAttributesNames();
+        if (keyAttributesNames.size() > 0 && Strings.isNullOrEmpty(xmlElement.getKey())) {
             // we should have a key but we don't.
-            mergingReport.addError(String.format(
-                    "Missing '%1$s' attribute on element %2$s at %3$s",
-                    nodeKeyResolver.getKeyAttributeName(),
-                    xmlElement.getId(),
-                    xmlElement.printPosition()));
+            String message = keyAttributesNames.size() > 1
+                    ? String.format("Missing one of '%1$s' key attribute on element %2$s at %3$s",
+                            Joiner.on(',').join(keyAttributesNames),
+                            xmlElement.getId(),
+                            xmlElement.printPosition())
+                    : String.format(
+                            "Missing '%1$s' key attribute on element %2$s at %3$s",
+                            keyAttributesNames.get(0),
+                            xmlElement.getId(),
+                            xmlElement.printPosition());
+            mergingReport.addError(message);
             return false;
         }
         return true;
@@ -187,5 +205,27 @@ public class PreValidator {
                             attributeOperationTypeEntry.getValue());
             }
         }
+    }
+
+    private static void splitUsesFeaturesDeclarations(MergingReport.Builder mergingReport,
+            XmlElement xmlElement) {
+
+        for (XmlElement childElement : xmlElement.getMergeableElements()) {
+
+            if (childElement.getType() == ManifestModel.NodeTypes.USES_FEATURE) {
+                // check if has name AND glEsVersion attributes.
+                Element childXml = childElement.getXml();
+                Attr name = childXml.getAttributeNodeNS(ANDROID_URI, "name");
+                Attr glEsVersion = childXml.getAttributeNodeNS(ANDROID_URI, "glEsVersion");
+                if (name != null && glEsVersion != null) {
+                    // spit these declarations into 2.
+                    Element sibling = (Element) childXml.cloneNode(true);
+                    sibling.removeAttributeNS(ANDROID_URI, "name");
+                    xmlElement.getXml().appendChild(sibling);
+                    childXml.removeAttributeNS(ANDROID_URI, "glEsVersion");
+                }
+            }
+        }
+
     }
 }
