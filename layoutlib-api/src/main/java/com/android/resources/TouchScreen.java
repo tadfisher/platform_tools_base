@@ -79,15 +79,11 @@ public enum TouchScreen implements ResourceEnum {
     }
 
     public static TouchScreen getByIndex(int index) {
-        int i = 0;
-        for (TouchScreen value : values()) {
-            if (i == index) {
-                return value;
-            }
-            i++;
-        }
-
-        return null;
+          TouchScreen[] values = values();
+          if (index >= 0 && index < values.length) {
+              return values[index];
+          }
+          return null;
     }
 
     @Override
