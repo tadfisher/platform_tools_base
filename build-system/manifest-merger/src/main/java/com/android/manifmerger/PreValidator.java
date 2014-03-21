@@ -74,10 +74,11 @@ public class PreValidator {
             @NonNull MergingReport.Builder mergingReport,
             @NonNull XmlDocument xmlDocument) {
 
+        validateManifestAttribute(mergingReport, xmlDocument.getRootNode());
         MergingReport.Result validated = validate(mergingReport, xmlDocument.getRootNode());
-        if (validated == MergingReport.Result.SUCCESS) {
-            splitUsesFeatureDeclarations(mergingReport, xmlDocument.getRootNode());
-        }
+//        if (validated == MergingReport.Result.SUCCESS) {
+//            splitUsesFeatureDeclarations(mergingReport, xmlDocument.getRootNode());
+//        }
         return validated;
     }
 
@@ -114,6 +115,16 @@ public class PreValidator {
         }
         return mergingReport.hasErrors()
                 ? MergingReport.Result.ERROR : MergingReport.Result.SUCCESS;
+    }
+
+    private static void validateManifestAttribute(
+            MergingReport.Builder mergingReport, XmlElement manifest) {
+        Attr attributeNode = manifest.getXml().getAttributeNode(AndroidManifest.ATTRIBUTE_PACKAGE);
+        if (attributeNode == null) {
+            mergingReport.addWarning(String.format(
+                    "Missing 'package' declaration in manifest at %1$s",
+                    manifest.printPosition()));
+        }
     }
 
     /**

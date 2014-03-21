@@ -34,10 +34,15 @@ import com.google.common.collect.ImmutableMap;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.util.Map;
+import java.util.logging.Logger;
+
+import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * merges android manifest files, idempotent.
@@ -164,7 +169,8 @@ public class ManifestMerger2 {
                 : Optional.of(lowerPriorityDocument);
 
         // if requested, dump each intermediary merging stage into the report.
-        if (mOptionalFeatures.contains(Invoker.Feature.KEEP_INTERMEDIARY_STAGES)) {
+        if (mOptionalFeatures.contains(Invoker.Feature.KEEP_INTERMEDIARY_STAGES)
+                && result.isPresent()) {
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             result.get().write(byteArrayOutputStream);
             mergingReportBuilder.addMergingStage(byteArrayOutputStream.toString());
