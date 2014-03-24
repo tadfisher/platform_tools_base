@@ -333,7 +333,7 @@ public class XmlElement extends XmlNode {
         // if the same node is not defined in this document merge it in.
         // if the same is defined, so far, give an error message.
         for (XmlElement lowerPriorityChild : lowerPriorityNode.getMergeableElements()) {
-            if (lowerPriorityChild.getType().getMergeType() == MergeType.IGNORE) {
+            if (shouldIgnore(lowerPriorityChild, mergingReport)) {
                 continue;
             }
             Optional<XmlElement> thisChildOptional =
@@ -369,6 +369,40 @@ public class XmlElement extends XmlNode {
                     handleTwoElementsExistence(thisChild, lowerPriorityChild, mergingReport);
             }
         }
+    }
+
+    /**
+     * Should we completely ignore a child from any merging activity.
+     * There are 2 situations where we should ignore a lower priority child :
+     * <p>
+     * <ul>
+     *     <li>The associate {@link com.android.manifmerger.ManifestModel.NodeTypes} is
+     *     annotated with {@link com.android.manifmerger.MergeType#IGNORE}</li>
+     *     <li>This element has a child of the same type with no key that has a '
+     *     tools:node="removeAll' attribute.</li>
+     * </ul>
+     * @param lowerPriorityChild the lower priority child we should determine eligibility for
+     *                           merging.
+     * @return true if the element should be ignored, false otherwise.
+     */
+    private boolean shouldIgnore(
+            XmlElement lowerPriorityChild,
+            MergingReport.Builder mergingReport) {
+
+        if (lowerPriorityChild.getType().getMergeType() == MergeType.IGNORE) {
+            return true;
+        }
+
+        Optional<XmlElement> thisChildElement = getNodeByTypeAndKey(lowerPriorityChild.getType(),
+                null /* keyValue */);
+        boolean shouldDelete = thisChildElement.isPresent()
+                && thisChildElement.get().mNodeOperationType == NodeOperationType.REMOVE_ALL;
+        if (shouldDelete) {
+            mergingReport.getActionRecorder().recordNodeAction(thisChildElement.get(),
+                    ActionRecorder.ActionType.REJECTED,
+                    lowerPriorityChild);
+        }
+        return shouldDelete;
     }
 
     /**

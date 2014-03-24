@@ -76,7 +76,8 @@ public class ToolsInstructionsCleaner {
                     // we need to special case when the element contained tools:node="remove"
                     // since it also needs to be deleted.
                     if (attribute.getLocalName().equals(XmlElement.TOOLS_NODE_LOCAL_NAME)
-                            && attribute.getNodeValue().equals(REMOVE_OPERATION_XML_MAME)) {
+                            && (attribute.getNodeValue().equals(REMOVE_OPERATION_XML_MAME)
+                                || attribute.getNodeValue().equals("removeAll"))) {
 
                         if (element.getParentNode().getNodeType() == Node.DOCUMENT_NODE) {
                             logger.error(null /* throwable */,

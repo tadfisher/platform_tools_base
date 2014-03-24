@@ -1,0 +1,90 @@
+#
+# Tests merging application/meta-data.
+# Several APIs provide app-specific keys (e.g. Android Backup API, Google Maps API.)
+# and the key needs to be placed in the <application> element as meta-data.
+#
+# This tests the default behavior which is to conflict when a library tries to
+# add a meta-data which is has the same name but not the same value as one already
+# defined in the application.
+#
+# The application can also override a meta-data using the tools:merge="override" attribute.
+# This lets the main application define a meta-data and prevent any library ones from being
+# merged and potentially conflict.
+#
+
+@fails
+
+@main
+
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.example.app1"
+    android:versionCode="100"
+    android:versionName="1.0.0">
+
+    <uses-sdk android:minSdkVersion="3" android:targetSdkVersion="11"/>
+
+    <application
+            android:name="TheApp"
+            android:backupAgent=".MyBackupAgent" >
+        <permission tools:node="removeAll" />
+    </application>
+
+</manifest>
+
+
+@lib1
+
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.app1">
+
+    <application android:name="TheApp" >
+        <permission
+                android:description="Insert boring description here"
+                android:icon="@drawable/robot"
+                android:label="Danger, Will Robinson!"
+                android:name="com.example.DangerWillRobinson"
+                android:protectionLevel="dangerous" />
+
+        <permission
+                android:name="com.example.WhatWereYouThinking"
+                android:protectionLevel="signatureOrSystem" />
+    </application>
+
+</manifest>
+
+@lib2
+
+    <manifest
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            package="com.example.app1">
+
+        <application android:name="TheApp" >
+            <permission
+                    android:name="com.example.AnotherPermission"
+                    android:protectionLevel="signatureOrSystem" />
+        </application>
+
+    </manifest>
+
+@result
+
+<?xml version="1.0" encoding="utf-8"?>
+    <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+              package="com.example.app1"
+              android:versionCode="100"
+              android:versionName="1.0.0">
+
+        <uses-sdk android:minSdkVersion="3" android:targetSdkVersion="11"/>
+
+        <application
+                android:name="TheApp"
+                android:backupAgent=".MyBackupAgent" >
+        </application>
+
+    </manifest>
+
+
+@errors
