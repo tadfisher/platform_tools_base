@@ -707,9 +707,7 @@ public class XmlElementTest extends TestCase {
                         "com.example.lib3.activityOne");
         assertTrue(activityOne.isPresent());
 
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        resultDocument.write(byteArrayOutputStream);
-        Logger.getAnonymousLogger().info(byteArrayOutputStream.toString());
+        Logger.getAnonymousLogger().info(resultDocument.prettyPrint());
 
 
         assertFalse(refDocument.getRootNode().getNodeByTypeAndKey(ManifestModel.NodeTypes.ACTIVITY,
@@ -764,9 +762,7 @@ public class XmlElementTest extends TestCase {
                         "com.example.lib3.activityOne");
         assertTrue(activityOne.isPresent());
 
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        resultDocument.write(byteArrayOutputStream);
-        Logger.getAnonymousLogger().info(byteArrayOutputStream.toString());
+        Logger.getAnonymousLogger().info(resultDocument.prettyPrint());
 
 
         assertFalse(refDocument.getRootNode().getNodeByTypeAndKey(ManifestModel.NodeTypes.ACTIVITY,

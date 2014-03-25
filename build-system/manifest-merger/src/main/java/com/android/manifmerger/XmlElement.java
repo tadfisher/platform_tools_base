@@ -679,15 +679,17 @@ public class XmlElement extends XmlNode {
     private static List<Node> getLeadingComments(Node nodeToBeAdopted) {
         ImmutableList.Builder<Node> nodesToAdopt = new ImmutableList.Builder<Node>();
         Node previousSibling = nodeToBeAdopted.getPreviousSibling();
+        boolean foundComments = false;
         while (previousSibling != null
                 && (previousSibling.getNodeType() == Node.COMMENT_NODE
                 || previousSibling.getNodeType() == Node.TEXT_NODE)) {
             // we really only care about comments.
             if (previousSibling.getNodeType() == Node.COMMENT_NODE) {
                 nodesToAdopt.add(previousSibling);
+                foundComments = true;
             }
             previousSibling = previousSibling.getPreviousSibling();
         }
-        return nodesToAdopt.build().reverse();
+        return nodesToAdopt.build();
     }
 }

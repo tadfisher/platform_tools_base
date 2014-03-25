@@ -1,22 +1,5 @@
-/*
- * Copyright (C) 2014 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
 package com.android.manifmerger;
-
-import static org.mockito.Mockito.when;
 
 import com.android.utils.ILogger;
 import com.google.common.base.Optional;
@@ -28,7 +11,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.xml.sax.SAXException;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.logging.Logger;
 
@@ -116,9 +98,7 @@ public class XmlDocumentTest extends TestCase {
                 mainDocument.merge(libraryDocument, mergingReportBuilder);
 
         assertTrue(mergedDocument.isPresent());
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        mergedDocument.get().write(byteArrayOutputStream);
-        Logger.getAnonymousLogger().info(byteArrayOutputStream.toString());
+        Logger.getAnonymousLogger().info(mergedDocument.get().prettyPrint());
         assertTrue(mergedDocument.get().getRootNode().getNodeByTypeAndKey(
                 ManifestModel.NodeTypes.APPLICATION, null).isPresent());
         Optional<XmlElement> activityOne = mergedDocument.get()
@@ -215,20 +195,19 @@ public class XmlDocumentTest extends TestCase {
     }
 
     public void testWriting() throws ParserConfigurationException, SAXException, IOException {
-        String input = ""
-                + "<manifest"
-                + " xmlns:x=\"http://schemas.android.com/apk/res/android\""
-                + " xmlns:y=\"http://schemas.android.com/apk/res/android/tools\""
-                + " package=\"com.example.lib3\">\n"
+        String input = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                + "<manifest xmlns:x=\"http://schemas.android.com/apk/res/android\"\n"
+                + "    xmlns:y=\"http://schemas.android.com/apk/res/android/tools\"\n"
+                + "    package=\"com.example.lib3\" >\n"
                 + "\n"
-                + "    <application x:label=\"@string/lib_name\" y:node=\"replace\"/>\n"
+                + "    <application\n"
+                + "        x:label=\"@string/lib_name\"\n"
+                + "        y:node=\"replace\" />\n"
                 + "\n"
-                + "</manifest>\n";
+                + "</manifest>";
 
         XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
                 new TestUtils.TestSourceLocation(getClass(), "testWriting()"), input);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        xmlDocument.write(byteArrayOutputStream);
-        assertEquals(input, byteArrayOutputStream.toString());
+        assertEquals(input, xmlDocument.prettyPrint());
     }
 }
