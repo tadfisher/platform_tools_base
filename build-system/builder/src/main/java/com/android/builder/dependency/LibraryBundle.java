@@ -56,6 +56,7 @@ public abstract class LibraryBundle implements LibraryDependency {
         this(bundle, bundleFolder, null);
     }
 
+    @Override
     public String getName() {
         return mName;
     }

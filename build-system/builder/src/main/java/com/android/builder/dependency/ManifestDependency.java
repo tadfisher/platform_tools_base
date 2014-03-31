@@ -25,6 +25,8 @@ import java.util.List;
  */
 public interface ManifestDependency extends ManifestProvider {
 
+    String getName();
+
     /**
      * Returns the direct dependency of this dependency.
      */

@@ -22,6 +22,7 @@ import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy
 import junit.framework.TestCase
 import org.gradle.tooling.GradleConnector
 import org.gradle.tooling.ProjectConnection
+import org.gradle.tooling.internal.consumer.DefaultGradleConnector
 
 import java.security.CodeSource
 /**
@@ -40,6 +41,10 @@ public abstract class BaseTest extends TestCase {
                 File dir = new File(location.toURI())
                 assertTrue(dir.getPath(), dir.exists())
 
+                if (System.getProperty("java.class.path").contains("idea_rt.jar")) {
+                    File f = dir.getParentFile().getParentFile().getParentFile();
+                    return new File(f, "build-system");
+                }
                 File f= dir.getParentFile().getParentFile().getParentFile().getParentFile().getParentFile().getParentFile().getParentFile().getParentFile();
                 return  new File(f, "tools" + File.separator + "base" + File.separator + "build-system")
             } catch (URISyntaxException e) {
@@ -146,7 +151,8 @@ public abstract class BaseTest extends TestCase {
 
         try {
 
-            GradleConnector connector = GradleConnector.newConnector()
+            DefaultGradleConnector connector = (DefaultGradleConnector) GradleConnector.newConnector()
+//            connector.embedded(true)
 
             ProjectConnection connection = connector
                     .useGradleVersion(gradleVersion)
