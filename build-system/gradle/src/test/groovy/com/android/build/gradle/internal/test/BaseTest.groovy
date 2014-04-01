@@ -40,6 +40,11 @@ public abstract class BaseTest extends TestCase {
                 File dir = new File(location.toURI())
                 assertTrue(dir.getPath(), dir.exists())
 
+                if (System.getProperty("java.class.path").contains("idea_rt.jar")) {
+                    File f = dir.getParentFile().getParentFile().getParentFile();
+                    return new File(f, "build-system");
+                }
+
                 File f= dir.getParentFile().getParentFile().getParentFile().getParentFile().getParentFile().getParentFile().getParentFile().getParentFile();
                 return  new File(f, "tools" + File.separator + "base" + File.separator + "build-system")
             } catch (URISyntaxException e) {

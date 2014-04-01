@@ -73,7 +73,7 @@ public abstract class BaseExtension {
     List<String> flavorDimensionList
     String testBuildType = "debug"
     // for now, use the old manifest merger.
-    boolean useOldManifestMerger = true;
+    boolean useOldManifestMerger = false;
 
     private Closure<Void> variantFilter
 
