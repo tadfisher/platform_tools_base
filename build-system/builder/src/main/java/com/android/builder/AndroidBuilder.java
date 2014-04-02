@@ -44,6 +44,8 @@ import com.android.builder.packaging.DuplicateFileException;
 import com.android.builder.packaging.PackagerException;
 import com.android.builder.packaging.SealedPackageException;
 import com.android.builder.packaging.SigningException;
+import com.android.builder.sdk.SdkInfo;
+import com.android.builder.sdk.TargetInfo;
 import com.android.builder.signing.CertificateInfo;
 import com.android.builder.signing.KeystoreHelper;
 import com.android.builder.signing.KeytoolException;
@@ -85,7 +87,7 @@ import java.util.Set;
  * build steps.
  *
  * To use:
- * create a builder with {@link #AndroidBuilder(SdkParser, String, ILogger, boolean)}
+ * create a builder with {@link #AndroidBuilder(String, ILogger, boolean)}
  *
  * then build steps can be done with
  * {@link #processManifest(java.io.File, java.util.List, java.util.List, String, int, String, int, int, String)}
@@ -96,11 +98,11 @@ import java.util.Set;
  * {@link #packageApk(String, java.io.File, java.util.Collection, String, java.util.Collection, java.util.Set, boolean, com.android.builder.model.SigningConfig, com.android.builder.model.PackagingOptions, String)}
  *
  * Java compilation is not handled but the builder provides the bootclasspath with
- * {@link #getBootClasspath(SdkParser)}.
+ * {@link #getBootClasspath()}.
  */
 public class AndroidBuilder {
 
-    private static final FullRevision MIN_BUILD_TOOLS_REV = new FullRevision(16, 0, 0);
+    private static final FullRevision MIN_BUILD_TOOLS_REV = new FullRevision(19, 0, 0);
 
     private static final DependencyFileProcessor sNoOpDependencyFileProcessor = new DependencyFileProcessor() {
         @Override
@@ -109,79 +111,88 @@ public class AndroidBuilder {
         }
     };
 
-    private final SdkParser mSdkParser;
     private final ILogger mLogger;
     private final CommandLineRunner mCmdLineRunner;
     private final boolean mVerboseExec;
-    private boolean mLibrary;
 
-    @NonNull
-    private final IAndroidTarget mTarget;
-    @NonNull
-    private final BuildToolInfo mBuildTools;
     private String mCreatedBy;
 
+    private SdkInfo mSdkInfo;
+    private TargetInfo mTargetInfo;
+
     /**
-     * Creates an AndroidBuilder
-     * <p/>
-     * This receives an {@link SdkParser} to provide the build with information about the SDK, as
-     * well as an {@link ILogger} to display output.
+     * Creates an AndroidBuilder.
      * <p/>
      * <var>verboseExec</var> is needed on top of the ILogger due to remote exec tools not being
      * able to output info and verbose messages separately.
      *
-     * @param sdkParser the SdkParser
+     * @param createdBy the createdBy String for the apk manifest.
      * @param logger the Logger
      * @param verboseExec whether external tools are launched in verbose mode
      */
     public AndroidBuilder(
-            @NonNull SdkParser sdkParser,
             @Nullable String createdBy,
             @NonNull ILogger logger,
             boolean verboseExec) {
         mCreatedBy = createdBy;
-        mSdkParser = checkNotNull(sdkParser);
         mLogger = checkNotNull(logger);
         mVerboseExec = verboseExec;
         mCmdLineRunner = new CommandLineRunner(mLogger);
-
-        BuildToolInfo buildToolInfo = mSdkParser.getBuildTools();
-        FullRevision buildToolsRevision = buildToolInfo.getRevision();
-
-        if (buildToolsRevision.compareTo(MIN_BUILD_TOOLS_REV) < 0) {
-            throw new IllegalArgumentException(String.format(
-                    "The SDK Build Tools revision (%1$s) is too low. Minimum required is %2$s",
-                    buildToolsRevision, MIN_BUILD_TOOLS_REV));
-        }
-
-        mTarget = mSdkParser.getTarget();
-        mBuildTools = mSdkParser.getBuildTools();
     }
 
     @VisibleForTesting
     AndroidBuilder(
-            @NonNull SdkParser sdkParser,
             @NonNull CommandLineRunner cmdLineRunner,
             @NonNull ILogger logger,
             boolean verboseExec) {
-        mSdkParser = checkNotNull(sdkParser);
         mCmdLineRunner = checkNotNull(cmdLineRunner);
         mLogger = checkNotNull(logger);
         mVerboseExec = verboseExec;
+    }
 
-        mTarget = mSdkParser.getTarget();
-        mBuildTools = mSdkParser.getBuildTools();
+    public void setTargetInfo(@NonNull SdkInfo sdkInfo, @NonNull TargetInfo targetInfo) {
+        mSdkInfo = sdkInfo;
+        mTargetInfo = targetInfo;
+
+        if (mTargetInfo.getBuildTools().getRevision().compareTo(MIN_BUILD_TOOLS_REV) < 0) {
+            throw new IllegalArgumentException(String.format(
+                    "The SDK Build Tools revision (%1$s) is too low. Minimum required is %2$s",
+                    mTargetInfo.getBuildTools().getRevision(), MIN_BUILD_TOOLS_REV));
+        }
+    }
+
+    @Nullable
+    public SdkInfo getSdkInfo() {
+        return mSdkInfo;
+    }
+
+    @Nullable
+    public TargetInfo getTargetInfo() {
+        return mTargetInfo;
+    }
+
+    @Nullable
+    public IAndroidTarget getTarget() {
+        return mTargetInfo.getTarget();
+    }
+
+    public boolean isTargetAPreview() {
+        return mTargetInfo.getTarget().getVersion().isPreview();
+    }
+
+    public String getTargetCodename() {
+        return mTargetInfo.getTarget().getVersion().getCodename();
     }
 
     /**
      * Helper method to get the boot classpath to be used during compilation.
      */
     @NonNull
-    public static List<String> getBootClasspath(@NonNull SdkParser sdkParser) {
+    public List<String> getBootClasspath() {
 
         List<String> classpath = Lists.newArrayList();
 
-        IAndroidTarget target = sdkParser.getTarget();
+        IAndroidTarget target = mTargetInfo.getTarget();
 
         classpath.addAll(target.getBootClasspath());
 
@@ -195,31 +206,27 @@ public class AndroidBuilder {
 
         // add annotations.jar if needed.
         if (target.getVersion().getApiLevel() <= 15) {
-            classpath.add(sdkParser.getAnnotationsJar());
+            classpath.add(mSdkInfo.getAnnotationsJar().getPath());
         }
 
         return classpath;
     }
 
-    /** Sets whether this builder is currently used to build a library. Defaults to false. */
-    public AndroidBuilder setBuildingLibrary(boolean library) {
-        mLibrary = library;
-        return this;
-    }
-
-    /** Sets whether this builder is currently used to build a library */
-    public boolean isBuildingLibrary() {
-        return mLibrary;
-    }
-
     /**
      * Returns the jar file for the renderscript mode.
-     * @return the jar file.
+     *
+     * This may return null if the SDK has not been loaded yet.
+     *
+     * @return the jar file, or null.
      */
-    @NonNull
+    @Nullable
     public File getRenderScriptSupportJar() {
-        return RenderScriptProcessor.getSupportJar(
-                mBuildTools.getLocation().getAbsolutePath());
+        if (mTargetInfo != null) {
+            return RenderScriptProcessor.getSupportJar(
+                    mTargetInfo.getBuildTools().getLocation().getAbsolutePath());
+        }
+
+        return null;
     }
 
     /**
@@ -239,7 +246,9 @@ public class AndroidBuilder {
 
             Set<File> fullJars = Sets.newHashSetWithExpectedSize(compileClasspath.size() + 1);
             fullJars.addAll(compileClasspath);
-            fullJars.add(renderScriptSupportJar);
+            if (renderScriptSupportJar != null) {
+                fullJars.add(renderScriptSupportJar);
+            }
             compileClasspath = fullJars;
         }
 
@@ -263,17 +272,23 @@ public class AndroidBuilder {
 
             Set<File> fullJars = Sets.newHashSetWithExpectedSize(packagedJars.size() + 1);
             fullJars.addAll(packagedJars);
-            fullJars.add(renderScriptSupportJar);
+            if (renderScriptSupportJar != null) {
+                fullJars.add(renderScriptSupportJar);
+            }
             packagedJars = fullJars;
         }
 
         return packagedJars;
     }
 
-    @NonNull
+    @Nullable
     public File getSupportNativeLibFolder() {
-        return RenderScriptProcessor.getSupportNativeLibFolder(
-                mBuildTools.getLocation().getAbsolutePath());
+        if (mTargetInfo != null) {
+            return RenderScriptProcessor.getSupportNativeLibFolder(
+                    mTargetInfo.getBuildTools().getLocation().getAbsolutePath());
+        }
+
+        return null;
     }
 
     /**
@@ -283,7 +298,7 @@ public class AndroidBuilder {
     @NonNull
     public PngCruncher getAaptCruncher() {
         return new AaptCruncher(
-                mBuildTools.getPath(BuildToolInfo.PathId.AAPT),
+                mTargetInfo.getBuildTools().getPath(BuildToolInfo.PathId.AAPT),
                 mCmdLineRunner);
     }
 
@@ -334,11 +349,13 @@ public class AndroidBuilder {
         checkNotNull(libraries, "libraries cannot be null.");
         checkNotNull(outManifestLocation, "outManifestLocation cannot be null.");
 
+        final IAndroidTarget target = mTargetInfo.getTarget();
+
         ICallback callback = new ICallback() {
             @Override
             public int queryCodenameApiLevel(@NonNull String codename) {
-                if (codename.equals(mTarget.getVersion().getCodename())) {
-                    return mTarget.getVersion().getApiLevel();
+                if (codename.equals(target.getVersion().getCodename())) {
+                    return target.getVersion().getApiLevel();
                 }
                 return ICallback.UNKNOWN_CODENAME;
             }
@@ -357,7 +374,6 @@ public class AndroidBuilder {
                 } else {
                     ManifestMerger merger = new ManifestMerger(MergerLog.wrapSdkLog(mLogger),
                             callback);
-                    merger.setInsertSourceMarkers(isInsertSourceMarkers());
                     doMerge(merger, new File(outManifestLocation), mainManifest,
                             attributeInjection, packageOverride);
                 }
@@ -377,7 +393,6 @@ public class AndroidBuilder {
 
                     ManifestMerger merger = new ManifestMerger(MergerLog.wrapSdkLog(mLogger),
                             callback);
-                    merger.setInsertSourceMarkers(isInsertSourceMarkers());
                     doMerge(merger, mainManifestOut, mainManifest, manifestOverlays,
                             attributeInjection, packageOverride);
 
@@ -440,11 +455,13 @@ public class AndroidBuilder {
         checkNotNull(libraries, "libraries cannot be null.");
         checkNotNull(outManifestLocation, "outManifestLocation cannot be null.");
 
+        final IAndroidTarget target = mTargetInfo.getTarget();
+
         ICallback callback = new ICallback() {
             @Override
             public int queryCodenameApiLevel(@NonNull String codename) {
-                if (codename.equals(mTarget.getVersion().getCodename())) {
-                    return mTarget.getVersion().getApiLevel();
+                if (codename.equals(target.getVersion().getCodename())) {
+                    return target.getVersion().getApiLevel();
                 }
                 return ICallback.UNKNOWN_CODENAME;
             }
@@ -580,25 +597,7 @@ public class AndroidBuilder {
         }
 
         ManifestMerger merger = new ManifestMerger(MergerLog.wrapSdkLog(mLogger), callback);
-        merger.setInsertSourceMarkers(isInsertSourceMarkers());
         doMerge(merger, outManifest, mainManifest, manifests, attributeInjection, packageOverride);
-    }
-
-    /**
-     * Returns whether we should insert source markers in generated files (such as
-     * XML resources and merged manifest files)
-     *
-     * @return true to generate source comments
-     */
-    public boolean isInsertSourceMarkers() {
-        // In release library builds (generating AAR's) we don't want source comments.
-        // In other scenarios (e.g. during development) we do.
-
-        // TODO: Find out whether we're building in a release build type
-        boolean isRelease = false;
-
-        //noinspection ConstantConditions
-        return !(mLibrary && isRelease);
     }
 
     private void doMerge(ManifestMerger merger, File output, File input,
@@ -664,10 +663,13 @@ public class AndroidBuilder {
         checkArgument(sourceOutputDir != null || resPackageOutput != null,
                 "No output provided for aapt task");
 
+        BuildToolInfo buildToolInfo = mTargetInfo.getBuildTools();
+        IAndroidTarget target = mTargetInfo.getTarget();
+
         // launch aapt: create the command line
         ArrayList<String> command = Lists.newArrayList();
 
-        String aapt = mBuildTools.getPath(BuildToolInfo.PathId.AAPT);
+        String aapt = buildToolInfo.getPath(BuildToolInfo.PathId.AAPT);
         if (aapt == null || !new File(aapt).isFile()) {
             throw new IllegalStateException("aapt is missing");
         }
@@ -685,7 +687,7 @@ public class AndroidBuilder {
 
         // inputs
         command.add("-I");
-        command.add(mTarget.getPath(IAndroidTarget.ANDROID_JAR));
+        command.add(target.getPath(IAndroidTarget.ANDROID_JAR));
 
         command.add("-M");
         command.add(manifestFile.getAbsolutePath());
@@ -868,7 +870,10 @@ public class AndroidBuilder {
         checkNotNull(sourceOutputDir, "sourceOutputDir cannot be null.");
         checkNotNull(importFolders, "importFolders cannot be null.");
 
-        String aidl = mBuildTools.getPath(BuildToolInfo.PathId.AIDL);
+        IAndroidTarget target = mTargetInfo.getTarget();
+        BuildToolInfo buildToolInfo = mTargetInfo.getBuildTools();
+
+        String aidl = buildToolInfo.getPath(BuildToolInfo.PathId.AIDL);
         if (aidl == null || !new File(aidl).isFile()) {
             throw new IllegalStateException("aidl is missing");
         }
@@ -880,7 +885,7 @@ public class AndroidBuilder {
 
         AidlProcessor processor = new AidlProcessor(
                 aidl,
-                mTarget.getPath(IAndroidTarget.ANDROID_AIDL),
+                target.getPath(IAndroidTarget.ANDROID_AIDL),
                 fullImportList,
                 sourceOutputDir,
                 dependencyFileProcessor != null ?
@@ -913,14 +918,17 @@ public class AndroidBuilder {
         checkNotNull(sourceOutputDir, "sourceOutputDir cannot be null.");
         checkNotNull(importFolders, "importFolders cannot be null.");
 
-        String aidl = mBuildTools.getPath(BuildToolInfo.PathId.AIDL);
+        IAndroidTarget target = mTargetInfo.getTarget();
+        BuildToolInfo buildToolInfo = mTargetInfo.getBuildTools();
+
+        String aidl = buildToolInfo.getPath(BuildToolInfo.PathId.AIDL);
         if (aidl == null || !new File(aidl).isFile()) {
             throw new IllegalStateException("aidl is missing");
         }
 
         AidlProcessor processor = new AidlProcessor(
                 aidl,
-                mTarget.getPath(IAndroidTarget.ANDROID_AIDL),
+                target.getPath(IAndroidTarget.ANDROID_AIDL),
                 importFolders,
                 sourceOutputDir,
                 dependencyFileProcessor != null ?
@@ -971,13 +979,15 @@ public class AndroidBuilder {
         checkNotNull(sourceOutputDir, "sourceOutputDir cannot be null.");
         checkNotNull(resOutputDir, "resOutputDir cannot be null.");
 
-        String renderscript = mBuildTools.getPath(BuildToolInfo.PathId.LLVM_RS_CC);
+        BuildToolInfo buildToolInfo = mTargetInfo.getBuildTools();
+
+        String renderscript = buildToolInfo.getPath(BuildToolInfo.PathId.LLVM_RS_CC);
         if (renderscript == null || !new File(renderscript).isFile()) {
             throw new IllegalStateException("llvm-rs-cc is missing");
         }
 
         FullRevision minBuildToolsRev = new FullRevision(19,0,3);
-        if (supportMode && mBuildTools.getRevision().compareTo(minBuildToolsRev) == -1) {
+        if (supportMode && buildToolInfo.getRevision().compareTo(minBuildToolsRev) == -1) {
             throw new IllegalStateException(
                     "RenderScript Support Mode requires buildToolsVersion >= " + minBuildToolsRev.toString());
         }
@@ -989,7 +999,7 @@ public class AndroidBuilder {
                 resOutputDir,
                 objOutputDir,
                 libOutputDir,
-                mBuildTools,
+                buildToolInfo,
                 targetApi,
                 debugBuild,
                 optimLevel,
@@ -1065,10 +1075,12 @@ public class AndroidBuilder {
         checkNotNull(dexOptions, "dexOptions cannot be null.");
         checkArgument(outDexFolder.isDirectory(), "outDexFolder must be a folder");
 
+        BuildToolInfo buildToolInfo = mTargetInfo.getBuildTools();
+
         // launch dx: create the command line
         ArrayList<String> command = Lists.newArrayList();
 
-        String dx = mBuildTools.getPath(BuildToolInfo.PathId.DX);
+        String dx = buildToolInfo.getPath(BuildToolInfo.PathId.DX);
         if (dx == null || !new File(dx).isFile()) {
             throw new IllegalStateException("dx is missing");
         }
@@ -1151,10 +1163,12 @@ public class AndroidBuilder {
         checkNotNull(outFile, "outFile cannot be null.");
         checkNotNull(dexOptions, "dexOptions cannot be null.");
 
+        BuildToolInfo buildToolInfo = mTargetInfo.getBuildTools();
+
         // launch dx: create the command line
         ArrayList<String> command = Lists.newArrayList();
 
-        String dx = mBuildTools.getPath(BuildToolInfo.PathId.DX);
+        String dx = buildToolInfo.getPath(BuildToolInfo.PathId.DX);
         if (dx == null || !new File(dx).isFile()) {
             throw new IllegalStateException("dx is missing");
         }
