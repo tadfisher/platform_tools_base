@@ -98,6 +98,9 @@ public enum NodeOperationType implements ConvertibleName {
         return SdkUtils.constantNameToCamelCase(name());
     }
 
+    public boolean isOverriding() {
+        return this == REMOVE || this == REMOVE_ALL || this == REPLACE;
+    }
 
     /**
      * Local xml name of node operation types.

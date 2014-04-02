@@ -108,6 +108,23 @@ public class ActionRecorder {
         }
     }
 
+    void recordImpliedNodeAction(XmlElement xmlElement) {
+        NodeKey storageKey = xmlElement.getId();
+        Actions.DecisionTreeRecord nodeDecisionTree = mRecords.get(storageKey);
+        if (nodeDecisionTree == null) {
+            nodeDecisionTree = new Actions.DecisionTreeRecord();
+            mRecords.put(storageKey, nodeDecisionTree);
+        }
+        Actions.NodeRecord record = new Actions.NodeRecord(Actions.ActionType.IMPLIED,
+                new Actions.ActionLocation(
+                        xmlElement.getDocument().getSourceLocation(),
+                        xmlElement.getDocument().getRootNode().getPosition()),
+                xmlElement.getId(),
+                xmlElement.getOperationType()
+        );
+        nodeDecisionTree.addNodeRecord(record);
+    }
+
     /**
      * Record a node action taken by the merging tool.
      *
