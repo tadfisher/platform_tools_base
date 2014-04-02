@@ -48,11 +48,16 @@ public class SessionParams extends RenderParams {
         }
     }
 
+    public static enum RenderingType {
+        LAYOUT, MENU, PREFERENCE
+    }
+
     private final ILayoutPullParser mLayoutDescription;
     private final RenderingMode mRenderingMode;
     private boolean mLayoutOnly = false;
     private Map<ResourceReference, AdapterBinding> mAdapterBindingMap;
     private boolean mExtendedViewInfoMode = false;
+    private final RenderingType mRenderingType;
 
     /**
      *
@@ -76,12 +81,14 @@ public class SessionParams extends RenderParams {
             RenderResources renderResources,
             IProjectCallback projectCallback,
             int minSdkVersion, int targetSdkVersion,
-            LayoutLog log) {
+            LayoutLog log,
+            RenderingType renderingType) {
         super(projectKey, hardwareConfig,
                 renderResources, projectCallback, minSdkVersion, targetSdkVersion, log);
 
         mLayoutDescription = layoutDescription;
         mRenderingMode = renderingMode;
+        mRenderingType = renderingType;
     }
 
     public SessionParams(SessionParams params) {
@@ -93,6 +100,7 @@ public class SessionParams extends RenderParams {
                     params.mAdapterBindingMap);
         }
         mExtendedViewInfoMode = params.mExtendedViewInfoMode;
+        mRenderingType = params.mRenderingType;
     }
 
     public ILayoutPullParser getLayoutDescription() {
@@ -101,6 +109,10 @@ public class SessionParams extends RenderParams {
 
     public RenderingMode getRenderingMode() {
         return mRenderingMode;
+    }
+
+    public RenderingType getRenderingType() {
+        return mRenderingType;
     }
 
     public void setLayoutOnly() {
