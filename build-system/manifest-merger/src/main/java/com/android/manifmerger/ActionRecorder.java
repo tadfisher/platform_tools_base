@@ -113,7 +113,7 @@ public class ActionRecorder {
      * an explicit declaration in the application targeted SDK.
      * @param xmlElement the implied element that was added to the resulting xml.
      */
-    void recordImpliedNodeAction(XmlElement xmlElement) {
+    void recordImpliedNodeAction(XmlElement xmlElement, String reason) {
         NodeKey storageKey = xmlElement.getId();
         Actions.DecisionTreeRecord nodeDecisionTree = mRecords.get(storageKey);
         if (nodeDecisionTree == null) {
@@ -125,6 +125,7 @@ public class ActionRecorder {
                         xmlElement.getDocument().getSourceLocation(),
                         xmlElement.getDocument().getRootNode().getPosition()),
                 xmlElement.getId(),
+                reason,
                 xmlElement.getOperationType()
         );
         nodeDecisionTree.addNodeRecord(record);
@@ -166,6 +167,7 @@ public class ActionRecorder {
                         targetElement.getDocument().getSourceLocation(),
                         targetElement.getPosition()),
                 targetElement.getId(),
+                null,
                 mergedElement.getOperationType()
         );
         nodeDecisionTree.addNodeRecord(record);
@@ -192,6 +194,7 @@ public class ActionRecorder {
                         originElement.getDocument().getSourceLocation(),
                         attribute.getPosition()),
                 attribute.getId(),
+                null,
                 attributeOperationType
         );
         attributeRecords.add(attributeRecord);
@@ -215,6 +218,7 @@ public class ActionRecorder {
                         implicitAttributeOwner.getDocument().getSourceLocation(),
                         implicitAttributeOwner.getPosition()),
                 attribute.getId(),
+                null,
                 AttributeOperationType.REPLACE
         );
         attributeRecords.add(attributeRecord);
