@@ -1,3 +1,4 @@
+<#assign includeGooglePlus = includePlus || includeDrive || includeGames || includeWallet>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" >
 <#if includeGooglePlus>
     <!-- To access Google+ APIs: -->
@@ -5,13 +6,10 @@
 
     <!-- To retrieve OAuth 2.0 tokens or invalidate tokens to disconnect a user. This disconnect
      option is required to comply with the Google+ Sign-In developer policies -->
-    <uses-permission android:name="android.permission.USE_CREDENTIALS" />
+    <uses-permission android:name="android.permission.USE_CREDENTIALS" /></#if>
 
-    <!-- To retrieve the account name (email) as part of sign-in: -->
-    <uses-permission android:name="android.permission.GET_ACCOUNTS" /></#if>
-
-    <!-- To auto-complete the email text field in the login form with the user's emails --><#if !includeGooglePlus>
-    <uses-permission android:name="android.permission.GET_ACCOUNTS" /></#if>
+    <!-- To auto-complete the email text field in the login form with the user's emails -->
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="android.permission.READ_PROFILE" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
 
