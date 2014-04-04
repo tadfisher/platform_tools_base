@@ -89,17 +89,17 @@ public class ${activityClass} extends Activity<#if includeGooglePlus> implements
     private static final int STATE_DEFAULT = 0;
     private static final int STATE_SIGN_IN = 1;
     private static final int STATE_IN_PROGRESS = 2;
-    
+
     private static final int RC_SIGN_IN = 0;
-    
+
     private static final int DIALOG_PLAY_SERVICES_ERROR = 0;
-    
+
     private static final String SAVED_PROGRESS = "sign_in_progress";
-    
+
     // GoogleApiClient wraps our service connection to Google Play services and
     // provides access to the users sign in state and Google's APIs.
     private GoogleApiClient mGoogleApiClient;
-    
+
     // We use mSignInProgress to track whether user has clicked sign in.
     // mSignInProgress can be one of three values:
     //
@@ -115,11 +115,11 @@ public class ${activityClass} extends Activity<#if includeGooglePlus> implements
     //                      start further intents until the current intent
     //                      completes.
     private int mSignInProgress;
-    
+
     // Used to store the PendingIntent most recently returned by Google Play
     // services until the user clicks 'Google+ Sign-In'.
     private PendingIntent mSignInIntent;
-    
+
     // Used to store the error code most recently returned by Google Play services
     // until the user clicks 'Google+ Sign-In'.
     private int mSignInError;
@@ -250,22 +250,22 @@ public class ${activityClass} extends Activity<#if includeGooglePlus> implements
             // Optionally, add additional APIs and scopes if required.
             .build();
     }
-    
+
     @Override
     protected void onStart() {
         super.onStart();
         mGoogleApiClient.connect();
     }
-    
+
     @Override
     protected void onStop() {
         super.onStop();
-        
+
         if (mGoogleApiClient.isConnected()) {
             mGoogleApiClient.disconnect();
         }
     }
-    
+
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
@@ -282,7 +282,7 @@ public class ${activityClass} extends Activity<#if includeGooglePlus> implements
     public void onConnected(Bundle connectionHint) {
         // Update the user interface to reflect that the user is signed in.
         mSignInButton.setEnabled(false);
-        
+
         // Indicate that the sign in process is complete.
         mSignInProgress = STATE_DEFAULT;
 
@@ -310,13 +310,13 @@ public class ${activityClass} extends Activity<#if includeGooglePlus> implements
     public void onConnectionFailed(ConnectionResult result) {
         // Refer to the javadoc for ConnectionResult to see what error codes might
         // be returned in onConnectionFailed.
-        
+
         if (mSignInProgress != STATE_IN_PROGRESS) {
             // We do not have an intent in progress so we should store the latest
             // error resolution intent for use when the sign in button is clicked.
             mSignInIntent = result.getResolution();
             mSignInError = result.getErrorCode();
-            
+
             if (mSignInProgress == STATE_SIGN_IN) {
                 // STATE_SIGN_IN indicates the user already clicked the sign in button
                 // so we should continue processing errors until the user is signed in
@@ -325,7 +325,7 @@ public class ${activityClass} extends Activity<#if includeGooglePlus> implements
             }
         }
     }
-    
+
     /* Starts an appropriate intent or dialog for user interaction to resolve
      * the current error preventing the user from being signed in.  This could
      * be a dialog allowing the user to select an account, an activity allowing
@@ -338,12 +338,12 @@ public class ${activityClass} extends Activity<#if includeGooglePlus> implements
             // resolve an error.  For example if the user needs to
             // select an account to sign in with, or if they need to consent
             // to the permissions your app is requesting.
-        
+
             try {
                 // Send the pending intent that we stored on the most recent
                 // OnConnectionFailed callback.  This will allow the user to
                 // resolve the error currently preventing our connection to
-                // Google Play services.  
+                // Google Play services.
                 mSignInProgress = STATE_IN_PROGRESS;
                 startIntentSenderForResult(mSignInIntent.getIntentSender(),
                     RC_SIGN_IN, null, 0, 0, 0);
@@ -363,7 +363,7 @@ public class ${activityClass} extends Activity<#if includeGooglePlus> implements
             showDialog(DIALOG_PLAY_SERVICES_ERROR);
         }  
     }
-    
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode,
             Intent data) {
@@ -378,7 +378,7 @@ public class ${activityClass} extends Activity<#if includeGooglePlus> implements
                     // we should stop processing errors.
                     mSignInProgress = STATE_DEFAULT;
                 }
-                
+
                 if (!mGoogleApiClient.isConnecting()) {
                     // If Google Play services resolved the issue with a dialog then
                     // onStart is not called so we need to re-attempt connection here.
@@ -507,7 +507,7 @@ public class ${activityClass} extends Activity<#if includeGooglePlus> implements
                 mError = e;
                 return false;
             }
- 
+
             return true;
         }
 
@@ -525,7 +525,7 @@ public class ${activityClass} extends Activity<#if includeGooglePlus> implements
             mSessionAuthProgress.hide();
 
             if (success) {
-		mSessionAuthProgress.dismiss();
+                mSessionAuthProgress.dismiss();
                 finish();
             } else if (mError instanceof UnknownUserException) {
 <#if includeGooglePlus>
@@ -604,17 +604,17 @@ public class ${activityClass} extends Activity<#if includeGooglePlus> implements
                     // Retrieve data rows for the device user's 'profile' contact.
                     Uri.withAppendedPath(ContactsContract.Profile.CONTENT_URI,
                             ContactsContract.Contacts.Data.CONTENT_DIRECTORY), ProfileQuery.PROJECTION,
-      
+
                     // Select only email addresses.
                     ContactsContract.Contacts.Data.MIMETYPE +
                             " = ?", new String[]{ContactsContract.CommonDataKinds.Email
                                                                          .CONTENT_ITEM_TYPE},
-      
+
                     // Show primary email addresses first. Note that there won't be
                     // a primary email address if the user hasn't specified one.
                     ContactsContract.Contacts.Data.IS_PRIMARY + " DESC");
         }
-      
+
         @Override
         public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
             List<String> emails = new ArrayList<String>();
@@ -623,10 +623,10 @@ public class ${activityClass} extends Activity<#if includeGooglePlus> implements
                 emails.add(cursor.getString(ProfileQuery.ADDRESS));
                 cursor.moveToNext();
             }
-      
+
             addEmailsToAutoComplete(emails);
         }
-      
+
         @Override
         public void onLoaderReset(Loader<Cursor> cursorLoader) { }
     }
@@ -666,10 +666,10 @@ public class ${activityClass} extends Activity<#if includeGooglePlus> implements
             return emailAddressCollection;
         }
 
-	    @Override
-	    protected void onPostExecute(List<String> emailAddressCollection) {
-	       addEmailsToAutoComplete(emailAddressCollection);
-	    }
+            @Override
+            protected void onPostExecute(List<String> emailAddressCollection) {
+               addEmailsToAutoComplete(emailAddressCollection);
+            }
     }
 </#if>
 
