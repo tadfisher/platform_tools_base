@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.tasks.BaseTask
 import com.android.builder.AndroidBuilder
 import com.android.builder.DexOptions
 import com.android.ide.common.internal.WaitableExecutor
+import com.android.sdklib.repository.FullRevision
 import com.google.common.collect.Sets
 import com.google.common.hash.HashCode
 import com.google.common.hash.HashFunction
@@ -84,7 +85,8 @@ public class PreDex extends BaseTask {
                     }
 
                     //noinspection GroovyAssignabilityCheck
-                    File preDexedFile = getDexFileName(outFolder, change.file)
+                    File preDexedFile = getDexFileName(outFolder, change.file,
+                            builder.getTargetInfo().getBuildTools().getRevision())
                     //noinspection GroovyAssignabilityCheck
                     builder.preDexLibrary(change.file, preDexedFile, options)
 
@@ -122,7 +124,8 @@ public class PreDex extends BaseTask {
      * @return
      */
     @NonNull
-    private static File getDexFileName(@NonNull File outFolder, @NonNull File inputFile) {
+    private static File getDexFileName(@NonNull File outFolder, @NonNull File inputFile,
+            @NonNull FullRevision buildToolsRevision) {
         // get the filename
         String name = inputFile.getName()
         // remove the extension
@@ -131,9 +134,11 @@ public class PreDex extends BaseTask {
             name = name.substring(0, pos)
         }
 
-        // add a hash of the original file path
+        // add a hash of the original file path, including the build tools revision since we
+        // may pre-dex the same file twice with different version of the build tools.
+        String input = inputFile.getAbsolutePath() + "|" + buildToolsRevision.toString();
         HashFunction hashFunction = Hashing.sha1()
-        HashCode hashCode = hashFunction.hashString(inputFile.getAbsolutePath())
+        HashCode hashCode = hashFunction.hashString(input)
 
         return new File(outFolder, name + "-" + hashCode.toString() + SdkConstants.DOT_JAR)
     }
