@@ -2,7 +2,7 @@
 <template
     format="4"
     revision="5"
-    name="Login Activity"
+    name="Sign-In Activity"
     description="Creates a new login activity, allowing users to optionally sign in with Google+ or enter an email address and password to log in to or register with your application."
     minApi="8"
     minBuildApi="14">
@@ -16,7 +16,7 @@
         name="Activity Name"
         type="string"
         constraints="class|unique|nonempty"
-        default="LoginActivity"
+        default="SignInActivity"
         help="The name of the activity class to create" />
 
     <parameter
@@ -25,7 +25,7 @@
         type="string"
         constraints="layout|unique|nonempty"
         suggest="${activityToLayout(activityClass)}"
-        default="activity_login"
+        default="activity_signin"
         help="The name of the layout to create for the activity" />
 
     <parameter
@@ -52,13 +52,34 @@
         default="com.mycompany.myapp" />
 
     <parameter
-        id="includeGooglePlus"
-        name="Include Google+ sign in"
+        id="includePlus"
+        name="Enable Google+ Sign-in and APIs"
         type="boolean"
         default="true" />
 
+    <parameter
+        id="includeGames"
+        name="Enable Google Play Games Services"
+        type="boolean"
+        default="false">
+    </parameter>
+
+    <parameter
+        id="includeDrive"
+        name="Enable Google Drive APIs"
+        type="boolean"
+        default="false">
+    </parameter>
+
+    <parameter
+        id="includeWallet"
+        name="Enable Google Wallet Instant Buy APIs"
+        type="boolean"
+        default="false">
+    </parameter>
+
     <thumbs>
-        <thumb>template_login_activity.png</thumb>
+        <thumb>template_signin_activity.png</thumb>
     </thumbs>
 
     <globals file="globals.xml.ftl" />
