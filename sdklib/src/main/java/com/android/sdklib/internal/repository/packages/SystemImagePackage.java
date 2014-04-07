@@ -326,6 +326,11 @@ public class SystemImagePackage extends MajorRevisionPackage
      */
     @Override
     public String getListDescription() {
+        String ld = getListDisplay();
+        if (!ld.isEmpty()) {
+            return String.format("%1$s%2$s", ld, isObsolete() ? " (Obsolete)" : "");
+        }
+
         boolean isDefaultTag = SystemImage.DEFAULT_TAG.equals(mTag);
         return String.format("%1$s%2$s System Image%3$s",
                 isDefaultTag ? "" : (mTag.getDisplay() + " "),
@@ -338,6 +343,15 @@ public class SystemImagePackage extends MajorRevisionPackage
      */
     @Override
     public String getShortDescription() {
+        String ld = getListDisplay();
+        if (!ld.isEmpty()) {
+            return String.format("%1$s, Android API %2$s, revision %3$s%4$s",
+                    ld,
+                    mVersion.getApiString(),
+                    getRevision().toShortString(),
+                    isObsolete() ? " (Obsolete)" : "");
+        }
+
         boolean isDefaultTag = SystemImage.DEFAULT_TAG.equals(mTag);
         return String.format("%1$s%2$s System Image, Android API %3$s, revision %4$s%5$s",
                 isDefaultTag ? "" : (mTag.getDisplay() + " "),
