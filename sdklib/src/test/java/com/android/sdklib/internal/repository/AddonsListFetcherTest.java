@@ -84,7 +84,7 @@ public class AddonsListFetcherTest extends TestCase {
     /**
      * Validate we can load a valid addon schema version 1
      */
-    public void testLoadSample_1() throws Exception {
+    public void testLoadAddonsListXml_1() throws Exception {
         InputStream xmlStream =
             getTestResource("/com/android/sdklib/testdata/addons_list_sample_1.xml");
 
@@ -130,7 +130,7 @@ public class AddonsListFetcherTest extends TestCase {
     /**
      * Validate we can load a valid addon schema version 2
      */
-    public void testLoadSample_2() throws Exception {
+    public void testLoadAddonsListXml_2() throws Exception {
         InputStream xmlStream =
             getTestResource("/com/android/sdklib/testdata/addons_list_sample_2.xml");
 
@@ -173,6 +173,20 @@ public class AddonsListFetcherTest extends TestCase {
                  "<ADDON_SITE URL='http://base/url/relative/url.xml' Name='Relative URL.'>]",
                  Arrays.toString(result));
         assertEquals(6, result.length);
+    }
+
+    /**
+     * Validate there isn't a next-version we haven't tested yet
+     */
+    public void testLoadAddonsListXml_3() throws Exception {
+        InputStream xmlStream = null;
+        try {
+            xmlStream = getTestResource("/com/android/sdklib/testdata/addons_list_sample_3.xml");
+        } catch (NullPointerException ignore) {
+            // We should have an NPE because there should be not such file.
+            return;
+        }
+        assertNull("There is a sample for addons-list-3.xsd but there is not corresponding unit test", xmlStream);
     }
 
     // IMPORTANT: Each time you add a test here for a new version, you should
