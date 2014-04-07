@@ -225,6 +225,16 @@ public class ActionRecorder {
         attributeRecords.add(attributeRecord);
     }
 
+    @Nullable
+    synchronized Actions.AttributeRecord getAttributeCreationRecord(XmlAttribute attribute) {
+        for (Actions.AttributeRecord attributeRecord : getAttributeRecords(attribute)) {
+            if (attributeRecord.getActionType() == Actions.ActionType.ADDED) {
+                return attributeRecord;
+            }
+        }
+        return null;
+    }
+
     private List<Actions.AttributeRecord> getAttributeRecords(XmlAttribute attribute) {
         XmlElement originElement = attribute.getOwnerElement();
         NodeKey storageKey = originElement.getId();
