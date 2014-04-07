@@ -102,6 +102,22 @@ public abstract class XmlNode {
     }
 
     /**
+     * Return the line number in the original xml file this element or attribute was declared.
+     */
+    public int getLine() {
+        PositionXmlParser.Position position = getPosition();
+        return position != null ? position.getLine() : 0;
+    }
+
+    /**
+     * Return the column number in the original xml file this element or attribute was declared.
+     */
+    public int getColumn() {
+        PositionXmlParser.Position position = getPosition();
+        return position != null ? position.getColumn() : 0;
+    }
+
+    /**
      * Implementation of {@link com.android.manifmerger.XmlNode.NodeName} for an
      * node's declaration not using a namespace.
      */

@@ -292,7 +292,6 @@ public class XmlElement extends OrphanXmlElement {
     public void mergeChildren(XmlElement lowerPriorityNode,
             MergingReport.Builder mergingReport) {
 
-        ILogger logger = mergingReport.getLogger();
         // read all lower priority mergeable nodes.
         // if the same node is not defined in this document merge it in.
         // if the same is defined, so far, give an error message.
@@ -330,12 +329,13 @@ public class XmlElement extends OrphanXmlElement {
         XmlElement thisChild = thisChildOptional.get();
         switch (thisChild.getType().getMergeType()) {
             case CONFLICT:
-                mergingReport.addError(String.format(
+                addMessage(mergingReport, MergingReport.Record.Severity.ERROR, String.format(
                         "Node %1$s cannot be present in more than one input file and it's "
                                 + "present at %2$s and %3$s",
                         thisChild.getType(),
                         thisChild.printPosition(),
-                        lowerPriorityChild.printPosition()));
+                        lowerPriorityChild.printPosition()
+                ));
                 break;
             case ALWAYS:
                 // no merging, we consume the lower priority node unmodified.
@@ -405,7 +405,7 @@ public class XmlElement extends OrphanXmlElement {
      * @param lowerPriority the lower priority element.
      * @param mergingReport the merging report to log errors and actions.
      */
-    private static void handleTwoElementsExistence(
+    private void handleTwoElementsExistence(
             XmlElement higherPriority,
             XmlElement lowerPriority,
             MergingReport.Builder mergingReport) {
@@ -437,7 +437,7 @@ public class XmlElement extends OrphanXmlElement {
                 Optional<String> compareMessage = higherPriority.compareTo(lowerPriority);
                 if (compareMessage.isPresent()) {
                     // flag error.
-                    mergingReport.addError(String.format(
+                    addMessage(mergingReport, MergingReport.Record.Severity.ERROR, String.format(
                             "Node %1$s at %2$s is tagged with tools:node=\"strict\", yet "
                                     + "%3$s at %4$s is different : %5$s",
                             higherPriority.getId(),
@@ -667,5 +667,12 @@ public class XmlElement extends OrphanXmlElement {
             previousSibling = previousSibling.getPreviousSibling();
         }
         return nodesToAdopt.build().reverse();
+    }
+
+    void addMessage(MergingReport.Builder mergingReport,
+            MergingReport.Record.Severity severity,
+            String message) {
+        mergingReport.addMessage(getDocument().getSourceLocation(),
+                getLine(), getColumn(), severity, message);
     }
 }

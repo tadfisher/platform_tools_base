@@ -16,9 +16,14 @@
 
 package com.android.manifmerger;
 
+import static com.android.manifmerger.XmlLoader.SourceLocation;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.concurrency.Immutable;
 import com.android.utils.ILogger;
+import com.android.utils.SdkUtils;
+import com.android.utils.XmlUtils;
+import com.google.common.base.CaseFormat;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
@@ -56,13 +61,13 @@ public class MergingReport {
         for (Record record : mRecords) {
             switch(record.mSeverity) {
                 case WARNING:
-                    logger.warning(record.mLog);
+                    logger.warning(record.toString());
                     break;
                 case ERROR:
-                    logger.error(null /* throwable */, record.mLog);
+                    logger.error(null /* throwable */, record.toString());
                     break;
                 case INFO:
-                    logger.info(record.mLog);
+                    logger.info(record.toString());
                     break;
                 default:
                     logger.error(null /* throwable */, "Unhandled record type " + record.mSeverity);
@@ -151,15 +156,26 @@ public class MergingReport {
      */
     public static class Record {
 
-        private Record(Severity severity, String mLog) {
-            this.mSeverity = severity;
-            this.mLog = mLog;
-        }
-
-        enum Severity {WARNING, ERROR, INFO }
+        public enum Severity {WARNING, ERROR, INFO }
 
         private final Severity mSeverity;
         private final String mLog;
+        private final SourceLocation mSourceLocation;
+        private final int mLineNumber;
+        private final int mColumnNumber;
+
+        private Record(
+                SourceLocation sourceLocation,
+                int lineNumber,
+                int columnNumber,
+                Severity severity,
+                String mLog) {
+            this.mSourceLocation = sourceLocation;
+            this.mLineNumber = lineNumber;
+            this.mColumnNumber = columnNumber;
+            this.mSeverity = severity;
+            this.mLog = mLog;
+        }
 
         public Severity getSeverity() {
             return mSeverity;
@@ -167,7 +183,11 @@ public class MergingReport {
 
         @Override
         public String toString() {
-            return mSeverity.toString() + ":" + mLog;
+            return CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, mSeverity.toString())
+                    + " at "
+                    + mSourceLocation.print(true)
+                    + ":" + mLineNumber + "," + mColumnNumber + "\n\t"
+                    + mLog;
         }
     }
 
@@ -199,20 +219,22 @@ public class MergingReport {
             return this;
         }
 
-        Builder addInfo(String info) {
-            mRecordBuilder.add(new Record(Record.Severity.INFO, info));
-            return this;
-        }
+        Builder addMessage(SourceLocation errorLocation,
+                int line,
+                int column,
+                Record.Severity severity,
+                String message) {
 
-        Builder addWarning(String warning) {
-            mHasWarnings = true;
-            mRecordBuilder.add(new Record(Record.Severity.WARNING, warning));
-            return this;
-        }
-
-        Builder addError(String error) {
-            mHasErrors = true;
-            mRecordBuilder.add(new Record(Record.Severity.ERROR, error));
+            switch (severity) {
+                case ERROR:
+                    mHasErrors = true;
+                    break;
+                case WARNING:
+                    mHasWarnings = true;
+                    break;
+            }
+            mRecordBuilder.add(new Record(
+                    errorLocation, line, column, severity, message));
             return this;
         }
 

@@ -135,7 +135,7 @@ public class OrphanXmlElement extends XmlNode {
     }
 
     @Override
-    @NonNull
+    @Nullable
     public PositionXmlParser.Position getPosition() {
         return UNKNOWN_POSITION;
     }
