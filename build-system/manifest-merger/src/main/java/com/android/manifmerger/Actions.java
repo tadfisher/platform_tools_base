@@ -143,7 +143,7 @@ public class Actions {
             }
             for (Map.Entry<XmlNode.NodeName, List<Actions.AttributeRecord>> attributeRecords :
                     record.getValue().mAttributeRecords.entrySet()) {
-                stringBuilder.append("\t").append(attributeRecords.getKey());
+                stringBuilder.append("\t").append(attributeRecords.getKey()).append("\n");
                 for (Actions.AttributeRecord attributeRecord : attributeRecords.getValue()) {
                     stringBuilder.append("\t\t");
                     attributeRecord.print(stringBuilder);
@@ -354,7 +354,7 @@ public class Actions {
                     return document.adoptNode(location);
                 }
             };
-            mPosition = new PersistedPosition(getNextSiblingElement(location));
+            mPosition = new PositionImpl(getNextSiblingElement(location));
         }
 
         public PositionXmlParser.Position getPosition() {
@@ -379,46 +379,6 @@ public class Actions {
             position.setAttribute("offset", String.valueOf(mPosition.getOffset()));
             location.appendChild(position);
             return location;
-        }
-    }
-
-    private static final class PersistedPosition implements PositionXmlParser.Position {
-
-        private final int mLine;
-        private final int mColumn;
-        private final int mOffset;
-
-        private PersistedPosition(Element xml) {
-            Preconditions.checkArgument(xml.getNodeName().equals("position"));
-            mLine = Integer.parseInt(xml.getAttribute("line"));
-            mColumn = Integer.parseInt(xml.getAttribute("col"));
-            mOffset = Integer.parseInt(xml.getAttribute("offset"));
-        }
-
-        @Nullable
-        @Override
-        public PositionXmlParser.Position getEnd() {
-            return null;
-        }
-
-        @Override
-        public void setEnd(@NonNull PositionXmlParser.Position end) {
-
-        }
-
-        @Override
-        public int getLine() {
-            return mLine;
-        }
-
-        @Override
-        public int getOffset() {
-            return mOffset;
-        }
-
-        @Override
-        public int getColumn() {
-            return mColumn;
         }
     }
 
