@@ -167,7 +167,8 @@ public class ManifestMerger2 {
 
         XmlDocument lowerPriorityDocument;
         try {
-            lowerPriorityDocument = XmlLoader.load(lowerPriorityXmlFile);
+            lowerPriorityDocument = XmlLoader.load(
+                    lowerPriorityXmlFile.getFirst(), lowerPriorityXmlFile.getSecond());
         } catch (Exception e) {
             throw new MergeFailureException(e);
         }
