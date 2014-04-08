@@ -17,6 +17,7 @@
 package com.android.builder.internal.compiler;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.concurrency.GuardedBy;
 import com.android.annotations.concurrency.Immutable;
@@ -24,19 +25,37 @@ import com.android.builder.AndroidBuilder;
 import com.android.builder.DexOptions;
 import com.android.ide.common.internal.CommandLineRunner;
 import com.android.ide.common.internal.LoggedErrorException;
+import com.android.ide.common.xml.XmlPrettyPrinter;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.repository.FullRevision;
+import com.android.utils.ILogger;
 import com.android.utils.Pair;
+import com.google.common.base.Charsets;
 import com.google.common.base.Objects;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * Pre Dexing cache.
@@ -66,19 +85,49 @@ public class PreDexCache {
         @NonNull
         private final File mOutputFile;
         @NonNull
-        private final HashCode mSourceHash;
-        @NonNull
         private final CountDownLatch mLatch;
 
         Item(
                 @NonNull File sourceFile,
                 @NonNull File outputFile,
-                @NonNull HashCode sourceHash,
                 @NonNull CountDownLatch latch) {
             mSourceFile = sourceFile;
             mOutputFile = outputFile;
-            mSourceHash = sourceHash;
             mLatch = latch;
+        }
+
+        @NonNull
+        private File getSourceFile() {
+            return mSourceFile;
+        }
+
+        @NonNull
+        private File getOutputFile() {
+            return mOutputFile;
+        }
+
+        @NonNull
+        private CountDownLatch getLatch() {
+            return mLatch;
+        }
+    }
+
+    @Immutable
+    private static class StoredItem {
+        @NonNull
+        private final File mSourceFile;
+        @NonNull
+        private final File mOutputFile;
+        @NonNull
+        private final HashCode mSourceHash;
+
+        StoredItem(
+                @NonNull File sourceFile,
+                @NonNull File outputFile,
+                @NonNull HashCode sourceHash) {
+            mSourceFile = sourceFile;
+            mOutputFile = outputFile;
+            mSourceHash = sourceHash;
         }
 
         @NonNull
@@ -94,11 +143,6 @@ public class PreDexCache {
         @NonNull
         private HashCode getSourceHash() {
             return mSourceHash;
-        }
-
-        @NonNull
-        private CountDownLatch getLatch() {
-            return mLatch;
         }
     }
 
@@ -116,6 +160,11 @@ public class PreDexCache {
         private Key(@NonNull File sourceFile, @NonNull FullRevision buildToolsRevision) {
             mSourceFile = sourceFile;
             mBuildToolsRevision = buildToolsRevision;
+        }
+
+        @NonNull
+        private FullRevision getBuildToolsRevision() {
+            return mBuildToolsRevision;
         }
 
         @Override
@@ -151,11 +200,29 @@ public class PreDexCache {
         return sSingleton;
     }
 
+    private volatile boolean mLoaded = false;
+
     @GuardedBy("this")
     private final Map<Key, Item> mMap = Maps.newHashMap();
+    @GuardedBy("this")
+    private final Map<Key, StoredItem> mStoredItems = Maps.newHashMap();
 
-    private int mMisses = 0;
-    private int mHits = 0;
+    private volatile int mMisses = 0;
+    private volatile int mHits = 0;
+
+    /**
+     * Loads the stored item. This can be called several times (per subproject), so only
+     * the first call should do something.
+     */
+    public synchronized void load(@NonNull File itemStorage) {
+        if (mLoaded) {
+            return;
+        }
+
+        loadItems(itemStorage);
+
+        mLoaded = true;
+    }
 
     /**
      * Pre-dex a given library to a given output with a specific version of the build-tools.
@@ -177,26 +244,26 @@ public class PreDexCache {
             boolean verbose,
             @NonNull CommandLineRunner commandLineRunner)
             throws IOException, LoggedErrorException, InterruptedException {
-        Pair<Item, Boolean> item = getItem(inputFile, outFile, buildToolInfo);
+        Pair<Item, Boolean> pair = getItem(inputFile, outFile, buildToolInfo);
 
         // if this is a new item
-        if (item.getSecond()) {
-            mMisses++;
-
+        if (pair.getSecond()) {
             // haven't process this file yet so do it and record it.
             AndroidBuilder.preDexLibrary(inputFile, outFile, dexOptions, buildToolInfo,
                     verbose, commandLineRunner);
 
+            mMisses++;
+
             // enable other threads to use the output of this pre-dex
-            item.getFirst().getLatch().countDown();
+            pair.getFirst().getLatch().countDown();
         } else {
             // wait until the file is pre-dexed by the first thread.
-            item.getFirst().getLatch().await();
+            pair.getFirst().getLatch().await();
 
             mHits++;
 
             // file already pre-dex, just copy the output.
-            Files.copy(item.getFirst().getOutputFile(), outFile);
+            Files.copy(pair.getFirst().getOutputFile(), outFile);
         }
     }
 
@@ -230,23 +297,199 @@ public class PreDexCache {
         // get the item
         Item item = mMap.get(itemKey);
 
-        boolean newItem = (item == null);
+        boolean newItem = false;
+
         if (item == null) {
-            item = new Item(inputFile, outFile,
-                    Files.hash(inputFile, Hashing.sha1()), new CountDownLatch(1));
+            // check if we have a stored version.
+            StoredItem storedItem = mStoredItems.get(itemKey);
+
+            if (storedItem != null) {
+                // check the sha1 is still valid, and the pre-dex file is still there.
+                File dexFile = storedItem.getOutputFile();
+                if (dexFile.isFile() &&
+                        storedItem.getSourceHash().equals(Files.hash(inputFile, Hashing.sha1()))) {
+
+                    // create an item where the outFile is the one stored since it
+                    // represent the pre-dexed library already.
+                    // Next time this lib needs to be pre-dexed, we'll use the item
+                    // rather than the stored item, allowing us to not compute the sha1 again.
+                    item = new Item(inputFile, dexFile, new CountDownLatch(1));
+
+                    // since there's no work to do, just count down on the latch
+                    item.getLatch().countDown();
+                }
+            }
+
+            // if we didn't find a valid stored item, create a new one.
+            if (item == null) {
+                item = new Item(inputFile, outFile, new CountDownLatch(1));
+                newItem = true;
+            }
+
             mMap.put(itemKey, item);
         }
 
         return Pair.of(item, newItem);
     }
 
-    public synchronized void clear() {
+    public synchronized void clear(@Nullable File itemStorage, @Nullable ILogger logger) throws IOException {
         if (!mMap.isEmpty()) {
-            System.out.println("PREDEX CACHE HITS:   " + mHits);
-            System.out.println("PREDEX CACHE MISSES: " + mMisses);
+            if (itemStorage != null) {
+                saveItems(itemStorage);
+            }
+
+            if (logger != null) {
+                logger.info("PREDEX CACHE HITS:   " + mHits);
+                logger.info("PREDEX CACHE MISSES: " + mMisses);
+            }
         }
+
         mMap.clear();
+        mStoredItems.clear();
         mHits = 0;
         mMisses = 0;
+    }
+
+    private synchronized void loadItems(@NonNull File itemStorage) {
+        if (!itemStorage.isFile()) {
+            return;
+        }
+
+        BufferedInputStream stream = null;
+        try {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            stream = new BufferedInputStream(new FileInputStream(itemStorage));
+            InputSource is = new InputSource(stream);
+            factory.setNamespaceAware(true);
+            factory.setValidating(false);
+
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            Document document = builder.parse(is);
+
+            // get the root node
+            Node rootNode = document.getDocumentElement();
+            if (rootNode == null || !"pre-dex-items".equals(rootNode.getLocalName())) {
+                return;
+            }
+
+            NodeList nodes = rootNode.getChildNodes();
+
+            for (int i = 0, n = nodes.getLength(); i < n; i++) {
+                Node node = nodes.item(i);
+
+                if (node.getNodeType() != Node.ELEMENT_NODE ||
+                        !"item".equals(node.getLocalName())) {
+                    continue;
+                }
+
+                NamedNodeMap attrMap = node.getAttributes();
+
+                File sourceFile = new File(attrMap.getNamedItem("jar").getNodeValue());
+                FullRevision revision = FullRevision.parseRevision(attrMap.getNamedItem("revision").getNodeValue());
+
+                StoredItem item = new StoredItem(
+                        sourceFile,
+                        new File(attrMap.getNamedItem("dex").getNodeValue()),
+                        HashCode.fromString(attrMap.getNamedItem("sha1").getNodeValue()));
+
+                Key key = Key.of(sourceFile, revision);
+
+                mStoredItems.put(key, item);
+            }
+        } catch (Exception ignored) {
+            // if we fail to read parts or any of the file, all it'll do is fail to reuse an
+            // already pre-dexed library, so that's not a super big deal.
+        } finally {
+            try {
+                if (stream != null) {
+                    stream.close();
+                }
+            } catch (IOException e) {
+                // ignore
+            }
+        }
+    }
+
+    private synchronized void saveItems(@NonNull File itemStorage) throws IOException {
+        // write "compact" blob
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        factory.setValidating(false);
+        factory.setIgnoringComments(true);
+        DocumentBuilder builder;
+
+        try {
+            builder = factory.newDocumentBuilder();
+            Document document = builder.newDocument();
+
+            Node rootNode = document.createElement("pre-dex-items");
+            document.appendChild(rootNode);
+
+            Set<Key> keys = Sets.newHashSetWithExpectedSize(mMap.size() + mStoredItems.size());
+            keys.addAll(mMap.keySet());
+            keys.addAll(mStoredItems.keySet());
+
+            for (Key key : keys) {
+                Item item = mMap.get(key);
+
+                if (item != null) {
+
+                    Node itemNode = createItemNode(document,
+                            item.getSourceFile(),
+                            item.getOutputFile(),
+                            key.getBuildToolsRevision(),
+                            Files.hash(item.getSourceFile(), Hashing.sha1()));
+                    rootNode.appendChild(itemNode);
+
+                } else {
+                    StoredItem storedItem = mStoredItems.get(key);
+                    // check that the source file still exists in order to avoid
+                    // storing libraries that are gone.
+                    if (storedItem != null &&
+                            storedItem.getSourceFile().isFile() &&
+                            storedItem.getOutputFile().isFile()) {
+                        Node itemNode = createItemNode(document,
+                                storedItem.getSourceFile(),
+                                storedItem.getOutputFile(),
+                                key.getBuildToolsRevision(),
+                                storedItem.getSourceHash());
+                        rootNode.appendChild(itemNode);
+                    }
+                }
+            }
+
+            String content = XmlPrettyPrinter.prettyPrint(document, true);
+
+            itemStorage.getParentFile().mkdirs();
+            Files.write(content, itemStorage, Charsets.UTF_8);
+        } catch (ParserConfigurationException e) {
+        }
+    }
+
+    private static Node createItemNode(
+            @NonNull Document document,
+            @NonNull File sourceFile,
+            @NonNull File outputFile,
+            @NonNull FullRevision toolsRevision,
+            @NonNull HashCode hashCode) {
+        Node itemNode = document.createElement("item");
+
+        Attr attr = document.createAttribute("jar");
+        attr.setValue(sourceFile.getPath());
+        itemNode.getAttributes().setNamedItem(attr);
+
+        attr = document.createAttribute("dex");
+        attr.setValue(outputFile.getPath());
+        itemNode.getAttributes().setNamedItem(attr);
+
+        attr = document.createAttribute("revision");
+        attr.setValue(toolsRevision.toString());
+        itemNode.getAttributes().setNamedItem(attr);
+
+        attr = document.createAttribute("sha1");
+        attr.setValue(hashCode.toString());
+        itemNode.getAttributes().setNamedItem(attr);
+
+        return itemNode;
     }
 }
