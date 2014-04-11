@@ -16,6 +16,8 @@
 
 package com.android.sdklib.internal.repository.archives;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.sdklib.internal.repository.IDescription;
@@ -24,8 +26,6 @@ import com.android.sdklib.internal.repository.sources.SdkSource;
 import com.android.sdklib.io.FileOp;
 
 import java.io.File;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Locale;
 import java.util.Properties;
 
@@ -42,38 +42,9 @@ import java.util.Properties;
  */
 public class Archive implements IDescription, Comparable<Archive> {
 
-    private static final String PROP_OS   = "Archive.Os";       //$NON-NLS-1$
-    private static final String PROP_ARCH = "Archive.Arch";     //$NON-NLS-1$
-
-    /** The checksum type. */
-    public enum ChecksumType {
-        /** A SHA1 checksum, represented as a 40-hex string. */
-        SHA1("SHA-1");  //$NON-NLS-1$
-
-        private final String mAlgorithmName;
-
-        /**
-         * Constructs a {@link ChecksumType} with the algorithm name
-         * suitable for {@link MessageDigest#getInstance(String)}.
-         * <p/>
-         * These names are officially documented at
-         * http://java.sun.com/javase/6/docs/technotes/guides/security/StandardNames.html#MessageDigest
-         */
-        private ChecksumType(String algorithmName) {
-            mAlgorithmName = algorithmName;
-        }
-
-        /**
-         * Returns a new {@link MessageDigest} instance for this checksum type.
-         * @throws NoSuchAlgorithmException if this algorithm is not available.
-         */
-        public MessageDigest getMessageDigest() throws NoSuchAlgorithmException {
-            return MessageDigest.getInstance(mAlgorithmName);
-        }
-    }
-
     /** The OS that this archive can be downloaded on. */
-    public enum Os {
+    @Deprecated
+    public enum LegacyOs {
         ANY("Any"),
         LINUX("Linux"),
         MACOSX("MacOS X"),
@@ -81,7 +52,7 @@ public class Archive implements IDescription, Comparable<Archive> {
 
         private final String mUiName;
 
-        private Os(String uiName) {
+        private LegacyOs(String uiName) {
             mUiName = uiName;
         }
 
@@ -96,18 +67,18 @@ public class Archive implements IDescription, Comparable<Archive> {
         }
 
         /**
-         * Returns the current OS as one of the {@link Os} enum values or null.
+         * Returns the current OS as one of the {@link LegacyOs} enum values or null.
          */
-        public static Os getCurrentOs() {
+        public static LegacyOs getCurrentOs() {
             String os = System.getProperty("os.name");          //$NON-NLS-1$
             if (os.startsWith("Mac")) {                         //$NON-NLS-1$
-                return Os.MACOSX;
+                return LegacyOs.MACOSX;
 
             } else if (os.startsWith("Windows")) {              //$NON-NLS-1$
-                return Os.WINDOWS;
+                return LegacyOs.WINDOWS;
 
             } else if (os.startsWith("Linux")) {                //$NON-NLS-1$
-                return Os.LINUX;
+                return LegacyOs.LINUX;
             }
 
             return null;
@@ -119,13 +90,14 @@ public class Archive implements IDescription, Comparable<Archive> {
                 return true;
             }
 
-            Os os = getCurrentOs();
+            LegacyOs os = getCurrentOs();
             return this == os;
         }
     }
 
     /** The Architecture that this archive can be downloaded on. */
-    public enum Arch {
+    @Deprecated
+    public enum LegacyArch {
         ANY("Any"),
         PPC("PowerPC"),
         X86("x86"),
@@ -133,7 +105,7 @@ public class Archive implements IDescription, Comparable<Archive> {
 
         private final String mUiName;
 
-        private Arch(String uiName) {
+        private LegacyArch(String uiName) {
             mUiName = uiName;
         }
 
@@ -148,22 +120,22 @@ public class Archive implements IDescription, Comparable<Archive> {
         }
 
         /**
-         * Returns the current architecture as one of the {@link Arch} enum values or null.
+         * Returns the current architecture as one of the {@link LegacyArch} enum values or null.
          */
-        public static Arch getCurrentArch() {
+        public static LegacyArch getCurrentArch() {
             // Values listed from http://lopica.sourceforge.net/os.html
             String arch = System.getProperty("os.arch");
 
             if (arch.equalsIgnoreCase("x86_64") || arch.equalsIgnoreCase("amd64")) {
-                return Arch.X86_64;
+                return LegacyArch.X86_64;
 
             } else if (arch.equalsIgnoreCase("x86")
                     || arch.equalsIgnoreCase("i386")
                     || arch.equalsIgnoreCase("i686")) {
-                return Arch.X86;
+                return LegacyArch.X86;
 
             } else if (arch.equalsIgnoreCase("ppc") || arch.equalsIgnoreCase("PowerPC")) {
-                return Arch.PPC;
+                return LegacyArch.PPC;
             }
 
             return null;
@@ -175,13 +147,11 @@ public class Archive implements IDescription, Comparable<Archive> {
                 return true;
             }
 
-            Arch arch = getCurrentArch();
+            LegacyArch arch = getCurrentArch();
             return this == arch;
         }
     }
 
-    private final Os     mOs;
-    private final Arch   mArch;
     private final String mUrl;
     private final long   mSize;
     private final String mChecksum;
@@ -189,14 +159,27 @@ public class Archive implements IDescription, Comparable<Archive> {
     private final Package mPackage;
     private final String mLocalOsPath;
     private final boolean mIsLocal;
+    private final ArchFilter mArchFilter;
 
     /**
      * Creates a new remote archive.
+     * This is typically called when inflating a remote-package info from XML meta-data.
+     *
+     * @param pkg The package that contains this archive. Typically not null.
+     * @param archFilter The {@link ArchFilter} for the archive. Typically not null.
+     * @param url The URL where the archive is available.
+     *          Typically not null but code should be able to handles both.
+     * @param size The expected size in bytes of the archive to download.
+     * @param checksum The expected checksum string of the archive. Currently only the
+     *          {@link ChecksumType#SHA1} format is supported.
      */
-    public Archive(Package pkg, Os os, Arch arch, String url, long size, String checksum) {
+    public Archive(@Nullable Package pkg,
+                   @Nullable ArchFilter archFilter,
+                   @Nullable String url,
+                   long size,
+                   @NonNull String checksum) {
         mPackage = pkg;
-        mOs = os;
-        mArch = arch;
+        mArchFilter =  archFilter != null ? archFilter : new ArchFilter(null);
         mUrl = url == null ? null : url.trim();
         mLocalOsPath = null;
         mSize = size;
@@ -206,15 +189,21 @@ public class Archive implements IDescription, Comparable<Archive> {
 
     /**
      * Creates a new local archive.
-     * Uses the properties from props first, if possible. Props can be null.
+     * This is typically called when inflating a local-package info by reading a local
+     * source.properties file. In this case a few properties like the URL, checksum and
+     * size are not defined.
+     *
+     * @param pkg The package that contains this archive. Cannot be null.
+     * @param props A set of properties. Can be null.
+     * @param localOsPath The OS path where the archive is installed if this represents a
+     *            local package. Null for a remote package.
      */
     @VisibleForTesting(visibility=Visibility.PACKAGE)
-    public Archive(Package pkg, Properties props, Os os, Arch arch, String localOsPath) {
+    public Archive(@NonNull Package pkg,
+                   @Nullable Properties props,
+                   @Nullable String localOsPath) {
         mPackage = pkg;
-
-        mOs   = props == null ? os   : Os.valueOf(  props.getProperty(PROP_OS,   os.toString()));
-        mArch = props == null ? arch : Arch.valueOf(props.getProperty(PROP_ARCH, arch.toString()));
-
+        mArchFilter = new ArchFilter(props);
         mUrl = null;
         mLocalOsPath = localOsPath;
         mSize = 0;
@@ -226,9 +215,8 @@ public class Archive implements IDescription, Comparable<Archive> {
      * Save the properties of the current archive in the give {@link Properties} object.
      * These properties will later be give the constructor that takes a {@link Properties} object.
      */
-    void saveProperties(Properties props) {
-        props.setProperty(PROP_OS,   mOs.toString());
-        props.setProperty(PROP_ARCH, mArch.toString());
+    void saveProperties(@NonNull Properties props) {
+        mArchFilter.saveProperties(props);
     }
 
     /**
@@ -243,6 +231,7 @@ public class Archive implements IDescription, Comparable<Archive> {
      * Returns the package that created and owns this archive.
      * It should generally not be null.
      */
+    @Nullable
     public Package getParentPackage() {
         return mPackage;
     }
@@ -259,6 +248,7 @@ public class Archive implements IDescription, Comparable<Archive> {
      * Returns the SHA1 archive checksum, as a 40-char hex.
      * Can be empty but not null for local installed folders.
      */
+    @NonNull
     public String getChecksum() {
         return mChecksum;
     }
@@ -266,6 +256,7 @@ public class Archive implements IDescription, Comparable<Archive> {
     /**
      * Returns the checksum type, always {@link ChecksumType#SHA1} right now.
      */
+    @NonNull
     public ChecksumType getChecksumType() {
         return mChecksumType;
     }
@@ -275,6 +266,7 @@ public class Archive implements IDescription, Comparable<Archive> {
      * Always return null for a local installed folder.
      * @see #getLocalOsPath()
      */
+    @Nullable
     public String getUrl() {
         return mUrl;
     }
@@ -284,48 +276,40 @@ public class Archive implements IDescription, Comparable<Archive> {
      * Always return null for remote archives.
      * @see #getUrl()
      */
+    @Nullable
     public String getLocalOsPath() {
         return mLocalOsPath;
     }
 
     /**
-     * Returns the archive {@link Os} enum.
-     * Can be null for a local installed folder on an unknown OS.
+     * Returns the architecture filter.
+     * This non-null filter indicates which host/jvm this archive is compatible with.
      */
-    public Os getOs() {
-        return mOs;
+    @NonNull
+    public ArchFilter getArchFilter() {
+        return mArchFilter;
     }
 
     /**
-     * Returns the archive {@link Arch} enum.
-     * Can be null for a local installed folder on an unknown architecture.
-     */
-    public Arch getArch() {
-        return mArch;
-    }
-
-    /**
-     * Generates a description for this archive of the OS/Arch supported by this archive.
+     * Generates a description of the {@link ArchFilter} supported by this archive.
      */
     public String getOsDescription() {
-        String os;
-        if (mOs == null) {
-            os = "unknown OS";
-        } else if (mOs == Os.ANY) {
-            os = "any OS";
-        } else {
-            os = mOs.getUiName();
+        StringBuilder sb = new StringBuilder();
+
+        HostOs hos = mArchFilter.getHostOS();
+        sb.append(hos == null ? "any OS" : hos.getUiName());
+
+        BitSize jvmBits = mArchFilter.getJvmBits();
+        if (jvmBits != null) {
+            sb.append(", JVM ").append(jvmBits.getSize()).append("-bits");
         }
 
-        String arch = "";                               //$NON-NLS-1$
-        if (mArch != null && mArch != Arch.ANY) {
-            arch = mArch.getUiName();
+        BitSize hostBits = mArchFilter.getJvmBits();
+        if (hostBits != null) {
+            sb.append(", Host ").append(hostBits.getSize()).append("-bits");
         }
 
-        return String.format("%1$s%2$s%3$s",
-                os,
-                arch.length() > 0 ? " " : "",           //$NON-NLS-2$
-                arch);
+        return sb.toString();
     }
 
     /**
@@ -389,7 +373,8 @@ public class Archive implements IDescription, Comparable<Archive> {
      * Returns true if this archive can be installed on the current platform.
      */
     public boolean isCompatible() {
-        return getOs().isCompatible() && getArch().isCompatible();
+        ArchFilter current = ArchFilter.getCurrent();
+        return mArchFilter.isCompatibleWith(current);
     }
 
     /**
@@ -423,12 +408,11 @@ public class Archive implements IDescription, Comparable<Archive> {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((mArch == null) ? 0 : mArch.hashCode());
+        result = prime * result + ((mArchFilter == null) ? 0 : mArchFilter.hashCode());
         result = prime * result + ((mChecksum == null) ? 0 : mChecksum.hashCode());
         result = prime * result + ((mChecksumType == null) ? 0 : mChecksumType.hashCode());
         result = prime * result + (mIsLocal ? 1231 : 1237);
         result = prime * result + ((mLocalOsPath == null) ? 0 : mLocalOsPath.hashCode());
-        result = prime * result + ((mOs == null) ? 0 : mOs.hashCode());
         result = prime * result + (int) (mSize ^ (mSize >>> 32));
         result = prime * result + ((mUrl == null) ? 0 : mUrl.hashCode());
         return result;
@@ -451,11 +435,11 @@ public class Archive implements IDescription, Comparable<Archive> {
             return false;
         }
         Archive other = (Archive) obj;
-        if (mArch == null) {
-            if (other.mArch != null) {
+        if (mArchFilter == null) {
+            if (other.mArchFilter != null) {
                 return false;
             }
-        } else if (!mArch.equals(other.mArch)) {
+        } else if (!mArchFilter.equals(other.mArchFilter)) {
             return false;
         }
         if (mChecksum == null) {
@@ -480,13 +464,6 @@ public class Archive implements IDescription, Comparable<Archive> {
                 return false;
             }
         } else if (!mLocalOsPath.equals(other.mLocalOsPath)) {
-            return false;
-        }
-        if (mOs == null) {
-            if (other.mOs != null) {
-                return false;
-            }
-        } else if (!mOs.equals(other.mOs)) {
             return false;
         }
         if (mSize != other.mSize) {
