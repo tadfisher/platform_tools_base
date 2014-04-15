@@ -48,6 +48,8 @@ import com.android.utils.ILogger;
 import com.android.utils.SdkUtils;
 import com.android.utils.StdLogger;
 import com.google.common.base.Charsets;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -170,6 +172,11 @@ public class GradleImport {
     private final List<String> mWarnings = Lists.newArrayList();
     private final List<String> mErrors = Lists.newArrayList();
     private Map<String, File> mPathMap = Maps.newTreeMap();
+    /**
+     * Set of modules user chose to import. Can be <code>null</code> when all
+     * modules will be imported
+     */
+    private Set<String> mSelectedModules;
 
     public GradleImport() {
         String workspace = System.getProperty(WORKSPACE_PROPERTY);
@@ -606,7 +613,16 @@ public class GradleImport {
             exportLocalProperties(destDir);
         }
         exportSettingsGradle(new File(destDir, FN_SETTINGS_GRADLE), isImportIntoExisting());
-        for (ImportModule module : mRootModules) {
+        Iterable<? extends ImportModule> filtered = mRootModules;
+        if (mSelectedModules != null) {
+            filtered = Iterables.filter(mRootModules, new Predicate<ImportModule>() {
+                @Override
+                public boolean apply(ImportModule input) {
+                  return mSelectedModules.contains(input.getModuleName());
+                }
+            });
+        }
+        for (ImportModule module : filtered) {
             exportModule(new File(destDir, module.getModuleName()), module);
         }
 
@@ -1081,6 +1097,10 @@ public class GradleImport {
             modules.put(module.getModuleName(), module.getCanonicalModuleDir());
         }
         return modules;
+    }
+
+    public void setModulesToImport(Map<String, File> modules) {
+        mSelectedModules = modules.keySet();
     }
 
     private static class ImportException extends RuntimeException {
