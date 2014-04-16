@@ -45,7 +45,7 @@ configurations{
 }
 
 dependencies{
-    provided 'net.sf.proguard:proguard-gradle:4.10'
+    provided 'net.sf.proguard:proguard-gradle:4.11'
 }
 
 //Include provided for compilation
