@@ -6,6 +6,18 @@ buildscript {
         classpath 'com.android.tools.build:gradle:0.11.0'
     }
 }
+
+apply plugin: 'android-ndk'
+
+android_ndk {
+    moduleName "sanangeles"
+    apiLevel "19"
+    cFlags "-DDISABLE_IMPORTGL"
+    ldLibs "GLESv1_CM", "dl", "log"
+    stl "stlport_static"
+    toolchain "clang"
+}
+
 apply plugin: 'android'
 
 android {
@@ -13,16 +25,8 @@ android {
     buildToolsVersion '19.1.0'
 
     defaultConfig {
-        ndk {
-            moduleName "sanangeles"
-            cFlags "-DANDROID_NDK -DDISABLE_IMPORTGL"
-            ldLibs "GLESv1_CM", "dl", "log"
-            stl "stlport_static"
-        }
-
         // This actual the app version code. Giving ourselves 1,000,000 values
         versionCode = 123
-
     }
 
     buildTypes.debug.jniDebugBuild true

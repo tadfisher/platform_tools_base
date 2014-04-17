@@ -116,6 +116,7 @@ import com.android.builder.testing.api.TestServer
 import com.android.ide.common.internal.ExecutorSingleton
 import com.android.ide.common.sdk.SdkVersionInfo
 import com.android.utils.ILogger
+import com.android.build.gradle.ndk.NdkAppPlugin
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.ListMultimap
 import com.google.common.collect.Lists
@@ -723,6 +724,15 @@ public abstract class BasePlugin {
             project.file("$project.buildDir/${FD_INTERMEDIATES}/rs/${variantData.variantConfiguration.dirName}/lib")
         }
         renderscriptTask.conventionMapping.ndkConfig = { config.ndkConfig }
+
+//        println "Created renderscriptTask"
+//        if (project.plugins.hasPlugin(NdkAppPlugin.class)) {
+//            NdkAppPlugin ndkPlugin = project.plugins.getPlugin(NdkAppPlugin.class)
+////            ndkPlugin.getNdkTasks(config).dependsOn(renderscriptTask)
+//            println "Adding RS include flag"
+//            ndkPlugin.getNdkExtension().cFlags "-I${renderscriptTask.getSourceOutputDir()}"
+//            ndkPlugin.getNdkExtension().cppFlags "-I${renderscriptTask.getSourceOutputDir()}"
+//        }
     }
 
     public void createMergeResourcesTask(@NonNull BaseVariantData variantData,
@@ -1191,9 +1201,6 @@ public abstract class BasePlugin {
 
         // Add a task to compile the test application
         createCompileTask(variantData, testedVariantData)
-
-        // Add NDK tasks
-        createNdkTasks(variantData)
 
         addPackageTasks(variantData, null, false /*publishApk*/)
 
@@ -1667,7 +1674,13 @@ public abstract class BasePlugin {
                 "package${variantData.variantConfiguration.fullName.capitalize()}",
                 PackageApplication)
         variantData.packageApplicationTask = packageApp
-        packageApp.dependsOn variantData.processResourcesTask, dexTask, variantData.processJavaResourcesTask, variantData.ndkCompileTask
+        packageApp.dependsOn variantData.processResourcesTask, dexTask, variantData.processJavaResourcesTask
+
+        // Add dependencies on NDK tasks if NDK plugin is applied.
+        if (project.plugins.hasPlugin(NdkAppPlugin.class)) {
+            NdkAppPlugin ndkPlugin = project.plugins.getPlugin(NdkAppPlugin.class)
+            packageApp.dependsOn(ndkPlugin.getNdkTasks(variantConfig))
+        }
 
         packageApp.plugin = this
 
@@ -1682,7 +1695,10 @@ public abstract class BasePlugin {
         packageApp.conventionMapping.jniFolders = {
             // for now only the project's compilation output.
             Set<File> set = Sets.newHashSet()
-            set.addAll(variantData.ndkCompileTask.soFolder)
+            if (project.plugins.hasPlugin(NdkAppPlugin.class)) {
+                NdkAppPlugin ndkPlugin = project.plugins.getPlugin(NdkAppPlugin.class)
+                set.addAll(ndkPlugin.getOutputDirectory(variantConfig))
+            }
             set.addAll(variantData.renderscriptCompileTask.libOutputDir)
             set.addAll(variantConfig.libraryJniFolders)
             set.addAll(variantConfig.jniLibsList)

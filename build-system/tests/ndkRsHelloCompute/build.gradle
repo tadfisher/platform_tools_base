@@ -6,6 +6,22 @@ buildscript {
         classpath 'com.android.tools.build:gradle:0.11.0'
     }
 }
+
+apply plugin: 'android-ndk'
+
+android_ndk {
+    moduleName "hellocomputendk"
+    apiLevel 19
+    stl "stlport_shared"
+    renderscriptNdkMode true
+
+    sourceSets {
+        main {
+            srcDirs "build/source/rs/arm/debug"
+        }
+    }
+}
+
 apply plugin: 'android'
 
 android {
@@ -14,11 +30,6 @@ android {
 
     defaultConfig {
         renderscriptNdkMode true
-        ndk {
-            moduleName "libhellocomputendk"
-            stl "stlport_shared"
-        }
-
     }
 
     buildTypes.debug.jniDebugBuild true
