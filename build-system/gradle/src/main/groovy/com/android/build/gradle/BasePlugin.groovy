@@ -184,8 +184,8 @@ import static java.io.File.separator
 public abstract class BasePlugin {
     public final static String DIR_BUNDLES = "bundles";
 
-    public static final String GRADLE_MIN_VERSION = "1.10"
-    public static final String[] GRADLE_SUPPORTED_VERSIONS = [ GRADLE_MIN_VERSION, "1.11", "1.12" ]
+    public static final String GRADLE_MIN_VERSION = "1.12"
+    public static final String[] GRADLE_SUPPORTED_VERSIONS = [ GRADLE_MIN_VERSION ]
 
     public static final String INSTALL_GROUP = "Install"
 
@@ -197,6 +197,7 @@ public abstract class BasePlugin {
     private ToolingModelBuilderRegistry registry
 
     protected JacocoPlugin jacocoPlugin
+    private NdkPlugin ndkPlugin
 
     private BaseExtension extension
     private VariantManager variantManager
@@ -280,9 +281,13 @@ public abstract class BasePlugin {
         def signingConfigContainer = project.container(SigningConfig,
                 new SigningConfigFactory(instantiator))
 
+        project.apply plugin: NdkPlugin
+        ndkPlugin = project.plugins.getPlugin(NdkPlugin)
+
         extension = project.extensions.create('android', getExtensionClass(),
                 this, (ProjectInternal) project, instantiator,
                 buildTypeContainer, productFlavorContainer, signingConfigContainer,
+                ndkPlugin.getNdkExtension(),
                 this instanceof LibraryPlugin)
         setBaseExtension(extension)
 
@@ -1266,7 +1271,7 @@ public abstract class BasePlugin {
         createCompileTask(variantData, testedVariantData)
 
         // Add NDK tasks
-        if (!project.plugins.hasPlugin(NdkPlugin.class)) {
+        if (!extension.getUseNewNdkPlugin()) {
             createNdkTasks(variantData)
         }
 
@@ -1745,7 +1750,7 @@ public abstract class BasePlugin {
         packageApp.dependsOn variantData.processResourcesTask, dexTask, variantData.processJavaResourcesTask
 
         // Add dependencies on NDK tasks if NDK plugin is applied.
-        if (project.plugins.hasPlugin(NdkPlugin.class)) {
+        if (extension.getUseNewNdkPlugin()) {
             NdkPlugin ndkPlugin = project.plugins.getPlugin(NdkPlugin.class)
             packageApp.dependsOn (ndkPlugin.getNdkTasks(variantConfig))
         } else {
@@ -1765,7 +1770,7 @@ public abstract class BasePlugin {
         packageApp.conventionMapping.jniFolders = {
             // for now only the project's compilation output.
             Set<File> set = Sets.newHashSet()
-            if (project.plugins.hasPlugin(NdkPlugin.class)) {
+            if (extension.getUseNewNdkPlugin()) {
                 NdkPlugin ndkPlugin = project.plugins.getPlugin(NdkPlugin.class)
                 set.addAll(ndkPlugin.getOutputDirectory(variantConfig))
             } else {

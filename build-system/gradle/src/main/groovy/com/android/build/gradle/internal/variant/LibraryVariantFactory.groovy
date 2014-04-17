@@ -161,7 +161,7 @@ public class LibraryVariantFactory implements VariantFactory {
                 Sync)
 
         // Add dependencies on NDK tasks if NDK plugin is applied.
-        if (project.plugins.hasPlugin(NdkPlugin.class)) {
+        if (extension.getUseNewNdkPlugin()) {
             NdkPlugin ndkPlugin = project.plugins.getPlugin(NdkPlugin.class)
             packageJniLibs.dependsOn(ndkPlugin.getNdkTasks(variantConfig))
             packageJniLibs.from(ndkPlugin.getOutputDirectory(variantConfig)).include("**/*.so")

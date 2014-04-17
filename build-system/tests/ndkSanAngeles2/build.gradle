@@ -9,14 +9,6 @@ buildscript {
 
 apply plugin: 'android-ndk'
 
-android_ndk {
-    moduleName "sanangeles"
-    cFlags "-DDISABLE_IMPORTGL"
-    ldLibs "GLESv1_CM", "dl", "log"
-    stl "stlport_static"
-    toolchain "clang"
-}
-
 apply plugin: 'android'
 
 android {
@@ -29,6 +21,15 @@ android {
     }
 
     buildTypes.debug.jniDebugBuild true
+
+    useNewNdkPlugin = true
+    ndk {
+        moduleName "sanangeles"
+        cFlags "-DDISABLE_IMPORTGL"
+        ldLibs "GLESv1_CM", "dl", "log"
+        stl "stlport_static"
+        toolchain "clang"
+    }
 
     productFlavors {
         x86 {

@@ -17,6 +17,11 @@ package com.android.build.gradle.ndk
 
 import com.android.build.gradle.api.AndroidSourceDirectorySet
 import com.android.build.gradle.internal.api.DefaultAndroidSourceDirectorySet
+import com.android.build.gradle.AppPlugin
+import com.android.build.gradle.BasePlugin
+import com.android.build.gradle.LibraryPlugin
+import com.android.build.gradle.internal.api.DefaultAndroidSourceDirectorySet
+import com.android.build.gradle.ndk.internal.ForwardNdkConfigurationAction
 import com.android.build.gradle.ndk.internal.NdkBuilder
 import com.android.build.gradle.ndk.internal.NdkConfigurationAction
 import com.android.build.gradle.ndk.internal.NdkExtensionConventionAction
@@ -26,6 +31,7 @@ import com.android.builder.model.BuildType
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.specs.Spec
 import org.gradle.configuration.project.ProjectConfigurationActionContainer
 import org.gradle.internal.Actions
 import org.gradle.internal.reflect.Instantiator
@@ -73,13 +79,25 @@ class NdkPlugin implements Plugin<Project> {
         project.apply plugin: 'c'
         project.apply plugin: 'cpp'
 
-        configurationActions.add(Actions.composite(
-                new NdkExtensionConventionAction(),
-                new ToolchainConfigurationAction(ndkBuilder, extension),
-                new NdkConfigurationAction(ndkBuilder, extension)))
+        configurationActions.add(Actions.filter(
+                Actions.composite(
+                        new ForwardNdkConfigurationAction(),
+                        new NdkExtensionConventionAction(),
+                        new ToolchainConfigurationAction(ndkBuilder, extension),
+                        new NdkConfigurationAction(ndkBuilder, extension)),
+                new Spec<Project>() {
+                    @Override
+                    boolean isSatisfiedBy(Project p) {
+                        return (!(p.plugins.hasPlugin(AppPlugin) ||
+                                    p.plugins.hasPlugin(LibraryPlugin)) ||
+                                extension.moduleName != null)
+                    }
+                }))
 
         project.afterEvaluate {
-            hideUnwantedTasks()
+            if (extension.moduleName != null) {
+                hideUnwantedTasks()
+            }
         }
     }
 
@@ -95,6 +113,7 @@ class NdkPlugin implements Plugin<Project> {
         }
         project.binaries.withType(ProjectSharedLibraryBinary).matching { binary ->
             binary.buildType.name.equals(variantConfig.getBuildType().getName()) &&
+                    binary.flavor.name.equals(variantConfig.getFlavorName()) &&
                     (variantConfig.getNdkConfig().getAbiFilters() == null ||
                             variantConfig.getNdkConfig().getAbiFilters().contains(
                                     binary.targetPlatform.name))

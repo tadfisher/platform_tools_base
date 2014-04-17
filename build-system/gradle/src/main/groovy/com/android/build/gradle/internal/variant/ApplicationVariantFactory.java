@@ -115,7 +115,7 @@ public class ApplicationVariantFactory implements VariantFactory {
         basePlugin.createCompileTask(variantData, null/*testedVariant*/);
 
         // Add NDK tasks
-        if (!basePlugin.getProject().getPlugins().hasPlugin(NdkPlugin.class)) {
+        if (!basePlugin.getExtension().getUseNewNdkPlugin()) {
             basePlugin.createNdkTasks(variantData);
         }
 

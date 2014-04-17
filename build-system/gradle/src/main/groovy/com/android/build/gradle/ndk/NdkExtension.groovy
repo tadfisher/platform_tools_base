@@ -38,7 +38,7 @@ public class NdkExtension {
     private boolean renderscriptNdkMode;
     private NamedDomainObjectContainer<AndroidSourceDirectorySet> sourceSetsContainer
 
-    public NdkExtension(NamedDomainObjectContainer<AndroidSourceDirectorySet> sourceSetsContainer) {
+    public NdkExtension(@Nullable NamedDomainObjectContainer<AndroidSourceDirectorySet> sourceSetsContainer) {
         this.sourceSetsContainer = sourceSetsContainer
     }
 

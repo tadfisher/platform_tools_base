@@ -23,7 +23,7 @@ public class NdkExtensionConventionAction implements Action<ProjectInternal> {
     public void execute(ProjectInternal project) {
         NdkExtension extension = project.getExtensions().getByType(NdkExtension.class);
 
-        if (extension.getModuleName() == null || extension.getModuleName().equals("")) {
+        if (extension.getModuleName() == null || extension.getModuleName().isEmpty()) {
             throw new InvalidUserDataException("moduleName must be set for Android NDK plugin.");
         }
 
