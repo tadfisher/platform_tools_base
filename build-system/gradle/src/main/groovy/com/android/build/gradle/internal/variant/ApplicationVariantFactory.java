@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.internal.api.ApplicationVariantImpl;
+import com.android.build.gradle.ndk.NdkPlugin;
 import com.android.builder.core.VariantConfiguration;
 
 import org.gradle.api.Task;
@@ -114,7 +115,9 @@ public class ApplicationVariantFactory implements VariantFactory {
         basePlugin.createCompileTask(variantData, null/*testedVariant*/);
 
         // Add NDK tasks
-        basePlugin.createNdkTasks(variantData);
+        if (!basePlugin.getExtension().getUseNewNdkPlugin()) {
+            basePlugin.createNdkTasks(variantData);
+        }
 
         basePlugin.addPackageTasks(appVariantData, assembleTask, true /*publishApk*/);
     }

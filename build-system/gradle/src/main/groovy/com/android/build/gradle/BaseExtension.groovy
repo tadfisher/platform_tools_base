@@ -17,6 +17,7 @@ package com.android.build.gradle
 import com.android.SdkConstants
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable
+import com.android.build.gradle.api.AndroidSourceDirectorySet
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.TestVariant
@@ -30,6 +31,7 @@ import com.android.build.gradle.internal.dsl.LintOptionsImpl
 import com.android.build.gradle.internal.dsl.PackagingOptionsImpl
 import com.android.build.gradle.internal.dsl.ProductFlavorDsl
 import com.android.build.gradle.internal.test.TestOptions
+import com.android.build.gradle.ndk.NdkExtension
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.DefaultBuildType
 import com.android.builder.core.DefaultProductFlavor
@@ -79,6 +81,9 @@ public abstract class BaseExtension {
     private String defaultPublishConfig = "release"
     private boolean publishNonDefault = false
 
+    private NdkExtension ndk
+    private boolean useNewNdkPlugin = false
+
     private Closure<Void> variantFilter
 
     private final DefaultDomainObjectSet<TestVariant> testVariantList =
@@ -106,6 +111,7 @@ public abstract class BaseExtension {
         this.buildTypes = buildTypes
         this.productFlavors = productFlavors
         this.signingConfigs = signingConfigs
+        this.ndk = ndk
 
         defaultConfig = instantiator.newInstance(ProductFlavorDsl.class, BuilderConstants.MAIN,
                 project, instantiator, project.getLogger())
@@ -429,5 +435,21 @@ public abstract class BaseExtension {
     public void flavorGroups(String... groups) {
         plugin.displayDeprecationWarning("'flavorGroups' has been renamed 'flavorDimensions'. It will be removed in 1.0")
         flavorDimensions(groups);
+    }
+
+    public void ndk(Action<NdkExtension> action) {
+        action.execute(ndk)
+    }
+
+    public boolean getUseNewNdkPlugin() {
+        return useNewNdkPlugin
+    }
+
+    public void setUseNewNdkPlugin(boolean value) {
+        useNewNdkPlugin = value
+    }
+
+    public setNdkExtension(NdkExtension extension) {
+        this.ndk = extension
     }
 }

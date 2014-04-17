@@ -16,6 +16,7 @@
 package com.android.build.gradle
 import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.api.BaseVariant
+import com.android.build.gradle.ndk.NdkExtension
 import com.android.builder.core.DefaultBuildType
 import com.android.builder.core.DefaultProductFlavor
 import com.android.builder.model.SigningConfig
