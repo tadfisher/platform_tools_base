@@ -1,0 +1,12 @@
+apply plugin: 'android-ndk'
+
+android_ndk {
+    moduleName "hello-jni"
+}
+
+apply plugin: 'android-library'
+
+android {
+    compileSdkVersion 19
+    buildToolsVersion "19.1.0"
+}
