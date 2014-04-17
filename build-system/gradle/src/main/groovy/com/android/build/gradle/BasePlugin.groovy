@@ -115,6 +115,7 @@ import com.android.builder.testing.api.TestServer
 import com.android.ide.common.internal.ExecutorSingleton
 import com.android.ide.common.sdk.SdkVersionInfo
 import com.android.utils.ILogger
+import com.android.build.gradle.ndk.NdkPlugin
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.ListMultimap
 import com.google.common.collect.Lists
@@ -183,8 +184,8 @@ import static java.io.File.separator
 public abstract class BasePlugin {
     public final static String DIR_BUNDLES = "bundles";
 
-    public static final String GRADLE_MIN_VERSION = "1.10"
-    public static final String[] GRADLE_SUPPORTED_VERSIONS = [ GRADLE_MIN_VERSION, "1.11", "1.12" ]
+    public static final String GRADLE_MIN_VERSION = "2.0"
+    public static final String[] GRADLE_SUPPORTED_VERSIONS = [ GRADLE_MIN_VERSION ]
 
     public static final String INSTALL_GROUP = "Install"
 
@@ -196,6 +197,7 @@ public abstract class BasePlugin {
     private ToolingModelBuilderRegistry registry
 
     protected JacocoPlugin jacocoPlugin
+    private NdkPlugin ndkPlugin
 
     private BaseExtension extension
     private VariantManager variantManager
@@ -284,6 +286,15 @@ public abstract class BasePlugin {
                 buildTypeContainer, productFlavorContainer, signingConfigContainer,
                 this instanceof LibraryPlugin)
         setBaseExtension(extension)
+
+        if (project.plugins.hasPlugin(NdkPlugin.class)) {
+            throw new BadPluginException(
+                    "Cannot apply Android native plugin before the Android plugin.")
+        }
+        project.apply plugin: NdkPlugin
+        ndkPlugin = project.plugins.getPlugin(NdkPlugin)
+
+        extension.setNdkExtension(ndkPlugin.getNdkExtension())
 
         variantManager = new VariantManager(project, this, extension, getVariantFactory())
 
@@ -1265,7 +1276,9 @@ public abstract class BasePlugin {
         createCompileTask(variantData, testedVariantData)
 
         // Add NDK tasks
-        createNdkTasks(variantData)
+        if (!extension.getUseNewNativePlugin()) {
+            createNdkTasks(variantData)
+        }
 
         addPackageTasks(variantData, null, false /*publishApk*/)
 
@@ -1739,7 +1752,15 @@ public abstract class BasePlugin {
                 "package${variantData.variantConfiguration.fullName.capitalize()}",
                 PackageApplication)
         variantData.packageApplicationTask = packageApp
-        packageApp.dependsOn variantData.processResourcesTask, dexTask, variantData.processJavaResourcesTask, variantData.ndkCompileTask
+        packageApp.dependsOn variantData.processResourcesTask, dexTask, variantData.processJavaResourcesTask
+
+        // Add dependencies on NDK tasks if NDK plugin is applied.
+        if (extension.getUseNewNativePlugin()) {
+            NdkPlugin ndkPlugin = project.plugins.getPlugin(NdkPlugin.class)
+            packageApp.dependsOn (ndkPlugin.getNdkTasks(variantConfig))
+        } else {
+            packageApp.dependsOn variantData.ndkCompileTask
+        }
 
         packageApp.plugin = this
 
@@ -1754,7 +1775,12 @@ public abstract class BasePlugin {
         packageApp.conventionMapping.jniFolders = {
             // for now only the project's compilation output.
             Set<File> set = Sets.newHashSet()
-            set.addAll(variantData.ndkCompileTask.soFolder)
+            if (extension.getUseNewNativePlugin()) {
+                NdkPlugin ndkPlugin = project.plugins.getPlugin(NdkPlugin.class)
+                set.addAll(ndkPlugin.getOutputDirectory(variantConfig))
+            } else {
+                set.addAll(variantData.ndkCompileTask.soFolder)
+            }
             set.addAll(variantData.renderscriptCompileTask.libOutputDir)
             set.addAll(variantConfig.libraryJniFolders)
             set.addAll(variantConfig.jniLibsList)
