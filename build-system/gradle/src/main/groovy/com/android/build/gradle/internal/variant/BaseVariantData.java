@@ -220,4 +220,51 @@ public abstract class BaseVariantData {
 
         return javaSources;
     }
+
+    /**
+     * Returns the Java folders.
+     */
+    @NonNull
+    public List<File> getJavaSourceFolder() {
+        // Build the list of source folders.
+        List<File> sourceFolders = Lists.newArrayList();
+
+        // First the actual source folders.
+        List<SourceProvider> providers = variantConfiguration.getSortedSourceProviders();
+        for (SourceProvider provider : providers) {
+            for (File sourceFolder : provider.getJavaDirectories()) {
+                if (sourceFolder.isDirectory()) {
+                    sourceFolders.add(sourceFolder);
+                }
+            }
+        }
+
+        File sourceFolder;
+        // then all the generated src folders.
+/*
+        sourceFolder = processResourcesTask.getSourceOutputDir();
+        if (sourceFolder.isDirectory()) {
+            sourceFolders.add(sourceFolder);
+        }
+
+        sourceFolder = generateBuildConfigTask.getSourceOutputDir();
+        if (sourceFolder.isDirectory()) {
+            sourceFolders.add(sourceFolder);
+        }
+*/
+        sourceFolder = aidlCompileTask.getSourceOutputDir();
+        if (sourceFolder.isDirectory()) {
+            sourceFolders.add(sourceFolder);
+        }
+
+        if (!variantConfiguration.getMergedFlavor().getRenderscriptNdkMode()) {
+            sourceFolder = renderscriptCompileTask.getSourceOutputDir();
+            if (sourceFolder.isDirectory()) {
+                sourceFolders.add(sourceFolder);
+            }
+        }
+
+        return sourceFolders;
+    }
+
 }
