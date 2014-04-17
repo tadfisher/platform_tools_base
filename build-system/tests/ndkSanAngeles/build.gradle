@@ -6,6 +6,17 @@ buildscript {
         classpath 'com.android.tools.build:gradle:0.10.0-SNAPSHOT'
     }
 }
+
+apply plugin: 'android-ndk'
+
+android_ndk {
+    moduleName "sanangeles"
+    apiLevel "19"
+    cFlags "-DDISABLE_IMPORTGL"
+    ldLibs "GLESv1_CM", "dl", "log"
+    stl "stlport_static"
+}
+
 apply plugin: 'android'
 
 android {
@@ -13,16 +24,8 @@ android {
     buildToolsVersion "19.0.2"
 
     defaultConfig {
-        ndk {
-            moduleName "sanangeles"
-            cFlags "-DANDROID_NDK -DDISABLE_IMPORTGL"
-            ldLibs "GLESv1_CM", "dl", "log"
-            stl "stlport_static"
-        }
-
         // This actual the app version code. Giving ourselves 1,000,000 values
         versionCode = 123
-
     }
 
     buildTypes.debug.jniDebugBuild true
@@ -64,5 +67,6 @@ android {
 
         // set the composite code
         variant.mergedFlavor.versionCode = flavorVersion * 1000000 + defaultConfig.versionCode
+        //variant.jniLibsList.add("${project.buildDir}/binaries/arm/debug/lib/")
     }
 }
