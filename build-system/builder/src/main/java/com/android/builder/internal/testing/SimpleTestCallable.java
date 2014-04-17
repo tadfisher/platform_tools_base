@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.builder.testing.TestData;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceException;
+import com.android.ddmlib.NullOutputReceiver;
 import com.android.ddmlib.testrunner.ITestRunListener;
 import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
 import com.android.ddmlib.testrunner.TestIdentifier;
@@ -32,6 +33,7 @@ import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Basic Callable to run tests on a given {@link DeviceConnector} using
@@ -50,6 +52,8 @@ public class SimpleTestCallable implements Callable<Boolean> {
     @NonNull
     private final File resultsDir;
     @NonNull
+    private final File coverageDir;
+    @NonNull
     private final File testApk;
     @Nullable
     private final File testedApk;
@@ -65,12 +69,14 @@ public class SimpleTestCallable implements Callable<Boolean> {
             @Nullable File testedApk,
             @NonNull  TestData testData,
             @NonNull  File resultsDir,
+            @NonNull  File coverageDir,
                       int timeout,
             @NonNull  ILogger logger) {
         this.projectName = projectName;
         this.device = device;
         this.flavorName = flavorName;
         this.resultsDir = resultsDir;
+        this.coverageDir = coverageDir;
         this.testApk = testApk;
         this.testedApk = testedApk;
         this.testData = testData;
@@ -88,6 +94,7 @@ public class SimpleTestCallable implements Callable<Boolean> {
         runListener.setReportDir(resultsDir);
 
         long time = System.currentTimeMillis();
+        boolean success = false;
 
         try {
             device.connect(timeout, logger);
@@ -106,12 +113,20 @@ public class SimpleTestCallable implements Callable<Boolean> {
                     testData.getInstrumentationRunner(),
                     device);
 
+            if (testData.isInstrumented()) {
+                runner.addInstrumentationArg("coverage", "true");
+                runner.addInstrumentationArg("coverageFile",
+                        "/data/data/" + testData.getTestedPackageName() + "/coverage.ec");
+            }
+
             runner.setRunName(deviceName);
             runner.setMaxtimeToOutputResponse(timeout);
 
             runner.run(runListener);
 
-            return runListener.getRunResult().hasFailedTests();
+            boolean result = runListener.getRunResult().hasFailedTests();
+            success = true;
+            return result;
         } catch (Exception e) {
             Map<String, String> emptyMetrics = Collections.emptyMap();
 
@@ -131,6 +146,18 @@ public class SimpleTestCallable implements Callable<Boolean> {
             throw e;
         } finally {
             if (isInstalled) {
+                // Get the coverage if needed.
+                if (success && testData.isInstrumented()) {
+                    String coverageFile = "/data/data/" + testData.getTestedPackageName() + "/coverage.ec";
+                    device.executeShellCommand(
+                            "run-as " + testData.getTestedPackageName() + " chmod 644 " + coverageFile,
+                            new NullOutputReceiver(),
+                            30, TimeUnit.SECONDS);
+                    device.pullFile(
+                            coverageFile,
+                            new File(coverageDir, "coverage.ec").getPath());
+                }
+
                 // uninstall the apps
                 // This should really not be null, because if it was the build
                 // would have broken before.

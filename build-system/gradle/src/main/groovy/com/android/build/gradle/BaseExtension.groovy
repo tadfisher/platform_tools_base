@@ -23,6 +23,8 @@ import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.TestVariant
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.SourceSetSourceProviderWrapper
+import com.android.build.gradle.internal.coverage.CodeCoverageHandler
+import com.android.build.gradle.internal.coverage.JacocoExtension
 import com.android.build.gradle.internal.dsl.AaptOptionsImpl
 import com.android.build.gradle.internal.dsl.AndroidSourceSetFactory
 import com.android.build.gradle.internal.dsl.DexOptionsImpl
@@ -65,6 +67,7 @@ public abstract class BaseExtension {
     final TestOptions testOptions
     final CompileOptions compileOptions
     final PackagingOptionsImpl packagingOptions
+    final JacocoExtension jacoco
 
     final NamedDomainObjectContainer<DefaultProductFlavor> productFlavors
     final NamedDomainObjectContainer<DefaultBuildType> buildTypes
@@ -82,6 +85,7 @@ public abstract class BaseExtension {
 
     private final List<DeviceProvider> deviceProviderList = Lists.newArrayList();
     private final List<TestServer> testServerList = Lists.newArrayList();
+    private CodeCoverageHandler codeCoverageHandler = null
 
     protected final BasePlugin plugin
 
@@ -112,6 +116,7 @@ public abstract class BaseExtension {
         testOptions = instantiator.newInstance(TestOptions.class)
         compileOptions = instantiator.newInstance(CompileOptions.class)
         packagingOptions = instantiator.newInstance(PackagingOptionsImpl.class)
+        jacoco = instantiator.newInstance(JacocoExtension.class)
 
         sourceSetsContainer = project.container(AndroidSourceSet,
                 new AndroidSourceSetFactory(instantiator, project.fileResolver, isLibrary))
@@ -158,22 +163,22 @@ public abstract class BaseExtension {
     }
 
     void compileSdkVersion(int apiLevel) {
-        plugin.checkTasksAlreadyCreated();
+        plugin.checkTasksAlreadyCreated()
         this.target = "android-" + apiLevel
     }
 
     void setCompileSdkVersion(int apiLevel) {
-        plugin.checkTasksAlreadyCreated();
+        plugin.checkTasksAlreadyCreated()
         compileSdkVersion(apiLevel)
     }
 
     void compileSdkVersion(String target) {
-        plugin.checkTasksAlreadyCreated();
+        plugin.checkTasksAlreadyCreated()
         this.target = target
     }
 
     void setCompileSdkVersion(String target) {
-        plugin.checkTasksAlreadyCreated();
+        plugin.checkTasksAlreadyCreated()
         compileSdkVersion(target)
     }
 
@@ -182,37 +187,37 @@ public abstract class BaseExtension {
     }
 
     void buildToolsVersion(String version) {
-        plugin.checkTasksAlreadyCreated();
+        plugin.checkTasksAlreadyCreated()
         buildToolsRevision = FullRevision.parseRevision(version)
     }
 
     void setBuildToolsVersion(String version) {
-        plugin.checkTasksAlreadyCreated();
+        plugin.checkTasksAlreadyCreated()
         buildToolsVersion(version)
     }
 
     void buildTypes(Action<? super NamedDomainObjectContainer<DefaultBuildType>> action) {
-        plugin.checkTasksAlreadyCreated();
+        plugin.checkTasksAlreadyCreated()
         action.execute(buildTypes)
     }
 
     void productFlavors(Action<? super NamedDomainObjectContainer<DefaultProductFlavor>> action) {
-        plugin.checkTasksAlreadyCreated();
+        plugin.checkTasksAlreadyCreated()
         action.execute(productFlavors)
     }
 
     void signingConfigs(Action<? super NamedDomainObjectContainer<SigningConfig>> action) {
-        plugin.checkTasksAlreadyCreated();
+        plugin.checkTasksAlreadyCreated()
         action.execute(signingConfigs)
     }
 
     public void flavorDimensions(String... dimensions) {
-        plugin.checkTasksAlreadyCreated();
+        plugin.checkTasksAlreadyCreated()
         flavorDimensionList = Arrays.asList(dimensions)
     }
 
     void sourceSets(Action<NamedDomainObjectContainer<AndroidSourceSet>> action) {
-        plugin.checkTasksAlreadyCreated();
+        plugin.checkTasksAlreadyCreated()
         action.execute(sourceSetsContainer)
     }
 
@@ -221,43 +226,72 @@ public abstract class BaseExtension {
     }
 
     void defaultConfig(Action<DefaultProductFlavor> action) {
-        plugin.checkTasksAlreadyCreated();
+        plugin.checkTasksAlreadyCreated()
         action.execute(defaultConfig)
     }
 
     void aaptOptions(Action<AaptOptionsImpl> action) {
-        plugin.checkTasksAlreadyCreated();
+        plugin.checkTasksAlreadyCreated()
         action.execute(aaptOptions)
     }
 
     void dexOptions(Action<DexOptionsImpl> action) {
-        plugin.checkTasksAlreadyCreated();
+        plugin.checkTasksAlreadyCreated()
         action.execute(dexOptions)
     }
 
     void lintOptions(Action<LintOptionsImpl> action) {
-        plugin.checkTasksAlreadyCreated();
+        plugin.checkTasksAlreadyCreated()
         action.execute(lintOptions)
     }
 
     void testOptions(Action<TestOptions> action) {
-        plugin.checkTasksAlreadyCreated();
+        plugin.checkTasksAlreadyCreated()
         action.execute(testOptions)
     }
 
     void compileOptions(Action<CompileOptions> action) {
-        plugin.checkTasksAlreadyCreated();
+        plugin.checkTasksAlreadyCreated()
         action.execute(compileOptions)
     }
 
     void packagingOptions(Action<PackagingOptionsImpl> action) {
-        plugin.checkTasksAlreadyCreated();
+        plugin.checkTasksAlreadyCreated()
         action.execute(packagingOptions)
     }
 
+    void jacoco(Action<JacocoExtension> action) {
+        plugin.checkTasksAlreadyCreated()
+        action.execute(jacoco)
+    }
+
     void deviceProvider(DeviceProvider deviceProvider) {
-        plugin.checkTasksAlreadyCreated();
+        plugin.checkTasksAlreadyCreated()
         deviceProviderList.add(deviceProvider)
+    }
+    
+
+    @NonNull
+    List<DeviceProvider> getDeviceProviders() {
+        return deviceProviderList
+    }
+
+    void testServer(TestServer testServer) {
+        plugin.checkTasksAlreadyCreated()
+        testServerList.add(testServer)
+    }
+
+    @NonNull
+    List<TestServer> getTestServers() {
+        return testServerList
+    }
+
+    void setCodeCoverageHandler(CodeCoverageHandler handler) {
+        codeCoverageHandler = handler
+    }
+
+    CodeCoverageHandler getCodeCoverageHandler() {
+        return codeCoverageHandler
     }
 
     void variantFilter(Closure<Void> filter) {
@@ -266,21 +300,6 @@ public abstract class BaseExtension {
 
     public Closure<Void> getVariantFilter() {
         return variantFilter;
-    }
-
-    @NonNull
-    List<DeviceProvider> getDeviceProviders() {
-        return deviceProviderList
-    }
-
-    void testServer(TestServer testServer) {
-        plugin.checkTasksAlreadyCreated();
-        testServerList.add(testServer)
-    }
-
-    @NonNull
-    List<TestServer> getTestServers() {
-        return testServerList
     }
 
     @NonNull

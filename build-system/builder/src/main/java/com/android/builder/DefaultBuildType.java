@@ -29,6 +29,7 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
 
     private final String mName;
     private boolean mDebuggable = false;
+    private boolean mInstrumented = false;
     private boolean mJniDebugBuild = false;
     private boolean mRenderscriptDebugBuild = false;
     private int mRenderscriptOptimLevel = 3;
@@ -47,6 +48,7 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
         _initWith(that);
 
         setDebuggable(that.isDebuggable());
+        setInstrumented(that.isInstrumented());
         setJniDebugBuild(that.isJniDebugBuild());
         setRenderscriptDebugBuild(that.isRenderscriptDebugBuild());
         setRenderscriptOptimLevel(that.getRenderscriptOptimLevel());
@@ -74,6 +76,16 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
     @Override
     public boolean isDebuggable() {
         return mDebuggable;
+    }
+
+
+    public void setInstrumented(boolean instrumented) {
+        mInstrumented = instrumented;
+    }
+
+    @Override
+    public boolean isInstrumented() {
+        return mInstrumented;
     }
 
     @NonNull
@@ -178,6 +190,7 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
 
         if (!mName.equals(buildType.mName)) return false;
         if (mDebuggable != buildType.mDebuggable) return false;
+        if (mInstrumented != buildType.mInstrumented) return false;
         if (mJniDebugBuild != buildType.mJniDebugBuild) return false;
         if (mRenderscriptDebugBuild != buildType.mRenderscriptDebugBuild) return false;
         if (mRenderscriptOptimLevel != buildType.mRenderscriptOptimLevel) return false;
@@ -204,6 +217,7 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
         int result = super.hashCode();
         result = 31 * result + (mName.hashCode());
         result = 31 * result + (mDebuggable ? 1 : 0);
+        result = 31 * result + (mInstrumented ? 1 : 0);
         result = 31 * result + (mJniDebugBuild ? 1 : 0);
         result = 31 * result + (mRenderscriptDebugBuild ? 1 : 0);
         result = 31 * result + mRenderscriptOptimLevel;
@@ -221,6 +235,7 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
         return Objects.toStringHelper(this)
                 .add("name", mName)
                 .add("debuggable", mDebuggable)
+                .add("instrumented", mInstrumented)
                 .add("jniDebugBuild", mJniDebugBuild)
                 .add("renderscriptDebugBuild", mRenderscriptDebugBuild)
                 .add("renderscriptOptimLevel", mRenderscriptOptimLevel)

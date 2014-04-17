@@ -1579,4 +1579,9 @@ public class VariantConfiguration implements TestData {
 
         return null;
     }
+
+    @Override
+    public boolean isInstrumented() {
+        return mBuildType.isInstrumented();
+    }
 }

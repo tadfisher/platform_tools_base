@@ -27,6 +27,8 @@ import com.android.build.gradle.internal.ProductFlavorData
 import com.android.build.gradle.internal.SdkHandler
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
+import com.android.build.gradle.internal.coverage.JacocoPlugin
+import com.android.build.gradle.internal.coverage.JacocoTask
 import com.android.build.gradle.internal.dependency.ClassifiedJarDependency
 import com.android.build.gradle.internal.dependency.DependencyChecker
 import com.android.build.gradle.internal.dependency.LibraryDependencyImpl
@@ -171,6 +173,8 @@ public abstract class BasePlugin {
     protected Instantiator instantiator
     private ToolingModelBuilderRegistry registry
 
+    protected JacocoPlugin jacocoPlugin
+
     private BaseExtension extension
     private VariantManager variantManager
 
@@ -197,6 +201,7 @@ public abstract class BasePlugin {
     protected Task assembleTest
     protected Task deviceCheck
     protected Task connectedCheck
+    protected Task jacocoAgentTask
 
     public Task lintCompile
     protected Task lintAll
@@ -236,6 +241,9 @@ public abstract class BasePlugin {
         sdkHandler = new SdkHandler(project, this, logger)
 
         project.apply plugin: JavaBasePlugin
+
+        project.apply plugin: JacocoPlugin
+        jacocoPlugin = project.plugins.getPlugin(JacocoPlugin)
 
         // Register a builder for the custom tooling model
         registry.register(new ModelBuilder());
@@ -1377,6 +1385,16 @@ public abstract class BasePlugin {
 
             project.file("$rootLocation/$subFolder/$flavorFolder")
         }
+        testTask.conventionMapping.coverageDir = {
+            String rootLocation = "$project.buildDir/code-coverage"
+
+            String flavorFolder = variantData.variantConfiguration.flavorName
+            if (!flavorFolder.isEmpty()) {
+                flavorFolder = "$FD_FLAVORS/" + flavorFolder
+            }
+
+            project.file("$rootLocation/$subFolder/$flavorFolder")
+        }
 
         return testTask
     }
@@ -1396,8 +1414,14 @@ public abstract class BasePlugin {
                         (variantConfig.type == TEST &&
                                 variantConfig.testedConfig.type != VariantConfiguration.Type.LIBRARY))
 
+        boolean runInstrumentation = /*extension.codeCoverageHandler != null &&*/
+                variantConfig.buildType.instrumented &&
+                (variantConfig.type != TEST ||
+                        (variantConfig.type == TEST &&
+                                variantConfig.testedConfig.type == VariantConfiguration.Type.LIBRARY))
+
         // common dex task configuration
-        String dexTaskName = "dex${variantData.variantConfiguration.fullName.capitalize()}"
+        String dexTaskName = "dex${variantConfig.fullName.capitalize()}"
         Dex dexTask = project.tasks.create(dexTaskName, Dex)
         variantData.dexTask = dexTask
 
@@ -1409,7 +1433,6 @@ public abstract class BasePlugin {
         dexTask.dexOptions = extension.dexOptions
 
         if (runProguard) {
-
             // first proguard task.
             BaseVariantData testedVariantData = variantData instanceof TestVariantData ? variantData.testedVariantData : null as BaseVariantData
             File outFile = createProguardTasks(variantData, testedVariantData)
@@ -1420,6 +1443,21 @@ public abstract class BasePlugin {
             dexTask.conventionMapping.libraries = { Collections.emptyList() }
 
         } else {
+            JacocoTask jacocoTask = null
+            Task agentTask = null
+            if (runInstrumentation) {
+                jacocoTask = project.tasks.create(
+                        "instrument${variantConfig.fullName.capitalize()}", JacocoTask)
+                jacocoTask.dependsOn variantData.javaCompileTask
+                jacocoTask.conventionMapping.jacocoClasspath = { project.configurations[JacocoPlugin.ANT_CONFIGURATION_NAME] }
+                jacocoTask.conventionMapping.inputDir = { variantData.javaCompileTask.destinationDir }
+                jacocoTask.conventionMapping.outputDir = { project.file("${project.buildDir}/instrumented-classes/${variantConfig.dirName}") }
+
+                dexTask.dependsOn jacocoTask
+
+                agentTask = getJacocoAgentTask()
+            }
+
             // if required, pre-dexing task.
             PreDex preDexTask = null;
             boolean runPreDex = extension.dexOptions.preDexLibraries
@@ -1427,34 +1465,60 @@ public abstract class BasePlugin {
                 def preDexTaskName = "preDex${variantData.variantConfiguration.fullName.capitalize()}"
                 preDexTask = project.tasks.create(preDexTaskName, PreDex)
 
-                preDexTask.dependsOn variantData.javaCompileTask, variantData.variantDependency.packageConfiguration.buildDependencies
+                preDexTask.dependsOn variantData.variantDependency.packageConfiguration.buildDependencies
                 preDexTask.plugin = this
                 preDexTask.dexOptions = extension.dexOptions
 
                 preDexTask.conventionMapping.inputFiles = {
-                    androidBuilder.getPackagedJars(variantConfig)
+                    Set<File> set = androidBuilder.getPackagedJars(variantConfig)
+                    if (jacocoTask != null) {
+                        set.add(project.file("$project.buildDir/jacoco/jacocoagent.jar"))
+                    }
+
+                    return set
                 }
                 preDexTask.conventionMapping.outputFolder = {
                     project.file(
                             "${project.buildDir}/pre-dexed/${variantData.variantConfiguration.dirName}")
                 }
+
+                if (agentTask != null) {
+                    preDexTask.dependsOn agentTask
+                }
             }
 
             // then dexing task
+            dexTask.dependsOn variantData.javaCompileTask
+
             if (runPreDex) {
                 dexTask.dependsOn preDexTask
             } else {
-                dexTask.dependsOn variantData.javaCompileTask, variantData.variantDependency.packageConfiguration.buildDependencies
+                dexTask.dependsOn variantData.variantDependency.packageConfiguration.buildDependencies
             }
 
-            dexTask.conventionMapping.inputFiles = { variantData.javaCompileTask.outputs.files.files }
+            dexTask.conventionMapping.inputFiles = {
+                if (jacocoTask != null) {
+                    return project.files(jacocoTask.getOutputDir()).files
+                }
+
+                variantData.javaCompileTask.outputs.files.files
+            }
             if (runPreDex) {
                 dexTask.conventionMapping.libraries = {
-                    project.fileTree(preDexTask.outputFolder).files
+                    return project.fileTree(preDexTask.outputFolder).files
                 }
             } else {
                 dexTask.conventionMapping.libraries = {
-                    androidBuilder.getPackagedJars(variantConfig)
+                    Set<File> set = androidBuilder.getPackagedJars(variantConfig)
+                    if (jacocoTask != null) {
+                        set.add(project.file("$project.buildDir/jacoco/jacocoagent.jar"))
+                    }
+
+                    return set
+                }
+
+                if (agentTask != null) {
+                    dexTask.dependsOn agentTask
                 }
             }
         }
@@ -1591,6 +1655,17 @@ public abstract class BasePlugin {
         assembleTask.description = "Assembles the " + variantData.description
         assembleTask.group = org.gradle.api.plugins.BasePlugin.BUILD_GROUP
         return assembleTask
+    }
+
+    public Task getJacocoAgentTask() {
+        if (jacocoAgentTask == null) {
+            jacocoAgentTask = project.tasks.create("unzipJacocoAgent", Copy)
+            jacocoAgentTask.from project.configurations[JacocoPlugin.AGENT_CONFIGURATION_NAME].collect { project.zipTree(it) }
+            jacocoAgentTask.include 'jacocoagent.jar'
+            jacocoAgentTask.into "$project.buildDir/jacoco"
+        }
+
+        return jacocoAgentTask
     }
 
     /**

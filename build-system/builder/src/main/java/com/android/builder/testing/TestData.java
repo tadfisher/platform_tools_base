@@ -50,6 +50,11 @@ public interface TestData {
     @NonNull
     Boolean getFunctionalTest();
 
+    /**
+     * Returns whether the tested app is instrumented for code coverage
+     */
+    boolean isInstrumented();
+
     int getMinSdkVersion();
 
     /**
