@@ -3,7 +3,7 @@ package ${packageName};
 <#if includeCallbacks>import android.app.Activity;</#if>
 <#if includeCallbacks>import android.net.Uri;</#if>
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import android${SupportPackage}.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,7 +11,7 @@ import android.view.ViewGroup;
 <#if applicationPackage??>import ${applicationPackage}.R;</#if>
 
 /**
- * A simple {@link android.support.v4.app.Fragment} subclass.
+ * A simple {@link android${SupportPackage}.app.Fragment} subclass.
 <#if includeCallbacks>
  * Activities that contain this fragment must implement the
  * {@link ${className}.OnFragmentInteractionListener} interface
