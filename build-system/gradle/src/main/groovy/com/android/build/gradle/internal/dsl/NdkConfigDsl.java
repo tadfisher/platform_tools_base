@@ -36,8 +36,11 @@ public class NdkConfigDsl implements NdkConfig, Serializable {
 
     private String moduleName;
     private String cFlags;
+    private String cppFlags;
+    private int apiLevel;
     private Set<String> ldLibs;
     private Set<String> abiFilters;
+    private String toolchain;
     private String stl;
 
     public NdkConfigDsl() {
@@ -62,12 +65,49 @@ public class NdkConfigDsl implements NdkConfig, Serializable {
 
     @Override
     @Input @Optional
+    public int getApiLevel() {
+        return apiLevel;
+    }
+
+    public void apiLevel(int apiLevel) {
+        this.apiLevel = apiLevel;
+    }
+
+    public void apiLevel(String apiLevel) {
+        this.apiLevel = Integer.parseInt(apiLevel);
+    }
+
+    public void setApiLevel(int apiLevel) {
+        this.apiLevel = apiLevel;
+    }
+
+    @Override
+    @Input @Optional
+    public String getToolchain() {
+        return toolchain;
+    }
+
+    public void setToolchain(String toolchain) {
+        this.toolchain = toolchain;
+    }
+    @Override
+    @Input @Optional
     public String getcFlags() {
         return cFlags;
     }
 
     public void setcFlags(String cFlags) {
         this.cFlags = cFlags;
+    }
+
+    @Override
+    @Input @Optional
+    public String getCppFlags() {
+        return cppFlags;
+    }
+
+    public void setCppFlags(String cppFlags) {
+        this.cppFlags = cppFlags;
     }
 
     @Override
