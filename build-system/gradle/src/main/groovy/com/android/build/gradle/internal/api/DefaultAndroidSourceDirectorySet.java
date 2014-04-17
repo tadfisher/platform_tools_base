@@ -35,7 +35,7 @@ public class DefaultAndroidSourceDirectorySet implements AndroidSourceDirectoryS
     private final FileResolver fileResolver;
     private List<Object> source = Lists.newArrayList();
 
-    DefaultAndroidSourceDirectorySet(@NonNull String name, @NonNull FileResolver fileResolver) {
+    public DefaultAndroidSourceDirectorySet(@NonNull String name, @NonNull FileResolver fileResolver) {
         this.name = name;
         this.fileResolver = fileResolver;
     }
