@@ -65,6 +65,7 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
         return mName;
     }
 
+    /** Sets whether this build type should generate a debuggable apk. */
     @NonNull
     public BuildType setDebuggable(boolean debuggable) {
         mDebuggable = debuggable;
@@ -76,6 +77,9 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
         return mDebuggable;
     }
 
+    /**
+     * Sets whether this build type is configured to generate an apk with debuggable native code.
+     */
     @NonNull
     public BuildType setJniDebugBuild(boolean jniDebugBuild) {
         mJniDebugBuild = jniDebugBuild;
@@ -92,6 +96,10 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
         return mRenderscriptDebugBuild;
     }
 
+    /**
+     * Sets whether the build type is configured to generate an apk with debuggable renderscript
+     * code.
+     */
     public void setRenderscriptDebugBuild(boolean renderscriptDebugBuild) {
         mRenderscriptDebugBuild = renderscriptDebugBuild;
     }
@@ -101,10 +109,12 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
         return mRenderscriptOptimLevel;
     }
 
+    /** Sets the optimization level to use by the renderscript compiler. */
     public void setRenderscriptOptimLevel(int renderscriptOptimLevel) {
         mRenderscriptOptimLevel = renderscriptOptimLevel;
     }
 
+    /** Sets the package name suffix applied to this build type. */
     @NonNull
     public BuildType setPackageNameSuffix(@Nullable String packageNameSuffix) {
         mPackageNameSuffix = packageNameSuffix;
@@ -117,6 +127,7 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
         return mPackageNameSuffix;
     }
 
+    /** Sets the version name suffix. */
     @NonNull
     public BuildType setVersionNameSuffix(@Nullable String versionNameSuffix) {
         mVersionNameSuffix = versionNameSuffix;
@@ -129,6 +140,7 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
         return mVersionNameSuffix;
     }
 
+    /** Sets whether proguard is enabled for this build type. */
     @NonNull
     public BuildType setRunProguard(boolean runProguard) {
         mRunProguard = runProguard;
@@ -140,6 +152,7 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
         return mRunProguard;
     }
 
+    /** Sets whether zipalign is enabled for this build type. */
     @NonNull
     public BuildType setZipAlign(boolean zipAlign) {
         mZipAlign = zipAlign;
@@ -151,6 +164,7 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
         return mZipAlign;
     }
 
+    /** Sets the signing configuration. e.g.: {@code signingConfig signingConfigs.myConfig} */
     @NonNull
     public BuildType setSigningConfig(@Nullable SigningConfig signingConfig) {
         mSigningConfig = signingConfig;
