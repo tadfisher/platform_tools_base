@@ -809,6 +809,11 @@ public final class SdkConstants {
     public static final String ATTR_QUANTITY = "quantity";             //$NON-NLS-1$
     public static final String ATTR_FORMAT = "format";                 //$NON-NLS-1$
 
+    // Attributes: Special template directives for resource merging
+    public static final String ATTR_TEMPLATE_MERGE_STRATEGY = "templateMergeStrategy"; //$NON-NLS-1$
+    public static final String VALUE_MERGE_STRATEGY_REPLACE = "replace"; //$NON-NLS-1$
+    public static final String VALUE_MERGE_STRATEGY_PRESERVE = "preserve"; //$NON-NLS-1$
+
     // Attributes: Layout
     public static final String ATTR_LAYOUT_RESOURCE_PREFIX = "layout_";//$NON-NLS-1$
     public static final String ATTR_CLASS = "class";                   //$NON-NLS-1$
