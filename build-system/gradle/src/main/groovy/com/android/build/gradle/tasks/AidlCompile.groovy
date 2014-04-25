@@ -18,17 +18,36 @@ package com.android.build.gradle.tasks
 
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable
-import com.android.build.gradle.internal.tasks.DependencyBasedCompileTask
+import com.android.build.gradle.internal.tasks.IncrementalTask
 import com.android.builder.compiling.DependencyFileProcessor
+import com.android.builder.internal.incremental.DependencyData
+import com.android.builder.internal.incremental.DependencyDataStore
+import com.android.ide.common.internal.WaitableExecutor
+import com.android.ide.common.res2.FileStatus
 import com.google.common.collect.Lists
+import com.google.common.collect.Multimap
 import org.gradle.api.file.FileTree
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.util.PatternSet
+
+import java.util.concurrent.Callable
 
 /**
  * Task to compile aidl files. Supports incremental update.
  */
-public class AidlCompile extends DependencyBasedCompileTask {
+public class AidlCompile extends IncrementalTask {
+
+    private static final String DEPENDENCY_STORE = "dependency.store"
+
+    // ----- PUBLIC TASK API -----
+
+    @OutputDirectory
+    File sourceOutputDir
+
+    @OutputDirectory @Optional
+    File aidlParcelableDir
 
     // ----- PRIVATE TASK API -----
 
@@ -49,26 +68,57 @@ public class AidlCompile extends DependencyBasedCompileTask {
         return src == null ? getProject().files().getAsFileTree() : src
     }
 
-    @Override
-    protected boolean isIncremental() {
-        return true
+    private static class DepFileProcessor implements DependencyFileProcessor {
+
+        List<DependencyData> dependencyDataList = Lists.newArrayList()
+        List<File> parcelableList = Lists.newArrayList()
+
+        List<DependencyData> getDependencyDataList() {
+            return dependencyDataList
+        }
+
+        @Override
+        DependencyData processFile(@NonNull File dependencyFile) {
+            DependencyData data = DependencyData.parseDependencyFile(dependencyFile)
+            if (data != null) {
+                if (data.getOutputFiles().isEmpty()) {
+                    parcelableList.add(new File(data.getMainFile()))
+                }
+                synchronized (this) {
+                    dependencyDataList.add(data)
+                }
+            }
+
+            return data;
+        }
     }
 
-    @Override
-    protected boolean supportsParallelization() {
-        return true
-    }
-
-    @Override
-    protected void compileAllFiles(DependencyFileProcessor dependencyFileProcessor) {
+    /**
+     * Action methods to compile all the files.
+     *
+     * The method receives a {@link DependencyFileProcessor} to be used by the
+     * {@link com.android.builder.internal.compiler.SourceSearcher.SourceFileProcessor} during
+     * the compilation.
+     *
+     * @param dependencyFileProcessor a DependencyFileProcessor
+     */
+    private void compileAllFiles(DependencyFileProcessor dependencyFileProcessor) {
         getBuilder().compileAllAidlFiles(
                 getSourceDirs(),
                 getSourceOutputDir(),
+                getAidlParcelableDir(),
                 getImportDirs(),
                 dependencyFileProcessor)
     }
 
-    @Override
+    /**
+     * Setup call back used once before calling multiple
+     * {@link #compileSingleFile(File, File, Object, DependencyFileProcessor)}
+     * during incremental compilation. The result object is passed back to the compileSingleFile
+     * method
+     *
+     * @return an object or null.
+     */
     protected Object incrementalSetup() {
         List<File> fullImportDir = Lists.newArrayList()
         fullImportDir.addAll(getImportDirs())
@@ -77,14 +127,149 @@ public class AidlCompile extends DependencyBasedCompileTask {
         return fullImportDir
     }
 
-    @Override
-    protected void compileSingleFile(@NonNull File file,
-                                     @Nullable Object data,
-                                     @NonNull DependencyFileProcessor dependencyFileProcessor) {
+    /**
+     * Compiles a single file.
+     * @param sourceFolder the file to compile.
+     * @param file the file to compile.
+     * @param data the data returned by {@link #incrementalSetup()}
+     * @param dependencyFileProcessor a DependencyFileProcessor
+     *
+     * @see #incrementalSetup()
+     */
+    private void compileSingleFile(
+            @NonNull File sourceFolder,
+            @NonNull File file,
+            @Nullable Object data,
+            @NonNull DependencyFileProcessor dependencyFileProcessor) {
         getBuilder().compileAidlFile(
+                sourceFolder,
                 file,
                 getSourceOutputDir(),
+                getAidlParcelableDir(),
                 (List<File>)data,
                 dependencyFileProcessor)
+    }
+
+    @Override
+    protected void doFullTaskAction() {
+        // this is full run, clean the previous output
+        File destinationDir = getSourceOutputDir()
+        emptyFolder(destinationDir)
+
+        DepFileProcessor processor = new DepFileProcessor()
+
+        compileAllFiles(processor)
+
+        List<DependencyData> dataList = processor.getDependencyDataList()
+
+        DependencyDataStore store = new DependencyDataStore()
+        store.addData(dataList)
+
+        store.saveTo(new File(getIncrementalFolder(), DEPENDENCY_STORE))
+    }
+
+    @Override
+    protected void doIncrementalTaskAction(Map<File, FileStatus> changedInputs) {
+
+        File incrementalData = new File(getIncrementalFolder(), DEPENDENCY_STORE)
+        DependencyDataStore store = new DependencyDataStore()
+        Multimap<String, DependencyData> inputMap
+        try {
+            inputMap = store.loadFrom(incrementalData)
+        } catch (Exception ignored) {
+            incrementalData.delete()
+            project.logger.info(
+                    "Failed to read dependency store: full task run!")
+            doFullTaskAction()
+            return
+        }
+
+        final Object incrementalObject = incrementalSetup()
+        final DepFileProcessor processor = new DepFileProcessor()
+
+        // use an executor to parallelize the compilation of multiple files.
+        WaitableExecutor<Void> executor = new WaitableExecutor<Void>()
+
+        Map<String,DependencyData> mainFileMap = store.getMainFileMap()
+
+        for (Map.Entry<File, FileStatus> entry : changedInputs.entrySet()) {
+            FileStatus status = entry.getValue()
+
+            switch (status) {
+                case FileStatus.NEW:
+                    executor.execute(new Callable<Void>() {
+                        @Override
+                        Void call() throws Exception {
+                            File file = entry.getKey()
+                            compileSingleFile(getSourceFolder(file), file, incrementalObject, processor)
+                        }
+                    })
+                    break
+                case FileStatus.CHANGED:
+                    List<DependencyData> impactedData = inputMap.get(entry.getKey().absolutePath)
+                    if (impactedData != null) {
+                        final int count = impactedData.size();
+                        for (int i = 0; i < count; i++) {
+                            final DependencyData data = impactedData.get(i);
+
+                            executor.execute(new Callable<Void>() {
+                                @Override
+                                Void call() throws Exception {
+                                    File file = new File(data.getMainFile());
+                                    compileSingleFile(getSourceFolder(file), file,
+                                            incrementalObject, processor)
+                                }
+                            })
+                        }
+                    }
+                    break
+                case FileStatus.REMOVED:
+                    final DependencyData data2 = mainFileMap.get(entry.getKey().absolutePath)
+                    if (data2 != null) {
+                        executor.execute(new Callable<Void>() {
+                            @Override
+                            Void call() throws Exception {
+                                cleanUpOutputFrom(data2)
+                            }
+                        })
+                        store.remove(data2)
+                    }
+                    break
+            }
+        }
+
+        try {
+            executor.waitForTasksWithQuickFail(true /*cancelRemaining*/)
+        } catch (Throwable t) {
+            incrementalData.delete()
+            throw t
+        }
+
+        // get all the update data for the recompiled objects
+        store.updateAll(processor.getDependencyDataList())
+
+        store.saveTo(incrementalData)
+    }
+
+    private File getSourceFolder(@NonNull File file) {
+        File parentDir = file
+        while ((parentDir = parentDir.getParentFile()) != null) {
+            for (File folder : getSourceDirs()) {
+                if (parentDir.equals(folder)) {
+                    return folder;
+                }
+            }
+        }
+
+        assert false
+    }
+
+    private static void cleanUpOutputFrom(@NonNull DependencyData dependencyData) {
+        for (String output : dependencyData.getOutputFiles()) {
+            new File(output).delete()
+        }
+        for (String output : dependencyData.getSecondaryOutputFiles()) {
+            new File(output).delete()
+        }
     }
 }
