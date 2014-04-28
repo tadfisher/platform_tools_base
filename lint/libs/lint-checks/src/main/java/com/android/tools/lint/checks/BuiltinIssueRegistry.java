@@ -36,9 +36,11 @@ public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
     static {
-        final int initialCapacity = 182;
+        final int initialCapacity = 184;
         List<Issue> issues = new ArrayList<Issue>(initialCapacity);
 
+        issues.add(AppCompatCallDetector.ISSUE);
+        issues.add(AppCompatResourceDetector.ISSUE);
         issues.add(AccessibilityDetector.ISSUE);
         issues.add(AssertDetector.ISSUE);
         issues.add(LabelForDetector.ISSUE);
