@@ -83,6 +83,10 @@ public class ClickableViewAccessibilityDetector extends Detector implements Dete
         return Speed.FAST;
     }
 
+    /*
+    TODO: Attemp to do with a Java visitor instead:
+    quickly
+     */
     // ---- Implements ClassScanner ----
     @Override
     public void checkClass(@NonNull ClassContext context, @NonNull ClassNode classNode) {
