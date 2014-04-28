@@ -19,6 +19,7 @@ package com.android.sdklib.repository.descriptors;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.sdklib.AndroidVersion;
+import com.android.sdklib.internal.repository.packages.License;
 import com.android.sdklib.repository.FullRevision;
 import com.android.sdklib.repository.MajorRevision;
 
@@ -42,6 +43,25 @@ public interface IPkgDesc extends Comparable<IPkgDesc>, IPkgCapabilities {
      */
     @NonNull
     public abstract PkgType getType();
+
+    /**
+     * Returns the list-display meta data of this package.
+     * @return The list-display data, if available, or null.
+     */
+    @Nullable
+    public String getListDisplay();
+
+    @Nullable
+    public String getDescriptionShort();
+
+    @Nullable
+    public String getDescriptionUrl();
+
+    @Nullable
+    public License getLicense();
+
+    @Nullable
+    public boolean isObsolete();
 
     /**
      * Returns the package's {@link FullRevision} or null.

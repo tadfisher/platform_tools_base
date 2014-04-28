@@ -20,6 +20,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
+import com.android.sdklib.internal.repository.packages.License;
+import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.repository.FullRevision;
 import com.android.sdklib.repository.FullRevision.PreviewComparison;
 import com.android.sdklib.repository.MajorRevision;
@@ -52,7 +54,18 @@ public class PkgDesc implements IPkgDesc {
     private final IIsUpdateFor mCustomIsUpdateFor;
     private final IGetPath mCustomPath;
 
+    private final License mLicense;
+    private final String mListDisplay;
+    private final String mDescriptionShort;
+    private final String mDescriptionUrl;
+    private final boolean mIsObsolete;
+
     protected PkgDesc(@NonNull PkgType type,
+                      @Nullable License license,
+                      @Nullable String listDisplay,
+                      @Nullable String descriptionShort,
+                      @Nullable String descriptionUrl,
+                      boolean isObsolete,
                       @Nullable FullRevision fullRevision,
                       @Nullable MajorRevision majorRevision,
                       @Nullable AndroidVersion androidVersion,
@@ -64,6 +77,11 @@ public class PkgDesc implements IPkgDesc {
                       @Nullable IIsUpdateFor customIsUpdateFor,
                       @Nullable IGetPath customPath) {
         mType = type;
+        mIsObsolete = isObsolete;
+        mLicense = license;
+        mListDisplay = listDisplay;
+        mDescriptionShort = descriptionShort;
+        mDescriptionUrl = descriptionUrl;
         mFullRevision = fullRevision;
         mMajorRevision = majorRevision;
         mAndroidVersion = androidVersion;
@@ -80,6 +98,36 @@ public class PkgDesc implements IPkgDesc {
     @Override
     public PkgType getType() {
         return mType;
+    }
+
+    @Override
+    @Nullable
+    public String getListDisplay() {
+        return mListDisplay;
+    }
+
+    @Override
+    @Nullable
+    public String getDescriptionShort() {
+        return mDescriptionShort;
+    }
+
+    @Override
+    @Nullable
+    public String getDescriptionUrl() {
+        return mDescriptionUrl;
+    }
+
+    @Override
+    @Nullable
+    public License getLicense() {
+        return mLicense;
+    }
+
+    @Override
+    @Nullable
+    public boolean isObsolete() {
+        return mIsObsolete;
     }
 
     @Override
@@ -376,6 +424,28 @@ public class PkgDesc implements IPkgDesc {
             builder.append(" MinPlatToolsRev=").append(getMinPlatformToolsRev());   //NON-NLS-1$
         }
 
+        if (mListDisplay != null) {
+            builder.append(" ListDisp=").append(mListDisplay);                      //NON-NLS-1$
+        }
+
+        if (mDescriptionShort != null) {
+            builder.append(" DescShort=").append(mDescriptionShort);                //NON-NLS-1$
+        }
+
+        if (mDescriptionUrl != null) {
+            builder.append(" DescUrl=").append(mDescriptionUrl);                    //NON-NLS-1$
+        }
+
+        if (mLicense != null) {
+            builder.append(" License['").append(mLicense.getLicenseRef())           //NON-NLS-1$
+                   .append("]=")                                                    //NON-NLS-1$
+                   .append(mLicense.getLicense().length()).append(" chars");        //NON-NLS-1$
+        }
+
+        if (isObsolete()) {
+            builder.append(" Obsolete=yes");                                        //NON-NLS-1$
+        }
+
         builder.append('>');
         return builder.toString();
     }
@@ -482,6 +552,12 @@ public class PkgDesc implements IPkgDesc {
         private String mAddonVendor;
         private String mAddonName;
         private IAddonDesc mTargetHashProvider;
+
+        private License mLicense;
+        private String mListDisplay;
+        private String mDescriptionShort;
+        private String mDescriptionUrl;
+        private boolean mIsObsolete;
 
 
         private Builder(PkgType type) {
@@ -725,15 +801,54 @@ public class PkgDesc implements IPkgDesc {
                                         @NonNull FullRevision minToolsRev) {
             Builder p = new Builder(PkgType.PKG_SAMPLES);
             p.mAndroidVersion = version;
-            p.mMajorRevision = revision;
-            p.mMinToolsRev = minToolsRev;
+            p.mMajorRevision  = revision;
+            p.mMinToolsRev    = minToolsRev;
             return p;
+        }
+
+        public Builder setDescriptions(@NonNull Package pkg) {
+            mDescriptionShort = pkg.getShortDescription();
+            mDescriptionUrl   = pkg.getDescUrl();
+            mListDisplay      = pkg.getListDisplay();
+            mIsObsolete       = pkg.isObsolete();
+            mLicense          = pkg.getLicense();
+            return this;
+        }
+
+        public Builder setLicense(@Nullable License license) {
+            mLicense = license;
+            return this;
+        }
+
+        public Builder setListDisplay(@Nullable String text) {
+            mListDisplay = text;
+            return this;
+        }
+
+        public Builder setDescriptionShort(@Nullable String text) {
+            mDescriptionShort = text;
+            return this;
+        }
+
+        public Builder setDescriptionUrl(@Nullable String text) {
+            mDescriptionUrl = text;
+            return this;
+        }
+
+        public Builder setIsObsolete(boolean isObsolete) {
+            mIsObsolete = isObsolete;
+            return this;
         }
 
         public IPkgDesc create() {
             if (mType == PkgType.PKG_ADDONS) {
                 return new PkgDescAddon(
                         mType,
+                        mLicense,
+                        mListDisplay,
+                        mDescriptionShort,
+                        mDescriptionUrl,
+                        mIsObsolete,
                         mFullRevision,
                         mMajorRevision,
                         mAndroidVersion,
@@ -749,6 +864,11 @@ public class PkgDesc implements IPkgDesc {
             if (mType == PkgType.PKG_EXTRAS) {
                 return new PkgDescExtra(
                     mType,
+                    mLicense,
+                    mListDisplay,
+                    mDescriptionShort,
+                    mDescriptionUrl,
+                    mIsObsolete,
                     mFullRevision,
                     mMajorRevision,
                     mAndroidVersion,
@@ -762,6 +882,11 @@ public class PkgDesc implements IPkgDesc {
 
             return new PkgDesc(
                     mType,
+                    mLicense,
+                    mListDisplay,
+                    mDescriptionShort,
+                    mDescriptionUrl,
+                    mIsObsolete,
                     mFullRevision,
                     mMajorRevision,
                     mAndroidVersion,

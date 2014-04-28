@@ -160,7 +160,7 @@ public abstract class LocalPkgInfo implements IListDescription, Comparable<Local
      * Computes object equality to this instance based on the underlying
      * {@link IPkgDesc} but also specific local properties such a local directory,
      * update available and actual source properties. This is different from
-     * the behavioe of {@link #compareTo(LocalPkgInfo)} which only uses the
+     * the behavior of {@link #compareTo(LocalPkgInfo)} which only uses the
      * {@link IPkgDesc} for ordering.
      */
     @Override
