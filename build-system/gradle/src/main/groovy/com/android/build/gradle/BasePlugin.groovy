@@ -141,6 +141,7 @@ import org.gradle.internal.reflect.Instantiator
 import org.gradle.language.jvm.tasks.ProcessResources
 import org.gradle.tooling.BuildException
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
+import org.gradle.util.GUtil
 import proguard.gradle.ProGuardTask
 
 import java.util.jar.Attributes
@@ -2092,24 +2093,51 @@ public abstract class BasePlugin {
             if (!list.isEmpty()) {
                 // get the first item only
                 LibraryDependencyImpl androidDependency = (LibraryDependencyImpl) list.get(0)
-
-                PrepareLibraryTask task = LibraryCache.getCache().handleLibrary(project, androidDependency)
-                prepareTaskMap.put(androidDependency, task)
-
-                // check if this library is created by a parent (this is based on the
-                // output file.
-                // TODO Fix this as it's fragile
-                Project parentProject = DependenciesImpl.getProject(androidDependency.getBundle(), projects)
-                if (parentProject != null) {
-                    String configName = androidDependency.getProjectVariant();
-                    if (configName == null) {
-                        configName = "default"
-                    }
-
-                    task.dependsOn parentProject.getPath() + ":assemble${configName.capitalize()}"
-                }
+                handleLibrary(project, androidDependency, projects)
             }
         }
+    }
+
+    /**
+     * Handles the library and returns a task to "prepare" the library (ie unarchive it). The task
+     * will be reused for all projects using the same library.
+     *
+     * @param project the project
+     * @param library the library.
+     * @return the prepare task.
+     */
+    private PrepareLibraryTask handleLibrary(@NonNull Project project,
+            @NonNull LibraryDependencyImpl library, @NonNull Set<Project> projects) {
+        String bundleName = GUtil
+                .toCamelCase(library.getName().replaceAll("\\:", " "));
+
+        PrepareLibraryTask prepareLibraryTask = prepareTaskMap.get(library);
+
+        if (prepareLibraryTask == null) {
+            prepareLibraryTask = project.tasks.create(
+                    "prepare" + bundleName + "Library", PrepareLibraryTask.class);
+
+            prepareLibraryTask.setDescription("Prepare " + library.getName());
+            prepareLibraryTask.bundle = library.getBundle();
+            prepareLibraryTask.explodedDir = library.getBundleFolder();
+
+            // check if this library is created by a parent (this is based on the
+            // output file.
+            // TODO Fix this as it's fragile
+            Project parentProject = DependenciesImpl.getProject(library.getBundle(), projects)
+            if (parentProject != null) {
+                String configName = library.getProjectVariant();
+                if (configName == null) {
+                    configName = "default"
+                }
+
+                prepareLibraryTask.dependsOn parentProject.getPath() + ":assemble${configName.capitalize()}"
+            }
+
+            prepareTaskMap.put(library, prepareLibraryTask);
+        }
+
+        return prepareLibraryTask;
     }
 
     private void resolveDependencyForConfig(
