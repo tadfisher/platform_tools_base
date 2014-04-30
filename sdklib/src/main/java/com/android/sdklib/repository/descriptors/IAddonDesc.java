@@ -44,8 +44,8 @@ public interface IAddonDesc {
 
     /**
      * Returns the add-on vendor id string.
-     * @return A non-null add-on vendor id.
+     * @return A non-null add-on vendor/name combo id.
      */
     @NonNull
-    public String getVendorId();
+    public IdDisplay getVendor();
 }

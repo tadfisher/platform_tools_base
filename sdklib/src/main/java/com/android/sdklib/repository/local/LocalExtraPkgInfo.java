@@ -23,6 +23,7 @@ import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.repository.NoPreviewRevision;
 import com.android.sdklib.repository.descriptors.IPkgDesc;
 import com.android.sdklib.repository.descriptors.IPkgDescExtra;
+import com.android.sdklib.repository.descriptors.IdDisplay;
 import com.android.sdklib.repository.descriptors.PkgDesc;
 
 import java.io.File;
@@ -35,7 +36,7 @@ public class LocalExtraPkgInfo extends LocalPkgInfo {
     public LocalExtraPkgInfo(@NonNull LocalSdk localSdk,
                              @NonNull File localDir,
                              @NonNull Properties sourceProps,
-                             @NonNull String vendorId,
+                             @NonNull IdDisplay vendorId,
                              @NonNull String path,
                              @NonNull String[] oldPaths,
                              @NonNull NoPreviewRevision revision) {
@@ -67,7 +68,7 @@ public class LocalExtraPkgInfo extends LocalPkgInfo {
                 pkg = ExtraPackage.create(
                         null,                       //source
                         getSourceProperties(),      //properties
-                        mDesc.getVendorId(),        //vendor
+                        mDesc.getVendor().getId(),//vendor
                         mDesc.getPath(),            //path
                         0,                          //revision
                         null,                       //license

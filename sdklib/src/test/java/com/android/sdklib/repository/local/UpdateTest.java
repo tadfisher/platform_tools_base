@@ -89,25 +89,26 @@ public class UpdateTest extends TestCase {
 
         addLocalExtra("18.0.1", "android", "support");
         addLocalExtra("18.0.2", "android", "compat");
-        addRemoteExtra(new NoPreviewRevision(18, 3, 4), "android", "support");
-        addRemoteExtra(new NoPreviewRevision(18, 5, 6), "android", "compat");
-        addRemoteExtra(new NoPreviewRevision(19, 7, 8), "android", "whatever");
+        IdDisplay vendor = new IdDisplay("android", "The Android");
+        addRemoteExtra(new NoPreviewRevision(18, 3, 4), vendor, "support");
+        addRemoteExtra(new NoPreviewRevision(18, 5, 6), vendor, "compat");
+        addRemoteExtra(new NoPreviewRevision(19, 7, 8), vendor, "whatever");
 
         addLocalPlatform("18", "2", "22.1.2");
-        addLocalAddOn   ("18", "2", "android", "coolstuff");
+        addLocalAddOn   ("18", "2", vendor, "coolstuff");
         addLocalSource  ("18", "2");
         addLocalSample  ("18", "2", "22.1.2");
         addLocalSysImg  ("18", "2", null,    "eabi");
         addLocalSysImg  ("18", "2", "tag-1", "eabi");
         addRemotePlatform(api18, new MajorRevision(3), new FullRevision(22));
-        addRemoteAddOn   (api18, new MajorRevision(3), "android", "coolstuff");
+        addRemoteAddOn   (api18, new MajorRevision(3), vendor, "coolstuff");
         addRemoteSource  (api18, new MajorRevision(3));
         addRemoteSample  (api18, new MajorRevision(3), new FullRevision(22));
         addRemoteSysImg  (api18, new MajorRevision(3), tagDefault, "eabi");
         addRemoteSysImg  (api18, new MajorRevision(3), tag1,       "eabi");
 
         addRemotePlatform(api19, new MajorRevision(4), new FullRevision(23));
-        addRemoteAddOn   (api19, new MajorRevision(4), "android", "coolstuff");
+        addRemoteAddOn   (api19, new MajorRevision(4), vendor, "coolstuff");
         addRemoteSource  (api19, new MajorRevision(4));
         addRemoteSample  (api19, new MajorRevision(4), new FullRevision(23));
         addRemoteSysImg  (api19, new MajorRevision(4), tagDefault, "eabi");
@@ -136,8 +137,8 @@ public class UpdateTest extends TestCase {
                 "<LocalSysImgPkgInfo <PkgDesc Type=sys_images Android=API 18 Tag=default [Default] Path=eabi MajorRev=2> " +
                         "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=sys_images Android=API 18 Tag=default [Default] Path=eabi MajorRev=3>>>, " +
 
-                "<LocalAddonPkgInfo <PkgDesc Type=addons Android=API 18 Vendor=android Path=android:coolstuff:18 MajorRev=2> " +
-                       "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=addons Android=API 18 Vendor=android Path=android:coolstuff:18 MajorRev=3>>>, " +
+                "<LocalAddonPkgInfo <PkgDesc Type=addons Android=API 18 Vendor=android [The Android] Path=android:coolstuff:18 MajorRev=2> " +
+                       "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=addons Android=API 18 Vendor=android [The Android] Path=android:coolstuff:18 MajorRev=3>>>, " +
 
                 "<LocalSamplePkgInfo <PkgDesc Type=samples Android=API 18 MajorRev=2 MinToolsRev=22.1.2> " +
                         "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=samples Android=API 18 MajorRev=3 MinToolsRev=22.0.0>>>, " +
@@ -145,10 +146,10 @@ public class UpdateTest extends TestCase {
                 "<LocalSourcePkgInfo <PkgDesc Type=sources Android=API 18 MajorRev=2> " +
                         "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=sources Android=API 18 MajorRev=3>>>, " +
 
-                "<LocalExtraPkgInfo <PkgDesc Type=extras Vendor=android Path=compat FullRev=18.0.2> " +
-                       "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=extras Vendor=android Path=compat FullRev=18.5.6>>>, " +
-                "<LocalExtraPkgInfo <PkgDesc Type=extras Vendor=android Path=support FullRev=18.0.1> " +
-                       "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=extras Vendor=android Path=support FullRev=18.3.4>>>" +
+                "<LocalExtraPkgInfo <PkgDesc Type=extras Vendor=android [The Android] Path=compat FullRev=18.0.2> " +
+                       "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=extras Vendor=android [The Android] Path=compat FullRev=18.5.6>>>, " +
+                "<LocalExtraPkgInfo <PkgDesc Type=extras Vendor=android [The Android] Path=support FullRev=18.0.1> " +
+                       "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=extras Vendor=android [The Android] Path=support FullRev=18.3.4>>>" +
                 "]",
                 result.getUpdatedPkgs().toString());
         assertEquals(
@@ -344,14 +345,14 @@ public class UpdateTest extends TestCase {
                 "ro.build.product=generic\n");
     }
 
-    private void addLocalAddOn(String api, String majorRev, String vendor, String name) {
-        String addon_dir = "addon-" + vendor + "-" + name;
+    private void addLocalAddOn(String api, String majorRev, IdDisplay vendor, String name) {
+        String addon_dir = "addon-" + vendor.getId() + "-" + name;
         mFOp.recordExistingFolder("/sdk/add-ons");
         mFOp.recordExistingFolder("/sdk/add-ons/" + addon_dir);
         mFOp.recordExistingFile("/sdk/add-ons/" + addon_dir + "/source.properties",
                 "Pkg.Revision=" + majorRev + "\n" +
-                "Addon.VendorId=" + vendor + "\n" +
-                "Addon.VendorDisplay=" + vendor + "\n" +
+                "Addon.VendorId=" + vendor.getId() + "\n" +
+                "Addon.VendorDisplay=" + vendor.getDisplay() + "\n" +
                 "Addon.NameId=" + name + "\n" +
                 "Addon.NameDisplay=" + name + "\n" +
                 "AndroidVersion.ApiLevel=" + api + "\n" +
@@ -362,8 +363,8 @@ public class UpdateTest extends TestCase {
                 "Pkg.Revision=" + majorRev + "\n" +
                 "name=" + name + "\n" +
                 "name-id=" + name + "\n" +
-                "vendor=" + vendor + "\n" +
-                "vendor-id=" + vendor + "\n" +
+                "vendor=" + vendor.getDisplay() + "\n" +
+                "vendor-id=" + vendor.getId() + "\n" +
                 "api=" + api + "\n" +
                 "libraries=com.foo.lib1;com.blah.lib2\n" +
                 "com.foo.lib1=foo.jar;API for Foo\n" +
@@ -396,7 +397,7 @@ public class UpdateTest extends TestCase {
         mRemotePkgs.put(d.getType(), r);
     }
 
-    private void addRemoteExtra(NoPreviewRevision revision, String vendor, String path) {
+    private void addRemoteExtra(NoPreviewRevision revision, IdDisplay vendor, String path) {
         IPkgDesc d = PkgDesc.Builder.newExtra(vendor, path, null, revision).create();
         RemotePkgInfo r = new RemotePkgInfo(d, mSource);
         mRemotePkgs.put(d.getType(), r);
@@ -435,7 +436,7 @@ public class UpdateTest extends TestCase {
 
     private void addRemoteAddOn(AndroidVersion version,
                                 MajorRevision revision,
-                                String vendor,
+                                IdDisplay vendor,
                                 String name) {
         IPkgDesc d = PkgDesc.Builder.newAddon(version, revision, vendor, name).create();
         RemotePkgInfo r = new RemotePkgInfo(d, mSource);

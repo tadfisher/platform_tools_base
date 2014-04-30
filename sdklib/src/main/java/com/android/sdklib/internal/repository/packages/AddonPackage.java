@@ -31,6 +31,7 @@ import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.SdkAddonConstants;
 import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.sdklib.repository.descriptors.IPkgDesc;
+import com.android.sdklib.repository.descriptors.IdDisplay;
 import com.android.sdklib.repository.descriptors.PkgDesc;
 import com.android.sdklib.repository.local.LocalAddonPkgInfo;
 import com.android.utils.Pair;
@@ -51,8 +52,7 @@ public class AddonPackage extends MajorRevisionPackage
         implements IAndroidVersionProvider, IPlatformDependency,
                    IExactApiLevelDependency, ILayoutlibVersion {
 
-    private final String mVendorId;
-    private final String mVendorDisplay;
+    private final IdDisplay mVendor;
     private final String mNameId;
     private final String mDisplayName;
     private final AndroidVersion mVersion;
@@ -192,8 +192,7 @@ public class AddonPackage extends MajorRevisionPackage
         assert vendorId.length() > 0;
         assert vendorDisp.length() > 0;
 
-        mVendorId      = vendorId.trim();
-        mVendorDisplay = vendorDisp.trim();
+        mVendor = new IdDisplay(vendorId.trim(), vendorDisp.trim());
 
         // --- other attributes
 
@@ -209,7 +208,7 @@ public class AddonPackage extends MajorRevisionPackage
         mPkgDesc = PkgDesc.Builder
                 .newAddon(mVersion,
                           (MajorRevision) getRevision(),
-                          mVendorId,
+                          mVendor,
                           mNameId)
                 .setDescriptions(this)
                 .create();
@@ -290,8 +289,7 @@ public class AddonPackage extends MajorRevisionPackage
         assert vendorId.length() > 0;
         assert vendorDisp.length() > 0;
 
-        mVendorId = vendorId.trim();
-        mVendorDisplay = vendorDisp.trim();
+        mVendor = new IdDisplay(vendorId.trim(), vendorDisp.trim());
 
         // --- other attributes
 
@@ -311,7 +309,7 @@ public class AddonPackage extends MajorRevisionPackage
         mPkgDesc = PkgDesc.Builder
                 .newAddon(mVersion,
                           (MajorRevision) getRevision(),
-                          mVendorId,
+                          mVendor,
                           mNameId)
                 .setDescriptions(this)
                 .create();
@@ -339,19 +337,22 @@ public class AddonPackage extends MajorRevisionPackage
         String name     = getProperty(sourceProps,
                                       PkgProps.ADDON_NAME_DISPLAY,
                                       getProperty(sourceProps,
-                                                  PkgProps.ADDON_NAME,
-                                                  addonProps.get(LocalAddonPkgInfo.ADDON_NAME)));
-        String vendor   = getProperty(sourceProps,
-                                      PkgProps.ADDON_VENDOR_DISPLAY,
+                                              PkgProps.ADDON_NAME,
+                                              addonProps.get(LocalAddonPkgInfo.ADDON_NAME)));
+        String vid      = getProperty(sourceProps,
+                                      PkgProps.ADDON_VENDOR_ID,
                                       getProperty(sourceProps,
-                                                  PkgProps.ADDON_VENDOR,
-                                                  addonProps.get(LocalAddonPkgInfo.ADDON_VENDOR)));
+                                              PkgProps.ADDON_VENDOR,
+                                              addonProps.get(LocalAddonPkgInfo.ADDON_VENDOR)));
+        String vname    = getProperty(sourceProps,
+                                      PkgProps.ADDON_VENDOR_DISPLAY,
+                                      vid);
         String api      = addonProps.get(LocalAddonPkgInfo.ADDON_API);
         String revision = addonProps.get(LocalAddonPkgInfo.ADDON_REVISION);
 
         String shortDesc = String.format("%1$s by %2$s, Android API %3$s, revision %4$s [*]",
                 name,
-                vendor,
+                vname,
                 api,
                 revision);
 
@@ -375,7 +376,7 @@ public class AddonPackage extends MajorRevisionPackage
         IPkgDesc desc = PkgDesc.Builder
                 .newAddon(new AndroidVersion(apiLevel, null),
                           new MajorRevision(intRevision),
-                          vendor,
+                          new IdDisplay(vid, vname),
                           name)
                 .setDescriptionShort(shortDesc)
                 .create();
@@ -405,8 +406,8 @@ public class AddonPackage extends MajorRevisionPackage
 
         props.setProperty(PkgProps.ADDON_NAME_ID,        mNameId);
         props.setProperty(PkgProps.ADDON_NAME_DISPLAY,   mDisplayName);
-        props.setProperty(PkgProps.ADDON_VENDOR_ID,      mVendorId);
-        props.setProperty(PkgProps.ADDON_VENDOR_DISPLAY, mVendorDisplay);
+        props.setProperty(PkgProps.ADDON_VENDOR_ID,      mVendor.getId());
+        props.setProperty(PkgProps.ADDON_VENDOR_DISPLAY, mVendor.getDisplay());
     }
 
     /**
@@ -443,13 +444,13 @@ public class AddonPackage extends MajorRevisionPackage
     /** Returns the vendor id, a string, for add-on packages. */
     @NonNull
     public String getVendorId() {
-        return mVendorId;
+        return mVendor.getId();
     }
 
     /** Returns the vendor, a string for display purposes. */
     @NonNull
     public String getDisplayVendor() {
-        return mVendorDisplay;
+        return mVendor.getDisplay();
     }
 
     /** Returns the name id, a string, for add-on packages or for libraries. */
@@ -683,8 +684,8 @@ public class AddonPackage extends MajorRevisionPackage
         result = prime * result + ((mLayoutlibVersion == null) ? 0 : mLayoutlibVersion.hashCode());
         result = prime * result + Arrays.hashCode(mLibs);
         result = prime * result + ((mDisplayName == null) ? 0 : mDisplayName.hashCode());
-        result = prime * result + ((mVendorDisplay == null) ? 0 : mVendorDisplay.hashCode());
-        result = prime * result + ((mVersion == null) ? 0 : mVersion.hashCode());
+        result = prime * result + ((mVendor == null)      ? 0 : mVendor.hashCode());
+        result = prime * result + ((mVersion == null)     ? 0 : mVersion.hashCode());
         return result;
     }
 
@@ -717,11 +718,11 @@ public class AddonPackage extends MajorRevisionPackage
         } else if (!mNameId.equals(other.mNameId)) {
             return false;
         }
-        if (mVendorId == null) {
-            if (other.mVendorId != null) {
+        if (mVendor == null) {
+            if (other.mVendor != null) {
                 return false;
             }
-        } else if (!mVendorId.equals(other.mVendorId)) {
+        } else if (!mVendor.equals(other.mVendor)) {
             return false;
         }
         if (mVersion == null) {

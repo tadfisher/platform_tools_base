@@ -309,8 +309,12 @@ public class LocalSdkTest extends TestCase {
         LocalPkgInfo pi1 = mLS.getPkgInfo(PkgType.PKG_EXTRAS, "vendor1", "path1");
         assertNotNull(pi1);
         assertTrue(pi1 instanceof LocalExtraPkgInfo);
-        assertEquals("vendor1",       ((LocalExtraPkgInfo)pi1).getDesc().getVendorId());
-        assertEquals("path1",         ((LocalExtraPkgInfo)pi1).getDesc().getPath());
+        assertEquals(
+                "vendor1 [Vendor]",
+                ((LocalExtraPkgInfo)pi1).getDesc().getVendor().toString());
+        assertEquals(
+                "path1",
+                ((LocalExtraPkgInfo)pi1).getDesc().getPath());
         assertEquals(new File("/sdk/extras/vendor1/path1"), pi1.getLocalDir());
         assertSame(mLS, pi1.getLocalSdk());
         assertEquals(null, pi1.getLoadError());
@@ -733,11 +737,13 @@ public class LocalSdkTest extends TestCase {
                 "com.foo.lib1=foo.jar;API for Foo\n" +
                 "com.blah.lib2=blah.jar;API for Blah\n");
 
-        assertEquals("[<LocalAddonPkgInfo <PkgDesc Type=addons Android=API 18 Vendor=Some Vendor Path=Some Vendor:Some Name:18 MajorRev=2>>]",
-                     Arrays.toString(mLS.getPkgsInfos(PkgType.PKG_ADDONS)));
-        assertEquals("[<LocalPlatformPkgInfo <PkgDesc Type=platforms Android=API 18 Path=android-18 MajorRev=1 MinToolsRev=21.0.0>>, " +
-                      "<LocalAddonPkgInfo <PkgDesc Type=addons Android=API 18 Vendor=Some Vendor Path=Some Vendor:Some Name:18 MajorRev=2>>]",
-                     Arrays.toString(mLS.getPkgsInfos(PkgType.PKG_ALL)));
+        assertEquals(
+                "[<LocalAddonPkgInfo <PkgDesc Type=addons Android=API 18 Vendor=vendor [Some Vendor] Path=Some Vendor:Some Name:18 MajorRev=2>>]",
+                Arrays.toString(mLS.getPkgsInfos(PkgType.PKG_ADDONS)));
+        assertEquals(
+                "[<LocalPlatformPkgInfo <PkgDesc Type=platforms Android=API 18 Path=android-18 MajorRev=1 MinToolsRev=21.0.0>>, " +
+                 "<LocalAddonPkgInfo <PkgDesc Type=addons Android=API 18 Vendor=vendor [Some Vendor] Path=Some Vendor:Some Name:18 MajorRev=2>>]",
+                 Arrays.toString(mLS.getPkgsInfos(PkgType.PKG_ALL)));
 
         LocalPkgInfo pi = mLS.getPkgInfo(PkgType.PKG_ADDONS, "Some Vendor:Some Name:18");
         assertNotNull(pi);

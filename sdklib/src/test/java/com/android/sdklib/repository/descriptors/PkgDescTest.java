@@ -301,7 +301,8 @@ public class PkgDescTest extends TestCase {
     //----
 
     public final void testPkgDescExtra() {
-        IPkgDesc p = PkgDesc.Builder.newExtra("vendor", "extra_path",
+        IdDisplay vendor = new IdDisplay("vendor", "The Vendor");
+        IPkgDesc p = PkgDesc.Builder.newExtra(vendor, "extra_path",
                 new String[] { "old_path1", "old_path2" },
                 new NoPreviewRevision(1, 2, 3)).create();
 
@@ -328,17 +329,18 @@ public class PkgDescTest extends TestCase {
         assertEquals("<PkgDesc Type=extras Vendor=vendor Path=extra_path FullRev=1.2.3>", p.toString());
 
         IPkgDescExtra e = (IPkgDescExtra) p;
-        assertEquals("vendor", e.getVendorId());
+        assertEquals("vendor", e.getVendor().toString());
         assertEquals("extra_path", e.getPath());
         assertEquals("[old_path1, old_path2]", Arrays.toString(e.getOldPaths()));
     }
 
     public final void testPkgDescExtra_Update() {
+        IdDisplay vendor = new IdDisplay("vendor", "The Vendor");
         final NoPreviewRevision rev123 = new NoPreviewRevision(1, 2, 3);
         final IPkgDesc p123  =
-                PkgDesc.Builder.newExtra("vendor", "extra_path", new String[0], rev123).create();
+                PkgDesc.Builder.newExtra(vendor, "extra_path", new String[0], rev123).create();
         final IPkgDesc p123b =
-                PkgDesc.Builder.newExtra("vendor", "extra_path", new String[0], rev123).create();
+                PkgDesc.Builder.newExtra(vendor, "extra_path", new String[0], rev123).create();
 
         // can't update itself
         assertFalse(p123 .isUpdateFor(p123b));
@@ -349,25 +351,26 @@ public class PkgDescTest extends TestCase {
         // updates a lesser revision of the same vendor/path
         final NoPreviewRevision rev124 = new NoPreviewRevision(1, 2, 4);
         final IPkgDesc p124  =
-                PkgDesc.Builder.newExtra("vendor", "extra_path", new String[0], rev124).create();
+                PkgDesc.Builder.newExtra(vendor, "extra_path", new String[0], rev124).create();
         assertTrue (p124.isUpdateFor(p123));
         assertTrue (p124.compareTo(p123) > 0);
 
         // does not update a different vendor
+        IdDisplay vendor2 = new IdDisplay("different-vendor", "Not the same Vendor");
         final IPkgDesc a124  =
-                PkgDesc.Builder.newExtra("auctrix", "extra_path", new String[0], rev124).create();
+                PkgDesc.Builder.newExtra(vendor2, "extra_path", new String[0], rev124).create();
         assertFalse(a124.isUpdateFor(p123));
         assertTrue (a124.compareTo(p123) < 0);
 
         // does not update a different extra path
         final IPkgDesc n124  =
-                PkgDesc.Builder.newExtra("vendor", "no_va", new String[0], rev124).create();
+                PkgDesc.Builder.newExtra(vendor, "no_va", new String[0], rev124).create();
         assertFalse(n124.isUpdateFor(p123));
         assertTrue (n124.compareTo(p123) > 0);
         // unless the old_paths mechanism is used to provide a way to update the path
         final IPkgDesc o124  =
                 PkgDesc.Builder.newExtra(
-                        "vendor", "no_va", new String[] { "extra_path" }, rev124).create();
+                        vendor, "no_va", new String[] { "extra_path" }, rev124).create();
         assertTrue (o124.isUpdateFor(p123));
         assertTrue (o124.compareTo(p123) > 0);
     }
@@ -560,8 +563,9 @@ public class PkgDescTest extends TestCase {
     //----
 
     public final void testPkgDescAddon() throws Exception {
+        IdDisplay vendor = new IdDisplay("vendor", "The Vendor");
         IPkgDesc p1 = PkgDesc.Builder.newAddon(new AndroidVersion("19"), new MajorRevision(1),
-                                       "vendor", "addon_name").create();
+                                               vendor, "addon_name").create();
 
         assertEquals(PkgType.PKG_ADDONS, p1.getType());
 
@@ -583,8 +587,9 @@ public class PkgDescTest extends TestCase {
         assertFalse(p1.hasMinPlatformToolsRev());
         assertNull (p1.getMinPlatformToolsRev());
 
-        assertEquals("<PkgDesc Type=addons Android=API 19 Vendor=vendor Path=vendor:addon_name:19 MajorRev=1>",
-                     p1.toString());
+        assertEquals(
+                "<PkgDesc Type=addons Android=API 19 Vendor=vendor [The Vendor] Path=vendor:addon_name:19 MajorRev=1>",
+                p1.toString());
 
         // If the add-on hash string can't determined in the constructor, a callback is
         // provided to give the information needed later.
@@ -594,7 +599,7 @@ public class PkgDescTest extends TestCase {
                     public String getTargetHash() {
                         try {
                             return AndroidTargetHash.getAddonHashString(
-                                    getVendorId(),
+                                    getVendor().getId(),
                                     "name3",
                                     new AndroidVersion("3"));
                         } catch (AndroidVersionException e) {
@@ -604,20 +609,21 @@ public class PkgDescTest extends TestCase {
                     }
 
                     @Override
-                    public String getVendorId() {
-                        return "vendor3";
+                    public IdDisplay getVendor() {
+                        return new IdDisplay("vendor3", "Vendor 3");
                     }
         }).create();
         assertEquals("vendor3:name3:3", p3.getPath());
     }
 
     public final void testPkgDescAddon_Update() throws Exception {
+        IdDisplay vendor = new IdDisplay("vendor", "The Vendor");
         final AndroidVersion api19 = new AndroidVersion("19");
         final MajorRevision rev1 = new MajorRevision(1);
         final IPkgDesc p19_1  =
-                PkgDesc.Builder.newAddon(api19, rev1, "vendor", "addon_name").create();
+                PkgDesc.Builder.newAddon(api19, rev1,  vendor, "addon_name").create();
         final IPkgDesc p19_1b =
-                PkgDesc.Builder.newAddon(api19, rev1, "vendor", "addon_name").create();
+                PkgDesc.Builder.newAddon(api19, rev1,  vendor, "addon_name").create();
 
         // can't update itself
         assertFalse(p19_1 .isUpdateFor(p19_1b));
@@ -628,27 +634,28 @@ public class PkgDescTest extends TestCase {
         // updates a lesser revision of the same API
         final MajorRevision rev2 = new MajorRevision(2);
         final IPkgDesc p19_2  =
-                PkgDesc.Builder.newAddon(api19, rev2, "vendor", "addon_name").create();
+                PkgDesc.Builder.newAddon(api19, rev2,  vendor, "addon_name").create();
         assertTrue (p19_2.isUpdateFor(p19_1));
         assertTrue (p19_2.compareTo(p19_1) > 0);
 
         // does not update a different API
         final AndroidVersion api18 = new AndroidVersion("18");
         final IPkgDesc p18_1  =
-                PkgDesc.Builder.newAddon(api18, rev2, "vendor", "addon_name").create();
+                PkgDesc.Builder.newAddon(api18, rev2,  vendor, "addon_name").create();
         assertFalse(p19_2.isUpdateFor(p18_1));
         assertFalse(p18_1.isUpdateFor(p19_2));
         assertTrue (p19_2.compareTo(p18_1) > 0);
 
         // does not update a different vendor
+        IdDisplay vendor2 = new IdDisplay("other-vendor", "The Other Vendor");
         final IPkgDesc a19_2  =
-                PkgDesc.Builder.newAddon(api19, rev2, "auctrix", "addon_name").create();
+                PkgDesc.Builder.newAddon(api19, rev2, vendor2, "addon_name").create();
         assertFalse(a19_2.isUpdateFor(p19_1));
         assertTrue (a19_2.compareTo(p19_1) < 0);
 
         // does not update a different add-on name
         final IPkgDesc n19_2  =
-                PkgDesc.Builder.newAddon(api19, rev2, "vendor", "no_va").create();
+                PkgDesc.Builder.newAddon(api19, rev2,  vendor, "no_va").create();
         assertFalse(n19_2.isUpdateFor(p19_1));
         assertTrue (n19_2.compareTo(p19_1) > 0);
     }

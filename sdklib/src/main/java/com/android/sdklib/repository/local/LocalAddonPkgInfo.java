@@ -34,8 +34,10 @@ import com.android.sdklib.io.FileOp;
 import com.android.sdklib.io.IFileOp;
 import com.android.sdklib.repository.FullRevision;
 import com.android.sdklib.repository.MajorRevision;
+import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.descriptors.IAddonDesc;
 import com.android.sdklib.repository.descriptors.IPkgDesc;
+import com.android.sdklib.repository.descriptors.IdDisplay;
 import com.android.sdklib.repository.descriptors.PkgDesc;
 import com.android.sdklib.repository.descriptors.PkgType;
 import com.android.utils.Pair;
@@ -73,7 +75,7 @@ public class LocalAddonPkgInfo extends LocalPlatformPkgInfo {
 
     private final @NonNull IPkgDesc mAddonDesc;
     private String mTargetHash;
-    private String mVendorId;
+    private IdDisplay mVendor;
 
     public LocalAddonPkgInfo(@NonNull LocalSdk localSdk,
                              @NonNull File localDir,
@@ -91,7 +93,7 @@ public class LocalAddonPkgInfo extends LocalPlatformPkgInfo {
 
             @NonNull
             @Override
-            public String getVendorId() {
+            public IdDisplay getVendor() {
                 // Lazily compute the vendor id the first time it is required.
                 return LocalAddonPkgInfo.this.getVendorId();
             }
@@ -105,29 +107,34 @@ public class LocalAddonPkgInfo extends LocalPlatformPkgInfo {
     }
 
     @NonNull
-    public String getVendorId() {
-        if (mVendorId == null) {
+    public IdDisplay getVendorId() {
+        if (mVendor == null) {
             IAndroidTarget target = getAndroidTarget();
 
-            String vendor = null;
+            String vid = null;
 
             if (target != null) {
-                vendor = target.getVendor();
+                vid = target.getVendor();
             } else {
                 Pair<Map<String, String>, String> infos = parseAddonProperties();
                 Map<String, String> map = infos.getFirst();
                 if (map != null) {
-                    vendor = map.get(ADDON_VENDOR);
+                    vid = map.get(ADDON_VENDOR);
                 }
             }
 
-            if (vendor == null) {
-                return "invalid";                                           //$NON-NLS-1$
+            if (vid == null) {
+                vid = "invalid";                                           //$NON-NLS-1$
             }
 
-            mVendorId = vendor;
+            String vname = getSourceProperties().getProperty(PkgProps.ADDON_NAME_DISPLAY);
+            if (vname == null || vname.isEmpty()) {
+                vname = vid;
+            }
+
+            mVendor = new IdDisplay(vid, vname);
         }
-        return mVendorId;
+        return mVendor;
     }
 
     @NonNull
@@ -136,32 +143,38 @@ public class LocalAddonPkgInfo extends LocalPlatformPkgInfo {
         if (mTargetHash == null) {
             IAndroidTarget target = getAndroidTarget();
 
-            String vendor = null;
-            String name   = null;
+            String vid  = null;
+            String name = null;
 
             if (target != null) {
-                vendor = target.getVendor();
-                name   = target.getName();
+                vid  = target.getVendor();
+                name = target.getName();
             } else {
                 Pair<Map<String, String>, String> infos = parseAddonProperties();
                 Map<String, String> map = infos.getFirst();
                 if (map != null) {
-                    vendor = map.get(ADDON_VENDOR);
-                    name   = map.get(ADDON_NAME);
+                    vid  = map.get(ADDON_VENDOR);
+                    name = map.get(ADDON_NAME);
                 }
             }
 
-            if (vendor == null) {
-                vendor = mVendorId;
+            if (vid == null) {
+                vid = mVendor.getId();
             }
 
-            if (vendor == null || name == null) {
+            if (vid == null || name == null) {
                 return "invalid";                                       //$NON-NLS-1$
             }
 
-            mVendorId = vendor;
+            String vname = getSourceProperties().getProperty(PkgProps.ADDON_NAME_DISPLAY);
+            if (vname == null || vname.isEmpty()) {
+                vname = vid;
+            }
+
+            mVendor = new IdDisplay(vid, vname);
+
             mTargetHash = AndroidTargetHash.getAddonHashString(
-                    vendor,
+                    vid,
                     name,
                     getDesc().getAndroidVersion());
         }

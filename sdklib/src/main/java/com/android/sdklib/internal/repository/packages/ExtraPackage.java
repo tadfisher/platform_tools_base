@@ -31,6 +31,7 @@ import com.android.sdklib.repository.FullRevision;
 import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.RepoConstants;
 import com.android.sdklib.repository.descriptors.IPkgDescExtra;
+import com.android.sdklib.repository.descriptors.IdDisplay;
 import com.android.sdklib.repository.descriptors.PkgDesc;
 import com.android.sdklib.repository.descriptors.PkgDescExtra;
 import com.android.utils.NullLogger;
@@ -59,14 +60,11 @@ public class ExtraPackage extends NoPreviewRevisionPackage
     private final String mDisplayName;
 
     /**
-     * The vendor id name. It is a simple alphanumeric string [a-zA-Z0-9_-].
+     * The vendor id + name.
+     * The id is a simple alphanumeric string [a-zA-Z0-9_-].
+     * The display name is used in the UI to represent the vendor. It can be anything.
      */
-    private final String mVendorId;
-
-    /**
-     * The vendor display name. Used in the UI to represent the vendor. It can be anything.
-     */
-    private final String mVendorDisplay;
+    private final IdDisplay mVendor;
 
     /**
      * The sub-folder name. It must be a non-empty single-segment path.
@@ -140,8 +138,7 @@ public class ExtraPackage extends NoPreviewRevisionPackage
             // The vendor-display name can be empty, in which case we use the vendor-id.
             vname = vid;
         }
-        mVendorDisplay = vname.trim();
-        mVendorId      = vid.trim();
+        mVendor = new IdDisplay(vname.trim(), vid.trim());
 
         if (name.length() == 0) {
             // If name is missing, use the <path> attribute as done in an addon-3 schema.
@@ -158,7 +155,7 @@ public class ExtraPackage extends NoPreviewRevisionPackage
         mOldPaths = PackageParserUtils.getXmlString(packageNode, RepoConstants.NODE_OLD_PATHS);
 
         mPkgDesc = (IPkgDescExtra) PkgDesc.Builder
-                .newExtra(mVendorId,
+                .newExtra(mVendor,
                           mPath,
                           getOldPaths(),
                           getRevision())
@@ -266,8 +263,7 @@ public class ExtraPackage extends NoPreviewRevisionPackage
             // The vendor-display name can be empty, in which case we use the vendor-id.
             vname = vid;
         }
-        mVendorDisplay = vname.trim();
-        mVendorId      = vid.trim();
+        mVendor = new IdDisplay(vname.trim(), vid.trim());
 
         if (name == null || name.length() == 0) {
             // If name is missing, use the <path> attribute as done in an addon-3 schema.
@@ -294,7 +290,7 @@ public class ExtraPackage extends NoPreviewRevisionPackage
         mProjectFiles = filePaths.toArray(new String[filePaths.size()]);
 
         mPkgDesc = (IPkgDescExtra) PkgDesc.Builder
-                .newExtra(mVendorId,
+                .newExtra(mVendor,
                           mPath,
                           getOldPaths(),
                           getRevision())
@@ -319,8 +315,8 @@ public class ExtraPackage extends NoPreviewRevisionPackage
 
         props.setProperty(PkgProps.EXTRA_PATH, mPath);
         props.setProperty(PkgProps.EXTRA_NAME_DISPLAY, mDisplayName);
-        props.setProperty(PkgProps.EXTRA_VENDOR_DISPLAY, mVendorDisplay);
-        props.setProperty(PkgProps.EXTRA_VENDOR_ID, mVendorId);
+        props.setProperty(PkgProps.EXTRA_VENDOR_DISPLAY, mVendor.getDisplay());
+        props.setProperty(PkgProps.EXTRA_VENDOR_ID, mVendor.getId());
 
         if (getMinApiLevel() != MIN_API_LEVEL_NOT_SPECIFIED) {
             props.setProperty(PkgProps.EXTRA_MIN_API_LEVEL, Integer.toString(getMinApiLevel()));
@@ -417,11 +413,11 @@ public class ExtraPackage extends NoPreviewRevisionPackage
      * Returns the vendor id.
      */
     public String getVendorId() {
-        return mVendorId;
+        return mVendor.getId();
     }
 
     public String getVendorDisplay() {
-        return mVendorDisplay;
+        return mVendor.getDisplay();
     }
 
     public String getDisplayName() {
@@ -452,7 +448,7 @@ public class ExtraPackage extends NoPreviewRevisionPackage
 
     /**
      * Used to produce a suitable name-display based on the current {@link #mPath}
-     * and {@link #mVendorDisplay} in addon-3 schemas.
+     * and {@code mVendor.getDisplay()} in addon-3 schemas.
      */
     private String getPrettyName() {
         String name = mPath;
@@ -460,9 +456,10 @@ public class ExtraPackage extends NoPreviewRevisionPackage
         // In the past, we used to save the extras in a folder vendor-path,
         // and that "vendor" would end up in the path when we reload the extra from
         // disk. Detect this and compensate.
-        if (mVendorDisplay != null && mVendorDisplay.length() > 0) {
-            if (name.startsWith(mVendorDisplay + "-")) {  //$NON-NLS-1$
-                name = name.substring(mVendorDisplay.length() + 1);
+        String disp = mVendor.getDisplay();
+        if (disp != null && disp.length() > 0) {
+            if (name.startsWith(disp + "-")) {  //$NON-NLS-1$
+                name = name.substring(disp.length() + 1);
             }
         }
 
@@ -474,8 +471,8 @@ public class ExtraPackage extends NoPreviewRevisionPackage
             name = "Unknown Extra";
         }
 
-        if (mVendorDisplay != null && mVendorDisplay.length() > 0) {
-            name = mVendorDisplay + " " + name;  //$NON-NLS-1$
+        if (disp != null && disp.length() > 0) {
+            name = disp + " " + name;  //$NON-NLS-1$
             name = name.replaceAll("[ _\t\f-]+", " ").trim();   //$NON-NLS-1$ //$NON-NLS-2$
         }
 
@@ -709,7 +706,7 @@ public class ExtraPackage extends NoPreviewRevisionPackage
         result = prime * result + mMinApiLevel;
         result = prime * result + ((mPath == null) ? 0 : mPath.hashCode());
         result = prime * result + Arrays.hashCode(mProjectFiles);
-        result = prime * result + ((mVendorDisplay == null) ? 0 : mVendorDisplay.hashCode());
+        result = prime * result + ((mVendor == null) ? 0 : mVendor.hashCode());
         return result;
     }
 
@@ -738,11 +735,11 @@ public class ExtraPackage extends NoPreviewRevisionPackage
         if (!Arrays.equals(mProjectFiles, other.mProjectFiles)) {
             return false;
         }
-        if (mVendorDisplay == null) {
-            if (other.mVendorDisplay != null) {
+        if (mVendor == null) {
+            if (other.mVendor != null) {
                 return false;
             }
-        } else if (!mVendorDisplay.equals(other.mVendorDisplay)) {
+        } else if (!mVendor.equals(other.mVendor)) {
             return false;
         }
         return mMinToolsMixin.equals(obj);

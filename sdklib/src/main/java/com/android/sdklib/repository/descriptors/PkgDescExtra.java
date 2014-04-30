@@ -41,7 +41,7 @@ public final class PkgDescExtra extends PkgDesc implements IPkgDescExtra {
                  @Nullable AndroidVersion androidVersion,
                  @Nullable String path,
                  @Nullable IdDisplay tag,
-                 @Nullable String vendorId,
+                 @Nullable IdDisplay vendorId,
                  @Nullable FullRevision minToolsRev,
                  @Nullable FullRevision minPlatformToolsRev,
                  @Nullable final String[] oldPaths) {
@@ -106,8 +106,8 @@ public final class PkgDescExtra extends PkgDesc implements IPkgDescExtra {
         int lenEpOldPaths = epOldPaths.length;
         for (int indexEp = -1; indexEp < lenEpOldPaths; indexEp++) {
             if (sameVendorAndPath(
-                    lhs.getVendorId(), lhs.getPath(),
-                    rhs.getVendorId(), indexEp < 0 ? rhs.getPath() : epOldPaths[indexEp])) {
+                    lhs.getVendor().getId(), lhs.getPath(),
+                    rhs.getVendor().getId(), indexEp < 0 ? rhs.getPath() : epOldPaths[indexEp])) {
                 return true;
             }
         }
@@ -116,8 +116,8 @@ public final class PkgDescExtra extends PkgDesc implements IPkgDescExtra {
         int lenThisOldPaths = thisOldPaths.length;
         for (int indexThis = -1; indexThis < lenThisOldPaths; indexThis++) {
             if (sameVendorAndPath(
-                    lhs.getVendorId(), indexThis < 0 ? lhs.getPath() : thisOldPaths[indexThis],
-                    rhs.getVendorId(), rhs.getPath())) {
+                 lhs.getVendor().getId(), indexThis < 0 ? lhs.getPath() : thisOldPaths[indexThis],
+                 rhs.getVendor().getId(), rhs.getPath())) {
                 return true;
             }
         }

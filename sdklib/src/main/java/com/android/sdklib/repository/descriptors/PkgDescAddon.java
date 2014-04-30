@@ -42,7 +42,6 @@ final class PkgDescAddon extends PkgDesc {
     public static final String ADDON_REVISION_OLD = "version";              //$NON-NLS-1$
 
     private @Nullable final String mAddonPath;
-    private @Nullable final String mAddonVendor;
     private @Nullable final IAddonDesc mTargetHashProvider;
 
     /**
@@ -63,10 +62,9 @@ final class PkgDescAddon extends PkgDesc {
                  @Nullable MajorRevision majorRevision,
                  @Nullable AndroidVersion androidVersion,
                  @Nullable IdDisplay tag,
-                 @Nullable String vendorId,
+                 @Nullable IdDisplay vendor,
                  @Nullable FullRevision minToolsRev,
                  @Nullable FullRevision minPlatformToolsRev,
-                 @Nullable String addonVendor,
                  @Nullable String addonName,
                  @Nullable IAddonDesc targetHashProvider) {
         super(type,
@@ -80,25 +78,26 @@ final class PkgDescAddon extends PkgDesc {
               androidVersion,
               null,     //path
               tag,
-              vendorId,
+              vendor,
               minToolsRev,
               minPlatformToolsRev,
               null,     //customIsUpdateFor
               null);    //customPath
 
-        assert targetHashProvider != null || (addonVendor != null && addonName != null);
+        assert targetHashProvider != null || (vendor != null && addonName != null);
+
         mTargetHashProvider = targetHashProvider;
-        mAddonVendor = addonVendor;
-        mAddonPath = targetHashProvider != null ? null :
-                     AndroidTargetHash.getAddonHashString(addonVendor, addonName, androidVersion);
+        mAddonPath = targetHashProvider != null || vendor == null ? null :
+                     AndroidTargetHash.getAddonHashString(
+                             vendor.getId(), addonName, androidVersion);
     }
 
     @Override
-    public String getVendorId() {
+    public IdDisplay getVendor() {
         if (mTargetHashProvider != null) {
-            return mTargetHashProvider.getVendorId();
+            return mTargetHashProvider.getVendor();
         }
-        return mAddonVendor;
+        return super.getVendor();
     }
 
     /** The "path" of an add-on is its target hash. */

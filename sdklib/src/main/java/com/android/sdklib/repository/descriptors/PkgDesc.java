@@ -30,9 +30,7 @@ import com.android.sdklib.repository.FullRevision.PreviewComparison;
 import com.android.sdklib.repository.MajorRevision;
 import com.android.sdklib.repository.NoPreviewRevision;
 
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 
 /**
  * {@link PkgDesc} keeps information on individual SDK packages
@@ -53,7 +51,7 @@ public class PkgDesc implements IPkgDesc {
     private final AndroidVersion mAndroidVersion;
     private final String mPath;
     private final IdDisplay mTag;
-    private final String mVendorId;
+    private final IdDisplay mVendorId;
     private final FullRevision mMinToolsRev;
     private final FullRevision mMinPlatformToolsRev;
     private final IIsUpdateFor mCustomIsUpdateFor;
@@ -76,7 +74,7 @@ public class PkgDesc implements IPkgDesc {
                       @Nullable AndroidVersion androidVersion,
                       @Nullable String path,
                       @Nullable IdDisplay tag,
-                      @Nullable String vendorId,
+                      @Nullable IdDisplay vendorId,
                       @Nullable FullRevision minToolsRev,
                       @Nullable FullRevision minPlatformToolsRev,
                       @Nullable IIsUpdateFor customIsUpdateFor,
@@ -161,8 +159,8 @@ public class PkgDesc implements IPkgDesc {
     }
 
     @Override
-    public boolean hasVendorId() {
-        return getType().hasVendorId();
+    public boolean hasVendor() {
+        return getType().hasVendor();
     }
 
     @Override
@@ -211,7 +209,7 @@ public class PkgDesc implements IPkgDesc {
 
     @Nullable
     @Override
-    public String getVendorId() {
+    public IdDisplay getVendor() {
         return mVendorId;
     }
 
@@ -267,7 +265,7 @@ public class PkgDesc implements IPkgDesc {
         }
 
         // Packages that have a vendor id need the same vendor id on both sides
-        if (hasVendorId() && !getVendorId().equals(existingDesc.getVendorId())) {
+        if (hasVendor() && !getVendor().equals(existingDesc.getVendor())) {
             return false;
         }
 
@@ -334,8 +332,8 @@ public class PkgDesc implements IPkgDesc {
             }
         }
 
-        if (hasVendorId() && o.hasVendorId()) {
-            t1 = getVendorId().compareTo(o.getVendorId());
+        if (hasVendor() && o.hasVendor()) {
+            t1 = getVendor().compareTo(o.getVendor());
             if (t1 != 0) {
                 return t1;
             }
@@ -401,7 +399,7 @@ public class PkgDesc implements IPkgDesc {
     @VisibleForTesting(visibility=Visibility.PRIVATE)
     protected String patternReplaceImpl(String result) {
         // Flags for list description pattern string, used in PkgType:
-        //      $MAJ  $FULL  $API  $PATH  $TAG  $VID  $NAME (for extras)
+        //      $MAJ  $FULL  $API  $PATH  $TAG  $VEND  $NAME (for extras)
 
         result = result.replace("$MAJ",  hasMajorRevision()  ? getMajorRevision().toShortString() : "");
         result = result.replace("$FULL", hasFullRevision()   ? getFullRevision() .toShortString() : "");
@@ -409,8 +407,7 @@ public class PkgDesc implements IPkgDesc {
         result = result.replace("$PATH", hasPath()           ? getPath()                          : "");
         result = result.replace("$TAG",  hasTag() && !getTag().equals(SystemImage.DEFAULT_TAG) ?
                                                 getTag().getDisplay() : "");
-        // TODO replace vendorId string by an IdDisplay and use .getDisplay()
-        result = result.replace("$VID",  hasVendorId() ? getVendorId() : "");
+        result = result.replace("$VEND",  hasVendor() ? getVendor().getDisplay() : "");
         // TOOD: $NAME -> (this instanceof IPkgDescExtra) ? this,getName() : ""
         result = result.replace("$NAME", "");
 
@@ -477,8 +474,8 @@ public class PkgDesc implements IPkgDesc {
             builder.append(" Android=").append(getAndroidVersion());                //NON-NLS-1$
         }
 
-        if (hasVendorId()) {
-            builder.append(" Vendor=").append(getVendorId());                       //NON-NLS-1$
+        if (hasVendor()) {
+            builder.append(" Vendor=").append(getVendor().toString());            //NON-NLS-1$
         }
 
         if (hasTag()) {
@@ -536,7 +533,7 @@ public class PkgDesc implements IPkgDesc {
         final int prime = 31;
         int result = 1;
         result = prime * result + (hasAndroidVersion() ? getAndroidVersion().hashCode() : 0);
-        result = prime * result + (hasVendorId()       ? getVendorId()      .hashCode() : 0);
+        result = prime * result + (hasVendor()       ? getVendor()      .hashCode() : 0);
         result = prime * result + (hasTag()            ? getTag()           .hashCode() : 0);
         result = prime * result + (hasPath()           ? getPath()          .hashCode() : 0);
         result = prime * result + (hasFullRevision()   ? getFullRevision()  .hashCode() : 0);
@@ -624,13 +621,12 @@ public class PkgDesc implements IPkgDesc {
         private AndroidVersion mAndroidVersion;
         private String mPath;
         private IdDisplay mTag;
-        private String mVendorId;
+        private IdDisplay mVendor;
         private FullRevision mMinToolsRev;
         private FullRevision mMinPlatformToolsRev;
         private IIsUpdateFor mCustomIsUpdateFor;
         private IGetPath mCustomPath;
         private String[] mOldPaths;
-        private String mAddonVendor;
         private String mAddonName;
         private IAddonDesc mTargetHashProvider;
 
@@ -735,20 +731,20 @@ public class PkgDesc implements IPkgDesc {
         /**
          * Creates a new extra package descriptor.
          *
-         * @param vendorId The vendor id string of the extra package.
+         * @param vendor The vendor id string of the extra package.
          * @param path The path id string of the extra package.
          * @param oldPaths An optional list of older paths for this extra package.
          * @param revision The revision of the extra package.
          * @return A {@link PkgDesc} describing this extra package.
          */
         @NonNull
-        public static Builder newExtra(@NonNull  String vendorId,
+        public static Builder newExtra(@NonNull  IdDisplay vendor,
                                        @NonNull  String path,
                                        @Nullable String[] oldPaths,
                                        @NonNull  NoPreviewRevision revision) {
             Builder p = new Builder(PkgType.PKG_EXTRAS);
             p.mFullRevision = revision;
-            p.mVendorId = vendorId;
+            p.mVendor = vendor;
             p.mPath = path;
             p.mOldPaths = oldPaths;
             return p;
@@ -797,12 +793,12 @@ public class PkgDesc implements IPkgDesc {
         @NonNull
         public static Builder newAddon(@NonNull AndroidVersion version,
                                        @NonNull MajorRevision revision,
-                                       @NonNull String addonVendor,
+                                       @NonNull IdDisplay addonVendor,
                                        @NonNull String addonName) {
             Builder p = new Builder(PkgType.PKG_ADDONS);
             p.mAndroidVersion = version;
             p.mMajorRevision = revision;
-            p.mAddonVendor = addonVendor;
+            p.mVendor = addonVendor;
             p.mAddonName = addonName;
             return p;
         }
@@ -934,10 +930,9 @@ public class PkgDesc implements IPkgDesc {
                         mMajorRevision,
                         mAndroidVersion,
                         mTag,
-                        mVendorId,
+                        mVendor,
                         mMinToolsRev,
                         mMinPlatformToolsRev,
-                        mAddonVendor,
                         mAddonName,
                         mTargetHashProvider);
             }
@@ -955,7 +950,7 @@ public class PkgDesc implements IPkgDesc {
                     mAndroidVersion,
                     mPath,
                     mTag,
-                    mVendorId,
+                    mVendor,
                     mMinToolsRev,
                     mMinPlatformToolsRev,
                     mOldPaths);
@@ -973,7 +968,7 @@ public class PkgDesc implements IPkgDesc {
                     mAndroidVersion,
                     mPath,
                     mTag,
-                    mVendorId,
+                    mVendor,
                     mMinToolsRev,
                     mMinPlatformToolsRev,
                     mCustomIsUpdateFor,
