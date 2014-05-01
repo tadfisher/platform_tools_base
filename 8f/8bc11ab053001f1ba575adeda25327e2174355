@@ -1,0 +1,7 @@
+Code-Review+2: Tor Norbye <tnorbye@google.com>
+Verified+1: Tor Norbye <tnorbye@google.com>
+Submitted-by: Tor Norbye <tnorbye@google.com>
+Submitted-at: Thu, 01 May 2014 23:40:21 +0000
+Reviewed-on: https://android-review.googlesource.com/93145
+Project: platform/tools/base
+Branch: refs/heads/gradle_0.10
