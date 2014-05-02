@@ -1,0 +1,7 @@
+Code-Review+2: Tor Norbye <tnorbye@google.com>
+Verified+1: Eugene Ostroukhov <eostroukhov@google.com>
+Submitted-by: Eugene Ostroukhov <eostroukhov@google.com>
+Submitted-at: Fri, 02 May 2014 00:12:12 +0000
+Reviewed-on: https://android-review.googlesource.com/93147
+Project: platform/tools/base
+Branch: refs/heads/idea133
