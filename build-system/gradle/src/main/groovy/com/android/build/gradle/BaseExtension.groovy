@@ -395,8 +395,8 @@ public abstract class BaseExtension {
     // TEMP for compatibility
     // STOPSHIP Remove in 1.0
 
-    // for now, use the old manifest merger.
-    boolean useOldManifestMerger = true;
+    // by default, use the new manifest merger.
+    boolean useOldManifestMerger = false;
 
     void useOldManifestMerger(boolean flag) {
         this.useOldManifestMerger = flag;
