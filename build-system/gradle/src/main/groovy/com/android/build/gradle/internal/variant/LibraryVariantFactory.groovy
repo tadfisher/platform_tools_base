@@ -161,7 +161,7 @@ public class LibraryVariantFactory implements VariantFactory {
             packageJniLibs.dependsOn(ndkPlugin.getNdkTasks(variantConfig))
             packageJniLibs.from(ndkPlugin.getOutputDirectory(variantConfig)).include("**/*.so")
         }
-        // package from 3 sources.
+        // package from 2 sources.
         packageJniLibs.from(variantConfig.jniLibsList).include("**/*.so")
         packageJniLibs.into(project.file(
                 "$project.buildDir/$DIR_BUNDLES/${dirName}/jni"))

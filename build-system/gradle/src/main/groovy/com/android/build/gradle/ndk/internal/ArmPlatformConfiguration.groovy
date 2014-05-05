@@ -20,6 +20,9 @@ import org.gradle.nativebinaries.platform.Platform
 import org.gradle.nativebinaries.platform.internal.ArchitectureInternal
 import org.gradle.nativebinaries.toolchain.TargetPlatformConfiguration
 
+/**
+ * TargetPlatformConfiguration for ARM
+ */
 class ArmPlatformConfiguration implements TargetPlatformConfiguration {
     public boolean supportsPlatform(Platform targetPlatform) {
         ((ArchitectureInternal) targetPlatform.getArchitecture()).isArm()

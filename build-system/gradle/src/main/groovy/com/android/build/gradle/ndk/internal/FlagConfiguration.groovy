@@ -17,10 +17,12 @@
 package com.android.build.gradle.ndk.internal
 
 /**
- * Base class for native binaries flag configurations.
+ * Interface for native binaries flag configurations.
  */
 interface FlagConfiguration {
     public List<String> getCFlags()
+
     public List<String> getCppFlags()
+
     public List<String> getLdFlags()
 }

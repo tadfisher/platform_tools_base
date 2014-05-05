@@ -67,6 +67,5 @@ android {
 
         // set the composite code
         variant.mergedFlavor.versionCode = flavorVersion * 1000000 + defaultConfig.versionCode
-        //variant.jniLibsList.add("${project.buildDir}/binaries/arm/debug/lib/")
     }
 }

@@ -71,14 +71,13 @@ class NdkConfigurationAction implements Action<Project> {
                         getOutputDirectory(project, buildType, targetPlatform),
                         "/lib" + ndkConfig.getModuleName() + ".so")
 
-                String sysroot = ("${ndkHelper.getNdkFolder()}/platforms/"
-                        + "android-$ndkConfig.apiLevel/"
-                        + "arch-$targetPlatform.architecture.name")
+                String sysroot = ndkHelper.getSysroot(targetPlatform, ndkConfig.apiLevel)
 
                 cCompiler.args  "--sysroot=$sysroot"
                 cppCompiler.args  "--sysroot=$sysroot"
                 linker.args "--sysroot=$sysroot"
-                FlagConfiguration flagConfig = FlagConfigurationFactory.create(buildType)
+                FlagConfiguration flagConfig =
+                        FlagConfigurationFactory.create(buildType, targetPlatform)
 
                 for (String arg : flagConfig.getCFlags()) {
                     cCompiler.args arg
@@ -106,6 +105,9 @@ class NdkConfigurationAction implements Action<Project> {
         }
     }
 
+    /**
+     * Return the output directory of the native binary.
+     */
     public File getOutputDirectory(Project project, BuildType buildType, Platform platform) {
         new File("$project.buildDir/binaries/",
                 "${ndkConfig.getModuleName()}SharedLibrary/$buildType.name/lib/$platform.name")

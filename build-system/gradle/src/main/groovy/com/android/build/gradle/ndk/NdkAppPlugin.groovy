@@ -20,6 +20,7 @@ import com.android.builder.BuilderConstants
 import com.android.builder.VariantConfiguration
 
 import com.android.build.gradle.internal.dsl.NdkConfigDsl
+import com.android.builder.model.BuildType
 import com.android.builder.model.NdkConfig
 import com.android.build.gradle.ndk.internal.NdkConfigurationAction
 import com.android.build.gradle.ndk.internal.NdkHelper
@@ -32,11 +33,15 @@ import org.gradle.nativebinaries.tasks.LinkSharedLibrary
 
 import javax.inject.Inject
 
+/**
+ * Plugin for Android NDK applications.
+ */
 class NdkAppPlugin implements Plugin<Project> {
     protected Project project
     private NdkConfig ndkConfig
     private NdkHelper ndkHelper
     private ProjectConfigurationActionContainer configurationActions
+    private NdkConfigurationAction configAction
 
     @Inject
     public NdkAppPlugin(ProjectConfigurationActionContainer configurationActions) {
@@ -77,12 +82,16 @@ class NdkAppPlugin implements Plugin<Project> {
 
         }
 
-        configurationActions.add(new NdkConfigurationAction(ndkConfig, ndkHelper))
+        configAction = new NdkConfigurationAction(ndkConfig, ndkHelper)
+        configurationActions.add(configAction)
 
         ToolchainConfiguration toolchainConfig = new ToolchainConfiguration(project, ndkHelper)
         toolchainConfig.configureToolchains()
     }
 
+    /**
+     * Return the expected native binary tasks for a VariantConfiguration.
+     */
     public TaskCollection getNdkTasks(VariantConfiguration variantConfig) {
         project.tasks.withType(LinkSharedLibrary).matching { task ->
             ((variantConfig.getBuildType().isDebuggable()
@@ -94,8 +103,13 @@ class NdkAppPlugin implements Plugin<Project> {
         }
     }
 
+    /**
+     * Return the expected location of the native binary for a VariantConfiguration.
+     */
     public File getOutputDirectory(VariantConfiguration variantConfig) {
+        BuildType buildType = variantConfig.buildType
         new File("$project.buildDir/binaries/${ndkConfig.getModuleName()}SharedLibrary/",
-                "${variantConfig.getDirName()}/lib")
+                (variantConfig.type == VariantConfiguration.Type.TEST) ? "test/" : ""
+                        + "$buildType.name/lib")
     }
 }

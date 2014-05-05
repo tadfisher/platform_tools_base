@@ -17,12 +17,20 @@
 package com.android.build.gradle.ndk.internal
 
 import org.gradle.nativebinaries.BuildType
+import org.gradle.nativebinaries.platform.Platform
 
 /**
  * Factory to create FlagConfiguration
  */
 class FlagConfigurationFactory {
-    public static FlagConfiguration create(BuildType buildType) {
-        return new GccFlagConfiguration(buildType)
+    /**
+     * Returns a FlagConfiguration.
+     *
+     * @param buildType Build type of the native binary.
+     * @param platform Target platform of the native binary.
+     * @return A FlagConfiguration for the targeted native binary.
+     */
+    public static FlagConfiguration create(BuildType buildType, Platform platform) {
+        return new GccFlagConfiguration(buildType, platform)
     }
 }
