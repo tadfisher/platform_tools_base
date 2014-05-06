@@ -2524,7 +2524,7 @@ public class LintDriver {
                 }
             }
 
-            if (checkComments && context.isSuppressed(scope, issue)) {
+            if (checkComments && context.isSuppressedWithComment(scope, issue)) {
                 return true;
             }
 
