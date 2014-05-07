@@ -15,14 +15,6 @@
  */
 package com.android.tools.lint.checks;
 
-import static com.android.SdkConstants.FD_BUILD_TOOLS;
-import static com.android.SdkConstants.FD_EXTRAS;
-import static com.android.SdkConstants.FD_M2_REPOSITORY;
-import static com.android.ide.common.repository.GradleCoordinate.COMPARE_PLUS_HIGHER;
-import static com.android.tools.lint.checks.ManifestDetector.TARGET_NEWER;
-import static java.io.File.separator;
-import static java.io.File.separatorChar;
-
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -30,21 +22,19 @@ import com.android.ide.common.repository.GradleCoordinate;
 import com.android.ide.common.sdk.SdkVersionInfo;
 import com.android.sdklib.repository.FullRevision;
 import com.android.tools.lint.client.api.LintClient;
-import com.android.tools.lint.detector.api.Category;
-import com.android.tools.lint.detector.api.Context;
-import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Implementation;
-import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.Location;
-import com.android.tools.lint.detector.api.Scope;
-import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
+import com.android.tools.lint.detector.api.*;
 import com.google.common.collect.Lists;
 
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import static com.android.SdkConstants.*;
+import static com.android.ide.common.repository.GradleCoordinate.COMPARE_PLUS_HIGHER;
+import static com.android.tools.lint.checks.ManifestDetector.TARGET_NEWER;
+import static java.io.File.separator;
+import static java.io.File.separatorChar;
 
 /**
  * Checks Gradle files for potential errors
@@ -442,7 +432,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
 
         // See if the support library version is lower than the targetSdkVersion
         if (mTargetSdkVersion > 0 && dependency.getMajorVersion() < mTargetSdkVersion &&
-                dependency.getMajorVersion() != GradleCoordinate.PLUS_REV &&
+                dependency.getMajorVersion() != GradleCoordinate.PLUS_REV_VALUE &&
                 context.isEnabled(COMPATIBILITY)) {
             String message = "The support library should not use a lower version ("
                 + dependency.getMajorVersion() + ") than the targetSdkVersion ("

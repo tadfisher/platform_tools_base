@@ -17,6 +17,7 @@ package com.android.ide.common.repository;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.google.common.base.Joiner;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -86,7 +87,177 @@ public class GradleCoordinate {
         }
     }
 
-    public static final int PLUS_REV = -1;
+    /**
+     * A single component of a revision number: either a number, a string or a list of
+     * components separated by dashes.
+     */
+    public abstract static class RevisionComponent implements Comparable<RevisionComponent> {
+        public abstract int asInteger();
+    }
+
+    public static class NumberComponent extends RevisionComponent {
+        private final int myNumber;
+
+        public NumberComponent(int number) {
+            myNumber = number;
+        }
+
+        @Override
+        public String toString() {
+            return Integer.toString(myNumber);
+        }
+
+        @Override
+        public int asInteger() {
+            return myNumber;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof NumberComponent && ((NumberComponent) o).myNumber == myNumber;
+        }
+
+        @Override
+        public int hashCode() {
+            return myNumber;
+        }
+
+        @Override
+        public int compareTo(RevisionComponent o) {
+            if (o instanceof NumberComponent) {
+                return myNumber - ((NumberComponent) o).myNumber;
+            }
+            if (o instanceof StringComponent) {
+                return 1;
+            }
+            if (o instanceof ListComponent) {
+                return 1; // 1.0.x > 1-1
+            }
+            return 0;
+        }
+    }
+
+    public static class StringComponent extends RevisionComponent {
+        private final String myString;
+
+        public StringComponent(String string) {
+            this.myString = string;
+        }
+
+        @Override
+        public String toString() {
+            return myString;
+        }
+
+        @Override
+        public int asInteger() {
+            return 0;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof StringComponent && ((StringComponent) o).myString.equals(myString);
+        }
+
+        @Override
+        public int hashCode() {
+            return myString.hashCode();
+        }
+
+        @Override
+        public int compareTo(RevisionComponent o) {
+            if (o instanceof NumberComponent) {
+                return -1;
+            }
+            if (o instanceof StringComponent) {
+                return myString.compareTo(((StringComponent) o).myString);
+            }
+            if (o instanceof ListComponent) {
+                return -1;  // 1-sp < 1-1
+            }
+            return 0;
+        }
+    }
+
+    private static class PlusComponent extends RevisionComponent {
+        @Override
+        public String toString() {
+            return "+";
+        }
+
+        @Override
+        public int asInteger() {
+            return PLUS_REV_VALUE;
+        }
+
+        @Override
+        public int compareTo(RevisionComponent o) {
+            throw new UnsupportedOperationException(
+                    "Please use a specific comparator that knows how to handle +");
+        }
+    }
+
+    /**
+     * A list of components separated by dashes.
+     */
+    public static class ListComponent extends RevisionComponent {
+        private final List<RevisionComponent> myItems = new ArrayList<RevisionComponent>();
+        private boolean myClosed = false;
+
+        public static ListComponent of(RevisionComponent... components) {
+            ListComponent result = new ListComponent();
+            for (RevisionComponent component : components) {
+                result.add(component);
+            }
+            return result;
+        }
+
+        public void add(RevisionComponent component) {
+            myItems.add(component);
+        }
+
+        @Override
+        public int asInteger() {
+            return 0;
+        }
+
+        @Override
+        public int compareTo(RevisionComponent o) {
+            if (o instanceof NumberComponent) {
+                return -1;  // 1-1 < 1.0.x
+            }
+            if (o instanceof StringComponent) {
+                return 1;  // 1-1 > 1-sp
+            }
+            if (o instanceof ListComponent) {
+                ListComponent rhs = (ListComponent) o;
+                for (int i = 0; i < myItems.size() && i < rhs.myItems.size(); i++) {
+                    int rc = myItems.get(i).compareTo(rhs.myItems.get(i));
+                    if (rc != 0) return rc;
+                }
+                return myItems.size() - rhs.myItems.size();
+            }
+            return 0;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof ListComponent && ((ListComponent) o).myItems.equals(myItems);
+        }
+
+        @Override
+        public int hashCode() {
+            return myItems.hashCode();
+        }
+
+        @Override
+        public String toString() {
+            return Joiner.on("-").join(myItems);
+        }
+    }
+
+    public static final PlusComponent PLUS_REV = new PlusComponent();
+    public static final int PLUS_REV_VALUE = -1;
 
     private final String myGroupId;
 
@@ -94,20 +265,16 @@ public class GradleCoordinate {
 
     private final ArtifactType myArtifactType;
 
-    private final List<Integer> myRevisions = new ArrayList<Integer>(3);
-
-    private final boolean myIsAnyRevision;
+    private final List<RevisionComponent> myRevisions = new ArrayList<RevisionComponent>(3);
 
     private static final Pattern MAVEN_PATTERN =
-            Pattern.compile("([\\w\\d\\.-]+):([\\w\\d\\.-]+):([\\d+\\.\\+]+)(@[\\w-]+)?");
-
-    private static final Pattern REVISION_PATTERN = Pattern.compile("(\\d+|\\+)");
+            Pattern.compile("([\\w\\d\\.-]+):([\\w\\d\\.-]+):([^:@]+)(@[\\w-]+)?");
 
     /**
      * Constructor
      */
     public GradleCoordinate(@NonNull String groupId, @NonNull String artifactId,
-            @NonNull Integer... revisions) {
+            @NonNull RevisionComponent... revisions) {
         this(groupId, artifactId, Arrays.asList(revisions), null);
     }
 
@@ -115,13 +282,30 @@ public class GradleCoordinate {
      * Constructor
      */
     public GradleCoordinate(@NonNull String groupId, @NonNull String artifactId,
-            @NonNull List<Integer> revisions, @Nullable ArtifactType type) {
+                            @NonNull int... revisions) {
+        this(groupId, artifactId, createComponents(revisions), null);
+    }
+
+    private static List<RevisionComponent> createComponents(int[] revisions) {
+        List<RevisionComponent> result = new ArrayList<RevisionComponent>(revisions.length);
+        for (int revision : revisions) {
+            if (revision == PLUS_REV_VALUE) {
+                result.add(PLUS_REV);
+            } else {
+                result.add(new NumberComponent(revision));
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Constructor
+     */
+    public GradleCoordinate(@NonNull String groupId, @NonNull String artifactId,
+            @NonNull List<RevisionComponent> revisions, @Nullable ArtifactType type) {
         myGroupId = groupId;
         myArtifactId = artifactId;
         myRevisions.addAll(revisions);
-
-        // If the major revision is "+" then we'll accept any revision
-        myIsAnyRevision = (!myRevisions.isEmpty() && myRevisions.get(0) == PLUS_REV);
 
         myArtifactType = type;
     }
@@ -154,20 +338,67 @@ public class GradleCoordinate {
             type = ArtifactType.getArtifactType(typeString.substring(1));
         }
 
-        matcher = REVISION_PATTERN.matcher(revision);
-
-        List<Integer> revisions = new ArrayList<Integer>(matcher.groupCount());
-
-        while (matcher.find()) {
-            String group = matcher.group();
-            revisions.add(group.equals("+") ? PLUS_REV : Integer.parseInt(group));
-            // A plus revision terminates the revision string
-            if (group.equals("+")) {
-                break;
-            }
-        }
+        List<RevisionComponent> revisions = parseRevisionNumber(revision);
 
         return new GradleCoordinate(groupId, artifactId, revisions, type);
+    }
+
+    private static List<RevisionComponent> parseRevisionNumber(String revision) {
+        List<RevisionComponent> components = new ArrayList<RevisionComponent>();
+        StringBuilder buffer = new StringBuilder();
+        for (int i = 0; i < revision.length(); i++) {
+            char c = revision.charAt(i);
+            if (c == '.') {
+                flushBuffer(components, buffer, true);
+            } else if (c == '+') {
+                if (buffer.length() > 0) {
+                    flushBuffer(components, buffer, true);
+                }
+                components.add(PLUS_REV);
+                break;
+            } else if (c == '-') {
+                flushBuffer(components, buffer, false);
+                int last = components.size() - 1;
+                if (last == -1) {
+                    components.add(ListComponent.of(new NumberComponent(0)));
+                } else if (!(components.get(last) instanceof ListComponent)) {
+                    components.set(last, ListComponent.of(components.get(last)));
+                }
+            } else {
+                buffer.append(c);
+            }
+        }
+        if (buffer.length() > 0 || components.size() == 0) {
+            flushBuffer(components, buffer, true);
+        }
+        return components;
+    }
+
+    private static void flushBuffer(List<RevisionComponent> components, StringBuilder buffer,
+                                    boolean closeList) {
+        RevisionComponent newComponent;
+        if (buffer.length() == 0) {
+            newComponent = new NumberComponent(0);
+        } else {
+            try {
+                newComponent = new NumberComponent(Integer.parseInt(buffer.toString()));
+            } catch(NumberFormatException e) {
+                newComponent = new StringComponent(buffer.toString());
+            }
+        }
+        buffer.setLength(0);
+        if (components.size() > 0 &&
+               components.get(components.size() - 1) instanceof ListComponent) {
+            ListComponent component = (ListComponent) components.get(components.size() - 1);
+            if (!component.myClosed) {
+                component.add(newComponent);
+                if (closeList) {
+                    component.myClosed = true;
+                }
+                return;
+            }
+        }
+        components.add(newComponent);
     }
 
     @Override
@@ -209,11 +440,11 @@ public class GradleCoordinate {
 
     public String getFullRevision() {
         StringBuilder revision = new StringBuilder();
-        for (int i : myRevisions) {
+        for (RevisionComponent component : myRevisions) {
             if (revision.length() > 0) {
                 revision.append('.');
             }
-            revision.append((i == PLUS_REV) ? "+" : i);
+            revision.append(component.toString());
         }
 
         return revision.toString();
@@ -224,7 +455,7 @@ public class GradleCoordinate {
      * if it is not available
      */
     public int getMajorVersion() {
-        return myRevisions.isEmpty() ? Integer.MIN_VALUE : myRevisions.get(0);
+        return myRevisions.isEmpty() ? Integer.MIN_VALUE : myRevisions.get(0).asInteger();
     }
 
     /**
@@ -232,7 +463,7 @@ public class GradleCoordinate {
      * if it is not available
      */
     public int getMinorVersion() {
-        return myRevisions.size() < 2 ? Integer.MIN_VALUE : myRevisions.get(1);
+        return myRevisions.size() < 2 ? Integer.MIN_VALUE : myRevisions.get(1).asInteger();
     }
 
     /**
@@ -240,7 +471,7 @@ public class GradleCoordinate {
      * if it is not available
      */
     public int getMicroVersion() {
-        return myRevisions.size() < 3 ? Integer.MIN_VALUE : myRevisions.get(2);
+        return myRevisions.size() < 3 ? Integer.MIN_VALUE : myRevisions.get(2).asInteger();
     }
 
     /**
@@ -288,8 +519,8 @@ public class GradleCoordinate {
     public int hashCode() {
         int result = myGroupId.hashCode();
         result = 31 * result + myArtifactId.hashCode();
-        for (Integer i : myRevisions) {
-            result = 31 * result + i;
+        for (RevisionComponent component : myRevisions) {
+            result = 31 * result + component.hashCode();
         }
         if (myArtifactType != null) {
             result = 31 * result + myArtifactType.hashCode();
@@ -303,33 +534,7 @@ public class GradleCoordinate {
      * to for example order coordinates by "most specific".
      */
     public static final Comparator<GradleCoordinate> COMPARE_PLUS_LOWER =
-            new Comparator<GradleCoordinate>() {
-                @Override
-                public int compare(@NonNull GradleCoordinate a, @NonNull GradleCoordinate b) {
-                    // Make sure we're comparing apples to apples. If not, compare artifactIds
-                    if (!a.isSameArtifact(b)) {
-                        return a.myArtifactId.compareTo(b.myArtifactId);
-                    }
-
-                    // Specific version should beat "any version"
-                    if (a.myIsAnyRevision) {
-                        return -1;
-                    } else if (b.myIsAnyRevision) {
-                        return 1;
-                    }
-
-                    int sizeA = a.myRevisions.size();
-                    int sizeB = b.myRevisions.size();
-                    int common = Math.min(sizeA, sizeB);
-                    for (int i = 0; i < common; ++i) {
-                        int delta = a.myRevisions.get(i) - b.myRevisions.get(i);
-                        if (delta != 0) {
-                            return delta;
-                        }
-                    }
-                    return sizeA < sizeB ? -1 : sizeB < sizeA ? 1 : 0;
-                }
-            };
+            new GradleCoordinateComparator(-1);
 
     /**
      * Comparator which compares Gradle versions - and treats a + version as higher
@@ -338,39 +543,36 @@ public class GradleCoordinate {
      * 0.7.+ higher and therefore satisfying the version requirement.
      */
     public static final Comparator<GradleCoordinate> COMPARE_PLUS_HIGHER =
-            new Comparator<GradleCoordinate>() {
-                @Override
-                public int compare(@NonNull GradleCoordinate a, @NonNull GradleCoordinate b) {
-                    // Make sure we're comparing apples to apples. If not, compare artifactIds
-                    if (!a.isSameArtifact(b)) {
-                        return a.myArtifactId.compareTo(b.myArtifactId);
-                    }
+            new GradleCoordinateComparator(1);
 
-                    // Plus is always highest
-                    if (a.myIsAnyRevision) {
-                        return 1;
-                    } else if (b.myIsAnyRevision) {
-                        return -1;
-                    }
+    private static class GradleCoordinateComparator implements Comparator<GradleCoordinate> {
+        private final int myPlusResult;
 
-                    int sizeA = a.myRevisions.size();
-                    int sizeB = b.myRevisions.size();
-                    int common = Math.min(sizeA, sizeB);
-                    for (int i = 0; i < common; ++i) {
-                        int revision1 = a.myRevisions.get(i);
-                        if (revision1 == PLUS_REV) {
-                            revision1 = Integer.MAX_VALUE;
-                        }
-                        int revision2 = b.myRevisions.get(i);
-                        if (revision2 == PLUS_REV) {
-                            revision2 = Integer.MAX_VALUE;
-                        }
-                        int delta = revision1 - revision2;
-                        if (delta != 0) {
-                            return delta;
-                        }
-                    }
-                    return sizeA < sizeB ? -1 : sizeB < sizeA ? 1 : 0;
+        private GradleCoordinateComparator(int plusResult) {
+            myPlusResult = plusResult;
+        }
+
+        @Override
+        public int compare(@NonNull GradleCoordinate a, @NonNull GradleCoordinate b) {
+            // Make sure we're comparing apples to apples. If not, compare artifactIds
+            if (!a.isSameArtifact(b)) {
+                return a.myArtifactId.compareTo(b.myArtifactId);
+            }
+
+            int sizeA = a.myRevisions.size();
+            int sizeB = b.myRevisions.size();
+            int common = Math.min(sizeA, sizeB);
+            for (int i = 0; i < common; ++i) {
+                RevisionComponent revision1 = a.myRevisions.get(i);
+                if (revision1 instanceof PlusComponent) return myPlusResult;
+                RevisionComponent revision2 = b.myRevisions.get(i);
+                if (revision2 instanceof PlusComponent) return -myPlusResult;
+                int delta = revision1.compareTo(revision2);
+                if (delta != 0) {
+                    return delta;
                 }
-            };
+            }
+            return sizeA < sizeB ? -1 : sizeB < sizeA ? 1 : 0;
+        }
+    }
 }
