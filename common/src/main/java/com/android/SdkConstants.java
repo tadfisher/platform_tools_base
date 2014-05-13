@@ -303,7 +303,9 @@ public final class SdkConstants {
     /** Name of the ABI to support. */
     public static final String ABI_ARMEABI = "armeabi";                 //$NON-NLS-1$
     public static final String ABI_ARMEABI_V7A = "armeabi-v7a";         //$NON-NLS-1$
+    public static final String ABI_ARMEABI_64 = "arm64";                //$NON-NLS-1$
     public static final String ABI_INTEL_ATOM = "x86";                  //$NON-NLS-1$
+    public static final String ABI_INTEL_ATOM_64 = "x86_64";            //$NON-NLS-1$
     public static final String ABI_MIPS = "mips";                       //$NON-NLS-1$
     /** Name of the CPU arch to support. */
     public static final String CPU_ARCH_ARM = "arm";                    //$NON-NLS-1$
