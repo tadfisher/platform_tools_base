@@ -50,6 +50,9 @@ public class DeviceSchemaTest extends TestCase {
 
     public void testValidXml() throws Exception {
         InputStream xml = DeviceSchemaTest.class.getResourceAsStream("devices.xml");
+        assertTrue(xml.markSupported());
+        xml.mark(500000);   // set mark to beginning of stream
+
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         boolean result = DeviceSchema.validate(xml, baos, null);
         String output = baos.toString().trim();
@@ -165,6 +168,8 @@ public class DeviceSchemaTest extends TestCase {
     private void checkFailure(Map<String, String> replacements, String regex) throws Exception {
         // Generate XML stream with replacements
         InputStream xmlStream = getReplacedStream(replacements);
+        assertTrue(xmlStream.markSupported());
+        xmlStream.mark(500000);   // set mark to beginning of stream
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         assertFalse(
@@ -179,9 +184,13 @@ public class DeviceSchemaTest extends TestCase {
 
     private void checkFailure(String resource, String regex) throws Exception {
         InputStream xml = DeviceSchemaTest.class.getResourceAsStream(resource);
+        assertTrue(xml.markSupported());
+        xml.mark(500000);   // set mark to beginning of stream
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
         assertFalse("Validation Assertion Failed, XML validated when it was expected to fail\n",
                 DeviceSchema.validate(xml, baos, null));
+
         String actual = baos.toString().trim();
         actual = actual.replace("\r\n", "\n");  // Fix Windows CRLF
         assertTrue(
@@ -191,6 +200,8 @@ public class DeviceSchemaTest extends TestCase {
 
     private void checkSuccess(Map<String, String> replacements) throws Exception {
         InputStream xmlStream = getReplacedStream(replacements);
+        assertTrue(xmlStream.markSupported());
+        xmlStream.mark(500000);   // set mark to beginning of stream
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         assertTrue(DeviceSchema.validate(xmlStream, baos, null));
