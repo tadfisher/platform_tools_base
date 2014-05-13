@@ -23,8 +23,11 @@ import com.android.annotations.Nullable;
 public enum Abi {
     ARMEABI(SdkConstants.ABI_ARMEABI),
     ARMEABI_V7A(SdkConstants.ABI_ARMEABI_V7A),
+    ARM64_V8A(SdkConstants.ABI_ARM64_V8A),
     X86(SdkConstants.ABI_INTEL_ATOM),
-    MIPS(SdkConstants.ABI_MIPS);
+    X86_64(SdkConstants.ABI_INTEL_ATOM64),
+    MIPS(SdkConstants.ABI_MIPS),
+    MIPS64(SdkConstants.ABI_MIPS64);
 
     @NonNull private final String mValue;
 
