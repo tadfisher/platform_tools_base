@@ -217,11 +217,20 @@ public final class AvdInfo implements Comparable<AvdInfo> {
         } else if (rawAbi.equalsIgnoreCase(SdkConstants.ABI_ARMEABI_V7A)) {
             s += "ARM (" + SdkConstants.ABI_ARMEABI_V7A + ")";
 
+        } else if (rawAbi.equalsIgnoreCase(SdkConstants.ABI_ARM64_V8A)) {
+            s += "ARM 64 (" + SdkConstants.ABI_ARMEABI_V7A + ")";
+
         } else if (rawAbi.equalsIgnoreCase(SdkConstants.ABI_INTEL_ATOM)) {
             s += "Intel Atom (" + SdkConstants.ABI_INTEL_ATOM + ")";
 
+        } else if (rawAbi.equalsIgnoreCase(SdkConstants.ABI_INTEL_ATOM64)) {
+            s += "Intel Atom 64 (" + SdkConstants.ABI_INTEL_ATOM + ")";
+
         } else if (rawAbi.equalsIgnoreCase(SdkConstants.ABI_MIPS)) {
             s += "MIPS (" + SdkConstants.ABI_MIPS + ")";
+
+        } else if (rawAbi.equalsIgnoreCase(SdkConstants.ABI_MIPS64)) {
+            s += "MIPS 64 (" + SdkConstants.ABI_MIPS + ")";
 
         } else {
             s += rawAbi + " (" + rawAbi + ")";
