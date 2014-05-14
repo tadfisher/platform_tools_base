@@ -23,7 +23,6 @@ import org.w3c.dom.Node;
 
 import java.io.File;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Represents a file in a resource folders.
@@ -79,10 +78,6 @@ public class ResourceFile extends DataFile<ResourceItem> {
     @NonNull
     public String getQualifiers() {
         return mQualifiers;
-    }
-
-    public void setQualifiers(@NonNull String qualifiers) {
-        mQualifiers = qualifiers;
     }
 
     @Override
