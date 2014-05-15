@@ -185,7 +185,25 @@ public class ViewInfo {
     /**
      * Returns if the ViewInfo represents part of the SystemUI, for example, the ActionBar.
      */
-    public boolean isSystemView() {
-        return false;
+    public ViewType getViewType() {
+        return ViewType.USER;
+    }
+
+    public enum ViewType {
+        // No idea what type of view it is.
+        UNKNOWN,
+        // A view added by the framework. No additional info about the view is
+        // available.
+        SYSTEM_UNKNOWN,
+        // A view that is part of the user's layout.
+        USER,
+        // The overflow menu button in the action bar.
+        ACTION_BAR_OVERFLOW,
+        // A menu item in the action bar.
+        ACTION_BAR_MENU,
+        // A menu item in the action bar overflow popup.
+        ACTION_BAR_OVERFLOW_MENU,
+        // The navigation bar buttons.
+        NAVIGATION_BAR_BACK, NAVIGATION_BAR_HOME, NAVIGATION_BAR_RECENTS
     }
 }
