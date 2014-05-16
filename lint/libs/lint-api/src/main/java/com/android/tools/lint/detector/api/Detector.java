@@ -538,6 +538,8 @@ public abstract class Detector {
     /**
      * Returns the expected speed of this detector
      *
+     * TODO: This property should move to {@link com.android.tools.lint.detector.api.Implementation}
+     *
      * @return the expected speed of this detector
      */
     @NonNull
