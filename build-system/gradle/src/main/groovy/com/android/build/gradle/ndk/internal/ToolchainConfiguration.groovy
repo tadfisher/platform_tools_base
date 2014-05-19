@@ -17,70 +17,66 @@
 package com.android.build.gradle.ndk.internal
 
 import com.android.SdkConstants
+import com.android.builder.model.NdkConfig
+import org.gradle.api.Action
 import org.gradle.api.Project
+import org.gradle.nativebinaries.toolchain.Clang
 import org.gradle.nativebinaries.toolchain.Gcc
+import org.gradle.nativebinaries.toolchain.ToolChain
 
 /**
  * Toolchain configuration for native binaries.
  */
 class ToolchainConfiguration {
 
-    private static final PLATFORM_STRING = [
-            (SdkConstants.CPU_ARCH_INTEL_ATOM) : "x86",
-            (SdkConstants.CPU_ARCH_ARM) : "arm-linux-androideabi",
-            (SdkConstants.CPU_ARCH_MIPS) : "mipsel-linux-android"
-    ]
-
-    private static final GCC_PREFIX = [
-            (SdkConstants.CPU_ARCH_INTEL_ATOM) : "i686-linux-android",
-            (SdkConstants.CPU_ARCH_ARM) : "arm-linux-androideabi",
-            (SdkConstants.CPU_ARCH_MIPS) : "mipsel-linux-android"
-    ]
-
-    private static final TOOLCHAIN_STRING = [
-            "gcc" : "",
-            "clang" : "clang3.4"
-    ]
-
     private static final String DEFAULT_TOOLCHAIN = "gcc"
-    private static final String DEFAULT_TOOLCHAIN_VERSION = "4.6"
+    private static final DEFAULT_TOOLCHAIN_VERSION = [
+            "gcc" : "4.6",
+            "clang" : "3.3"
+    ]
 
     Project project
-    NdkHelper ndkHelper
+    NdkBuilder ndkBuilder
+    NdkConfig ndkConfig
 
-    ToolchainConfiguration(Project project, NdkHelper ndkHelper) {
+    ToolchainConfiguration(Project project, NdkBuilder ndkBuilder, NdkConfig ndkConfig) {
         this.project = project
-        this.ndkHelper = ndkHelper
+        this.ndkBuilder = ndkBuilder
+        this.ndkConfig = ndkConfig
     }
 
     public void configureToolchains() {
         // Create toolchain for each architecture.  Toolchain for x86 must be created first,
         // otherwise gradle may not choose the correct toolchain for a target platform.  This is
-        // gradle always choose the first toolchain supporting a platform and there is no way to
-        // remove x86 support in GCC or Clang toolchain.
-        for (String architecture : [SdkConstants.CPU_ARCH_INTEL_ATOM, SdkConstants.CPU_ARCH_ARM]) {
-            for (String toolchain : [DEFAULT_TOOLCHAIN]) {
-                createToolchain(toolchain, DEFAULT_TOOLCHAIN_VERSION, architecture)
-            }
+        // because gradle always choose the first toolchain supporting a platform and there is no
+        // way to remove x86 support in GCC or Clang toolchain.
+
+        String toolchain = ndkConfig.getToolchain() ?: DEFAULT_TOOLCHAIN
+        String toolchainVersion = (
+                ndkConfig.getToolchainVersion() ?: DEFAULT_TOOLCHAIN_VERSION[toolchain])
+        for (String platform : [
+                SdkConstants.ABI_INTEL_ATOM,
+                SdkConstants.ABI_ARMEABI_V7A,
+                SdkConstants.ABI_ARMEABI,
+                SdkConstants.ABI_MIPS]) {
+            createToolchain(toolchain, toolchainVersion, platform)
         }
     }
 
-    static private String getPrefix(String toolchain, String architecture) {
-        if (toolchain.equals("gcc")) {
-            return GCC_PREFIX[architecture]
-        }
-        return ""
-    }
+    private void createToolchain(String toolchainName, String toolchainVersion, String platform) {
+        println toolchainName
+        println toolchainVersion
+        println platform
+        String name = NdkBuilder.getToolchainName(toolchainName, toolchainVersion, platform)
+        String bin = (ndkBuilder.getToolchainPath(toolchainName, toolchainVersion, platform).toString()
+                + "/bin")
 
-    private void createToolchain(String toolchain, String toolchainVersion, String architecture) {
-        String name = getToolchainName(toolchain, toolchainVersion, architecture)
-        String bin = getToolchainPath(toolchain, toolchainVersion, architecture).toString()
         project.model {
             toolChains {
-                "$name"(Gcc) {
-                    if (architecture.equals("arm")) {
-                        addPlatformConfiguration(new ArmPlatformConfiguration())
-                    }
+                "$name"(toolchainName.equals("gcc") ? Gcc : Clang) {
+                    addPlatformConfiguration(new DefaultPlatformConfiguration(platform))
+
+                    cCompiler.executable("gcc")
 
                     // By default, gradle will use -Xlinker to pass arguments to the linker.
                     // Removing it as it prevents -sysroot from being properly set.
@@ -93,21 +89,4 @@ class ToolchainConfiguration {
         }
     }
 
-    static private String getToolchainName(
-            String toolchain,
-            String toolchainVersion,
-            String architecture) {
-        PLATFORM_STRING[architecture] + "-" + TOOLCHAIN_STRING[toolchain] + toolchainVersion
-    }
-
-    private File getToolchainPath(String toolchain, String toolchainVersion, String architecture) {
-        File prebuiltFolder = new File(
-                ndkHelper.getNdkFolder(),
-                "toolchains/${getToolchainName(toolchain, toolchainVersion, architecture)}/prebuilt")
-
-        // This should detect the host architecture to determine the path of the prebuilt toolchain
-        // instead of assuming there is only one folder in prebuilt directory.
-        File[] toolchainFolder = prebuiltFolder.listFiles()
-        new File(toolchainFolder[0], "${getPrefix(toolchain, architecture)}/bin")
-    }
 }

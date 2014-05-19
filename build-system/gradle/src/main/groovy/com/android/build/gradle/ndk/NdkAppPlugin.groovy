@@ -23,8 +23,7 @@ import com.android.build.gradle.internal.dsl.NdkConfigDsl
 import com.android.builder.model.BuildType
 import com.android.builder.model.NdkConfig
 import com.android.build.gradle.ndk.internal.NdkConfigurationAction
-import com.android.build.gradle.ndk.internal.NdkHelper
-import com.android.build.gradle.ndk.internal.ToolchainConfiguration
+import com.android.build.gradle.ndk.internal.NdkBuilder
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskCollection
@@ -39,7 +38,7 @@ import javax.inject.Inject
 class NdkAppPlugin implements Plugin<Project> {
     protected Project project
     private NdkConfig ndkConfig
-    private NdkHelper ndkHelper
+    private NdkBuilder ndkBuilder
     private ProjectConfigurationActionContainer configurationActions
     private NdkConfigurationAction configAction
 
@@ -51,9 +50,8 @@ class NdkAppPlugin implements Plugin<Project> {
     void apply(Project project) {
         this.project = project
 
-        ndkHelper = new NdkHelper(project)
-
         ndkConfig = project.extensions.create("android_ndk", NdkConfigDsl)
+        ndkBuilder = new NdkBuilder(project, ndkConfig)
 
         project.apply plugin: 'c'
         project.apply plugin: 'cpp'
@@ -82,11 +80,8 @@ class NdkAppPlugin implements Plugin<Project> {
 
         }
 
-        configAction = new NdkConfigurationAction(ndkConfig, ndkHelper)
+        configAction = new NdkConfigurationAction(ndkConfig, ndkBuilder)
         configurationActions.add(configAction)
-
-        ToolchainConfiguration toolchainConfig = new ToolchainConfiguration(project, ndkHelper)
-        toolchainConfig.configureToolchains()
     }
 
     /**
@@ -94,9 +89,10 @@ class NdkAppPlugin implements Plugin<Project> {
      */
     public TaskCollection getNdkTasks(VariantConfiguration variantConfig) {
         project.tasks.withType(LinkSharedLibrary).matching { task ->
-            ((variantConfig.getBuildType().isDebuggable()
-                    ? task.name.contains("Debug")
-                    : task.name.contains("Release"))
+//            ((variantConfig.getBuildType().isDebuggable()
+//                    ? task.name.contains("Debug")
+//                    : task.name.contains("Release"))
+            (task.name.contains(variantConfig.getBuildType().getName().capitalize())
             && (variantConfig.getNdkConfig().getAbiFilters() == null
                     || variantConfig.getNdkConfig().getAbiFilters().contains(
                             task.targetPlatform.name)))

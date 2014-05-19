@@ -30,17 +30,21 @@ class NdkConfigurationAction implements Action<Project> {
 
 
     NdkConfig ndkConfig
-    NdkHelper ndkHelper
+    NdkBuilder ndkBuilder
 
-    NdkConfigurationAction (NdkConfig ndkConfig, NdkHelper ndkHelper) {
+    NdkConfigurationAction (NdkConfig ndkConfig, NdkBuilder ndkBuilder) {
         this.ndkConfig = ndkConfig
-        this.ndkHelper = ndkHelper
+        this.ndkBuilder = ndkBuilder
     }
 
     public void execute(Project project) {
         project.libraries {
             create(ndkConfig.getModuleName())
         }
+
+        ToolchainConfiguration toolchainConfig = (
+                new ToolchainConfiguration(project, ndkBuilder, ndkConfig))
+        toolchainConfig.configureToolchains()
 
         configureProperties(project)
     }
@@ -64,6 +68,8 @@ class NdkConfigurationAction implements Action<Project> {
 
         project.libraries.getByName(ndkConfig.getModuleName()) {
             binaries.withType(SharedLibraryBinary.class) {
+                cCompiler.define "ANDROID"
+                cppCompiler.define "ANDROID"
                 cCompiler.define "ANDROID_NDK"
                 cppCompiler.define "ANDROID_NDK"
 
@@ -71,13 +77,14 @@ class NdkConfigurationAction implements Action<Project> {
                         getOutputDirectory(project, buildType, targetPlatform),
                         "/lib" + ndkConfig.getModuleName() + ".so")
 
-                String sysroot = ndkHelper.getSysroot(targetPlatform, ndkConfig.apiLevel)
+                String sysroot = ndkBuilder.getSysroot(targetPlatform)
 
                 cCompiler.args  "--sysroot=$sysroot"
                 cppCompiler.args  "--sysroot=$sysroot"
                 linker.args "--sysroot=$sysroot"
                 FlagConfiguration flagConfig =
-                        FlagConfigurationFactory.create(buildType, targetPlatform)
+                        FlagConfigurationFactory.create(buildType, targetPlatform, ndkBuilder)
+
 
                 for (String arg : flagConfig.getCFlags()) {
                     cCompiler.args arg
@@ -93,11 +100,9 @@ class NdkConfigurationAction implements Action<Project> {
                 if (ndkConfig.getcFlags() != null) {
                     cCompiler.args ndkConfig.getcFlags()
                 }
-
                 if (ndkConfig.getCppFlags() != null) {
                     cppCompiler.args ndkConfig.getCppFlags()
                 }
-
                 for (String ldLibs : ndkConfig.getLdLibs()) {
                     linker.args "-l$ldLibs"
                 }

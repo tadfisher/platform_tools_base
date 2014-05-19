@@ -30,7 +30,9 @@ class FlagConfigurationFactory {
      * @param platform Target platform of the native binary.
      * @return A FlagConfiguration for the targeted native binary.
      */
-    public static FlagConfiguration create(BuildType buildType, Platform platform) {
-        return new GccFlagConfiguration(buildType, platform)
+    public static FlagConfiguration create(BuildType buildType, Platform platform, NdkBuilder ndkBuilder) {
+        return (ndkBuilder.getNdkConfig().getToolchain().equals("gcc")
+                ? new GccFlagConfiguration(buildType, platform)
+                : new ClangFlagConfiguration(ndkBuilder, buildType, platform))
     }
 }

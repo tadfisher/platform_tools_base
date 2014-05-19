@@ -89,33 +89,6 @@ class GccFlagConfiguration implements FlagConfiguration{
             ]
     ]
 
-    /*
-   -Wl,-soname,libsanangeles.so
--shared
---sysroot=/usr/local/google/home/chiur/dev/android-ndk-r9d/platforms/android-19/arch-arm
-/usr/local/google/home/chiur/dev/work2/tools/base/build-system/tests/ndkSanAngeles/build/ndk/arm/debug/obj/local/armeabi-v7a/objs-debug/sanangeles//usr/local/google/home/chiur/dev/work2/tools/base/build-system/tests/ndkSanAngeles/src/main/jni/app-android.o
-/usr/local/google/home/chiur/dev/work2/tools/base/build-system/tests/ndkSanAngeles/build/ndk/arm/debug/obj/local/armeabi-v7a/objs-debug/sanangeles//usr/local/google/home/chiur/dev/work2/tools/base/build-system/tests/ndkSanAngeles/src/main/jni/demo.o
-/usr/local/google/home/chiur/dev/work2/tools/base/build-system/tests/ndkSanAngeles/build/ndk/arm/debug/obj/local/armeabi-v7a/objs-debug/sanangeles//usr/local/google/home/chiur/dev/work2/tools/base/build-system/tests/ndkSanAngeles/src/main/jni/importgl.o
--lgcc
--no-canonical-prefixes
--march=armv7-a
--Wl,--fix-cortex-a8
-
--Wl,--no-undefined
--Wl,-z,noexecstack
--Wl,-z,relro
--Wl,-z,now
-
--L/usr/local/google/home/chiur/dev/android-ndk-r9d/platforms/android-19/arch-arm/usr/lib
--lGLESv1_CM
--ldl
--llog
--lc
--lm
--o
-/usr/local/google/home/chiur/dev/work2/tools/base/build-system/tests/ndkSanAngeles/build/ndk/arm/debug/obj/local/armeabi-v7a/libsanangeles.so
-*/
-
     private static final List<String> LDFLAGS = []
 
     private Platform platform

@@ -41,6 +41,7 @@ public class NdkConfigDsl implements NdkConfig, Serializable {
     private Set<String> ldLibs;
     private Set<String> abiFilters;
     private String toolchain;
+    private String toolchainVersion;
     private String stl;
 
     public NdkConfigDsl() {
@@ -90,6 +91,19 @@ public class NdkConfigDsl implements NdkConfig, Serializable {
     public void setToolchain(String toolchain) {
         this.toolchain = toolchain;
     }
+
+    /**
+     * The toolchain version.
+     */
+    @Nullable
+    public String getToolchainVersion() {
+        return toolchainVersion;
+    }
+
+    public void setToolchainVersion(String toolchainVersion) {
+        this.toolchainVersion = toolchainVersion;
+    }
+
     @Override
     @Input @Optional
     public String getcFlags() {
