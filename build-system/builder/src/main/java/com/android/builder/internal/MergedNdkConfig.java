@@ -29,22 +29,16 @@ import java.util.Set;
 public class MergedNdkConfig implements NdkConfig {
 
     private String moduleName;
-    private int apiLevel;
-    private String toolchain;
     private String cFlags;
-    private String cppFlags;
     private Set<String> ldLibs;
     private Set<String> abiFilters;
     private String stl;
-    private boolean renderscriptNdkMode;
 
     public void reset() {
         moduleName = null;
         cFlags = null;
-        cppFlags = null;
         ldLibs = null;
         abiFilters = null;
-        toolchain = null;
     }
 
     @Override
@@ -55,20 +49,8 @@ public class MergedNdkConfig implements NdkConfig {
 
     @Override
     @Nullable
-    public int getApiLevel() {
-        return apiLevel;
-    }
-
-    @Override
-    @Nullable
     public String getcFlags() {
         return cFlags;
-    }
-
-    @Override
-    @Nullable
-    public String getCppFlags() {
-        return cppFlags;
     }
 
     @Override
@@ -85,20 +67,8 @@ public class MergedNdkConfig implements NdkConfig {
 
     @Override
     @Nullable
-    public String getToolchain() {
-        return toolchain;
-    }
-
-    @Override
-    @Nullable
     public String getStl() {
         return stl;
-    }
-
-    @Override
-    @Nullable
-    public boolean getRenderscriptNdkMode() {
-        return renderscriptNdkMode;
     }
 
     public void append(@NonNull NdkConfig ndkConfig) {
@@ -106,8 +76,6 @@ public class MergedNdkConfig implements NdkConfig {
         if (ndkConfig.getModuleName() != null) {
             moduleName = ndkConfig.getModuleName();
         }
-
-        apiLevel = ndkConfig.getApiLevel();
 
         if (ndkConfig.getStl() != null) {
             stl = ndkConfig.getStl();
@@ -123,22 +91,10 @@ public class MergedNdkConfig implements NdkConfig {
             abiFilters.addAll(ndkConfig.getAbiFilters());
         }
 
-        if (toolchain == null) {
-            toolchain = ndkConfig.getToolchain();
-        } else if (ndkConfig.getToolchain() != null) {
-            toolchain = toolchain + " " + ndkConfig.getToolchain();
-        }
-
         if (cFlags == null) {
             cFlags = ndkConfig.getcFlags();
         } else if (ndkConfig.getcFlags() != null) {
             cFlags = cFlags + " " + ndkConfig.getcFlags();
-        }
-
-        if (cppFlags == null) {
-            cppFlags = ndkConfig.getCppFlags();
-        } else if (ndkConfig.getCppFlags() != null) {
-            cppFlags = cppFlags + " " + ndkConfig.getCppFlags();
         }
 
         if (ndkConfig.getLdLibs() != null) {

@@ -699,14 +699,14 @@ public abstract class BasePlugin {
         }
         renderscriptTask.conventionMapping.ndkConfig = { config.ndkConfig }
 
-        println "Created renderscriptTask"
-        if (project.plugins.hasPlugin(NdkAppPlugin.class)) {
-            NdkAppPlugin ndkPlugin = project.plugins.getPlugin(NdkAppPlugin.class)
-//            ndkPlugin.getNdkTasks(config).dependsOn(renderscriptTask)
-            println "Adding RS include flag"
-            ndkPlugin.getNdkExtension().cFlags "-I${renderscriptTask.getSourceOutputDir()}"
-            ndkPlugin.getNdkExtension().cppFlags "-I${renderscriptTask.getSourceOutputDir()}"
-        }
+//        println "Created renderscriptTask"
+//        if (project.plugins.hasPlugin(NdkAppPlugin.class)) {
+//            NdkAppPlugin ndkPlugin = project.plugins.getPlugin(NdkAppPlugin.class)
+////            ndkPlugin.getNdkTasks(config).dependsOn(renderscriptTask)
+//            println "Adding RS include flag"
+//            ndkPlugin.getNdkExtension().cFlags "-I${renderscriptTask.getSourceOutputDir()}"
+//            ndkPlugin.getNdkExtension().cppFlags "-I${renderscriptTask.getSourceOutputDir()}"
+//        }
     }
 
     public void createMergeResourcesTask(@NonNull BaseVariantData variantData,

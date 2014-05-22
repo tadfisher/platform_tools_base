@@ -36,14 +36,9 @@ public class NdkConfigDsl implements NdkConfig, Serializable {
 
     private String moduleName;
     private String cFlags;
-    private String cppFlags;
-    private int apiLevel;
     private Set<String> ldLibs;
     private Set<String> abiFilters;
-    private String toolchain;
-    private String toolchainVersion;
     private String stl;
-    private boolean renderscriptNdkMode;
 
     public NdkConfigDsl() {
     }
@@ -51,13 +46,8 @@ public class NdkConfigDsl implements NdkConfig, Serializable {
     public NdkConfigDsl(@NonNull NdkConfigDsl ndkConfig) {
         moduleName = ndkConfig.moduleName;
         cFlags = ndkConfig.cFlags;
-        cppFlags = ndkConfig.cppFlags;
-        apiLevel = ndkConfig.apiLevel;
         setLdLibs(ndkConfig.ldLibs);
         setAbiFilters(ndkConfig.abiFilters);
-        toolchain = ndkConfig.toolchain;
-        toolchainVersion = ndkConfig.toolchainVersion;
-        stl = ndkConfig.stl;
     }
 
     @Override
@@ -72,62 +62,12 @@ public class NdkConfigDsl implements NdkConfig, Serializable {
 
     @Override
     @Input @Optional
-    public int getApiLevel() {
-        return apiLevel;
-    }
-
-    public void apiLevel(int apiLevel) {
-        this.apiLevel = apiLevel;
-    }
-
-    public void apiLevel(String apiLevel) {
-        this.apiLevel = Integer.parseInt(apiLevel);
-    }
-
-    public void setApiLevel(int apiLevel) {
-        this.apiLevel = apiLevel;
-    }
-
-    @Override
-    @Input @Optional
-    public String getToolchain() {
-        return toolchain;
-    }
-
-    public void setToolchain(String toolchain) {
-        this.toolchain = toolchain;
-    }
-
-    /**
-     * The toolchain version.
-     */
-    @Nullable
-    public String getToolchainVersion() {
-        return toolchainVersion;
-    }
-
-    public void setToolchainVersion(String toolchainVersion) {
-        this.toolchainVersion = toolchainVersion;
-    }
-
-    @Override
-    @Input @Optional
     public String getcFlags() {
         return cFlags;
     }
 
     public void setcFlags(String cFlags) {
         this.cFlags = cFlags;
-    }
-
-    @Override
-    @Input @Optional
-    public String getCppFlags() {
-        return cppFlags;
-    }
-
-    public void setCppFlags(String cppFlags) {
-        this.cppFlags = cppFlags;
     }
 
     @Override
@@ -221,15 +161,5 @@ public class NdkConfigDsl implements NdkConfig, Serializable {
 
     public void setStl(String stl) {
         this.stl = stl;
-    }
-
-    @Override
-    @Nullable
-    public boolean getRenderscriptNdkMode() {
-        return renderscriptNdkMode;
-    }
-
-    public void setRenderscriptNdkMode(boolean renderscriptNdkMode) {
-        this.renderscriptNdkMode = renderscriptNdkMode;
     }
 }

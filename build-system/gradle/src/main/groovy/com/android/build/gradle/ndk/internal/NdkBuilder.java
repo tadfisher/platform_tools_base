@@ -38,7 +38,7 @@ import java.util.Map;
 import java.util.Properties;
 
 public class NdkBuilder {
-    private NdkExtension ndkConfig;
+    private NdkExtension ndkExtension;
     private File ndkFolder;
 
 
@@ -53,9 +53,9 @@ public class NdkBuilder {
             "clang", "clang");
 
 
-    public NdkBuilder(Project project, NdkExtension ndkConfig) {
+    public NdkBuilder(Project project, NdkExtension ndkExtension) {
         ndkFolder = findNdkDir(project);
-        this.ndkConfig = ndkConfig;
+        this.ndkExtension = ndkExtension;
     }
 
     @Nullable
@@ -64,14 +64,14 @@ public class NdkBuilder {
     }
 
     NdkExtension getNdkExtension() {
-        return ndkConfig;
+        return ndkExtension;
     }
 
     /**
      * Returns the sysroot directory for the toolchain.
      */
     String getSysroot(Platform targetPlatform) {
-        return ndkFolder + "/platforms/android-" + ndkConfig.getApiLevel()
+        return ndkFolder + "/platforms/android-" + ndkExtension.getApiLevel()
                 + "/arch-" + targetPlatform.getArchitecture().getName();
     }
 
