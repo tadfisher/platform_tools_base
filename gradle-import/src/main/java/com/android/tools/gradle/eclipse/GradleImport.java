@@ -49,7 +49,11 @@ import com.android.utils.SdkUtils;
 import com.android.utils.StdLogger;
 import com.google.common.base.Charsets;
 import com.google.common.base.Predicate;
-import com.google.common.collect.*;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import com.google.common.primitives.Bytes;
@@ -1271,14 +1275,8 @@ public class GradleImport {
 
     Document getXmlDocument(File file, boolean namespaceAware) throws IOException {
         String xml = Files.toString(file, UTF_8);
-
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        InputSource is = new InputSource(new StringReader(xml));
-        factory.setNamespaceAware(namespaceAware);
-        factory.setValidating(false);
         try {
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            return builder.parse(is);
+            return XmlUtils.parseDocument(xml, namespaceAware);
         } catch (Exception e) {
             reportError(null, file, "Invalid XML file: " + file.getPath() + ":\n"
                     + e.getMessage());
