@@ -698,6 +698,15 @@ public abstract class BasePlugin {
             project.file("$project.buildDir/rs/${variantData.variantConfiguration.dirName}/lib")
         }
         renderscriptTask.conventionMapping.ndkConfig = { config.ndkConfig }
+
+        println "Created renderscriptTask"
+        if (project.plugins.hasPlugin(NdkAppPlugin.class)) {
+            NdkAppPlugin ndkPlugin = project.plugins.getPlugin(NdkAppPlugin.class)
+//            ndkPlugin.getNdkTasks(config).dependsOn(renderscriptTask)
+            println "Adding RS include flag"
+            ndkPlugin.getNdkExtension().cFlags "-I${renderscriptTask.getSourceOutputDir()}"
+            ndkPlugin.getNdkExtension().cppFlags "-I${renderscriptTask.getSourceOutputDir()}"
+        }
     }
 
     public void createMergeResourcesTask(@NonNull BaseVariantData variantData,
@@ -1580,7 +1589,7 @@ public abstract class BasePlugin {
                 "package${variantData.variantConfiguration.fullName.capitalize()}",
                 PackageApplication)
         variantData.packageApplicationTask = packageApp
-        packageApp.dependsOn variantData.processResourcesTask, dexTask, variantData.processJavaResourcesTask //, variantData.ndkCompileTask
+        packageApp.dependsOn variantData.processResourcesTask, dexTask, variantData.processJavaResourcesTask
 
         // Add dependencies on NDK tasks if NDK plugin is applied.
         if (project.plugins.hasPlugin(NdkAppPlugin.class)) {

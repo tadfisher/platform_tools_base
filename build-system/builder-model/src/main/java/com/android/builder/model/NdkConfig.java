@@ -73,4 +73,10 @@ public interface NdkConfig {
      */
     @Nullable
     public String getStl();
+
+    /**
+     * If Renderscript is used
+     */
+    @Nullable
+    public boolean getRenderscriptNdkMode();
 }

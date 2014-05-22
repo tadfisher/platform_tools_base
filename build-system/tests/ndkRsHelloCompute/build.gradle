@@ -13,6 +13,13 @@ android_ndk {
     moduleName "hellocomputendk"
     apiLevel 19
     stl "stlport_shared"
+    renderscriptNdkMode true
+
+    sourceSets {
+        main {
+            srcDirs "build/source/rs/arm/debug"
+        }
+    }
 }
 
 apply plugin: 'android'
@@ -23,7 +30,6 @@ android {
 
     defaultConfig {
         renderscriptNdkMode true
-
     }
 
     buildTypes.debug.jniDebugBuild true

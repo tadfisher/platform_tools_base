@@ -20,7 +20,7 @@ import static com.android.SdkConstants.FN_LOCAL_PROPERTIES;
 
 import com.android.SdkConstants;
 import com.android.annotations.Nullable;
-import com.android.builder.model.NdkConfig;
+import com.android.build.gradle.ndk.NdkExtension;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Closeables;
@@ -38,7 +38,7 @@ import java.util.Map;
 import java.util.Properties;
 
 public class NdkBuilder {
-    private NdkConfig ndkConfig;
+    private NdkExtension ndkConfig;
     private File ndkFolder;
 
 
@@ -52,14 +52,8 @@ public class NdkBuilder {
             "gcc", "",
             "clang", "clang");
 
-    private static final Map<String, String> GCC_PREFIX = ImmutableMap.of(
-            SdkConstants.ABI_INTEL_ATOM, "i686-linux-android",
-            SdkConstants.ABI_ARMEABI_V7A, "arm-linux-androideabi",
-            SdkConstants.ABI_ARMEABI, "arm-linux-androideabi",
-            SdkConstants.ABI_MIPS, "mipsel-linux-android");
 
-
-    public NdkBuilder(Project project, NdkConfig ndkConfig) {
+    public NdkBuilder(Project project, NdkExtension ndkConfig) {
         ndkFolder = findNdkDir(project);
         this.ndkConfig = ndkConfig;
     }
@@ -69,7 +63,7 @@ public class NdkBuilder {
         return ndkFolder;
     }
 
-    NdkConfig getNdkConfig() {
+    NdkExtension getNdkExtension() {
         return ndkConfig;
     }
 
@@ -126,13 +120,6 @@ public class NdkBuilder {
             String platform) {
         return PLATFORM_STRING.get(platform) + "-" + TOOLCHAIN_STRING.get(toolchain)
                 + toolchainVersion;
-    }
-
-    private static String getPrefix(String toolchain, String platform) {
-        if (toolchain.equals("gcc")) {
-            return GCC_PREFIX.get(platform);
-        }
-        return "";
     }
 
 

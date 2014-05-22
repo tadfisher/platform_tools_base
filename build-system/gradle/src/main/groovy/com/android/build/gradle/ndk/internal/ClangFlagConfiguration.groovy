@@ -36,6 +36,49 @@ class ClangFlagConfiguration implements FlagConfiguration{
             (SdkConstants.ABI_MIPS) : "mips-none-linux-android",
     ]
 
+    private static final def PLATFORM_CFLAGS = [
+            (SdkConstants.ABI_ARMEABI) : [
+                    "-fpic",
+                    "-mthumb",
+                    "-Os",
+                    "-fno-strict-aliasing",
+                    "-finline-limit=64",
+                    "-march=armv5te",
+                    "-mtune=xscale",
+                    "-msoft-float",
+            ],
+            (SdkConstants.ABI_ARMEABI_V7A) : [
+                    "-fpic",
+                    "-Os",
+                    "-fno-strict-aliasing",
+                    "-finline-limit=64",
+                    "-march=armv7-a",
+                    "-mfloat-abi=softfp",
+                    "-mfpu=vfpv3-d16",
+                    "-mthumb",
+            ],
+            (SdkConstants.ABI_INTEL_ATOM) : [
+                    "-O2",
+                    "-fstrict-aliasing",
+                    "-funswitch-loops",
+                    "-finline-limit=300",
+
+            ],
+            (SdkConstants.ABI_MIPS) : [
+                    "-fpic",
+                    "-fno-strict-aliasing",
+                    "-finline-functions",
+                    "-fmessage-length=0",
+                    "-fno-inline-functions-called-once",
+                    "-fgcse-after-reload",
+                    "-frerun-cse-after-loop",
+                    "-frename-registers",
+                    "-O2",
+                    "-funswitch-loops",
+                    "-finline-limit=300",
+            ]
+    ]
+
     ClangFlagConfiguration(NdkBuilder ndkBuilder, BuildType buildType, Platform platform) {
         this.ndkBuilder = ndkBuilder
         this.isDebugBuild = (buildType.name.equals(BuilderConstants.DEBUG))
@@ -43,26 +86,22 @@ class ClangFlagConfiguration implements FlagConfiguration{
     }
 
     List<String> getCFlags() {
-        [
+         def toolchainFlags = [
                 "-gcc-toolchain",
                 ndkBuilder.getToolchainPath("gcc", "4.8", platform.name),
-//                "/usr/local/google/home/chiur/dev/android-ndk-r9d/toolchains/arm-linux-androideabi-4.8/prebuilt/linux-x86_64",
                 "-target",
-                TARGET[platform.name],
-                "-march=armv7-a",
-                "-mfloat-abi=softfp",
-                "-mfpu=vfpv3-d16",
-                "-mthumb",
-        ]
+                TARGET[platform.name]]
+         toolchainFlags + PLATFORM_CFLAGS[platform.name]
     }
+
     List<String> getCppFlags() {
         getCFlags()
     }
+
     List<String> getLdFlags() {
         [
                 "-gcc-toolchain",
                 ndkBuilder.getToolchainPath("gcc", "4.8", platform.name),
-//                "/usr/local/google/home/chiur/dev/android-ndk-r9d/toolchains/arm-linux-androideabi-4.8/prebuilt/linux-x86_64",
                 "-target",
                 TARGET[platform.name],
         ]

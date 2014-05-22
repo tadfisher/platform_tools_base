@@ -16,7 +16,9 @@
 
 package com.android.build.gradle.ndk.internal
 
-import com.android.builder.model.NdkConfig
+import com.android.build.gradle.api.AndroidSourceDirectorySet
+import com.android.build.gradle.ndk.NdkExtension
+import com.android.builder.BuilderConstants
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.nativebinaries.BuildType
@@ -27,46 +29,46 @@ import org.gradle.nativebinaries.platform.Platform
  * Configure settings used by the native binaries.
  */
 class NdkConfigurationAction implements Action<Project> {
-
-
-    NdkConfig ndkConfig
+    NdkExtension ndkExtension
     NdkBuilder ndkBuilder
 
-    NdkConfigurationAction (NdkConfig ndkConfig, NdkBuilder ndkBuilder) {
-        this.ndkConfig = ndkConfig
+    NdkConfigurationAction (NdkExtension ndkExtension, NdkBuilder ndkBuilder) {
+        this.ndkExtension = ndkExtension
         this.ndkBuilder = ndkBuilder
     }
 
     public void execute(Project project) {
         project.libraries {
-            create(ndkConfig.getModuleName())
+            create(ndkExtension.getModuleName())
         }
 
         ToolchainConfiguration toolchainConfig = (
-                new ToolchainConfiguration(project, ndkBuilder, ndkConfig))
+                new ToolchainConfiguration(project, ndkBuilder, ndkExtension))
         toolchainConfig.configureToolchains()
 
         configureProperties(project)
     }
 
     void configureProperties(Project project) {
-        project.sources.getByName(ndkConfig.getModuleName()) {
+        project.sources.getByName(ndkExtension.getModuleName()) {
             c {
                 source {
-                    srcDir "src/main/jni"
+//                    srcDir "src/main/jni"
+                    setSrcDirs(ndkExtension.getSourceSets().getByName(BuilderConstants.MAIN).getSrcDirs())
                     include "**/*.c"
                 }
             }
             cpp {
                 source {
-                    srcDir "src/main/jni"
+//                    srcDir "src/main/jni"
+                    setSrcDirs(ndkExtension.getSourceSets().getByName(BuilderConstants.MAIN).getSrcDirs())
                     include "**/*.cpp"
                     include "**/*.cc"
                 }
             }
         }
 
-        project.libraries.getByName(ndkConfig.getModuleName()) {
+        project.libraries.getByName(ndkExtension.getModuleName()) {
             binaries.withType(SharedLibraryBinary.class) {
                 cCompiler.define "ANDROID"
                 cppCompiler.define "ANDROID"
@@ -75,7 +77,7 @@ class NdkConfigurationAction implements Action<Project> {
 
                 sharedLibraryFile = new File(
                         getOutputDirectory(project, buildType, targetPlatform),
-                        "/lib" + ndkConfig.getModuleName() + ".so")
+                        "/lib" + ndkExtension.getModuleName() + ".so")
 
                 String sysroot = ndkBuilder.getSysroot(targetPlatform)
 
@@ -84,6 +86,19 @@ class NdkConfigurationAction implements Action<Project> {
                 linker.args "--sysroot=$sysroot"
                 FlagConfiguration flagConfig =
                         FlagConfigurationFactory.create(buildType, targetPlatform, ndkBuilder)
+
+                if (ndkExtension.getRenderscriptNdkMode()) {
+                    cCompiler.args "-I$sysroot/usr/include/rs"
+                    cCompiler.args "-I$sysroot/usr/include/rs/cpp"
+                    cppCompiler.args "-I$sysroot/usr/include/rs"
+                    cppCompiler.args "-I$sysroot/usr/include/rs/cpp"
+//                    cppCompiler.args "-I$project.buildDir/source/rs/$targetPlatform.name/$buildType.name"
+                    linker.args "-L$sysroot/usr/lib/rs"
+                }
+
+                // Currently do not support customization of stl library.
+                cppCompiler.args "-I${ndkBuilder.getNdkFolder()}/sources/cxx-stl/stlport/stlport"
+                cppCompiler.args "-I${ndkBuilder.getNdkFolder()}/sources/cxx-stl//gabi++/include"
 
 
                 for (String arg : flagConfig.getCFlags()) {
@@ -96,14 +111,14 @@ class NdkConfigurationAction implements Action<Project> {
                     linker.args arg
                 }
 
-                // Add flags defined in NdkConfig
-                if (ndkConfig.getcFlags() != null) {
-                    cCompiler.args ndkConfig.getcFlags()
+                // Add flags defined in NdkExtension
+                if (ndkExtension.getcFlags() != null) {
+                    cCompiler.args ndkExtension.getcFlags()
                 }
-                if (ndkConfig.getCppFlags() != null) {
-                    cppCompiler.args ndkConfig.getCppFlags()
+                if (ndkExtension.getCppFlags() != null) {
+                    cppCompiler.args ndkExtension.getCppFlags()
                 }
-                for (String ldLibs : ndkConfig.getLdLibs()) {
+                for (String ldLibs : ndkExtension.getLdLibs()) {
                     linker.args "-l$ldLibs"
                 }
             }
@@ -115,6 +130,6 @@ class NdkConfigurationAction implements Action<Project> {
      */
     public File getOutputDirectory(Project project, BuildType buildType, Platform platform) {
         new File("$project.buildDir/binaries/",
-                "${ndkConfig.getModuleName()}SharedLibrary/$buildType.name/lib/$platform.name")
+                "${ndkExtension.getModuleName()}SharedLibrary/$buildType.name/lib/$platform.name")
     }
 }

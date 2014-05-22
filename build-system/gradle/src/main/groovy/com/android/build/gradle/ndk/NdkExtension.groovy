@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.dsl;
+package com.android.build.gradle.ndk
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.builder.model.NdkConfig;
-import com.google.common.collect.Sets;
+import com.android.annotations.Nullable
+import com.android.build.gradle.api.AndroidSourceDirectorySet;
+import com.google.common.collect.Sets
+import org.gradle.api.Action
+import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
 
@@ -29,39 +31,24 @@ import java.util.Collections;
 import java.util.Set;
 
 /**
- * Implementation of NdkConfig to be used in the gradle DSL.
+ * Implementation of NdkExtension to be used in the gradle DSL.
  */
-public class NdkConfigDsl implements NdkConfig, Serializable {
-    private static final long serialVersionUID = 1L;
-
+public class NdkExtension {
     private String moduleName;
     private String cFlags;
     private String cppFlags;
     private int apiLevel;
     private Set<String> ldLibs;
-    private Set<String> abiFilters;
     private String toolchain;
     private String toolchainVersion;
     private String stl;
     private boolean renderscriptNdkMode;
+    final NamedDomainObjectContainer<AndroidSourceDirectorySet> sourceSetsContainer
 
-    public NdkConfigDsl() {
+    public NdkExtension(NamedDomainObjectContainer<AndroidSourceDirectorySet> sourceSetsContainer) {
+        this.sourceSetsContainer = sourceSetsContainer
     }
 
-    public NdkConfigDsl(@NonNull NdkConfigDsl ndkConfig) {
-        moduleName = ndkConfig.moduleName;
-        cFlags = ndkConfig.cFlags;
-        cppFlags = ndkConfig.cppFlags;
-        apiLevel = ndkConfig.apiLevel;
-        setLdLibs(ndkConfig.ldLibs);
-        setAbiFilters(ndkConfig.abiFilters);
-        toolchain = ndkConfig.toolchain;
-        toolchainVersion = ndkConfig.toolchainVersion;
-        stl = ndkConfig.stl;
-    }
-
-    @Override
-    @Input @Optional
     public String getModuleName() {
         return moduleName;
     }
@@ -70,8 +57,6 @@ public class NdkConfigDsl implements NdkConfig, Serializable {
         this.moduleName = moduleName;
     }
 
-    @Override
-    @Input @Optional
     public int getApiLevel() {
         return apiLevel;
     }
@@ -88,8 +73,6 @@ public class NdkConfigDsl implements NdkConfig, Serializable {
         this.apiLevel = apiLevel;
     }
 
-    @Override
-    @Input @Optional
     public String getToolchain() {
         return toolchain;
     }
@@ -110,8 +93,6 @@ public class NdkConfigDsl implements NdkConfig, Serializable {
         this.toolchainVersion = toolchainVersion;
     }
 
-    @Override
-    @Input @Optional
     public String getcFlags() {
         return cFlags;
     }
@@ -120,8 +101,6 @@ public class NdkConfigDsl implements NdkConfig, Serializable {
         this.cFlags = cFlags;
     }
 
-    @Override
-    @Input @Optional
     public String getCppFlags() {
         return cppFlags;
     }
@@ -130,14 +109,12 @@ public class NdkConfigDsl implements NdkConfig, Serializable {
         this.cppFlags = cppFlags;
     }
 
-    @Override
-    @Input @Optional
     public Set<String> getLdLibs() {
         return ldLibs;
     }
 
     @NonNull
-    public NdkConfigDsl ldLibs(String lib) {
+    public NdkExtension ldLibs(String lib) {
         if (ldLibs == null) {
             ldLibs = Sets.newHashSet();
         }
@@ -146,7 +123,7 @@ public class NdkConfigDsl implements NdkConfig, Serializable {
     }
 
     @NonNull
-    public NdkConfigDsl ldLibs(String... libs) {
+    public NdkExtension ldLibs(String... libs) {
         if (ldLibs == null) {
             ldLibs = Sets.newHashSetWithExpectedSize(libs.length);
         }
@@ -155,65 +132,22 @@ public class NdkConfigDsl implements NdkConfig, Serializable {
     }
 
     @NonNull
-    public NdkConfigDsl setLdLibs(Collection<String> libs) {
+    public NdkExtension setLdLibs(Collection<String> libs) {
         if (libs != null) {
-            if (abiFilters == null) {
-                abiFilters = Sets.newHashSetWithExpectedSize(libs.size());
+            if (ldLibs == null) {
+                ldLibs = Sets.newHashSetWithExpectedSize(libs.size());
             } else {
-                abiFilters.clear();
+                ldLibs.clear();
             }
             for (String filter : libs) {
-                abiFilters.add(filter);
+                ldLibs.add(filter);
             }
         } else {
-            abiFilters = null;
+            ldLibs = null;
         }
         return this;
     }
 
-
-    @Override
-    @Input @Optional
-    public Set<String> getAbiFilters() {
-        return abiFilters;
-    }
-
-    @NonNull
-    public NdkConfigDsl abiFilter(String filter) {
-        if (abiFilters == null) {
-            abiFilters = Sets.newHashSetWithExpectedSize(2);
-        }
-        abiFilters.add(filter);
-        return this;
-    }
-
-    @NonNull
-    public NdkConfigDsl abiFilters(String... filters) {
-        if (abiFilters == null) {
-            abiFilters = Sets.newHashSetWithExpectedSize(2);
-        }
-        Collections.addAll(abiFilters, filters);
-        return this;
-    }
-
-    @NonNull
-    public NdkConfigDsl setAbiFilters(Collection<String> filters) {
-        if (filters != null) {
-            if (abiFilters == null) {
-                abiFilters = Sets.newHashSetWithExpectedSize(filters.size());
-            } else {
-                abiFilters.clear();
-            }
-            for (String filter : filters) {
-                abiFilters.add(filter);
-            }
-        } else {
-            abiFilters = null;
-        }
-        return this;
-    }
-
-    @Override
     @Nullable
     public String getStl() {
         return stl;
@@ -223,7 +157,6 @@ public class NdkConfigDsl implements NdkConfig, Serializable {
         this.stl = stl;
     }
 
-    @Override
     @Nullable
     public boolean getRenderscriptNdkMode() {
         return renderscriptNdkMode;
@@ -231,5 +164,13 @@ public class NdkConfigDsl implements NdkConfig, Serializable {
 
     public void setRenderscriptNdkMode(boolean renderscriptNdkMode) {
         this.renderscriptNdkMode = renderscriptNdkMode;
+    }
+
+    void sourceSets(Action<NamedDomainObjectContainer<AndroidSourceDirectorySet>> action) {
+        action.execute(sourceSetsContainer)
+    }
+
+    NamedDomainObjectContainer<AndroidSourceDirectorySet> getSourceSets() {
+        sourceSetsContainer
     }
 }

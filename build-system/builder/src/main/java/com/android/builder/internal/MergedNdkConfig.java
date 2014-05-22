@@ -36,6 +36,7 @@ public class MergedNdkConfig implements NdkConfig {
     private Set<String> ldLibs;
     private Set<String> abiFilters;
     private String stl;
+    private boolean renderscriptNdkMode;
 
     public void reset() {
         moduleName = null;
@@ -92,6 +93,12 @@ public class MergedNdkConfig implements NdkConfig {
     @Nullable
     public String getStl() {
         return stl;
+    }
+
+    @Override
+    @Nullable
+    public boolean getRenderscriptNdkMode() {
+        return renderscriptNdkMode;
     }
 
     public void append(@NonNull NdkConfig ndkConfig) {

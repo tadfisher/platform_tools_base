@@ -16,18 +16,21 @@
 package com.android.build.gradle.ndk
 
 import com.android.SdkConstants
+import com.android.build.gradle.api.AndroidSourceDirectorySet
+import com.android.build.gradle.internal.api.DefaultAndroidSourceDirectorySet
+import com.android.build.gradle.ndk.internal.NdkExtensionConventionAction
 import com.android.builder.BuilderConstants
 import com.android.builder.VariantConfiguration
 
-import com.android.build.gradle.internal.dsl.NdkConfigDsl
 import com.android.builder.model.BuildType
-import com.android.builder.model.NdkConfig
 import com.android.build.gradle.ndk.internal.NdkConfigurationAction
 import com.android.build.gradle.ndk.internal.NdkBuilder
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskCollection
 import org.gradle.configuration.project.ProjectConfigurationActionContainer
+import org.gradle.internal.Actions
+import org.gradle.internal.reflect.Instantiator
 import org.gradle.nativebinaries.tasks.LinkSharedLibrary
 
 import javax.inject.Inject
@@ -37,21 +40,37 @@ import javax.inject.Inject
  */
 class NdkAppPlugin implements Plugin<Project> {
     protected Project project
-    private NdkConfig ndkConfig
+    private NdkExtension extension
     private NdkBuilder ndkBuilder
     private ProjectConfigurationActionContainer configurationActions
     private NdkConfigurationAction configAction
 
+    protected Instantiator instantiator
+
     @Inject
-    public NdkAppPlugin(ProjectConfigurationActionContainer configurationActions) {
+    public NdkAppPlugin(
+            ProjectConfigurationActionContainer configurationActions,
+            Instantiator instantiator) {
         this.configurationActions = configurationActions
+        this.instantiator = instantiator
+    }
+
+    public Instantiator getInstantiator() {
+        instantiator
+    }
+
+    public NdkExtension getNdkExtension() {
+        extension
     }
 
     void apply(Project project) {
         this.project = project
 
-        ndkConfig = project.extensions.create("android_ndk", NdkConfigDsl)
-        ndkBuilder = new NdkBuilder(project, ndkConfig)
+        def sourceSetContainers = project.container(AndroidSourceDirectorySet) { name ->
+            instantiator.newInstance(DefaultAndroidSourceDirectorySet, name, project.fileResolver)
+        }
+        extension = project.extensions.create("android_ndk", NdkExtension, sourceSetContainers)
+        ndkBuilder = new NdkBuilder(project, extension)
 
         project.apply plugin: 'c'
         project.apply plugin: 'cpp'
@@ -80,8 +99,9 @@ class NdkAppPlugin implements Plugin<Project> {
 
         }
 
-        configAction = new NdkConfigurationAction(ndkConfig, ndkBuilder)
-        configurationActions.add(configAction)
+        configurationActions.add(Actions.composite(
+                new NdkExtensionConventionAction(),
+                new NdkConfigurationAction(extension, ndkBuilder)))
     }
 
     /**
@@ -104,7 +124,7 @@ class NdkAppPlugin implements Plugin<Project> {
      */
     public File getOutputDirectory(VariantConfiguration variantConfig) {
         BuildType buildType = variantConfig.buildType
-        new File("$project.buildDir/binaries/${ndkConfig.getModuleName()}SharedLibrary/",
+        new File("$project.buildDir/binaries/${extension.getModuleName()}SharedLibrary/",
                 (variantConfig.type == VariantConfiguration.Type.TEST) ? "test/" : ""
                         + "$buildType.name/lib")
     }
