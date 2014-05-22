@@ -19,9 +19,17 @@ package com.android.manifmerger;
 import static com.android.manifmerger.Actions.ActionType;
 
 import com.android.annotations.NonNull;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -51,9 +59,40 @@ public class PostValidator {
 
         Preconditions.checkNotNull(xmlDocument);
         Preconditions.checkNotNull(mergingReport);
+        reOrderElements(xmlDocument.getRootNode());
         validate(xmlDocument.getRootNode(),
                 mergingReport.getActionRecorder().build(),
                 mergingReport);
+    }
+
+    /**
+     * Reorder child elements. So far, only <application> can be moved last in the list of children
+     * of the <manifest> element.
+     *
+     * @param xmlElement the root element of the manifest document.
+     */
+    private static void reOrderElements(XmlElement xmlElement) {
+
+        // look up application element first.
+        Optional<XmlElement> element = xmlElement
+                .getNodeByTypeAndKey(ManifestModel.NodeTypes.APPLICATION, null);
+        if (!element.isPresent()) {
+            return;
+        }
+        XmlElement applicationElement = element.get();
+
+        // remove the application element and add it back, it will be automatically placed last.
+        List<Node> comments = XmlElement.getLeadingComments(applicationElement.getXml());
+
+        // also move the application's comments if any.
+        for (Node comment : comments) {
+            xmlElement.getXml().removeChild(comment);
+            xmlElement.getXml().appendChild(comment);
+        }
+        // remove from its current location and add it back right before the
+        // application element.
+        xmlElement.getXml().removeChild(applicationElement.getXml());
+        xmlElement.getXml().appendChild(applicationElement.getXml());
     }
 
     /**

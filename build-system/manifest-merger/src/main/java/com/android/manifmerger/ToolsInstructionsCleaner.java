@@ -25,6 +25,7 @@ import com.android.annotations.concurrency.Immutable;
 import com.android.utils.ILogger;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -119,12 +120,16 @@ public class ToolsInstructionsCleaner {
             }
         }
         NodeList childNodes = element.getChildNodes();
+        ImmutableList.Builder<Element> childElements = ImmutableList.builder();
         for (int i = 0; i < childNodes.getLength(); i++) {
             Node node = childNodes.item(i);
             if (node.getNodeType() == Node.ELEMENT_NODE) {
-                if (cleanToolsReferences((Element) node, logger) == ERROR) {
-                    return ERROR;
-                }
+                childElements.add((Element) node);
+            }
+        }
+        for (Element childElement : childElements.build()) {
+            if (cleanToolsReferences(childElement, logger) == ERROR) {
+                return ERROR;
             }
         }
         return MergingReport.Result.SUCCESS;
