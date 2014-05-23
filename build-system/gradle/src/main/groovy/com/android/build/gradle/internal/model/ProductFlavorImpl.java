@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.model.ApiVersion;
 import com.android.builder.model.ClassField;
 import com.android.builder.model.NdkConfig;
 import com.android.builder.model.ProductFlavor;
@@ -39,8 +40,8 @@ class ProductFlavorImpl implements ProductFlavor, Serializable {
     private static final long serialVersionUID = 1L;
 
     private String name = null;
-    private int mMinSdkVersion = -1;
-    private int mTargetSdkVersion = -1;
+    private ApiVersion mMinSdkVersion = null;
+    private ApiVersion mTargetSdkVersion = null;
     private int mRenderscriptTargetApi = -1;
     private boolean mRenderscriptSupportMode = false;
     private boolean mRenderscriptNdkMode = false;
@@ -58,8 +59,8 @@ class ProductFlavorImpl implements ProductFlavor, Serializable {
         ProductFlavorImpl clonedFlavor = new ProductFlavorImpl();
         clonedFlavor.name = productFlavor.getName();
 
-        clonedFlavor.mMinSdkVersion = productFlavor.getMinSdkVersion();
-        clonedFlavor.mTargetSdkVersion = productFlavor.getTargetSdkVersion();
+        clonedFlavor.mMinSdkVersion = ApiVersionImpl.clone(productFlavor.getMinSdkVersion());
+        clonedFlavor.mTargetSdkVersion = ApiVersionImpl.clone(productFlavor.getTargetSdkVersion());
         clonedFlavor.mRenderscriptTargetApi = productFlavor.getRenderscriptTargetApi();
         clonedFlavor.mRenderscriptSupportMode = productFlavor.getRenderscriptSupportMode();
         clonedFlavor.mRenderscriptNdkMode = productFlavor.getRenderscriptNdkMode();
@@ -83,14 +84,14 @@ class ProductFlavorImpl implements ProductFlavor, Serializable {
     private ProductFlavorImpl() {
     }
 
-    @NonNull
     @Override
+    @NonNull
     public String getName() {
         return name;
     }
 
-    @Nullable
     @Override
+    @Nullable
     public String getPackageName() {
         return mPackageName;
     }
@@ -100,19 +101,21 @@ class ProductFlavorImpl implements ProductFlavor, Serializable {
         return mVersionCode;
     }
 
-    @Nullable
     @Override
+    @Nullable
     public String getVersionName() {
         return mVersionName;
     }
 
     @Override
-    public int getMinSdkVersion() {
+    @Nullable
+    public ApiVersion getMinSdkVersion() {
         return mMinSdkVersion;
     }
 
     @Override
-    public int getTargetSdkVersion() {
+    @Nullable
+    public ApiVersion getTargetSdkVersion() {
         return mTargetSdkVersion;
     }
 

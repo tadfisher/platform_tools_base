@@ -20,13 +20,16 @@ import com.android.annotations.NonNull
 import com.android.annotations.Nullable
 import com.android.builder.AndroidBuilder
 import com.android.builder.BuilderConstants
+import com.android.builder.DefaultApiVersion
 import com.android.builder.DefaultProductFlavor
 import com.android.builder.model.ClassField
 import com.android.builder.model.NdkConfig
+import com.android.builder.model.ProductFlavor
 import org.gradle.api.Action
 import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.logging.Logger
 import org.gradle.internal.reflect.Instantiator
+
 /**
  * DSL overlay to make methods that accept String... work.
  */
@@ -54,6 +57,56 @@ class ProductFlavorDsl extends DefaultProductFlavor {
     @Nullable
     public NdkConfig getNdkConfig() {
         return ndkConfig;
+    }
+
+    public ProductFlavor setMinSdkVersion(int minSdkVersion) {
+        setMinSdkVersion(new DefaultApiVersion(minSdkVersion));
+        return this;
+    }
+
+    public ProductFlavor minSdkVersion(int minSdkVersion) {
+        setMinSdkVersion(minSdkVersion);
+        return this;
+    }
+
+    public ProductFlavor setMinSdkVersion(String minSdkVersion) {
+        try {
+            int value = Integer.valueOf(minSdkVersion)
+            setMinSdkVersion(new DefaultApiVersion(value));
+        } catch (NumberFormatException ignored) {
+            setMinSdkVersion(new DefaultApiVersion(minSdkVersion));
+        }
+        return this;
+    }
+
+    public ProductFlavor minSdkVersion(String minSdkVersion) {
+        setMinSdkVersion(minSdkVersion);
+        return this;
+    }
+
+    public ProductFlavor setTargetSdkVersion(int targetSdkVersion) {
+        setTargetSdkVersion(new DefaultApiVersion(targetSdkVersion));
+        return this;
+    }
+
+    public ProductFlavor targetSdkVersion(int targetSdkVersion) {
+        setTargetSdkVersion(targetSdkVersion);
+        return this;
+    }
+
+    public ProductFlavor setTargetSdkVersion(String targetSdkVersion) {
+        try {
+            int value = Integer.valueOf(targetSdkVersion)
+            setTargetSdkVersion(new DefaultApiVersion(value));
+        } catch (NumberFormatException ignored) {
+            setTargetSdkVersion(new DefaultApiVersion(targetSdkVersion));
+        }
+        return this;
+    }
+
+    public ProductFlavor targetSdkVersion(String targetSdkVersion) {
+        setTargetSdkVersion(targetSdkVersion);
+        return this;
     }
 
     // -- DSL Methods. TODO remove once the instantiator does what I expect it to do.
