@@ -16,7 +16,17 @@
 
 package com.android.tools.lint.checks;
 
+import com.android.annotations.NonNull;
+import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Detector;
+import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.Project;
+import com.google.common.collect.Sets;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 @SuppressWarnings("javadoc")
 public class PluralsDetectorTest extends AbstractCheckTest {
@@ -26,6 +36,7 @@ public class PluralsDetectorTest extends AbstractCheckTest {
     }
 
     public void test1() throws Exception {
+        mEnabled = Sets.newHashSet(PluralsDetector.MISSING, PluralsDetector.EXTRA);
         assertEquals(""
                 + "res/values-pl/plurals2.xml:3: Error: For locale \"pl\" (Polish) the following quantities should also be defined: many [MissingQuantity]\n"
                 + "    <plurals name=\"numberOfSongsAvailable\">\n"
@@ -39,6 +50,7 @@ public class PluralsDetectorTest extends AbstractCheckTest {
     }
 
     public void test2() throws Exception {
+        mEnabled = Sets.newHashSet(PluralsDetector.MISSING, PluralsDetector.EXTRA);
         assertEquals(""
                 + "res/values-cs/plurals3.xml:3: Error: For locale \"cs\" (Czech) the following quantities should also be defined: few, many [MissingQuantity]\n" +
                 "  <plurals name=\"draft\">\n" +
@@ -57,6 +69,7 @@ public class PluralsDetectorTest extends AbstractCheckTest {
     }
 
     public void testEmptyPlural() throws Exception {
+        mEnabled = Sets.newHashSet(PluralsDetector.MISSING, PluralsDetector.EXTRA);
         assertEquals(""
                 + "res/values/plurals4.xml:3: Error: There should be at least one quantity string in this <plural> definition [MissingQuantity]\n"
                 + "   <plurals name=\"minutes_until_num\">\n"
@@ -69,16 +82,43 @@ public class PluralsDetectorTest extends AbstractCheckTest {
 
     public void testPolish() throws Exception {
         // Test for https://code.google.com/p/android/issues/detail?id=67803
+        mEnabled = Sets.newHashSet(PluralsDetector.MISSING, PluralsDetector.EXTRA);
         assertEquals(""
-                        + "res/values-pl/plurals5.xml:3: Error: For locale \"pl\" (Polish) the following quantities should also be defined: many [MissingQuantity]\n"
-                        + "    <plurals name=\"my_plural\">\n"
-                        + "    ^\n"
-                        + "res/values-pl/plurals5.xml:3: Warning: For language \"pl\" (Polish) the following quantities are not relevant: zero [UnusedQuantity]\n"
-                        + "    <plurals name=\"my_plural\">\n"
-                        + "    ^\n"
-                        + "1 errors, 1 warnings\n",
+                + "res/values-pl/plurals5.xml:3: Error: For locale \"pl\" (Polish) the following quantities should also be defined: many [MissingQuantity]\n"
+                + "    <plurals name=\"my_plural\">\n"
+                + "    ^\n"
+                + "res/values-pl/plurals5.xml:3: Warning: For language \"pl\" (Polish) the following quantities are not relevant: zero [UnusedQuantity]\n"
+                + "    <plurals name=\"my_plural\">\n"
+                + "    ^\n"
+                + "1 errors, 1 warnings\n",
 
                 lintProject(
                         "res/values/plurals5.xml=>res/values-pl/plurals5.xml"));
+    }
+
+    public void testImpliedQuantity() throws Exception {
+        mEnabled = Collections.singleton(PluralsDetector.IMPLIED_QUANTITY);
+        assertEquals(""
+                + "res/values-pl/plurals2.xml:4: Error: Plural string does not reference the quantity (with a %d, %s, etc). This is usually means you are using the quantity class to infer the specific quantity, but that does not work in many locales. See full issue explanation for more. [ImpliedQuantity]\n"
+                + "        <item quantity=\"one\">Znaleziono jedną piosenkę.</item>\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "1 errors, 0 warnings\n",
+
+                lintProject(
+                        "res/values/plurals.xml",
+                        "res/values/plurals2.xml",
+                        "res/values-pl/plurals2.xml"));
+    }
+
+    private Set<Issue> mEnabled = new HashSet<Issue>();
+
+    @Override
+    protected TestConfiguration getConfiguration(LintClient client, Project project) {
+        return new TestConfiguration(client, project, null) {
+            @Override
+            public boolean isEnabled(@NonNull Issue issue) {
+                return super.isEnabled(issue) && mEnabled.contains(issue);
+            }
+        };
     }
 }

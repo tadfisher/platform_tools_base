@@ -27,7 +27,6 @@ import static com.android.tools.lint.checks.PluralsDetector.Quantity.zero;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.resources.LocaleManager;
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
@@ -106,6 +105,29 @@ public class PluralsDetector extends ResourceXmlDetector {
             IMPLEMENTATION).addMoreInfo(
             "http://developer.android.com/guide/topics/resources/string-resource.html#Plurals");
 
+    /** This plural does not use the quantity value */
+    public static final Issue IMPLIED_QUANTITY = Issue.create(
+            "ImpliedQuantity", //$NON-NLS-1$
+            "Implied Quantities",
+            "Looks for quantity string translations which do not use the quantity",
+
+            "Plural strings should generally include a `%s` or `%d` formatting argument. " +
+            "You should *not* rely on the quantity itself. For example, you should not " +
+            "try to have a specialized message like \"No new mail!\" for message quantity 0, " +
+            "since that message will never be matched in locales that do not have a " +
+            "grammatical zero quantity. Instead, if you want to have a special message for " +
+            "an empty inbox, you need to create a separate message for that, instead of " +
+            "relying on a quantity string.\n" +
+            "\n" +
+            "This lint check looks for plural strings that do not refer to the quantity " +
+            "with a formatting parameter, since that is usually an indication that the string " +
+            "attempts to infer the number from the quantity class itself.",
+            Category.MESSAGES,
+            3,
+            Severity.ERROR,
+            IMPLEMENTATION).addMoreInfo(
+            "http://developer.android.com/guide/topics/resources/string-resource.html#Plurals");
+
     /** Constructs a new {@link PluralsDetector} */
     public PluralsDetector() {
     }
@@ -150,6 +172,15 @@ public class PluralsDetector extends ResourceXmlDetector {
             if (!TAG_ITEM.equals(child.getTagName())) {
                 continue;
             }
+
+            if (!haveFormattingParameter(child) && context.isEnabled(IMPLIED_QUANTITY)) {
+                String message = "Plural string does not reference the quantity (with a %d, "
+                        + "%s, etc). This is usually means you are using the quantity class to "
+                        + "infer the specific quantity, but that does not work in many locales. "
+                        + "See full issue explanation for more.";
+                context.report(IMPLIED_QUANTITY, child, context.getLocation(child), message, null);
+            }
+
             String quantityString = child.getAttribute(ATTR_QUANTITY);
             if (quantityString == null || quantityString.isEmpty()) {
                 continue;
@@ -191,6 +222,33 @@ public class PluralsDetector extends ResourceXmlDetector {
                     TranslationDetector.getLanguageDescription(language), formatSet(extra));
             context.report(EXTRA, element, context.getLocation(element), message, null);
         }
+    }
+
+    /**
+     * Returns true if the given string/plurals item element contains a formatting parameter,
+     * possibly within HTML markup or xliff metadata tags
+     */
+    private static boolean haveFormattingParameter(@NonNull Element element) {
+        NodeList children = element.getChildNodes();
+        for (int i = 0, n = children.getLength(); i < n; i++) {
+            Node child = children.item(i);
+            short nodeType = child.getNodeType();
+            if (nodeType == Node.ELEMENT_NODE) {
+                if (haveFormattingParameter((Element)child)) {
+                    return true;
+                }
+            } else if (nodeType == Node.TEXT_NODE) {
+                String text = child.getNodeValue();
+                if (text.indexOf('%') == -1) {
+                    continue;
+                }
+                if (StringFormatDetector.getFormatArgumentCount(text, null) >= 1) {
+                    return true;
+                }
+
+            }
+        }
+        return false;
     }
 
     private static String formatSet(EnumSet<Quantity> set) {
