@@ -380,7 +380,7 @@ public class AndroidBuilder {
             int versionCode,
             String versionName,
             @Nullable String minSdkVersion,
-            int targetSdkVersion,
+            @Nullable String targetSdkVersion,
             @NonNull String outManifestLocation) {
 
         try {
@@ -404,9 +404,9 @@ public class AndroidBuilder {
                 manifestMergerInvoker.setOverride(ManifestMerger2.SystemProperty.MIN_SDK_VERSION,
                         minSdkVersion);
             }
-            if (targetSdkVersion > 0) {
+            if (!Strings.isNullOrEmpty(targetSdkVersion)) {
                 manifestMergerInvoker.setOverride(ManifestMerger2.SystemProperty.TARGET_SDK_VERSION,
-                        String.valueOf(targetSdkVersion));
+                        targetSdkVersion);
             }
             MergingReport mergingReport = manifestMergerInvoker.merge();
             mLogger.info("Merging result:" + mergingReport.getResult());

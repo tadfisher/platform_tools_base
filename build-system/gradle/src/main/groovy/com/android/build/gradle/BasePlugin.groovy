@@ -516,10 +516,6 @@ public abstract class BasePlugin {
         ProductFlavor mergedFlavor = config.mergedFlavor
 
         processManifestTask.conventionMapping.minSdkVersion = {
-            if (androidBuilder.isPreviewTarget()) {
-                return androidBuilder.getTargetCodename()
-            }
-
             if (mergedFlavor.minSdkVersion >= 1) {
                 return Integer.toString(mergedFlavor.minSdkVersion)
             }
@@ -528,8 +524,17 @@ public abstract class BasePlugin {
         }
 
         processManifestTask.conventionMapping.targetSdkVersion = {
-            mergedFlavor.targetSdkVersion
+            if (androidBuilder.isPreviewTarget()) {
+                return androidBuilder.getTargetCodename()
+            }
+
+            if (mergedFlavor.targetSdkVersion >= 1) {
+                return Integer.toString(mergedFlavor.targetSdkVersion)
+            }
+
+            return null
         }
+
         processManifestTask.conventionMapping.manifestOutputFile = {
             project.file(
                     "$project.buildDir/${FD_INTERMEDIATES}/${manifestOutDir}/" +
