@@ -18,6 +18,9 @@ package com.android.build.gradle.api;
 
 import com.android.annotations.NonNull;
 
+import org.gradle.api.file.FileTree;
+import org.gradle.api.tasks.util.PatternFilterable;
+
 import java.io.File;
 import java.util.Set;
 
@@ -61,6 +64,12 @@ public interface AndroidSourceDirectorySet {
      */
     @NonNull
     AndroidSourceDirectorySet setSrcDirs(Iterable<?> srcDirs);
+
+    @NonNull
+    public FileTree getSourceFiles();
+
+    PatternFilterable getFilter();
+
 
     /**
      * Returns the resolved directories.
