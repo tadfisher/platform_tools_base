@@ -31,6 +31,7 @@ import com.android.builder.DefaultProductFlavor
 import com.android.builder.VariantConfiguration
 import com.android.builder.model.AndroidArtifact
 import com.android.builder.model.AndroidProject
+import com.android.builder.model.ApiVersion
 import com.android.builder.model.ArtifactMetaData
 import com.android.builder.model.JavaArtifact
 import com.android.builder.model.LintOptions
@@ -186,12 +187,19 @@ public class ModelBuilder implements ToolingModelBuilder {
             clonedJavaArtifacts.add(JavaArtifactImpl.clone(javaArtifact))
         }
 
+        ApiVersion minSdkVersionOverride = null, targetSdkVersionOverride = null
+
+
+
         VariantImpl variant = new VariantImpl(
                 variantName,
                 variantData.variantConfiguration.baseName,
                 variantData.variantConfiguration.buildType.name,
                 getProductFlavorNames(variantData),
-                ProductFlavorImpl.cloneFlavor(variantData.variantConfiguration.mergedFlavor),
+                ProductFlavorImpl.cloneFlavor(
+                        variantData.variantConfiguration.mergedFlavor,
+                        minSdkVersionOverride,
+                        targetSdkVersionOverride),
                 mainArtifact,
                 extraAndroidArtifacts,
                 clonedJavaArtifacts)
