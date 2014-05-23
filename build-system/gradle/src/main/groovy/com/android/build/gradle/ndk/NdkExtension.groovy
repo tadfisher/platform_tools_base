@@ -31,7 +31,7 @@ import java.util.Collections;
 import java.util.Set;
 
 /**
- * Implementation of NdkExtension to be used in the gradle DSL.
+ * Extension for android-ndk plugin.
  */
 public class NdkExtension {
     private String moduleName;
@@ -135,12 +135,10 @@ public class NdkExtension {
     public NdkExtension setLdLibs(Collection<String> libs) {
         if (libs != null) {
             if (ldLibs == null) {
-                ldLibs = Sets.newHashSetWithExpectedSize(libs.size());
+                ldLibs = Sets.newHashSet(libs);
             } else {
                 ldLibs.clear();
-            }
-            for (String filter : libs) {
-                ldLibs.add(filter);
+                ldLibs.addAll(libs);
             }
         } else {
             ldLibs = null;

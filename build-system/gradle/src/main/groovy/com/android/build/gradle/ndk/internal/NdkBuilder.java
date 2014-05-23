@@ -138,19 +138,15 @@ public class NdkBuilder {
         } else {
             throw new GradleException("Unrecognized toolchain: " + toolchain);
         }
-        System.out.println(prebuiltFolder);
 
         // This should detect the host architecture to determine the path of the prebuilt toolchain
         // instead of assuming there is only one folder in prebuilt directory.
         File[] toolchainFolder = prebuiltFolder.listFiles();
-        System.out.println(toolchainFolder);
         if (toolchainFolder.length != 1) {
             throw new GradleException("Unable to find toolchain prebuilt folder in: "
                     + prebuiltFolder);
         }
         return toolchainFolder[0];
-        //return new File(toolchainFolder[0], getPrefix(toolchain, platform) + "/bin");
-        //return new File(toolchainFolder[0], getPrefix(toolchain, platform));
     }
 
 }

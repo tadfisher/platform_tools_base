@@ -80,7 +80,7 @@ class ToolchainConfiguration {
                     if (toolchainName.equals("gcc")) {
                         cCompiler.setExecutable("${GCC_PREFIX[platform]}-gcc")
                         cppCompiler.setExecutable("${GCC_PREFIX[platform]}-g++")
-                        linker.setExecutable("${GCC_PREFIX[platform]}-ld")
+                        linker.setExecutable("${GCC_PREFIX[platform]}-g++")
                         assembler.setExecutable("${GCC_PREFIX[platform]}-as")
                         staticLibArchiver.setExecutable("${GCC_PREFIX[platform]}-ar")
                     }

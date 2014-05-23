@@ -26,8 +26,6 @@ import org.gradle.nativebinaries.platform.Platform
  */
 class GccFlagConfiguration implements FlagConfiguration{
     private static final List<String> RELEASE_CFLAGS = [
-            "-MMD",
-            "-MP",
             "-fpic",
             "-ffunction-sections",
             "-funwind-tables",
