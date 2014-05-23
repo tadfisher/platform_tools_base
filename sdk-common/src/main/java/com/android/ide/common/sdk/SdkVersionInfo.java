@@ -16,6 +16,8 @@
 package com.android.ide.common.sdk;
 
 import com.android.annotations.Nullable;
+import com.android.sdklib.AndroidVersion;
+import com.android.sdklib.IAndroidTarget;
 
 import java.util.Locale;
 
@@ -217,5 +219,57 @@ public class SdkVersionInfo {
         }
 
         return sb.toString();
+    }
+
+    /**
+     * Returns the {@link AndroidVersion} for a given version string, which is typically an API
+     * level number, but can also be a codename for a preview platform
+     *
+     * @param value   the version string
+     * @param targets an optional array of installed targets, if available
+     * @return an {@link com.android.sdklib.AndroidVersion}, or null if we version could not be
+     * determined (e.g. an empty or invalid API number or an unknown code name)
+     */
+    @Nullable
+    public static AndroidVersion getVersion(
+            @Nullable String value,
+            @Nullable IAndroidTarget[] targets) {
+        if (value == null || value.isEmpty()) {
+            return null;
+        }
+
+        if (Character.isDigit(value.charAt(0))) {
+            try {
+                int api = Integer.parseInt(value);
+                if (api >= 1) {
+                    return new AndroidVersion(api, null);
+                }
+                return null;
+            } catch (NumberFormatException e) {
+                // Invalid version string
+                return null;
+            }
+        }
+
+        // Codename
+        if (targets != null) {
+            for (int i = targets.length - 1; i >= 0; i--) {
+                IAndroidTarget target = targets[i];
+                if (target.isPlatform()) {
+                    AndroidVersion version = target.getVersion();
+                    if (version.isPreview() && value.equalsIgnoreCase(version.getCodename())) {
+                        return new AndroidVersion(version.getApiLevel(), version.getCodename());
+                    }
+                }
+            }
+        }
+
+        int api = getApiByPreviewName(value, false);
+        if (api != -1) {
+            return new AndroidVersion(api - 1, value);
+        }
+
+        // Must be a future SDK platform
+        return new AndroidVersion(HIGHEST_KNOWN_API, value);
     }
 }
