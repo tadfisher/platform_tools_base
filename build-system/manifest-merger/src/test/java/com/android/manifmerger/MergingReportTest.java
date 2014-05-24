@@ -27,7 +27,6 @@ import com.google.common.collect.ImmutableList;
 
 import junit.framework.TestCase;
 
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -42,7 +41,7 @@ public class MergingReportTest extends TestCase {
     @Mock Element mElement;
     @Mock XmlLoader.SourceLocation mSourceLocation;
     @Mock KeyResolver<String> mKeyResolver;
-    @Mock KeyBasedValueResolver<ManifestMerger2.SystemProperty> mPropertyResolver;
+    @Mock KeyBasedValueResolver<ManifestTask.SystemProperty> mPropertyResolver;
 
     @Override
     protected void setUp() throws Exception {

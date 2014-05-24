@@ -16,7 +16,7 @@
 
 package com.android.manifmerger;
 
-import static com.android.manifmerger.ManifestMerger2.SystemProperty;
+import static com.android.manifmerger.ManifestTask.SystemProperty;
 import static com.android.manifmerger.ManifestModel.NodeTypes.USES_PERMISSION;
 import static com.android.manifmerger.ManifestModel.NodeTypes.USES_SDK;
 import static com.android.manifmerger.PlaceholderHandler.KeyBasedValueResolver;
@@ -132,7 +132,7 @@ public class XmlDocument {
 
     /**
      * Returns the {@link com.android.manifmerger.PlaceholderHandler.KeyBasedValueResolver} capable
-     * of resolving all injected {@link com.android.manifmerger.ManifestMerger2.SystemProperty}
+     * of resolving all injected {@link com.android.manifmerger.ManifestTask.SystemProperty}
      */
     public KeyBasedValueResolver<SystemProperty> getSystemPropertyResolver() {
         return mSystemPropertyResolver;
