@@ -74,6 +74,7 @@ import com.android.build.gradle.tasks.AidlCompile
 import com.android.build.gradle.tasks.Dex
 import com.android.build.gradle.tasks.GenerateBuildConfig
 import com.android.build.gradle.tasks.GenerateResValues
+import com.android.build.gradle.tasks.InjectLibraryManifest
 import com.android.build.gradle.tasks.Lint
 import com.android.build.gradle.tasks.MergeAssets
 import com.android.build.gradle.tasks.MergeResources
@@ -531,6 +532,46 @@ public abstract class BasePlugin {
             mergedFlavor.targetSdkVersion
         }
         processManifestTask.conventionMapping.manifestOutputFile = {
+            project.file(
+                    "$project.buildDir/${FD_INTERMEDIATES}/${manifestOutDir}/" +
+                            "${variantData.variantConfiguration.dirName}/AndroidManifest.xml")
+        }
+    }
+
+    public void injectLibraryManifest(BaseVariantData variantData, String manifestOutDir) {
+        if (extension.getUseOldManifestMerger()) {
+            createOldProcessManifestTask(variantData, manifestOutDir);
+            return;
+        }
+        VariantConfiguration config = variantData.variantConfiguration
+
+        def injectLibraryManifest = project.tasks.create(
+                "inject${variantData.variantConfiguration.fullName.capitalize()}Manifest",
+                InjectLibraryManifest)
+        variantData.processManifestTask = injectLibraryManifest
+        injectLibraryManifest.plugin = this
+
+        injectLibraryManifest.dependsOn variantData.prepareDependenciesTask
+        injectLibraryManifest.variantConfiguration = config
+
+        ProductFlavor mergedFlavor = config.mergedFlavor
+
+        injectLibraryManifest.conventionMapping.minSdkVersion = {
+            if (androidBuilder.isPreviewTarget()) {
+                return androidBuilder.getTargetCodename()
+            }
+
+            if (mergedFlavor.minSdkVersion >= 1) {
+                return Integer.toString(mergedFlavor.minSdkVersion)
+            }
+
+            return null
+        }
+
+        injectLibraryManifest.conventionMapping.targetSdkVersion = {
+            mergedFlavor.targetSdkVersion
+        }
+        injectLibraryManifest.conventionMapping.manifestOutputFile = {
             project.file(
                     "$project.buildDir/${FD_INTERMEDIATES}/${manifestOutDir}/" +
                             "${variantData.variantConfiguration.dirName}/AndroidManifest.xml")

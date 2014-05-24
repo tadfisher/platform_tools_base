@@ -17,6 +17,7 @@
 package com.android.builder;
 
 import static com.android.manifmerger.ManifestMerger2.Invoker;
+import static com.android.manifmerger.ManifestTask.SystemProperty;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -58,8 +59,10 @@ import com.android.ide.common.internal.CommandLineRunner;
 import com.android.ide.common.internal.LoggedErrorException;
 import com.android.ide.common.internal.PngCruncher;
 import com.android.manifmerger.ICallback;
+import com.android.manifmerger.ManifestInjector;
 import com.android.manifmerger.ManifestMerger;
 import com.android.manifmerger.ManifestMerger2;
+import com.android.manifmerger.ManifestTask;
 import com.android.manifmerger.MergerLog;
 import com.android.manifmerger.MergingReport;
 import com.android.manifmerger.XmlDocument;
@@ -388,28 +391,92 @@ public class AndroidBuilder {
                     .addFlavorAndBuildTypeManifests(
                             manifestOverlays.toArray(new File[manifestOverlays.size()]))
                     .addLibraryManifests(collectLibraries(libraries));
-            if (!Strings.isNullOrEmpty(packageOverride)) {
-                manifestMergerInvoker.setOverride(ManifestMerger2.SystemProperty.PACKAGE,
-                        packageOverride);
-            }
-            if (versionCode > 0) {
-                manifestMergerInvoker.setOverride(ManifestMerger2.SystemProperty.VERSION_CODE,
-                        String.valueOf(versionCode));
-            }
-            if (!Strings.isNullOrEmpty(versionName)) {
-                manifestMergerInvoker.setOverride(ManifestMerger2.SystemProperty.VERSION_NAME,
-                        versionName);
-            }
-            if (!Strings.isNullOrEmpty(minSdkVersion)) {
-                manifestMergerInvoker.setOverride(ManifestMerger2.SystemProperty.MIN_SDK_VERSION,
-                        minSdkVersion);
-            }
-            if (targetSdkVersion > 0) {
-                manifestMergerInvoker.setOverride(ManifestMerger2.SystemProperty.TARGET_SDK_VERSION,
-                        String.valueOf(targetSdkVersion));
-            }
+
+            setInjectableValues(manifestMergerInvoker,
+                    packageOverride, versionCode, versionName, minSdkVersion, targetSdkVersion);
+
             MergingReport mergingReport = manifestMergerInvoker.merge();
             mLogger.info("Merging result:" + mergingReport.getResult());
+            switch (mergingReport.getResult()) {
+                case WARNING:
+                    mergingReport.log(mLogger);
+                    // fall through since these are just warnings.
+                case SUCCESS:
+                    XmlDocument xmlDocument = mergingReport.getMergedDocument().get();
+                    try {
+                        String annotatedDocument = mergingReport.getActions().blame(xmlDocument);
+                        mLogger.verbose(annotatedDocument);
+                    } catch (Exception e) {
+                        mLogger.error(e, "cannot print resulting xml");
+                    }
+                    save(xmlDocument, new File(outManifestLocation));
+                    mLogger.info("Merged manifest saved to " + outManifestLocation);
+                    break;
+                case ERROR:
+                    mergingReport.log(mLogger);
+                    throw new RuntimeException(mergingReport.getReportString());
+                default:
+                    throw new RuntimeException("Unhandled result type : "
+                            + mergingReport.getResult());
+            }
+        } catch (ManifestMerger2.MergeFailureException e) {
+            // TODO: unacceptable.
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Sets the {@link com.android.manifmerger.ManifestTask.SystemProperty} that can be injected
+     * in the manifest file.
+     */
+    private static void setInjectableValues(
+            ManifestTask.Invoker<?> invoker,
+            String packageOverride,
+            int versionCode,
+            String versionName,
+            @Nullable String minSdkVersion,
+            int targetSdkVersion) {
+
+        if (!Strings.isNullOrEmpty(packageOverride)) {
+            invoker.setOverride(SystemProperty.PACKAGE, packageOverride);
+        }
+        if (versionCode > 0) {
+            invoker.setOverride(SystemProperty.VERSION_CODE,
+                    String.valueOf(versionCode));
+        }
+        if (!Strings.isNullOrEmpty(versionName)) {
+            invoker.setOverride(SystemProperty.VERSION_NAME, versionName);
+        }
+        if (!Strings.isNullOrEmpty(minSdkVersion)) {
+            invoker.setOverride(SystemProperty.MIN_SDK_VERSION, minSdkVersion);
+        }
+        if (targetSdkVersion > 0) {
+            invoker.setOverride(SystemProperty.TARGET_SDK_VERSION,
+                    String.valueOf(targetSdkVersion));
+        }
+    }
+
+    /**
+     * Injects system properties and perform place holders replacements into a manifest file.
+     */
+    public void injectLibraryManifest(
+            @NonNull File mainManifest,
+            String packageOverride,
+            int versionCode,
+            String versionName,
+            @Nullable String minSdkVersion,
+            int targetSdkVersion,
+            @NonNull String outManifestLocation) {
+
+        try {
+            ManifestInjector.Invoker manifestInjectorInvoker =
+                    ManifestInjector.newInvoker(mainManifest, mLogger);
+
+            setInjectableValues(manifestInjectorInvoker,
+                    packageOverride, versionCode, versionName, minSdkVersion, targetSdkVersion);
+
+            MergingReport mergingReport = manifestInjectorInvoker.inject();
+            mLogger.info("Injected result:" + mergingReport.getResult());
             switch (mergingReport.getResult()) {
                 case WARNING:
                     mergingReport.log(mLogger);
@@ -747,9 +814,25 @@ public class AndroidBuilder {
                         functionalTest,
                         generatedTestManifest.getAbsolutePath());
 
+                ImmutableList<Pair<String, File>> namedLibraries = collectLibraries(libraries);
+                ImmutableList.Builder<Pair<String, File>> reworkedLibraries =
+                        ImmutableList.builder();
+
+                File mainManifestFile;
+                if (namedLibraries.isEmpty()) {
+                    mainManifestFile = generatedTestManifest;
+                } else {
+                    mainManifestFile = namedLibraries.get(0).getSecond();
+                    reworkedLibraries.add(Pair.of("test manifest", generatedTestManifest));
+                    for (int i = 1; i < namedLibraries.size(); i++) {
+                        reworkedLibraries.add(namedLibraries.get(i));
+                    }
+                }
+
                 MergingReport mergingReport = ManifestMerger2.newInvoker(
-                        generatedTestManifest, mLogger)
-                        .addLibraryManifests(collectLibraries(libraries))
+                        mainManifestFile, mLogger)
+                        .setOverride(SystemProperty.PACKAGE, testPackageName)
+                        .addLibraryManifests(reworkedLibraries.build())
                         .merge();
 
                 mLogger.info("Merging result:" + mergingReport.getResult());

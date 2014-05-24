@@ -20,32 +20,20 @@ import com.android.sdklib.mock.MockLog;
 
 import junit.framework.TestCase;
 
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.xml.sax.SAXException;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.logging.Logger;
 
 import javax.xml.parsers.ParserConfigurationException;
 
 /**
- * Tests for the {@link com.android.manifmerger.ManifestMergerTest} class
+ * Tests for the {@link com.android.manifmerger.ManifestInjector}
  */
-public class ManifestMerger2SmallTest extends TestCase {
+public class ManifestInjectorTest extends TestCase {
 
-    @Mock
-    ActionRecorder mActionRecorder;
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        MockitoAnnotations.initMocks(this);
-    }
-
-    public void testValidationFailure()
+    public void testInjection()
             throws ParserConfigurationException, SAXException, IOException,
             ManifestMerger2.MergeFailureException {
 
@@ -54,12 +42,9 @@ public class ManifestMerger2SmallTest extends TestCase {
                 + "<manifest\n"
                 + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                 + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
-                + "    package=\"com.example.lib3\">\n"
+                + "    package=\"com.example.lib3\" >\n"
                 + "\n"
-                + "    <application android:label=\"@string/lib_name\" />\n"
-                + "\n"
-                + "        <activity android:name=\"activityOne\" "
-                + "             tools:replace=\"exported\"/>\n"
+                + "    <activity android:name=\"${packageName}.activityOne\" />\n"
                 + "\n"
                 + "</manifest>";
 
@@ -67,11 +52,20 @@ public class ManifestMerger2SmallTest extends TestCase {
         assertTrue(tmpFile.exists());
 
         try {
-            MergingReport mergingReport = ManifestMerger2.newInvoker(tmpFile, mockLog).merge();
-            assertEquals(MergingReport.Result.ERROR, mergingReport.getResult());
-            // check the log complains about the incorrect "tools:replace"
-            assertStringPresenceInLogRecords(mergingReport, "tools:replace");
-            assertFalse(mergingReport.getMergedDocument().isPresent());
+            MergingReport mergingReport = ManifestInjector.newInvoker(tmpFile, mockLog)
+                    .setOverride(ManifestTask.SystemProperty.PACKAGE, "com.foo.test")
+                    .inject();
+            assertEquals(MergingReport.Result.SUCCESS, mergingReport.getResult());
+            // make sure we have the expected result.
+            String expectedResult = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                    + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                    + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                    + "    package=\"com.foo.test\" >\n"
+                    + "\n"
+                    + "    <activity android:name=\"com.foo.test.activityOne\" />\n"
+                    + "\n"
+                    + "</manifest>";
+            assertEquals(expectedResult, mergingReport.getMergedDocument().get().prettyPrint());
         } finally {
             assertTrue(tmpFile.delete());
         }
@@ -87,21 +81,9 @@ public class ManifestMerger2SmallTest extends TestCase {
             fw = new FileWriter(tmpFile);
             fw.append(input);
         } finally {
-            if (fw != null) fw.close();
+            if (fw != null)
+                fw.close();
         }
         return tmpFile;
-    }
-
-    private static void assertStringPresenceInLogRecords(MergingReport mergingReport, String s) {
-        for (MergingReport.Record record : mergingReport.getLoggingRecords()) {
-            if (record.toString().contains(s)) {
-                return;
-            }
-        }
-        // failed, dump the records
-        for (MergingReport.Record record : mergingReport.getLoggingRecords()) {
-            Logger.getAnonymousLogger().info(record.toString());
-        }
-        fail("could not find " + s + " in logging records");
     }
 }
