@@ -18,12 +18,17 @@ package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.AppPlugin;
 import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.internal.api.ApplicationVariantImpl;
 import com.android.builder.VariantConfiguration;
 
 import org.gradle.api.Task;
+import org.gradle.api.artifacts.Configuration;
+
+import java.io.File;
+import java.util.Set;
 
 /**
  */
@@ -73,8 +78,9 @@ public class ApplicationVariantFactory implements VariantFactory {
         ApplicationVariantData appVariantData = (ApplicationVariantData) variantData;
 
         basePlugin.createAnchorTasks(variantData);
-
         basePlugin.createCheckManifestTask(variantData);
+
+        handleMicroApp(variantData);
 
         // Add a task to process the manifest(s)
         basePlugin.createProcessManifestTask(variantData, "manifests");
@@ -109,5 +115,22 @@ public class ApplicationVariantFactory implements VariantFactory {
         basePlugin.createNdkTasks(variantData);
 
         basePlugin.addPackageTasks(appVariantData, assembleTask, true /*publishApk*/);
+    }
+
+    private void handleMicroApp(@NonNull BaseVariantData variantData) {
+
+        Configuration config = basePlugin.getProject().getConfigurations().findByName(
+                AppPlugin.CONFIG_WEAR_APP);
+        Set<File> file = config.getFiles();
+
+        int count = file.size();
+        if (count == 1) {
+            if (variantData.getVariantConfiguration().getBuildType().getEmbedMicroApp()) {
+                basePlugin.createCopyMicroApkTask(variantData, config);
+                basePlugin.createGenerateMicroApkDataTask(variantData, config);
+            }
+        } else if (count > 1) {
+            throw new RuntimeException("");
+        }
     }
 }
