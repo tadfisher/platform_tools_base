@@ -32,6 +32,8 @@ import javax.inject.Inject
 class AppPlugin extends BasePlugin implements Plugin<Project> {
     static PluginHolder pluginHolder;
 
+    public final static String CONFIG_WEAR_APP = "wearApp"
+
     @Inject
     public AppPlugin(Instantiator instantiator, ToolingModelBuilderRegistry registry) {
         super(instantiator, registry)
@@ -50,14 +52,9 @@ class AppPlugin extends BasePlugin implements Plugin<Project> {
         if (pluginHolder != null) {
             pluginHolder.plugin = this;
         }
-    }
 
-    /**
-     * Task creation entry point.
-     */
-    @Override
-    protected void doCreateAndroidTasks() {
-        variantManager.createAndroidTasks()
+        // create the config to link a wear apk.
+        project.configurations.create(CONFIG_WEAR_APP)
     }
 
     @Override
