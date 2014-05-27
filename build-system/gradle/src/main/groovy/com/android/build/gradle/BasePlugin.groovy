@@ -914,7 +914,13 @@ public abstract class BasePlugin {
         processResources.conventionMapping.type = { variantConfiguration.type }
         processResources.conventionMapping.debuggable = { variantConfiguration.buildType.debuggable }
         processResources.conventionMapping.aaptOptions = { extension.aaptOptions }
-        processResources.conventionMapping.resourceConfigs = { variantConfiguration.mergedFlavor.resourceConfigurations }
+        if (variantConfiguration.buildType.pseudolocalize) {
+            processResources.conventionMapping.resourceConfigs = {
+                variantConfiguration.mergedFlavor.resourceConfigurations + [ "en_XA", "ar_XB"]
+            }
+        } else {
+            processResources.conventionMapping.resourceConfigs = { variantConfiguration.mergedFlavor.resourceConfigurations }
+        }
     }
 
     public void createProcessJavaResTask(BaseVariantData variantData) {

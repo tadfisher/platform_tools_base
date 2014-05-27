@@ -39,6 +39,7 @@ class BuildTypeImpl implements BuildType, Serializable {
     private boolean debuggable;
     private boolean testCoverageEnabled;
     private boolean jniDebugBuild;
+    private boolean pseudolocalize;
     private boolean renderscriptDebugBuild;
     private int renderscriptOptimLevel;
     private String packageNameSuffix;
@@ -59,6 +60,7 @@ class BuildTypeImpl implements BuildType, Serializable {
         clonedBuildType.versionNameSuffix = buildType.getVersionNameSuffix();
         clonedBuildType.runProguard = buildType.isRunProguard();
         clonedBuildType.zipAlign = buildType.isZipAlign();
+        clonedBuildType.pseudolocalize = buildType.isPseudolocalize();
 
         return clonedBuildType;
     }
@@ -85,6 +87,11 @@ class BuildTypeImpl implements BuildType, Serializable {
     @Override
     public boolean isJniDebugBuild() {
         return jniDebugBuild;
+    }
+
+    @Override
+    public boolean isPseudolocalize() {
+        return pseudolocalize;
     }
 
     @Override

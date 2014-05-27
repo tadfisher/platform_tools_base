@@ -29,6 +29,7 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
 
     private final String mName;
     private boolean mDebuggable = false;
+    private boolean mPseudolocalize = false;
     private boolean mTestCoverageEnabled = false;
     private boolean mJniDebugBuild = false;
     private boolean mRenderscriptDebugBuild = false;
@@ -57,6 +58,7 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
         setRunProguard(that.isRunProguard());
         setZipAlign(that.isZipAlign());
         setSigningConfig(that.getSigningConfig());
+        setPseudolocalize(that.isPseudolocalize());
 
         return this;
     }
@@ -89,6 +91,14 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
         return mTestCoverageEnabled;
     }
 
+    public void setPseudolocalize(boolean pseudolocalize) {
+        mPseudolocalize = pseudolocalize;
+    }
+
+    @Override
+    public boolean isPseudolocalize() {
+        return mPseudolocalize;
+    }
     /**
      * Whether this build type is configured to generate an APK with debuggable native code.
      */
@@ -205,6 +215,7 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
         if (mDebuggable != buildType.mDebuggable) return false;
         if (mTestCoverageEnabled != buildType.mTestCoverageEnabled) return false;
         if (mJniDebugBuild != buildType.mJniDebugBuild) return false;
+        if (mPseudolocalize != buildType.mPseudolocalize) return false;
         if (mRenderscriptDebugBuild != buildType.mRenderscriptDebugBuild) return false;
         if (mRenderscriptOptimLevel != buildType.mRenderscriptOptimLevel) return false;
         if (mRunProguard != buildType.mRunProguard) return false;
@@ -232,6 +243,7 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
         result = 31 * result + (mDebuggable ? 1 : 0);
         result = 31 * result + (mTestCoverageEnabled ? 1 : 0);
         result = 31 * result + (mJniDebugBuild ? 1 : 0);
+        result = 31 * result + (mPseudolocalize ? 1 : 0);
         result = 31 * result + (mRenderscriptDebugBuild ? 1 : 0);
         result = 31 * result + mRenderscriptOptimLevel;
         result = 31 * result + (mPackageNameSuffix != null ? mPackageNameSuffix.hashCode() : 0);
@@ -250,6 +262,7 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
                 .add("debuggable", mDebuggable)
                 .add("testCoverageEnabled", mTestCoverageEnabled)
                 .add("jniDebugBuild", mJniDebugBuild)
+                .add("pseudolocalize", mPseudolocalize)
                 .add("renderscriptDebugBuild", mRenderscriptDebugBuild)
                 .add("renderscriptOptimLevel", mRenderscriptOptimLevel)
                 .add("packageNameSuffix", mPackageNameSuffix)
