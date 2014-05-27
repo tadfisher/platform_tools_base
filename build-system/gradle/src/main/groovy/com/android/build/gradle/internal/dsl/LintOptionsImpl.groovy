@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.dsl
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable;
 import com.android.builder.model.LintOptions
+import com.android.build.gradle.BasePlugin
 import com.android.tools.lint.HtmlReporter
 import com.android.tools.lint.LintCliClient
 import com.android.tools.lint.LintCliFlags
@@ -524,6 +525,8 @@ public class LintOptionsImpl implements LintOptions, Serializable {
             @NonNull String extension,
             boolean fatalOnly) {
         StringBuilder base = new StringBuilder()
+        base.append(BasePlugin.FD_OUTPUTS)
+        base.append(File.separator)
         base.append("lint-results")
         if (variantName != null) {
             base.append("-")
