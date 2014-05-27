@@ -16,13 +16,13 @@
 
 package com.android.build.gradle.ndk.internal
 
-import com.android.build.gradle.api.AndroidSourceDirectorySet
 import com.android.build.gradle.ndk.NdkExtension
 import com.android.builder.BuilderConstants
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.nativebinaries.BuildType
-import org.gradle.nativebinaries.SharedLibraryBinary
+import org.gradle.nativebinaries.LibraryBinary
+import org.gradle.nativebinaries.NativeBinary
 import org.gradle.nativebinaries.platform.Platform
 
 /**
@@ -32,7 +32,7 @@ class NdkConfigurationAction implements Action<Project> {
     NdkExtension ndkExtension
     NdkBuilder ndkBuilder
 
-    NdkConfigurationAction (NdkExtension ndkExtension, NdkBuilder ndkBuilder) {
+    NdkConfigurationAction (NdkBuilder ndkBuilder, NdkExtension ndkExtension) {
         this.ndkExtension = ndkExtension
         this.ndkBuilder = ndkBuilder
     }
@@ -41,12 +41,8 @@ class NdkConfigurationAction implements Action<Project> {
         project.libraries {
             create(ndkExtension.getModuleName())
         }
-
-        ToolchainConfiguration toolchainConfig = (
-                new ToolchainConfiguration(project, ndkBuilder, ndkExtension))
-        toolchainConfig.configureToolchains()
-
         configureProperties(project)
+
     }
 
     void configureProperties(Project project) {
@@ -69,30 +65,27 @@ class NdkConfigurationAction implements Action<Project> {
         }
 
         project.libraries.getByName(ndkExtension.getModuleName()) {
-            binaries.withType(SharedLibraryBinary.class) {
+            binaries.withType(LibraryBinary.class) { binary ->
                 cCompiler.define "ANDROID"
                 cppCompiler.define "ANDROID"
                 cCompiler.define "ANDROID_NDK"
                 cppCompiler.define "ANDROID_NDK"
 
+                // Set output library filename.
                 sharedLibraryFile = new File(
                         getOutputDirectory(project, buildType, targetPlatform),
                         "/lib" + ndkExtension.getModuleName() + ".so")
 
                 String sysroot = ndkBuilder.getSysroot(targetPlatform)
-
                 cCompiler.args  "--sysroot=$sysroot"
                 cppCompiler.args  "--sysroot=$sysroot"
                 linker.args "--sysroot=$sysroot"
-                FlagConfiguration flagConfig =
-                        FlagConfigurationFactory.create(buildType, targetPlatform, ndkBuilder)
 
                 if (ndkExtension.getRenderscriptNdkMode()) {
                     cCompiler.args "-I$sysroot/usr/include/rs"
                     cCompiler.args "-I$sysroot/usr/include/rs/cpp"
                     cppCompiler.args "-I$sysroot/usr/include/rs"
                     cppCompiler.args "-I$sysroot/usr/include/rs/cpp"
-//                    cppCompiler.args "-I$project.buildDir/source/rs/$targetPlatform.name/$buildType.name"
                     linker.args "-L$sysroot/usr/lib/rs"
                 }
 
@@ -100,6 +93,8 @@ class NdkConfigurationAction implements Action<Project> {
                 cppCompiler.args "-I${ndkBuilder.getNdkFolder()}/sources/cxx-stl/stlport/stlport"
                 cppCompiler.args "-I${ndkBuilder.getNdkFolder()}/sources/cxx-stl//gabi++/include"
 
+                FlagConfiguration flagConfig =
+                        FlagConfigurationFactory.create(buildType, targetPlatform, ndkBuilder)
 
                 for (String arg : flagConfig.getCFlags()) {
                     cCompiler.args arg
@@ -121,8 +116,17 @@ class NdkConfigurationAction implements Action<Project> {
                 for (String ldLibs : ndkExtension.getLdLibs()) {
                     linker.args "-l$ldLibs"
                 }
+
+                if (buildType.name.contains("debug")) {
+                    createNdkLibraryTask(binary)
+                }
             }
         }
+    }
+
+    private void createNdkLibraryTask(NativeBinary binary) {
+        println "createNdkLibraryTask"
+        println binary.namingScheme.getLifecycleTaskName()
     }
 
     /**

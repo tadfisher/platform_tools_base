@@ -24,70 +24,108 @@ import org.gradle.nativebinaries.platform.Platform
 /**
  * Flag configuration for GCC toolchain.
  */
-class GccFlagConfiguration implements FlagConfiguration{
-    private static final List<String> RELEASE_CFLAGS = [
-            "-fpic",
-            "-ffunction-sections",
-            "-funwind-tables",
-            "-fstack-protector",
-            "-g",
-            "-DNDEBUG",
-            "-fomit-frame-pointer",
-            "-Wa,--noexecstack",
-            "-Wformat",
-            "-Werror=format-security"
-    ]
-    private static final List<String> DEBUG_CFLAGS = [
-            "-O0",
-            "-UNDEBUG",
-            "-fno-omit-frame-pointer",
-            "-fno-strict-aliasing",
-    ]
 
-    private static final def PLATFORM_CFLAGS = [
+class GccFlagConfiguration implements FlagConfiguration{
+
+    private static final def RELEASE_CFLAGS = [
             (SdkConstants.ABI_ARMEABI) : [
                     "-fpic",
-                    "-mthumb",
-                    "-Os",
-                    "-fno-strict-aliasing",
-                    "-finline-limit=64",
+                    "-ffunction-sections",
+                    "-funwind-tables",
+                    "-fstack-protector",
+                    "-no-canonical-prefixes",
                     "-march=armv5te",
                     "-mtune=xscale",
                     "-msoft-float",
+                    "-mthumb",
+                    "-Os",
+                    "-g",
+                    "-DNDEBUG",
+                    "-fomit-frame-pointer",
+                    "-fno-strict-aliasing",
+                    "-finline-limit=64",
             ],
             (SdkConstants.ABI_ARMEABI_V7A) : [
                     "-fpic",
-                    "-Os",
-                    "-fno-strict-aliasing",
-                    "-finline-limit=64",
+                    "-ffunction-sections",
+                    "-funwind-tables",
+                    "-fstack-protector",
+                    "-no-canonical-prefixes",
                     "-march=armv7-a",
                     "-mfpu=vfpv3-d16",
                     "-mfloat-abi=softfp",
                     "-mthumb",
+                    "-Os",
+                    "-g",
+                    "-DNDEBUG",
+                    "-fomit-frame-pointer",
+                    "-fno-strict-aliasing",
+                    "-finline-limit=64",
             ],
             (SdkConstants.ABI_INTEL_ATOM) : [
+                    "-ffunction-sections",
+                    "-funwind-tables",
+                    "-no-canonical-prefixes",
+                    "-fstack-protector",
                     "-O2",
+                    "-g",
+                    "-DNDEBUG",
+                    "-fomit-frame-pointer",
                     "-fstrict-aliasing",
                     "-funswitch-loops",
                     "-finline-limit=300",
-
             ],
             (SdkConstants.ABI_MIPS) : [
                     "-fpic",
                     "-fno-strict-aliasing",
                     "-finline-functions",
+                    "-ffunction-sections",
+                    "-funwind-tables",
                     "-fmessage-length=0",
                     "-fno-inline-functions-called-once",
                     "-fgcse-after-reload",
                     "-frerun-cse-after-loop",
                     "-frename-registers",
+                    "-no-canonical-prefixes",
                     "-O2",
+                    "-g",
+                    "-DNDEBUG",
+                    "-fomit-frame-pointer",
                     "-funswitch-loops",
                     "-finline-limit=300",
             ]
     ]
 
-    private static final List<String> LDFLAGS = []
+    private static final def DEBUG_CFLAGS = [
+            (SdkConstants.ABI_ARMEABI) : [
+                    "-O0",
+                    "-UNDEBUG",
+                    "-fno-omit-frame-pointer",
+                    "-fno-strict-aliasing",
+            ],
+            (SdkConstants.ABI_ARMEABI_V7A) : [
+                    "-O0",
+                    "-UNDEBUG",
+                    "-fno-omit-frame-pointer",
+                    "-fno-strict-aliasing",
+            ],
+            (SdkConstants.ABI_INTEL_ATOM) : [
+                    "-O0",
+                    "-UNDEBUG",
+                    "-fno-omit-frame-pointer",
+                    "-fno-strict-aliasing",
+            ],
+            (SdkConstants.ABI_MIPS) : [
+                    "-O0",
+                    "-UNDEBUG",
+                    "-fno-omit-frame-pointer",
+                    "-fno-unswitch-loops",
+            ],
+    ]
+
+    private static final List<String> LDFLAGS = [
+            "-no-canonical-prefixes",
+    ]
 
     private Platform platform
     private boolean isDebugBuild
@@ -98,7 +136,7 @@ class GccFlagConfiguration implements FlagConfiguration{
     }
 
     List<String> getCFlags() {
-        RELEASE_CFLAGS + PLATFORM_CFLAGS[platform.name] + (isDebugBuild ? DEBUG_CFLAGS : [])
+        RELEASE_CFLAGS[platform.name] + (isDebugBuild ? DEBUG_CFLAGS[platform.name] : [])
     }
     List<String> getCppFlags() {
         getCFlags()

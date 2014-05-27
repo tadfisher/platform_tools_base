@@ -19,6 +19,7 @@ import com.android.SdkConstants
 import com.android.build.gradle.api.AndroidSourceDirectorySet
 import com.android.build.gradle.internal.api.DefaultAndroidSourceDirectorySet
 import com.android.build.gradle.ndk.internal.NdkExtensionConventionAction
+import com.android.build.gradle.ndk.internal.ToolchainConfigurationAction
 import com.android.builder.BuilderConstants
 import com.android.builder.VariantConfiguration
 
@@ -74,7 +75,6 @@ class NdkAppPlugin implements Plugin<Project> {
 
         project.apply plugin: 'c'
         project.apply plugin: 'cpp'
-        project.apply plugin: 'assembler'
 
         project.model {
             buildTypes {
@@ -95,13 +95,17 @@ class NdkAppPlugin implements Plugin<Project> {
                 "$SdkConstants.ABI_ARMEABI_V7A" {
                     architecture SdkConstants.CPU_ARCH_ARM
                 }
+                "$SdkConstants.ABI_MIPS" {
+                    architecture "ppc"
+                }
             }
 
         }
 
         configurationActions.add(Actions.composite(
                 new NdkExtensionConventionAction(),
-                new NdkConfigurationAction(extension, ndkBuilder)))
+                new ToolchainConfigurationAction(ndkBuilder, extension),
+                new NdkConfigurationAction(ndkBuilder, extension)))
     }
 
     /**

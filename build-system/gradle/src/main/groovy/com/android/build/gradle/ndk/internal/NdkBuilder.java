@@ -48,6 +48,13 @@ public class NdkBuilder {
             SdkConstants.ABI_ARMEABI, "arm-linux-androideabi",
             SdkConstants.ABI_MIPS, "mipsel-linux-android");
 
+    // Map of ABI to target architecture
+    private static final Map<String, String> ARCHITECTURE_STRING = ImmutableMap.of(
+            SdkConstants.ABI_INTEL_ATOM, SdkConstants.CPU_ARCH_INTEL_ATOM,
+            SdkConstants.ABI_ARMEABI_V7A, SdkConstants.CPU_ARCH_ARM,
+            SdkConstants.ABI_ARMEABI, SdkConstants.CPU_ARCH_ARM,
+            SdkConstants.ABI_MIPS, SdkConstants.CPU_ARCH_MIPS);
+
     private static final Map<String, String> TOOLCHAIN_STRING = ImmutableMap.of(
             "gcc", "",
             "clang", "clang");
@@ -72,7 +79,7 @@ public class NdkBuilder {
      */
     String getSysroot(Platform targetPlatform) {
         return ndkFolder + "/platforms/android-" + ndkExtension.getApiLevel()
-                + "/arch-" + targetPlatform.getArchitecture().getName();
+                + "/arch-" + ARCHITECTURE_STRING.get(targetPlatform.getName());
     }
 
     /**

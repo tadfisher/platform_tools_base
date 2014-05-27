@@ -18,6 +18,7 @@ package com.android.build.gradle.ndk.internal
 
 import com.android.SdkConstants
 import com.android.build.gradle.ndk.NdkExtension
+import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.nativebinaries.toolchain.Clang
 import org.gradle.nativebinaries.toolchain.Gcc
@@ -25,8 +26,7 @@ import org.gradle.nativebinaries.toolchain.Gcc
 /**
  * Toolchain configuration for native binaries.
  */
-class ToolchainConfiguration {
-
+class ToolchainConfigurationAction implements Action<Project> {
     private static final GCC_PREFIX = [
             (SdkConstants.ABI_INTEL_ATOM) : "i686-linux-android",
             (SdkConstants.ABI_ARMEABI_V7A) : "arm-linux-androideabi",
@@ -38,13 +38,12 @@ class ToolchainConfiguration {
     NdkBuilder ndkBuilder
     NdkExtension ndkExtension
 
-    ToolchainConfiguration(Project project, NdkBuilder ndkBuilder, NdkExtension ndkExtension) {
-        this.project = project
+    ToolchainConfigurationAction(NdkBuilder ndkBuilder, NdkExtension ndkExtension) {
         this.ndkBuilder = ndkBuilder
         this.ndkExtension = ndkExtension
     }
 
-    public void configureToolchains() {
+    public void execute(Project project) {
         // Create toolchain for each architecture.  Toolchain for x86 must be created first,
         // otherwise gradle may not choose the correct toolchain for a target platform.  This is
         // because gradle always choose the first toolchain supporting a platform and there is no
@@ -54,19 +53,15 @@ class ToolchainConfiguration {
                 SdkConstants.ABI_ARMEABI_V7A,
                 SdkConstants.ABI_ARMEABI,
                 SdkConstants.ABI_MIPS]) {
-            createToolchain(ndkExtension.getToolchain(), ndkExtension.getToolchainVersion(), platform)
+            createToolchain(
+                    project,
+                    ndkExtension.getToolchain(),
+                    ndkExtension.getToolchainVersion(),
+                    platform)
         }
     }
 
-    private static String getPrefix(String toolchain, String platform) {
-        if (toolchain.equals("gcc")) {
-            return GCC_PREFIX.get(platform);
-        }
-        return "";
-    }
-
-
-    private void createToolchain(String toolchainName, String toolchainVersion, String platform) {
+    private void createToolchain(Project project, String toolchainName, String toolchainVersion, String platform) {
         String name = NdkBuilder.getToolchainName(toolchainName, toolchainVersion, platform)
         String bin = (
                 ndkBuilder.getToolchainPath(toolchainName, toolchainVersion, platform).toString()
