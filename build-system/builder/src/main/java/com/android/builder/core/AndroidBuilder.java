@@ -978,6 +978,7 @@ public class AndroidBuilder {
             @Nullable String proguardOutput,
                       VariantConfiguration.Type type,
                       boolean debuggable,
+                      boolean pseudolocalize,
             @NonNull  AaptOptions options,
             @NonNull  Collection<String> resourceConfigs,
                       boolean enforceUniquePackageName)
@@ -1054,6 +1055,10 @@ public class AndroidBuilder {
 
         if (debuggable) {
             command.add("--debug-mode");
+        }
+
+        if (pseudolocalize) {
+            command.add("--pseudo-localize");
         }
 
         if (type != VariantConfiguration.Type.TEST) {
