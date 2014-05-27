@@ -68,6 +68,7 @@ public class DeviceTest extends BuildTest {
             "packagingOptions",
             "pkgOverride",
             "proguard",
+            "pseudolocalized",
             "proguardLib",
             "sameNamedLibs"
     };
