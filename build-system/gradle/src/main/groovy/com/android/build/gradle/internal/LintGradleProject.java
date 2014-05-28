@@ -16,8 +16,10 @@ import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.Variant;
+import com.android.ide.common.sdk.SdkVersionInfo;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
+import com.android.sdklib.IAndroidTarget;
 import com.android.tools.lint.detector.api.Project;
 import com.android.utils.Pair;
 import com.android.utils.XmlUtils;
@@ -41,6 +43,9 @@ import java.util.Set;
  * library)
  */
 public class LintGradleProject extends Project {
+    protected AndroidVersion mMinSdkVersion;
+    protected AndroidVersion mTargetSdkVersion;
+
     private LintGradleProject(
             @NonNull LintGradleClient client,
             @NonNull File dir,
@@ -384,25 +389,58 @@ public class LintGradleProject extends Project {
         }
 
         @Override
-        public int getMinSdk() {
-            ApiVersion minSdk = mProject.getDefaultConfig().getProductFlavor().getMinSdkVersion();
-            if (minSdk != null) {
-                // FIXME for codename support
-                return minSdk.getApiLevel();
+        @NonNull
+        public AndroidVersion getMinSdkVersion() {
+            if (mMinSdkVersion == null) {
+                ProductFlavor flavor = mProject.getDefaultConfig().getProductFlavor();
+                ApiVersion minSdk = flavor.getMinSdkVersion();
+                if (minSdk != null) {
+                    mMinSdkVersion = convertVersion(minSdk);
+                } else {
+                    mMinSdkVersion = super.getMinSdkVersion(); // from manifest
+                }
             }
 
-            return mMinSdk; // from manifest
+            return mMinSdkVersion;
         }
 
         @Override
-        public int getTargetSdk() {
-            ApiVersion targetSdk = mProject.getDefaultConfig().getProductFlavor().getTargetSdkVersion();
-            if (targetSdk != null) {
-                // FIXME for codename support
-                return targetSdk.getApiLevel();
+        @NonNull
+        public AndroidVersion getTargetSdkVersion() {
+            if (mTargetSdkVersion == null) {
+                ProductFlavor flavor = mProject.getDefaultConfig().getProductFlavor();
+                ApiVersion targetSdk = flavor.getTargetSdkVersion();
+                if (targetSdk != null) {
+                    mTargetSdkVersion = convertVersion(targetSdk);
+                } else {
+                    mTargetSdkVersion = super.getTargetSdkVersion(); // from manifest
+                }
             }
 
-            return mTargetSdk; // from manifest
+            return mTargetSdkVersion;
+        }
+
+        /**
+         * Convert an {@link ApiVersion} to a {@link AndroidVersion}. The chief problem here is that
+         * the {@link ApiVersion}, when using a codename, will not encode the corresponding API
+         * level (it just reflects the string entered by the user in the gradle file) so we perform
+         * a search here (since lint really wants to know the actual numeric API level)
+         *
+         * @param api the api version to convert
+         * @return the corresponding version
+         */
+        @NonNull
+        private AndroidVersion convertVersion(@NonNull ApiVersion api) {
+            String codename = api.getCodename();
+            if (codename != null) {
+                IAndroidTarget[] targets = mClient.getTargets();
+                AndroidVersion version = SdkVersionInfo.getVersion(codename, targets);
+                if (version != null) {
+                    return version;
+                }
+                return new AndroidVersion(api.getApiLevel(), codename);
+            }
+            return new AndroidVersion(api.getApiLevel(), null);
         }
 
         @Override
