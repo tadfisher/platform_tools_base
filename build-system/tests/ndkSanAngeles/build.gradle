@@ -11,7 +11,6 @@ apply plugin: 'android-ndk'
 
 android_ndk {
     moduleName "sanangeles"
-    apiLevel "19"
     cFlags "-DDISABLE_IMPORTGL"
     ldLibs "GLESv1_CM", "dl", "log"
     stl "stlport_static"

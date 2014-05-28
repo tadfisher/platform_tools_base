@@ -113,6 +113,9 @@ public class ApplicationVariantFactory implements VariantFactory {
         // Add a compile task
         basePlugin.createCompileTask(variantData, null/*testedVariant*/);
 
+        // Add NDK tasks
+        basePlugin.createNdkTasks(variantData);
+
         basePlugin.addPackageTasks(appVariantData, assembleTask, true /*publishApk*/);
     }
 

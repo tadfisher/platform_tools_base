@@ -2,7 +2,6 @@ apply plugin: 'android-ndk'
 
 android_ndk {
     moduleName "hello-jni"
-    apiLevel 19
 }
 
 apply plugin: 'android-library'

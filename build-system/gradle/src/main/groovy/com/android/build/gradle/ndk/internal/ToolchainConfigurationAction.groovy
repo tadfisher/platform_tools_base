@@ -44,6 +44,29 @@ class ToolchainConfigurationAction implements Action<Project> {
     }
 
     public void execute(Project project) {
+        // Configure all platforms.  Currently missing support for mips.
+        project.model {
+            platforms {
+                "$SdkConstants.ABI_INTEL_ATOM" {
+                    architecture SdkConstants.CPU_ARCH_INTEL_ATOM
+                }
+                "$SdkConstants.ABI_ARMEABI" {
+                    architecture SdkConstants.CPU_ARCH_ARM
+                }
+                "$SdkConstants.ABI_ARMEABI_V7A" {
+                    architecture SdkConstants.CPU_ARCH_ARM
+                }
+                "$SdkConstants.ABI_MIPS" {
+                    // Gradle currently do not support mips architecture, but it is safe to set it
+                    // to another architecture that is otherwise unused.
+                    // The default Gcc and Clang toolchains support platforms without architecture.
+                    // This means if architecture is not set, the x86 toolchain will be chosen by
+                    // gradle as it will be created first
+                    architecture "ppc"
+                }
+            }
+        }
+
         // Create toolchain for each architecture.  Toolchain for x86 must be created first,
         // otherwise gradle may not choose the correct toolchain for a target platform.  This is
         // because gradle always choose the first toolchain supporting a platform and there is no

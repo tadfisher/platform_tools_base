@@ -35,7 +35,7 @@ import com.android.builder.dependency.LibraryBundle
 import com.android.builder.dependency.LibraryDependency
 import com.android.builder.dependency.ManifestDependency
 import com.android.builder.model.AndroidLibrary
-import com.android.build.gradle.ndk.NdkAppPlugin
+import com.android.build.gradle.ndk.AndroidNdkPlugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.tasks.Copy
@@ -160,11 +160,17 @@ public class LibraryVariantFactory implements VariantFactory {
                 Sync)
 
         // Add dependencies on NDK tasks if NDK plugin is applied.
-        if (project.plugins.hasPlugin(NdkAppPlugin.class)) {
-            NdkAppPlugin ndkPlugin = project.plugins.getPlugin(NdkAppPlugin.class)
+        if (project.plugins.hasPlugin(AndroidNdkPlugin.class)) {
+            AndroidNdkPlugin ndkPlugin = project.plugins.getPlugin(AndroidNdkPlugin.class)
             packageJniLibs.dependsOn(ndkPlugin.getNdkTasks(variantConfig))
             packageJniLibs.from(ndkPlugin.getOutputDirectory(variantConfig)).include("**/*.so")
+        } else {
+            // Add NDK tasks
+            basePlugin.createNdkTasks(variantData);
+            packageJniLibs.dependsOn variantData.ndkCompileTask
+            packageJniLibs.from(variantData.ndkCompileTask.soFolder).include("**/*.so")
         }
+
         // package from 2 sources.
         packageJniLibs.from(variantConfig.jniLibsList).include("**/*.so")
         packageJniLibs.into(project.file(

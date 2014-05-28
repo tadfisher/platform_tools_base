@@ -23,6 +23,7 @@ import org.gradle.api.Project
 import org.gradle.nativebinaries.BuildType
 import org.gradle.nativebinaries.LibraryBinary
 import org.gradle.nativebinaries.NativeBinary
+import org.gradle.nativebinaries.internal.ProjectSharedLibraryBinary
 import org.gradle.nativebinaries.platform.Platform
 
 /**
@@ -38,6 +39,13 @@ class NdkConfigurationAction implements Action<Project> {
     }
 
     public void execute(Project project) {
+        project.model {
+            buildTypes {
+                maybeCreate(BuilderConstants.DEBUG)
+                maybeCreate(BuilderConstants.RELEASE)
+            }
+        }
+
         project.libraries {
             create(ndkExtension.getModuleName())
         }
@@ -49,14 +57,12 @@ class NdkConfigurationAction implements Action<Project> {
         project.sources.getByName(ndkExtension.getModuleName()) {
             c {
                 source {
-//                    srcDir "src/main/jni"
                     setSrcDirs(ndkExtension.getSourceSets().getByName(BuilderConstants.MAIN).getSrcDirs())
                     include "**/*.c"
                 }
             }
             cpp {
                 source {
-//                    srcDir "src/main/jni"
                     setSrcDirs(ndkExtension.getSourceSets().getByName(BuilderConstants.MAIN).getSrcDirs())
                     include "**/*.cpp"
                     include "**/*.cc"
@@ -65,7 +71,7 @@ class NdkConfigurationAction implements Action<Project> {
         }
 
         project.libraries.getByName(ndkExtension.getModuleName()) {
-            binaries.withType(LibraryBinary.class) { binary ->
+            binaries.withType(ProjectSharedLibraryBinary.class) { ProjectSharedLibraryBinary binary ->
                 cCompiler.define "ANDROID"
                 cppCompiler.define "ANDROID"
                 cCompiler.define "ANDROID_NDK"

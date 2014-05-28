@@ -53,6 +53,7 @@ class GdbSetupTask extends DefaultTask {
         this.ndkExtension = ndkExtension
         this.buildType = buildType
         this.platform = platform
+        this.gdbsetupFile = getOutputFile()
     }
 
     @TaskAction
@@ -61,17 +62,15 @@ class GdbSetupTask extends DefaultTask {
 
         StringBuilder sb = new StringBuilder()
 
-        "/usr/local/google/home/chiur/dev/work2/tools/base/build-system/tests/ndkSanAngeles/build/ndk/arm/debug/lib/armeabi-v7a/gdb.setup"
         sb.append(
                 "set solib-search-path /usr/local/google/home/chiur/dev/work2/tools/base/build-system/tests/ndkSanAngeles/build/ndk/arm/debug/obj/local/armeabi-v7a")
         sb.append("directory ")
-        sb.append("
-        /usr/local/google/home/chiur/dev/android-ndk-r9d/platforms/android-19/arch-arm/usr/include
-        /usr/local/google/home/chiur/dev/work2/tools/base/build-system/tests/ndkSanAngeles/src/main/jni
-        /usr/local/google/home/chiur/dev/work2/tools/base/build-system/tests/ndkSanAngeles/src/arm/jni
-        /usr/local/google/home/chiur/dev/work2/tools/base/build-system/tests/ndkSanAngeles/src/debug/jni
-        /usr/local/google/home/chiur/dev/work2/tools/base/build-system/tests/ndkSanAngeles/src/armDebug/jni
-        ../../build/ndk/arm/debug /usr/local/google/home/chiur/dev/android-ndk-r9d/sources/cxx-stl/stlport")
+        sb.append("/usr/local/google/home/chiur/dev/android-ndk-r9d/platforms/android-19/arch-arm/usr/include" +
+                "/usr/local/google/home/chiur/dev/work2/tools/base/build-system/tests/ndkSanAngeles/src/main/jni" +
+                "/usr/local/google/home/chiur/dev/work2/tools/base/build-system/tests/ndkSanAngeles/src/arm/jni" +
+                "/usr/local/google/home/chiur/dev/work2/tools/base/build-system/tests/ndkSanAngeles/src/debug/jni" +
+                "/usr/local/google/home/chiur/dev/work2/tools/base/build-system/tests/ndkSanAngeles/src/armDebug/jni" +
+                "../../build/ndk/arm/debug /usr/local/google/home/chiur/dev/android-ndk-r9d/sources/cxx-stl/stlport")
 
 
         Files.write(sb.toString(), gdbsetupFile, Charsets.UTF_8)

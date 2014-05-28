@@ -32,6 +32,7 @@ import org.gradle.api.tasks.TaskCollection
 import org.gradle.configuration.project.ProjectConfigurationActionContainer
 import org.gradle.internal.Actions
 import org.gradle.internal.reflect.Instantiator
+import org.gradle.nativebinaries.SharedLibraryBinary
 import org.gradle.nativebinaries.tasks.LinkSharedLibrary
 
 import javax.inject.Inject
@@ -39,7 +40,7 @@ import javax.inject.Inject
 /**
  * Plugin for Android NDK applications.
  */
-class NdkAppPlugin implements Plugin<Project> {
+class AndroidNdkPlugin implements Plugin<Project> {
     protected Project project
     private NdkExtension extension
     private NdkBuilder ndkBuilder
@@ -49,7 +50,7 @@ class NdkAppPlugin implements Plugin<Project> {
     protected Instantiator instantiator
 
     @Inject
-    public NdkAppPlugin(
+    public AndroidNdkPlugin(
             ProjectConfigurationActionContainer configurationActions,
             Instantiator instantiator) {
         this.configurationActions = configurationActions
@@ -76,32 +77,6 @@ class NdkAppPlugin implements Plugin<Project> {
         project.apply plugin: 'c'
         project.apply plugin: 'cpp'
 
-        project.model {
-            buildTypes {
-                maybeCreate(BuilderConstants.DEBUG)
-                maybeCreate(BuilderConstants.RELEASE)
-            }
-        }
-
-        // Configure all platforms.  Currently missing support for mips.
-        project.model {
-            platforms {
-                "$SdkConstants.ABI_INTEL_ATOM" {
-                    architecture SdkConstants.CPU_ARCH_INTEL_ATOM
-                }
-                "$SdkConstants.ABI_ARMEABI" {
-                    architecture SdkConstants.CPU_ARCH_ARM
-                }
-                "$SdkConstants.ABI_ARMEABI_V7A" {
-                    architecture SdkConstants.CPU_ARCH_ARM
-                }
-                "$SdkConstants.ABI_MIPS" {
-                    architecture "ppc"
-                }
-            }
-
-        }
-
         configurationActions.add(Actions.composite(
                 new NdkExtensionConventionAction(),
                 new ToolchainConfigurationAction(ndkBuilder, extension),
@@ -112,10 +87,9 @@ class NdkAppPlugin implements Plugin<Project> {
      * Return the expected native binary tasks for a VariantConfiguration.
      */
     public TaskCollection getNdkTasks(VariantConfiguration variantConfig) {
+//        project.libraries.getByName(ndkExtension.getModuleName()).binaries.withType
+
         project.tasks.withType(LinkSharedLibrary).matching { task ->
-//            ((variantConfig.getBuildType().isDebuggable()
-//                    ? task.name.contains("Debug")
-//                    : task.name.contains("Release"))
             (task.name.contains(variantConfig.getBuildType().getName().capitalize())
             && (variantConfig.getNdkConfig().getAbiFilters() == null
                     || variantConfig.getNdkConfig().getAbiFilters().contains(

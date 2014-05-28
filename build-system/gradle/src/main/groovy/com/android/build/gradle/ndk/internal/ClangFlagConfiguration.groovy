@@ -126,12 +126,7 @@ class ClangFlagConfiguration implements FlagConfiguration{
     }
 
     List<String> getCFlags() {
-         def toolchainFlags = [
-                "-gcc-toolchain",
-                ndkBuilder.getToolchainPath("gcc", "4.8", platform.name),
-                "-target",
-                TARGET_TRIPLE[platform.name]]
-         toolchainFlags + RELEASE_CFLAGS[platform.name] + DEBUG_CFLAGS[platform.name]
+         getTargetFlags() + RELEASE_CFLAGS[platform.name] + DEBUG_CFLAGS[platform.name]
     }
 
     List<String> getCppFlags() {
@@ -139,55 +134,16 @@ class ClangFlagConfiguration implements FlagConfiguration{
     }
 
     List<String> getLdFlags() {
-        [ "-gcc-toolchain",
+        getTargetFlags() +
+                (platform.name.equals(SdkConstants.ABI_ARMEABI_V7A) ? ["-Wl,--fix-cortex-a8"] : [])
+    }
+
+    private List<String> getTargetFlags() {
+        [
+                "-gcc-toolchain",
                 ndkBuilder.getToolchainPath("gcc", "4.8", platform.name),
                 "-target",
-                TARGET_TRIPLE[platform.name], ] + (platform.name.equals(SdkConstants.ABI_ARMEABI_V7A) ? ["-Wl,--fix-cortex-a8"] : [])
+                TARGET_TRIPLE[platform.name]
+        ]
     }
 }
-
-
-/*
-    private static final def RELEASE_CFLAGS = [
-            (SdkConstants.ABI_ARMEABI) : [
-                    "-fpic",
-                    "-mthumb",
-                    "-Os",
-                    "-fno-strict-aliasing",
-                    "-finline-limit=64",
-                    "-march=armv5te",
-                    "-mtune=xscale",
-                    "-msoft-float",
-            ],
-            (SdkConstants.ABI_ARMEABI_V7A) : [
-                    "-fpic",
-                    "-Os",
-                    "-fno-strict-aliasing",
-                    "-finline-limit=64",
-                    "-march=armv7-a",
-                    "-mfloat-abi=softfp",
-                    "-mfpu=vfpv3-d16",
-                    "-mthumb",
-            ],
-            (SdkConstants.ABI_INTEL_ATOM) : [
-                    "-O2",
-                    "-fstrict-aliasing",
-                    "-funswitch-loops",
-                    "-finline-limit=300",
-
-            ],
-            (SdkConstants.ABI_MIPS) : [
-                    "-fpic",
-                    "-fno-strict-aliasing",
-                    "-finline-functions",
-                    "-fmessage-length=0",
-                    "-fno-inline-functions-called-once",
-                    "-fgcse-after-reload",
-                    "-frerun-cse-after-loop",
-                    "-frename-registers",
-                    "-O2",
-                    "-funswitch-loops",
-                    "-finline-limit=300",
-            ]
-    ]
-*/

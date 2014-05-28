@@ -78,7 +78,7 @@ public class NdkBuilder {
      * Returns the sysroot directory for the toolchain.
      */
     String getSysroot(Platform targetPlatform) {
-        return ndkFolder + "/platforms/android-" + ndkExtension.getApiLevel()
+        return ndkFolder + "/platforms/" + ndkExtension.getCompileSdkVersion()
                 + "/arch-" + ARCHITECTURE_STRING.get(targetPlatform.getName());
     }
 

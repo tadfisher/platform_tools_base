@@ -35,15 +35,15 @@ import java.util.Set;
  */
 public class NdkExtension {
     private String moduleName;
+    private String target
     private String cFlags;
     private String cppFlags;
-    private int apiLevel;
     private Set<String> ldLibs;
     private String toolchain;
     private String toolchainVersion;
     private String stl;
     private boolean renderscriptNdkMode;
-    final NamedDomainObjectContainer<AndroidSourceDirectorySet> sourceSetsContainer
+    private NamedDomainObjectContainer<AndroidSourceDirectorySet> sourceSetsContainer
 
     public NdkExtension(NamedDomainObjectContainer<AndroidSourceDirectorySet> sourceSetsContainer) {
         this.sourceSetsContainer = sourceSetsContainer
@@ -57,20 +57,24 @@ public class NdkExtension {
         this.moduleName = moduleName;
     }
 
-    public int getApiLevel() {
-        return apiLevel;
+    public String getCompileSdkVersion() {
+        return target
     }
 
-    public void apiLevel(int apiLevel) {
-        this.apiLevel = apiLevel;
+    public void compileSdkVersion(String target) {
+        this.target = target
     }
 
-    public void apiLevel(String apiLevel) {
-        this.apiLevel = Integer.parseInt(apiLevel);
+    public void compileSdkVersion(int apiLevel) {
+        compileSdkVersion("android-" + apiLevel)
     }
 
-    public void setApiLevel(int apiLevel) {
-        this.apiLevel = apiLevel;
+    public void setCompileSdkVersion(int apiLevel) {
+        compileSdkVersion(apiLevel)
+    }
+
+    public void setCompileSdkVersion(String target) {
+        compileSdkVersion(target)
     }
 
     public String getToolchain() {
