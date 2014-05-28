@@ -98,7 +98,7 @@ public class PluralsDetectorTest extends AbstractCheckTest {
     public void testImpliedQuantity() throws Exception {
         mEnabled = Collections.singleton(PluralsDetector.IMPLIED_QUANTITY);
         assertEquals(""
-                + "res/values-sl/plurals2.xml:4: Error: The quantity 'one' matches more than one specific number in this locale, but the message did not include a formatting argument (such as %d). This is usually an internationalization error. See full issue explanation for more. [ImpliedQuantity]\n"
+                + "res/values-sl/plurals2.xml:4: Error: The quantity 'one' matches more than one specific number in this locale (1, 101, 201, 301, 401, 501, 601, 701, 1001, \u2026), but the message did not include a formatting argument (such as %d). This is usually an internationalization error. See full issue explanation for more. [ImpliedQuantity]\n"
                 + "        <item quantity=\"one\">Znaleziono jedną piosenkę.</item>\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "1 errors, 0 warnings\n",

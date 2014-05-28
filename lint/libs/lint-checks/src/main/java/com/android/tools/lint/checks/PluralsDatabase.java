@@ -24,9 +24,15 @@ import static com.android.tools.lint.checks.PluralsDatabase.Quantity.zero;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.LintUtils;
+import com.google.common.base.Charsets;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.google.common.io.ByteStreams;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -37,12 +43,16 @@ import java.util.Set;
  * about plural forms for a given language
  */
 public class PluralsDatabase {
+    private static final boolean DEBUG = false;
+    private static final EnumSet<Quantity> NONE = EnumSet.noneOf(Quantity.class);
+
     private static final PluralsDatabase sInstance = new PluralsDatabase();
 
     private Map<String, EnumSet<Quantity>> mPlurals;
-    private Map<Quantity, Map<Set<Quantity>,Boolean>> mMultiValueSetNames =
-            Maps.newEnumMap(Quantity.class);
-
+    private Map<Quantity, Set<String>> mMultiValueSetNames = Maps.newEnumMap(Quantity.class);
+    private String mDescriptions;
+    private int mRuleSetOffset;
+    private Map<String,String> mSetNamePerLanguage;
 
     @NonNull
     public static PluralsDatabase get() {
@@ -52,18 +62,112 @@ public class PluralsDatabase {
     @Nullable
     public EnumSet<Quantity> getRelevant(@NonNull String language) {
         ensureInitialized();
-        return mPlurals.get(language);
+        EnumSet<Quantity> set = mPlurals.get(language);
+        if (set == null) {
+            String s = getLocaleData(language);
+            if (s == null) {
+                mPlurals.put(language, NONE);
+                return null;
+            }
+            // Process each item and look for relevance
+
+            set = EnumSet.noneOf(Quantity.class);
+            int length = s.length();
+            for (int offset = 0, end; offset < length; offset = end + 1) {
+                for (; offset < length; offset++) {
+                    if (!Character.isWhitespace(s.charAt(offset))) {
+                        break;
+                    }
+                }
+
+                int begin = s.indexOf('{', offset);
+                if (begin == -1) {
+                    break;
+                }
+                end = findBalancedEnd(s, begin);
+                if (end == -1) {
+                    end = length;
+                }
+
+                if (s.startsWith("other{", offset)) {
+                    // Not included
+                    continue;
+                }
+
+                // Make sure the rule references applies to integers:
+                // Rule definition mentions n or i or @integer
+                //
+                //    n  absolute value of the source number (integer and decimals).
+                //    i  integer digits of n.
+                //    v  number of visible fraction digits in n, with trailing zeros.
+                //    w  number of visible fraction digits in n, without trailing zeros.
+                //    f  visible fractional digits in n, with trailing zeros.
+                //    t  visible fractional digits in n, without trailing zeros.
+                boolean appliesToIntegers = false;
+                boolean inQuotes = false;
+                for (int i = begin + 1; i < end - 1; i++) {
+                    char c = s.charAt(i);
+                    if (c == '"') {
+                        inQuotes = !inQuotes;
+                    } else if (inQuotes) {
+                        if (c == '@') {
+                            if (s.startsWith("@integer", i)) {
+                                appliesToIntegers = true;
+                                break;
+                            } else {
+                                // @decimal always comes after @integer
+                                break;
+                            }
+                        } else if ((c == 'i' || c == 'n') && Character
+                                .isWhitespace(s.charAt(i + 1))) {
+                            appliesToIntegers = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!appliesToIntegers) {
+                    if (DEBUG) {
+                        System.out.println("Skipping quantity " + s.substring(offset, begin)
+                                + " in set for locale " + language + " (" + getSetName(language)
+                                + ")");
+                    }
+                    continue;
+                }
+
+                if (s.startsWith("one{", offset)) {
+                    set.add(one);
+                } else if (s.startsWith("few{", offset)) {
+                    set.add(few);
+                } else if (s.startsWith("many{", offset)) {
+                    set.add(many);
+                } else if (s.startsWith("two{", offset)) {
+                    set.add(two);
+                } else if (s.startsWith("zero{", offset)) {
+                    set.add(zero);
+                } else {
+                    // Unexpected quantity: ignore
+                    if (DEBUG) {
+                        assert false : s.substring(offset, Math.min(offset + 10, length));
+                    }
+                }
+            }
+
+            mPlurals.put(language, set);
+        }
+        return set == NONE ? null : set;
     }
 
-    public boolean hasMultipleValuesForQuantity(@NonNull String language,
+    public boolean hasMultipleValuesForQuantity(
+            @NonNull String language,
             @NonNull Quantity quantity) {
         if (quantity == Quantity.one || quantity == Quantity.two || quantity == Quantity.zero) {
             ensureInitialized();
-            EnumSet<Quantity> relevant = mPlurals.get(language);
-            if (relevant != null) {
-                Map<Set<Quantity>,Boolean> names = mMultiValueSetNames.get(quantity);
+            String setName = getSetName(language);
+            if (setName != null) {
+                Set<String> names = mMultiValueSetNames.get(quantity);
                 assert names != null : quantity;
-                return names.containsKey(relevant);
+                return names.contains(setName);
             }
         }
 
@@ -71,11 +175,6 @@ public class PluralsDatabase {
     }
 
     private void ensureInitialized() {
-        // Based on the plurals table in plurals.txt in icu4c, version 52:
-        //  external/icu4c/data/misc/plurals.txt
-        // The format is documented here:
-        // http://unicode.org/reports/tr35/tr35-numbers.html#Language_Plural_Rules
-
         if (mPlurals == null) {
             initialize();
         }
@@ -83,234 +182,7 @@ public class PluralsDatabase {
 
     @SuppressWarnings({"UnnecessaryLocalVariable", "UnusedDeclaration"})
     private void initialize() {
-        // Quantity.other appears in every single set, so it was instead removed and
-        // handled at the check site.
-        EnumSet<Quantity> empty = EnumSet.noneOf(Quantity.class);
-
-        EnumSet<Quantity> set0 = EnumSet.of(few, many, one, two, zero);
-        EnumSet<Quantity> set1 = EnumSet.of(many, one, two);
-        EnumSet<Quantity> set10 = EnumSet.of(few, many, one);
-        EnumSet<Quantity> set11 = EnumSet.of(few, one);  // "many" are only for fractions
-        EnumSet<Quantity> set12 = set10;
-        EnumSet<Quantity> set13 = EnumSet.of(few, one, two);
-        EnumSet<Quantity> set14 = set10;
-        EnumSet<Quantity> set15 = EnumSet.of(one);
-        EnumSet<Quantity> set16 = set0;
-        EnumSet<Quantity> set17 = EnumSet.of(one, zero);
-        EnumSet<Quantity> set18 = set11;
-        EnumSet<Quantity> set19 = EnumSet.of(few, many, one, two);
-        EnumSet<Quantity> set2 = set15;
-        EnumSet<Quantity> set20 = set17;
-        EnumSet<Quantity> set21 = set15;
-        EnumSet<Quantity> set22 = set13;
-        EnumSet<Quantity> set23 = set22;
-        EnumSet<Quantity> set24 = empty;
-        EnumSet<Quantity> set25 = set15;
-        EnumSet<Quantity> set26 = set15;
-        EnumSet<Quantity> set27 = set15;
-        EnumSet<Quantity> set28 = set15;
-        EnumSet<Quantity> set29 = set15;
-        EnumSet<Quantity> set3 = set15;
-        EnumSet<Quantity> set30 = set15;
-        EnumSet<Quantity> set31 = set15;
-        EnumSet<Quantity> set32 = set15;
-        EnumSet<Quantity> set33 = set18;
-        EnumSet<Quantity> set34 = EnumSet.of(many, one);
-        EnumSet<Quantity> set35 = set10;
-        EnumSet<Quantity> set36 = set15;
-        EnumSet<Quantity> set37 = set15;
-        EnumSet<Quantity> set38 = set15;
-        EnumSet<Quantity> set39 = set13;
-        EnumSet<Quantity> set4 = set15;
-        EnumSet<Quantity> set40 = EnumSet.of(many);
-        EnumSet<Quantity> set41 = set13;
-        EnumSet<Quantity> set42 = set13;
-        EnumSet<Quantity> set43 = set19;
-        EnumSet<Quantity> set44 = set19;
-        EnumSet<Quantity> set45 = set10;
-        EnumSet<Quantity> set5 = set17;
-        EnumSet<Quantity> set6 = EnumSet.of(one, two);
-        EnumSet<Quantity> set7 = set19;
-        EnumSet<Quantity> set8 = set18;
-        EnumSet<Quantity> set9 = set18; // "many" only for fractions, so using different set
-
-        // The following sets are used by the mMultiValueSetNames map, and therefore need
-        // to have their own instances since we will look up set identity
-        set10 = EnumSet.copyOf(set10);
-        set13 = EnumSet.copyOf(set13);
-        set15 = EnumSet.copyOf(set15);
-        set18 = EnumSet.copyOf(set18);
-        set19 = EnumSet.copyOf(set19);
-        set21 = EnumSet.copyOf(set21);
-        set22 = EnumSet.copyOf(set22);
-        set23 = EnumSet.copyOf(set23);
-        set25 = EnumSet.copyOf(set25);
-        set3 = EnumSet.copyOf(set3);
-        set30 = EnumSet.copyOf(set30);
-        set31 = EnumSet.copyOf(set31);
-        set32 = EnumSet.copyOf(set32);
-        set33 = EnumSet.copyOf(set33);
-        set34 = EnumSet.copyOf(set34);
-        set35 = EnumSet.copyOf(set35);
-        set38 = EnumSet.copyOf(set38);
-        set39 = EnumSet.copyOf(set39);
-        set4 = EnumSet.copyOf(set4);
-        set40 = EnumSet.copyOf(set40);
-        set42 = EnumSet.copyOf(set42);
-        set43 = EnumSet.copyOf(set43);
-        set44 = EnumSet.copyOf(set44);
-        set45 = EnumSet.copyOf(set45);
-        set5 = EnumSet.copyOf(set5);
-        set9 = EnumSet.copyOf(set9);
-
-        final int INITIAL_CAPACITY = 133;
-        mPlurals = Maps.newHashMapWithExpectedSize(INITIAL_CAPACITY);
-        mPlurals.put("af", set2);
-        mPlurals.put("ak", set3);
-        mPlurals.put("am", set30);
-        mPlurals.put("ar", set0);
-        mPlurals.put("az", set2);
-        mPlurals.put("be", set10);
-        mPlurals.put("bg", set2);
-        mPlurals.put("bh", set3);
-        mPlurals.put("bm", set24);
-        mPlurals.put("bn", set30);
-        mPlurals.put("bo", set24);
-        mPlurals.put("br", set19);
-        mPlurals.put("bs", set33);
-        mPlurals.put("ca", set26);
-        mPlurals.put("cs", set11);
-        mPlurals.put("cy", set16);
-        mPlurals.put("da", set28);
-        mPlurals.put("de", set26);
-        mPlurals.put("dv", set2);
-        mPlurals.put("dz", set24);
-        mPlurals.put("ee", set2);
-        mPlurals.put("el", set2);
-        mPlurals.put("en", set26);
-        mPlurals.put("eo", set2);
-        mPlurals.put("es", set2);
-        mPlurals.put("et", set26);
-        mPlurals.put("eu", set2);
-        mPlurals.put("fa", set30);
-        mPlurals.put("ff", set4);
-        mPlurals.put("fi", set26);
-        mPlurals.put("fo", set2);
-        mPlurals.put("fr", set4);
-        mPlurals.put("fy", set2);
-        mPlurals.put("ga", set7);
-        mPlurals.put("gd", set23);
-        mPlurals.put("gl", set26);
-        mPlurals.put("gu", set30);
-        mPlurals.put("gv", set22);
-        mPlurals.put("ha", set2);
-        mPlurals.put("he", set1);
-        mPlurals.put("hi", set30);
-        mPlurals.put("hr", set33);
-        mPlurals.put("hu", set2);
-        mPlurals.put("hy", set4);
-        mPlurals.put("id", set24);
-        mPlurals.put("ig", set24);
-        mPlurals.put("ii", set24);
-        mPlurals.put("in", set24);
-        mPlurals.put("is", set31);
-        mPlurals.put("it", set26);
-        mPlurals.put("iu", set6);
-        mPlurals.put("iw", set1);
-        mPlurals.put("ja", set24);
-        mPlurals.put("ji", set26);
-        mPlurals.put("jv", set24);
-        // Javanese replaced by "jv"
-        //mPlurals.put("jw", set24);
-        mPlurals.put("ka", set2);
-        mPlurals.put("kk", set2);
-        mPlurals.put("kl", set2);
-        mPlurals.put("km", set24);
-        mPlurals.put("kn", set30);
-        mPlurals.put("ko", set24);
-        mPlurals.put("ks", set2);
-        mPlurals.put("ku", set2);
-        mPlurals.put("kw", set6);
-        mPlurals.put("ky", set2);
-        mPlurals.put("lb", set2);
-        mPlurals.put("lg", set2);
-        mPlurals.put("ln", set3);
-        mPlurals.put("lo", set24);
-        mPlurals.put("lt", set9);
-        mPlurals.put("lv", set5);
-        mPlurals.put("mg", set3);
-        mPlurals.put("mk", set15);
-        mPlurals.put("ml", set2);
-        mPlurals.put("mn", set2);
-        // Deprecated
-        //mPlurals.put("mo", set8);
-        mPlurals.put("mr", set30);
-        mPlurals.put("ms", set24);
-        mPlurals.put("mt", set14);
-        mPlurals.put("my", set24);
-        mPlurals.put("nb", set2);
-        mPlurals.put("nd", set2);
-        mPlurals.put("ne", set2);
-        mPlurals.put("nl", set26);
-        mPlurals.put("nn", set2);
-        mPlurals.put("no", set2);
-        mPlurals.put("nr", set2);
-        mPlurals.put("ny", set2);
-        mPlurals.put("om", set2);
-        mPlurals.put("or", set2);
-        mPlurals.put("os", set2);
-        mPlurals.put("pa", set3);
-        mPlurals.put("pl", set12);
-        mPlurals.put("ps", set2);
-        mPlurals.put("pt", set27);
-        // Luckily these sets are identical so we don't need to make a region distinction
-        // in the API
-        //mPlurals.put("pt_PT", set29); // XXX
-        mPlurals.put("rm", set2);
-        mPlurals.put("ro", set8);
-        mPlurals.put("ru", set34);
-        mPlurals.put("se", set6);
-        mPlurals.put("sg", set24);
-        // sh was removed from 639-1 to 639-2
-        //mPlurals.put("sh", set33);
-        mPlurals.put("si", set32);
-        mPlurals.put("sk", set11);
-        mPlurals.put("sl", set13);
-        mPlurals.put("sn", set2);
-        mPlurals.put("so", set2);
-        mPlurals.put("sq", set2);
-        mPlurals.put("sr", set33);
-        mPlurals.put("ss", set2);
-        mPlurals.put("st", set2);
-        mPlurals.put("sv", set26);
-        mPlurals.put("sw", set26);
-        mPlurals.put("ta", set2);
-        mPlurals.put("te", set2);
-        mPlurals.put("th", set24);
-        mPlurals.put("ti", set3);
-        mPlurals.put("tk", set2);
-        mPlurals.put("tl", set25);
-        mPlurals.put("tn", set2);
-        mPlurals.put("to", set24);
-        mPlurals.put("tr", set2);
-        mPlurals.put("ts", set2);
-        mPlurals.put("uk", set35);
-        mPlurals.put("ur", set26);
-        mPlurals.put("uz", set2);
-        mPlurals.put("ve", set2);
-        mPlurals.put("vi", set24);
-        mPlurals.put("vo", set2);
-        mPlurals.put("wa", set3);
-        mPlurals.put("wo", set24);
-        mPlurals.put("xh", set2);
-        mPlurals.put("yi", set26);
-        mPlurals.put("yo", set24);
-        mPlurals.put("zh", set24);
-        mPlurals.put("zu", set30);
-
-        assert mPlurals.size() == INITIAL_CAPACITY : mPlurals.size();
-
-        // Sets where more than a single integer maps to one. Take for example
+        // Sets where more than a single integer maps to the quantity. Take for example
         // set 10:
         //    set10{
         //        one{
@@ -327,38 +199,177 @@ public class PluralsDatabase {
         //        one{"i = 0,1 and n != 0 @integer 1 @decimal 0.1~1.6"}
         //    }
         // since it looks to me like this only differs from 1 in the fractional part.
+        //
+        // This is currently manually encoded (by looking at the rules). It would be
+        // great to handle this automatically via the parser instead.
 
-        //noinspection unchecked
-        mMultiValueSetNames.put(Quantity.one, newIdentityHashMap(
-                set10, set13, set15, set18, set19, set21, set22, set23, set25, set3, set30,
-                set31, set32, set33, set34, set35, set38, set39, set4, set40, set42, set45,
-                set5, set9
+        mMultiValueSetNames = Maps.newEnumMap(Quantity.class);
+        mMultiValueSetNames.put(Quantity.two, Sets.newHashSet(
+                "set13", "set19", "set22", "set23", "set40", "set43", "set44", "set45"
         ));
-
-        // Sets where more than a single integer maps to two.
-        //noinspection unchecked
-        mMultiValueSetNames.put(Quantity.two, newIdentityHashMap(
-                set13, set19, set22, set23, set40, set43, set44, set45
+        mMultiValueSetNames.put(Quantity.one, Sets.newHashSet(
+                "set10", "set13", "set15", "set18", "set19", "set21", "set22", "set23", "set25",
+                "set3", "set30", "set31", "set32", "set33", "set34", "set35", "set38", "set39",
+                "set4", "set40", "set42", "set45", "set5", "set9"
         ));
+        mMultiValueSetNames.put(Quantity.zero, Collections.singleton("set5"));
 
-        // Sets where more than a single integer maps to zero.
-        //noinspection unchecked
-        mMultiValueSetNames.put(Quantity.zero, newIdentityHashMap(set5));
+        mSetNamePerLanguage = Maps.newHashMapWithExpectedSize(20);
+        mPlurals = Maps.newHashMapWithExpectedSize(20);
     }
 
-    private static Map<Set<Quantity>,Boolean> newIdentityHashMap(Set<Quantity>... elements) {
-        Map<Set<Quantity>,Boolean> map = Maps.newIdentityHashMap();
-        for (Set<Quantity> set : elements) {
-            map.put(set, true);
-        }
-        return map;
-    }
-
-    @SuppressWarnings({"MethodMayBeStatic", "UnusedParameters"})
     @Nullable
     public String findIntegerExamples(@NonNull String language, @NonNull Quantity quantity) {
-        // Need plurals database
+        String data = getQuantityData(language, quantity);
+        if (data != null) {
+            int index = data.indexOf("@integer");
+            if (index == -1) {
+                return null;
+            }
+            int start = index + "@integer".length();
+            int end = data.indexOf('@', start);
+            if (end == -1) {
+                end = data.length();
+            }
+            return data.substring(start, end).trim();
+        }
+
         return null;
+    }
+
+
+    @NonNull
+    private String getPluralsDescriptions() {
+        if (mDescriptions == null) {
+            InputStream stream = PluralsDetector.class.getResourceAsStream("data/plurals.txt");
+            if (stream != null) {
+                try {
+                    byte[] bytes = ByteStreams.toByteArray(stream);
+                    mDescriptions = new String(bytes, Charsets.UTF_8);
+                    mRuleSetOffset = mDescriptions.indexOf("rules{");
+                    if (mRuleSetOffset == -1) {
+                        if (DEBUG) {
+                            assert false;
+                        }
+                        mDescriptions = "";
+                        mRuleSetOffset = 0;
+                    }
+
+                } catch (IOException e) {
+                    try {
+                        stream.close();
+                    } catch (IOException e1) {
+                        // Stupid API.
+                    }
+                }
+            }
+            if (mDescriptions == null) {
+                mDescriptions = "";
+            }
+        }
+        return mDescriptions;
+    }
+
+    @Nullable
+    public String getQuantityData(@NonNull String language, @NonNull Quantity quantity) {
+        String data = getLocaleData(language);
+        if (data == null) {
+            return null;
+        }
+        String quantityDeclaration = quantity.name() + "{";
+        int quantityStart = data.indexOf(quantityDeclaration);
+        if (quantityStart == -1) {
+            return null;
+        }
+        int quantityEnd = findBalancedEnd(data, quantityStart);
+        if (quantityEnd == -1) {
+            return null;
+        }
+        //String s = data.substring(quantityStart + quantityDeclaration.length(), quantityEnd);
+        StringBuilder sb = new StringBuilder();
+        boolean inString = false;
+        for (int i = quantityStart + quantityDeclaration.length(); i < quantityEnd; i++) {
+            char c = data.charAt(i);
+            if (c == '"') {
+                inString = !inString;
+            } else if (inString) {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
+    }
+
+    @Nullable
+    public String getSetName(@NonNull String language) {
+        String name = mSetNamePerLanguage.get(language);
+        if (name == null) {
+            name = findSetName(language);
+            if (name == null) {
+                name = ""; // Store "" instead of null so we remember search result
+            }
+            mSetNamePerLanguage.put(language, name);
+        }
+
+        return name.isEmpty() ? null : name;
+    }
+
+    @Nullable
+    private String findSetName(@NonNull String language) {
+        String data = getPluralsDescriptions();
+        int index = data.indexOf("locales{");
+        if (index == -1) {
+            return null;
+        }
+        int end = data.indexOf("locales_ordinals{", index + 1);
+        if (end == -1) {
+            return null;
+        }
+        String languageDeclaration = " " + language + "{\"";
+        index = data.indexOf(languageDeclaration);
+        if (index == -1 || index >= end) {
+            return null;
+        }
+        int setEnd = data.indexOf('\"', index + languageDeclaration.length());
+        if (setEnd == -1) {
+            return null;
+        }
+        return data.substring(index + languageDeclaration.length(), setEnd).trim();
+    }
+
+    @Nullable
+    public String getLocaleData(@NonNull String language) {
+        String set = getSetName(language);
+        if (set == null) {
+            return null;
+        }
+        String data = getPluralsDescriptions();
+        int setStart = data.indexOf(set + "{", mRuleSetOffset);
+        if (setStart == -1) {
+            return null;
+        }
+        int setEnd = findBalancedEnd(data, setStart);
+        if (setEnd == -1) {
+            return null;
+        }
+        return data.substring(setStart + set.length() + 1, setEnd);
+    }
+
+    private static int findBalancedEnd(String data, int offset) {
+        int balance = 0;
+        int length = data.length();
+        for (; offset < length; offset++) {
+            char c = data.charAt(offset);
+            if (c == '{') {
+                balance++;
+            } else if (c == '}') {
+                balance--;
+                if (balance == 0) {
+                    return offset;
+                }
+            }
+        }
+
+        return -1;
     }
 
     public enum Quantity {
