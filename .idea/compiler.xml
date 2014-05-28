@@ -17,6 +17,7 @@
       <entry name="?*.xsd" />
       <entry name="?*.css" />
       <entry name="?*.trace" />
+      <entry name="plurals.txt" />
     </wildcardResourcePatterns>
     <annotationProcessing>
       <profile default="true" name="Default" enabled="false">
