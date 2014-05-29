@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.builder;
+package com.android.builder.core;
 
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.FD_RES_XML;
-import static com.android.builder.BuilderConstants.ANDROID_WEAR;
-import static com.android.builder.BuilderConstants.ANDROID_WEAR_MICRO_APK;
 import static com.android.manifmerger.ManifestMerger2.Invoker;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -110,7 +108,7 @@ import java.util.regex.Pattern;
  * then build steps can be done with
  * {@link #processManifest(java.io.File, java.util.List, java.util.List, String, int, String, String, int, String)}
  * {@link #processTestManifest(String, String, int, String, String, Boolean, Boolean, java.util.List, String)}
- * {@link #processResources(java.io.File, java.io.File, java.io.File, java.util.List, String, String, String, String, String, com.android.builder.VariantConfiguration.Type, boolean, com.android.builder.model.AaptOptions, java.util.Collection, boolean)}
+ * {@link #processResources(java.io.File, java.io.File, java.io.File, java.util.List, String, String, String, String, String, com.android.builder.core.VariantConfiguration.Type, boolean, com.android.builder.model.AaptOptions, java.util.Collection, boolean)}
  * {@link #compileAllAidlFiles(java.util.List, java.io.File, java.io.File, java.util.List, com.android.builder.compiling.DependencyFileProcessor)}
  * {@link #convertByteCode(Iterable, Iterable, java.io.File, DexOptions, java.util.List, boolean)}
  * {@link #packageApk(String, java.io.File, java.util.Collection, String, java.util.Collection, java.util.Set, boolean, com.android.builder.model.SigningConfig, com.android.builder.model.PackagingOptions, String)}
@@ -516,10 +514,10 @@ public class AndroidBuilder {
      * @param targetSdkVersion a targetSdkVersion to inject in the manifest or -1 to do nothing.
      * @param outManifestLocation the output location for the merged manifest
      *
-     * @see com.android.builder.VariantConfiguration#getMainManifest()
-     * @see com.android.builder.VariantConfiguration#getManifestOverlays()
-     * @see com.android.builder.VariantConfiguration#getDirectLibraries()
-     * @see com.android.builder.VariantConfiguration#getMergedFlavor()
+     * @see VariantConfiguration#getMainManifest()
+     * @see VariantConfiguration#getManifestOverlays()
+     * @see VariantConfiguration#getDirectLibraries()
+     * @see VariantConfiguration#getMergedFlavor()
      * @see DefaultProductFlavor#getVersionCode()
      * @see DefaultProductFlavor#getVersionName()
      * @see DefaultProductFlavor#getMinSdkVersion()
@@ -621,14 +619,14 @@ public class AndroidBuilder {
      * @param libraries the library dependency graph
      * @param outManifest the output location for the merged manifest
      *
-     * @see com.android.builder.VariantConfiguration#getPackageName()
-     * @see com.android.builder.VariantConfiguration#getTestedConfig()
-     * @see com.android.builder.VariantConfiguration#getMinSdkVersion()
-     * @see com.android.builder.VariantConfiguration#getTestedPackageName()
-     * @see com.android.builder.VariantConfiguration#getInstrumentationRunner()
-     * @see com.android.builder.VariantConfiguration#getHandleProfiling()
-     * @see com.android.builder.VariantConfiguration#getFunctionalTest()
-     * @see com.android.builder.VariantConfiguration#getDirectLibraries()
+     * @see VariantConfiguration#getPackageName()
+     * @see VariantConfiguration#getTestedConfig()
+     * @see VariantConfiguration#getMinSdkVersion()
+     * @see VariantConfiguration#getTestedPackageName()
+     * @see VariantConfiguration#getInstrumentationRunner()
+     * @see VariantConfiguration#getHandleProfiling()
+     * @see VariantConfiguration#getFunctionalTest()
+     * @see VariantConfiguration#getDirectLibraries()
      */
     public void processTestManifest(
             @NonNull  String testPackageName,
@@ -712,14 +710,14 @@ public class AndroidBuilder {
      * @param libraries the library dependency graph
      * @param outManifest the output location for the merged manifest
      *
-     * @see com.android.builder.VariantConfiguration#getPackageName()
-     * @see com.android.builder.VariantConfiguration#getTestedConfig()
-     * @see com.android.builder.VariantConfiguration#getMinSdkVersion()
-     * @see com.android.builder.VariantConfiguration#getTestedPackageName()
-     * @see com.android.builder.VariantConfiguration#getInstrumentationRunner()
-     * @see com.android.builder.VariantConfiguration#getHandleProfiling()
-     * @see com.android.builder.VariantConfiguration#getFunctionalTest()
-     * @see com.android.builder.VariantConfiguration#getDirectLibraries()
+     * @see VariantConfiguration#getPackageName()
+     * @see VariantConfiguration#getTestedConfig()
+     * @see VariantConfiguration#getMinSdkVersion()
+     * @see VariantConfiguration#getTestedPackageName()
+     * @see VariantConfiguration#getInstrumentationRunner()
+     * @see VariantConfiguration#getHandleProfiling()
+     * @see VariantConfiguration#getFunctionalTest()
+     * @see VariantConfiguration#getDirectLibraries()
      */
     public void processTestManifest2(
             @NonNull  String testPackageName,
@@ -1223,7 +1221,7 @@ public class AndroidBuilder {
         resXmlFile.mkdirs();
 
         Files.write(content,
-                new File(resXmlFile, ANDROID_WEAR_MICRO_APK + DOT_XML),
+                new File(resXmlFile, BuilderConstants.ANDROID_WEAR_MICRO_APK + DOT_XML),
                 Charsets.UTF_8);
     }
 
@@ -1234,8 +1232,8 @@ public class AndroidBuilder {
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                 "<manifest package=\"\" xmlns:android=\"http://schemas.android.com/apk/res/android\">\n" +
                 "    <application>\n" +
-                        "        <meta-data android:name=\"" + ANDROID_WEAR + "\"\n" +
-                "                   android:resource=\"@xml/" + ANDROID_WEAR_MICRO_APK + "\" />\n" +
+                        "        <meta-data android:name=\"" + BuilderConstants.ANDROID_WEAR + "\"\n" +
+                "                   android:resource=\"@xml/" + BuilderConstants.ANDROID_WEAR_MICRO_APK + "\" />\n" +
                 "    </application>\n" +
                 "</manifest>\n";
 
@@ -1641,7 +1639,7 @@ public class AndroidBuilder {
      * @throws PackagerException
      * @throws SigningException when the key cannot be read from the keystore
      *
-     * @see com.android.builder.VariantConfiguration#getPackagedJars()
+     * @see VariantConfiguration#getPackagedJars()
      */
     public void packageApk(
             @NonNull String androidResPkgLocation,
