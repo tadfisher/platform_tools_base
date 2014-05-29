@@ -21,6 +21,7 @@ import static com.android.SdkConstants.FD_RES_XML;
 import static com.android.builder.core.BuilderConstants.ANDROID_WEAR;
 import static com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK;
 import static com.android.manifmerger.ManifestMerger2.Invoker;
+import static com.android.manifmerger.ManifestTask.SystemProperty;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -64,6 +65,7 @@ import com.android.ide.common.signing.KeytoolException;
 import com.android.manifmerger.ICallback;
 import com.android.manifmerger.ManifestMerger;
 import com.android.manifmerger.ManifestMerger2;
+import com.android.manifmerger.ManifestTask;
 import com.android.manifmerger.MergerLog;
 import com.android.manifmerger.MergingReport;
 import com.android.manifmerger.XmlDocument;
@@ -108,7 +110,7 @@ import java.util.regex.Pattern;
  * create a builder with {@link #AndroidBuilder(String, ILogger, boolean)}
  *
  * then build steps can be done with
- * {@link #processManifest2(java.io.File, java.util.List, java.util.List, String, int, String, String, String, String)}
+ * {@link #mergeManifests(java.io.File, java.util.List, java.util.List, String, int, String, String, String, String)}
  * {@link #processTestManifest2(String, String, String, String, String, Boolean, Boolean, java.util.List, java.io.File)}
  * {@link #processResources(java.io.File, java.io.File, java.io.File, java.util.List, String, String, String, String, String, com.android.builder.core.VariantConfiguration.Type, boolean, com.android.builder.model.AaptOptions, java.util.Collection, boolean)}
  * {@link #compileAllAidlFiles(java.util.List, java.io.File, java.io.File, java.util.List, com.android.builder.compiling.DependencyFileProcessor)}
@@ -379,7 +381,7 @@ public class AndroidBuilder {
     /**
      * Invoke the Manifest Merger version 2.
      */
-    public void processManifest2(
+    public void mergeManifests(
             @NonNull File mainManifest,
             @NonNull List<File> manifestOverlays,
             @NonNull List<? extends ManifestDependency> libraries,
@@ -395,26 +397,10 @@ public class AndroidBuilder {
                     .addFlavorAndBuildTypeManifests(
                             manifestOverlays.toArray(new File[manifestOverlays.size()]))
                     .addLibraryManifests(collectLibraries(libraries));
-            if (!Strings.isNullOrEmpty(packageOverride)) {
-                manifestMergerInvoker.setOverride(ManifestMerger2.SystemProperty.PACKAGE,
-                        packageOverride);
-            }
-            if (versionCode > 0) {
-                manifestMergerInvoker.setOverride(ManifestMerger2.SystemProperty.VERSION_CODE,
-                        String.valueOf(versionCode));
-            }
-            if (!Strings.isNullOrEmpty(versionName)) {
-                manifestMergerInvoker.setOverride(ManifestMerger2.SystemProperty.VERSION_NAME,
-                        versionName);
-            }
-            if (!Strings.isNullOrEmpty(minSdkVersion)) {
-                manifestMergerInvoker.setOverride(ManifestMerger2.SystemProperty.MIN_SDK_VERSION,
-                        minSdkVersion);
-            }
-            if (!Strings.isNullOrEmpty(targetSdkVersion)) {
-                manifestMergerInvoker.setOverride(ManifestMerger2.SystemProperty.TARGET_SDK_VERSION,
-                        targetSdkVersion);
-            }
+
+            setInjectableValues(manifestMergerInvoker,
+                    packageOverride, versionCode, versionName, minSdkVersion, targetSdkVersion);
+
             MergingReport mergingReport = manifestMergerInvoker.merge();
             mLogger.info("Merging result:" + mergingReport.getResult());
             switch (mergingReport.getResult()) {
@@ -442,6 +428,36 @@ public class AndroidBuilder {
         } catch (ManifestMerger2.MergeFailureException e) {
             // TODO: unacceptable.
             throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Sets the {@link com.android.manifmerger.ManifestTask.SystemProperty} that can be injected
+     * in the manifest file.
+     */
+    private static void setInjectableValues(
+            ManifestTask.Invoker<?> invoker,
+            String packageOverride,
+            int versionCode,
+            String versionName,
+            @Nullable String minSdkVersion,
+            @Nullable String targetSdkVersion) {
+
+        if (!Strings.isNullOrEmpty(packageOverride)) {
+            invoker.setOverride(SystemProperty.PACKAGE, packageOverride);
+        }
+        if (versionCode > 0) {
+            invoker.setOverride(SystemProperty.VERSION_CODE,
+                    String.valueOf(versionCode));
+        }
+        if (!Strings.isNullOrEmpty(versionName)) {
+            invoker.setOverride(SystemProperty.VERSION_NAME, versionName);
+        }
+        if (!Strings.isNullOrEmpty(minSdkVersion)) {
+            invoker.setOverride(SystemProperty.MIN_SDK_VERSION, minSdkVersion);
+        }
+        if (!Strings.isNullOrEmpty(targetSdkVersion)) {
+            invoker.setOverride(SystemProperty.TARGET_SDK_VERSION, targetSdkVersion);
         }
     }
 
@@ -754,9 +770,25 @@ public class AndroidBuilder {
                         functionalTest,
                         generatedTestManifest);
 
+                ImmutableList<Pair<String, File>> namedLibraries = collectLibraries(libraries);
+                ImmutableList.Builder<Pair<String, File>> reworkedLibraries =
+                        ImmutableList.builder();
+
+                File mainManifestFile;
+                if (namedLibraries.isEmpty()) {
+                    mainManifestFile = generatedTestManifest;
+                } else {
+                    mainManifestFile = namedLibraries.get(0).getSecond();
+                    reworkedLibraries.add(Pair.of("test manifest", generatedTestManifest));
+                    for (int i = 1; i < namedLibraries.size(); i++) {
+                        reworkedLibraries.add(namedLibraries.get(i));
+                    }
+                }
+
                 MergingReport mergingReport = ManifestMerger2.newInvoker(
-                        generatedTestManifest, mLogger)
-                        .addLibraryManifests(collectLibraries(libraries))
+                        mainManifestFile, mLogger)
+                        .setOverride(SystemProperty.PACKAGE, testPackageName)
+                        .addLibraryManifests(reworkedLibraries.build())
                         .merge();
 
                 mLogger.info("Merging result:" + mergingReport.getResult());

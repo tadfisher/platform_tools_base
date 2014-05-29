@@ -22,21 +22,25 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.OutputFile
 
 /**
  * A task that processes the manifest
  */
-public class ProcessAppManifest2 extends ProcessManifest {
+public class MergeManifests extends ManifestProcessorTask {
 
-    // ----- PRIVATE TASK API -----
+    // ----- PUBLIC TASK API -----
+    @Input @Optional
+    String minSdkVersion
+
+    @Input @Optional
+    String targetSdkVersion
+
+    VariantConfiguration variantConfiguration
+
     @InputFile
     File getMainManifest() {
         return variantConfiguration.getMainManifest();
-    }
-
-    @InputFiles
-    List<File> getManifestOverlays() {
-        return variantConfiguration.getManifestOverlays();
     }
 
     @Input @Optional
@@ -54,13 +58,11 @@ public class ProcessAppManifest2 extends ProcessManifest {
         variantConfiguration.getVersionName();
     }
 
-    @Input @Optional
-    String minSdkVersion
-
-    @Input @Optional
-    String targetSdkVersion
-
-    VariantConfiguration variantConfiguration;
+    @InputFiles
+    List<File> getManifestOverlays() {
+        return variantConfiguration.getManifestOverlays();
+    }
+    // ----- PRIVATE TASK API -----
     List<ManifestDependencyImpl> libraries
 
     /**
@@ -85,7 +87,7 @@ public class ProcessAppManifest2 extends ProcessManifest {
     @Override
     protected void doFullTaskAction() {
 
-        getBuilder().processManifest2(
+        getBuilder().mergeManifests(
                 getMainManifest(),
                 getManifestOverlays(),
                 getLibraries(),

@@ -85,12 +85,13 @@ class AndroidReportTask extends BaseTask implements AndroidTestTask {
         TestReport report = new TestReport(reportType, resultsOutDir, reportOutDir)
         report.generateReport()
 
+        String reportUrl = new ConsoleRenderer().asClickableFileUrl(
+                new File(reportOutDir, "index.html"))
+        getLogger().error(Thread.currentThread().dump());
         // fail if any of the tasks failed.
         for (AndroidTestTask task : subTasks) {
             if (task.testFailed) {
 
-                String reportUrl = new ConsoleRenderer().asClickableFileUrl(
-                        new File(reportOutDir, "index.html"))
                 String message = "There were failing tests. See the report at: " + reportUrl
 
                 if (getIgnoreFailures()) {
@@ -102,6 +103,7 @@ class AndroidReportTask extends BaseTask implements AndroidTestTask {
                 break
             }
         }
+        getLogger().info("Success. See report at : " + reportUrl);
     }
 
     private void copyResults(File reportOutDir) {

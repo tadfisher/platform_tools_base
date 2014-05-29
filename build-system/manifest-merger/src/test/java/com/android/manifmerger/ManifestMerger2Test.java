@@ -16,7 +16,7 @@
 
 package com.android.manifmerger;
 
-import static com.android.manifmerger.ManifestMerger2.SystemProperty;
+import static com.android.manifmerger.ManifestTask.SystemProperty;
 import static com.android.manifmerger.MergingReport.Record;
 
 import com.android.annotations.Nullable;
@@ -28,7 +28,6 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
