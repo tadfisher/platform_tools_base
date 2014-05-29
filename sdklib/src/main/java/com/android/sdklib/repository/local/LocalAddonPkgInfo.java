@@ -435,7 +435,7 @@ public class LocalAddonPkgInfo extends LocalPlatformPkgInfo {
         for (File file : files) {
             if (fileOp.isDirectory(file)) {
                 found.add(new SystemImage(file,
-                                          LocationType.IN_PLATFORM_SUBFOLDER,
+                                          LocationType.IN_IMAGES_SUBFOLDER,
                                           SystemImage.DEFAULT_TAG,
                                           file.getName(),
                                           FileOp.EMPTY_FILE_ARRAY));
@@ -450,7 +450,7 @@ public class LocalAddonPkgInfo extends LocalPlatformPkgInfo {
             // We found no sub-folder system images but it looks like the top directory
             // has some img files in it. It must be a legacy ARM EABI system image folder.
             found.add(new SystemImage(imagesDir,
-                                      LocationType.IN_PLATFORM_LEGACY,
+                                      LocationType.IN_LEGACY_FOLDER,
                                       SystemImage.DEFAULT_TAG,
                                       SdkConstants.ABI_ARMEABI,
                                       FileOp.EMPTY_FILE_ARRAY));

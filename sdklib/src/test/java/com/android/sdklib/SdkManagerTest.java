@@ -110,7 +110,7 @@ public class SdkManagerTest extends SdkManagerTestCase {
         // By default SdkManagerTestCase creates an SDK with one platform containing
         // a legacy armeabi system image.
         assertEquals(
-                "[SystemImage tag=default, ABI=armeabi, location in platform legacy='$SDK/platforms/v0_0/images']",
+                "[SystemImage tag=default, ABI=armeabi, location in legacy folder='$SDK/platforms/v0_0/images']",
                 cleanPath(sdkman, Arrays.toString(t.getSystemImages())));
 
         // 1- add a few "platform subfolders" system images and reload the SDK.
@@ -118,12 +118,12 @@ public class SdkManagerTest extends SdkManagerTestCase {
         // target from above is present, it is no longer visible.
 
         makeSystemImageFolder(new SystemImage(sdkman, t,
-                LocationType.IN_PLATFORM_SUBFOLDER,
+                LocationType.IN_IMAGES_SUBFOLDER,
                 SystemImage.DEFAULT_TAG,
                 SdkConstants.ABI_ARMEABI_V7A,
                 FileOp.EMPTY_FILE_ARRAY));
         makeSystemImageFolder(new SystemImage(sdkman, t,
-                LocationType.IN_PLATFORM_SUBFOLDER,
+                LocationType.IN_IMAGES_SUBFOLDER,
                 SystemImage.DEFAULT_TAG,
                 SdkConstants.ABI_INTEL_ATOM,
                 FileOp.EMPTY_FILE_ARRAY));
@@ -191,7 +191,7 @@ public class SdkManagerTest extends SdkManagerTestCase {
         // By default SdkManagerTestCase creates an SDK with one platform containing
         // a legacy armeabi system image.
         assertEquals(
-                "[SystemImage tag=default, ABI=armeabi, location in platform legacy='$SDK/platforms/v0_0/images']",
+                "[SystemImage tag=default, ABI=armeabi, location in legacy folder='$SDK/platforms/v0_0/images']",
                 cleanPath(sdkman, Arrays.toString(t.getSystemImages())));
 
         // Now add a different ABI system image in the new system-images folder.
@@ -210,7 +210,7 @@ public class SdkManagerTest extends SdkManagerTestCase {
         t = sdkman.getTargets()[0];
 
         assertEquals(
-                "[SystemImage tag=default, ABI=armeabi, location in platform legacy='$SDK/platforms/v0_0/images', " +
+                "[SystemImage tag=default, ABI=armeabi, location in legacy folder='$SDK/platforms/v0_0/images', " +
                  "SystemImage tag=default, ABI=x86, location in system image='$SDK/system-images/android-0/default/x86']",
                 cleanPath(sdkman, Arrays.toString(t.getSystemImages())));
 

@@ -77,7 +77,7 @@ public enum PkgType implements IPkgCapabilities {
      * Path returns the system image ABI. */
     PKG_SYS_IMAGES(0x0200, SdkConstants.FD_SYSTEM_IMAGES,
             "$PATH System Image, Android $API{?$MAJ>1:, rev $MAJ}",
-            true /*maj-r*/, false, true /*api*/, true /*path*/, true /*tag*/, false, false, false),
+            true /*maj-r*/, false, true /*api*/, true /*path*/, true /*tag*/, false /*vend*/, false, false),
 
     /** Filter the SDK/addons.
      *  Has {@link AndroidVersion}. Has {@link MajorRevision}.
@@ -85,6 +85,13 @@ public enum PkgType implements IPkgCapabilities {
     PKG_ADDONS(0x0400, SdkConstants.FD_ADDONS,
             "{|$NAME|$VEND $PATH|}, Android $API{?$MAJ>1:, rev $MAJ}",
             true /*maj-r*/, false, true /*api*/, true /*path*/, false, true /*vend*/, false, false),
+
+    /** Filter the SDK/addons/sys-images.
+     * Has {@link AndroidVersion}. Has {@link MajorRevision}. Has tag.
+     * Path returns the system image ABI. */
+    PKG_ADDON_SYS_IMAGES(0x0200, SdkConstants.FD_SYSTEM_IMAGES,
+            "$PATH System Image, Android $API{?$MAJ>1:, rev $MAJ}",
+            true /*maj-r*/, false, true /*api*/, true /*path*/, true /*tag*/, true /*vend*/, false, false),
 
     /** Filter the SDK/samples folder.
      *  Note: this will not detect samples located in the SDK/extras packages.

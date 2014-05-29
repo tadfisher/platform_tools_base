@@ -17,6 +17,7 @@
 package com.android.sdklib.repository.local;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.SystemImage;
 import com.android.sdklib.repository.MajorRevision;

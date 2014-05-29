@@ -46,6 +46,27 @@
     </sdk:system-image>
 
     <sdk:system-image>
+        <sdk:list-display>x86 System Image for some add-on</sdk:list-display>
+        <sdk:api-level>2</sdk:api-level>
+        <sdk:revision>1</sdk:revision>
+        <sdk:tag-id>some-addon</sdk:tag-id>
+        <sdk:add-on>
+            <sdk:vendor-id>some-vendor</sdk:vendor-id>
+            <sdk:vendor-name>Acme Vendor Inc.</sdk:vendor-name>
+        </sdk:add-on>
+        <sdk:abi>x86</sdk:abi>
+        <sdk:archives>
+            <sdk:archive>
+                <sdk:host-os>windows</sdk:host-os>
+                <sdk:host-bits>32</sdk:host-bits>
+                <sdk:size>65535</sdk:size>
+                <sdk:checksum type="sha1">1234ae37115ebf13412bbef91339ee0d94541234</sdk:checksum>
+                <sdk:url>http://www.example.com/plat1/x86/image1.zip</sdk:url>
+            </sdk:archive>
+        </sdk:archives>
+    </sdk:system-image>
+
+    <sdk:system-image>
         <sdk:list-display>System Image for x86-64 CPU for API 2</sdk:list-display>
         <sdk:api-level>2</sdk:api-level>
         <sdk:revision>1</sdk:revision>
