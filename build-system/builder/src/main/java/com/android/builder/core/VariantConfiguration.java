@@ -48,6 +48,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -95,6 +96,10 @@ public class VariantConfiguration implements TestData {
     private final List<String> mFlavorDimensionNames = Lists.newArrayList();
     private final List<DefaultProductFlavor> mFlavorConfigs = Lists.newArrayList();
     private final List<SourceProvider> mFlavorSourceProviders = Lists.newArrayList();
+
+    /** list of splits associated with the variant */
+    @NonNull
+    private final Map<SplitType, Split> mSplits = new EnumMap<SplitType, Split>(SplitType.class);
 
     /** Variant specific source provider, may be null */
     @Nullable
@@ -392,6 +397,41 @@ public class VariantConfiguration implements TestData {
         computeNdkConfig();
 
         return this;
+    }
+
+    /**
+     * Add a new {@link Split}.
+     *
+     * @param split the split
+     * @return the config object.
+     */
+    public VariantConfiguration addSplit(@NonNull Split split) {
+        checkNotNull(split);
+        // check that there isn't an existing split of the same type.
+        checkState(!mSplits.containsKey(split.getType()));
+
+        mSplits.put(split.getType(), split);
+
+        return this;
+    }
+
+    /**
+     * Returns the Split value for a given dimension type.
+     *
+     * @param splitType the type of the dimension to return
+     * @return the Split value or null if not found.
+     */
+    @Nullable
+    public Split getSplitByType(@NonNull SplitType splitType) {
+        return mSplits.get(splitType);
+    }
+
+    /**
+     * Returns whether the variant has any splits.
+     * @return
+     */
+    public boolean hasSplits() {
+        return !mSplits.isEmpty();
     }
 
     /**
