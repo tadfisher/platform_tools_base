@@ -105,7 +105,7 @@ public class LibraryVariantFactory implements VariantFactory {
         basePlugin.createGenerateResValuesTask(variantData)
 
         // Add a task to process the manifest(s)
-        basePlugin.createProcessManifestTask(variantData, DIR_BUNDLES)
+        basePlugin.injectLibraryManifest(variantData, DIR_BUNDLES);
 
         // Add a task to compile renderscript files.
         basePlugin.createRenderscriptTask(variantData)
