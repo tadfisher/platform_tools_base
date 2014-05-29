@@ -20,7 +20,7 @@ import org.gradle.nativebinaries.BuildType
 import org.gradle.nativebinaries.platform.Platform
 
 /**
- * Factory to create FlagConfiguration
+ * Factory to create a FlagConfiguration.
  */
 class FlagConfigurationFactory {
     /**
@@ -30,7 +30,10 @@ class FlagConfigurationFactory {
      * @param platform Target platform of the native binary.
      * @return A FlagConfiguration for the targeted native binary.
      */
-    public static FlagConfiguration create(BuildType buildType, Platform platform, NdkBuilder ndkBuilder) {
+    public static FlagConfiguration create(
+            NdkBuilder ndkBuilder,
+            BuildType buildType,
+            Platform platform) {
         String toolchain = ndkBuilder.getNdkExtension().getToolchain()
         return (toolchain == null || toolchain.equals("gcc")
                 ? new GccFlagConfiguration(buildType, platform)

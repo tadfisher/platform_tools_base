@@ -17,7 +17,7 @@
 package com.android.build.gradle.ndk.internal
 
 import com.android.SdkConstants
-import com.android.builder.BuilderConstants
+import com.android.builder.core.BuilderConstants
 import org.gradle.nativebinaries.BuildType
 import org.gradle.nativebinaries.platform.Platform
 

@@ -24,7 +24,7 @@ import org.gradle.nativebinaries.toolchain.Clang
 import org.gradle.nativebinaries.toolchain.Gcc
 
 /**
- * Toolchain configuration for native binaries.
+ * Action to configure toolchain for native binaries.
  */
 class ToolchainConfigurationAction implements Action<Project> {
     private static final GCC_PREFIX = [
@@ -76,7 +76,7 @@ class ToolchainConfigurationAction implements Action<Project> {
                 SdkConstants.ABI_ARMEABI_V7A,
                 SdkConstants.ABI_ARMEABI,
                 SdkConstants.ABI_MIPS]) {
-            createToolchain(
+            configureToolchain(
                     project,
                     ndkExtension.getToolchain(),
                     ndkExtension.getToolchainVersion(),
@@ -84,8 +84,15 @@ class ToolchainConfigurationAction implements Action<Project> {
         }
     }
 
-    private void createToolchain(Project project, String toolchainName, String toolchainVersion, String platform) {
-        String name = NdkBuilder.getToolchainName(toolchainName, toolchainVersion, platform)
+    /**
+     * Configure toolchain for a platform.
+     */
+    private void configureToolchain(
+            Project project,
+            String toolchainName,
+            String toolchainVersion,
+            String platform) {
+        String name = "$toolchainName-$toolchainVersion-$platform"
         String bin = (
                 ndkBuilder.getToolchainPath(toolchainName, toolchainVersion, platform).toString()
                 + "/bin")

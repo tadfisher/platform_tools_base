@@ -116,7 +116,7 @@ import com.android.builder.testing.api.TestServer
 import com.android.ide.common.internal.ExecutorSingleton
 import com.android.ide.common.sdk.SdkVersionInfo
 import com.android.utils.ILogger
-import com.android.build.gradle.ndk.AndroidNdkPlugin
+import com.android.build.gradle.ndk.NdkPlugin
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.ListMultimap
 import com.google.common.collect.Lists
@@ -1194,7 +1194,7 @@ public abstract class BasePlugin {
         createCompileTask(variantData, testedVariantData)
 
         // Add NDK tasks
-        if (!project.plugins.hasPlugin(AndroidNdkPlugin.class)) {
+        if (!project.plugins.hasPlugin(NdkPlugin.class)) {
             createNdkTasks(variantData)
         }
 
@@ -1673,9 +1673,14 @@ public abstract class BasePlugin {
         packageApp.dependsOn variantData.processResourcesTask, dexTask, variantData.processJavaResourcesTask
 
         // Add dependencies on NDK tasks if NDK plugin is applied.
-        if (project.plugins.hasPlugin(AndroidNdkPlugin.class)) {
-            AndroidNdkPlugin ndkPlugin = project.plugins.getPlugin(AndroidNdkPlugin.class)
-            packageApp.dependsOn(ndkPlugin.getNdkTasks(variantConfig))
+        if (project.plugins.hasPlugin(NdkPlugin.class)) {
+            NdkPlugin ndkPlugin = project.plugins.getPlugin(NdkPlugin.class)
+//            def tasks = ndkPlugin.getNdkTasks(variantConfig)
+//            println tasks
+            packageApp.dependsOn (ndkPlugin.getNdkTasks(variantConfig))
+//            for (t in ndkPlugin.getNdkTasks(variantConfig) {
+//                packageApp.dependsOn t
+//            }
         } else {
             packageApp.dependsOn variantData.ndkCompileTask
         }
@@ -1693,8 +1698,8 @@ public abstract class BasePlugin {
         packageApp.conventionMapping.jniFolders = {
             // for now only the project's compilation output.
             Set<File> set = Sets.newHashSet()
-            if (project.plugins.hasPlugin(AndroidNdkPlugin.class)) {
-                AndroidNdkPlugin ndkPlugin = project.plugins.getPlugin(AndroidNdkPlugin.class)
+            if (project.plugins.hasPlugin(NdkPlugin.class)) {
+                NdkPlugin ndkPlugin = project.plugins.getPlugin(NdkPlugin.class)
                 set.addAll(ndkPlugin.getOutputDirectory(variantConfig))
             } else {
                 set.addAll(variantData.ndkCompileTask.soFolder)

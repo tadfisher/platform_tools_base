@@ -15,42 +15,36 @@
  */
 package com.android.build.gradle.ndk
 
-import com.android.SdkConstants
 import com.android.build.gradle.api.AndroidSourceDirectorySet
 import com.android.build.gradle.internal.api.DefaultAndroidSourceDirectorySet
+import com.android.build.gradle.ndk.internal.NdkBuilder
+import com.android.build.gradle.ndk.internal.NdkConfigurationAction
 import com.android.build.gradle.ndk.internal.NdkExtensionConventionAction
 import com.android.build.gradle.ndk.internal.ToolchainConfigurationAction
-import com.android.builder.BuilderConstants
-import com.android.builder.VariantConfiguration
-
+import com.android.builder.core.VariantConfiguration
 import com.android.builder.model.BuildType
-import com.android.build.gradle.ndk.internal.NdkConfigurationAction
-import com.android.build.gradle.ndk.internal.NdkBuilder
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.tasks.TaskCollection
 import org.gradle.configuration.project.ProjectConfigurationActionContainer
 import org.gradle.internal.Actions
 import org.gradle.internal.reflect.Instantiator
-import org.gradle.nativebinaries.SharedLibraryBinary
-import org.gradle.nativebinaries.tasks.LinkSharedLibrary
+import org.gradle.nativebinaries.internal.ProjectSharedLibraryBinary
 
 import javax.inject.Inject
 
 /**
  * Plugin for Android NDK applications.
  */
-class AndroidNdkPlugin implements Plugin<Project> {
+class NdkPlugin implements Plugin<Project> {
     protected Project project
     private NdkExtension extension
     private NdkBuilder ndkBuilder
     private ProjectConfigurationActionContainer configurationActions
-    private NdkConfigurationAction configAction
 
     protected Instantiator instantiator
 
     @Inject
-    public AndroidNdkPlugin(
+    public NdkPlugin(
             ProjectConfigurationActionContainer configurationActions,
             Instantiator instantiator) {
         this.configurationActions = configurationActions
@@ -84,21 +78,27 @@ class AndroidNdkPlugin implements Plugin<Project> {
     }
 
     /**
-     * Return the expected native binary tasks for a VariantConfiguration.
+     * Return the native binary tasks for a VariantConfiguration.
      */
-    public TaskCollection getNdkTasks(VariantConfiguration variantConfig) {
-//        project.libraries.getByName(ndkExtension.getModuleName()).binaries.withType
-
-        project.tasks.withType(LinkSharedLibrary).matching { task ->
-            (task.name.contains(variantConfig.getBuildType().getName().capitalize())
-            && (variantConfig.getNdkConfig().getAbiFilters() == null
-                    || variantConfig.getNdkConfig().getAbiFilters().contains(
-                            task.targetPlatform.name)))
+    public def getNdkTasks(VariantConfiguration variantConfig) {
+        if (variantConfig.getType() == VariantConfiguration.Type.TEST) {
+            // Do not return tasks for test variants as test source set is not supported at the
+            // moment.
+            return []
+        }
+        def binaries = project.binaries.withType(ProjectSharedLibraryBinary).matching  { binary ->
+            binary.buildType.name.equals(variantConfig.getBuildType().getName()) &&
+                    (variantConfig.getNdkConfig().getAbiFilters() == null ||
+                            variantConfig.getNdkConfig().getAbiFilters().contains(
+                                    binary.targetPlatform.name))
+        }
+        binaries.collect { ProjectSharedLibraryBinary binary ->
+            project.tasks.getByName(binary.getNamingScheme().getLifecycleTaskName())
         }
     }
 
     /**
-     * Return the expected location of the native binary for a VariantConfiguration.
+     * Return the output directory of the native binary tasks for a VariantConfiguration.
      */
     public File getOutputDirectory(VariantConfiguration variantConfig) {
         BuildType buildType = variantConfig.buildType

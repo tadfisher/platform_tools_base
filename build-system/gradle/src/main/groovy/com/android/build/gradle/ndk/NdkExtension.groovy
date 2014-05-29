@@ -16,19 +16,12 @@
 
 package com.android.build.gradle.ndk
 
-import com.android.annotations.NonNull;
+import com.android.annotations.NonNull
 import com.android.annotations.Nullable
-import com.android.build.gradle.api.AndroidSourceDirectorySet;
+import com.android.build.gradle.api.AndroidSourceDirectorySet
 import com.google.common.collect.Sets
 import org.gradle.api.Action
-import org.gradle.api.NamedDomainObjectContainer;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.Optional;
-
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Set;
+import org.gradle.api.NamedDomainObjectContainer
 
 /**
  * Extension for android-ndk plugin.

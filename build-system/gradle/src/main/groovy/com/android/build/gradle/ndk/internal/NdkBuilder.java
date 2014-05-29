@@ -25,7 +25,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Closeables;
 
-import org.gradle.api.GradleException;
+import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
 import org.gradle.nativebinaries.platform.Platform;
 
@@ -37,11 +37,14 @@ import java.io.InputStreamReader;
 import java.util.Map;
 import java.util.Properties;
 
+/**
+ * Handles NDK related paths.
+ */
 public class NdkBuilder {
     private NdkExtension ndkExtension;
-    private File ndkFolder;
+    private File ndkDirectory;
 
-
+    // Map of ABI to toolchain platform string.
     private static final Map<String, String> PLATFORM_STRING = ImmutableMap.of(
             SdkConstants.ABI_INTEL_ATOM, "x86",
             SdkConstants.ABI_ARMEABI_V7A, "arm-linux-androideabi",
@@ -55,19 +58,23 @@ public class NdkBuilder {
             SdkConstants.ABI_ARMEABI, SdkConstants.CPU_ARCH_ARM,
             SdkConstants.ABI_MIPS, SdkConstants.CPU_ARCH_MIPS);
 
+    // Map of toolchain names to the subdirectory name containing the toolchain.
     private static final Map<String, String> TOOLCHAIN_STRING = ImmutableMap.of(
             "gcc", "",
             "clang", "clang");
 
 
     public NdkBuilder(Project project, NdkExtension ndkExtension) {
-        ndkFolder = findNdkDir(project);
+        ndkDirectory = findNdkDirectory(project);
         this.ndkExtension = ndkExtension;
     }
 
+    /**
+     * Returns the directory of the NDK.
+     */
     @Nullable
-    public File getNdkFolder() {
-        return ndkFolder;
+    public File getNdkDirectory() {
+        return ndkDirectory;
     }
 
     NdkExtension getNdkExtension() {
@@ -75,17 +82,63 @@ public class NdkBuilder {
     }
 
     /**
+     * Toolchain name used by the NDK.
+     */
+    private static String getToolchainName(
+            String toolchain,
+            String toolchainVersion,
+            String platform) {
+        return PLATFORM_STRING.get(platform) + "-" + TOOLCHAIN_STRING.get(toolchain)
+                + toolchainVersion;
+    }
+
+    /**
+     * Return the path containing the prebuilt toolchain.
+     *
+     * @param toolchain Name of the toolchain ["gcc", "clang"].
+     * @param toolchainVersion Version of the toolchain.
+     * @param platform Target platform supported by the NDK.
+     * @return Directory containing the prebuilt toolchain.
+     */
+
+    public File getToolchainPath(String toolchain, String toolchainVersion, String platform) {
+        File prebuiltFolder;
+        if (toolchain.equals("gcc")) {
+            prebuiltFolder = new File(
+                    getNdkDirectory(),
+                    "toolchains/" + getToolchainName(toolchain, toolchainVersion, platform)
+                            + "/prebuilt");
+
+        } else if (toolchain.equals("clang")) {
+            prebuiltFolder = new File(
+                    getNdkDirectory(),
+                    "toolchains/llvm-" + toolchainVersion + "/prebuilt");
+        } else {
+            throw new InvalidUserDataException("Unrecognized toolchain: " + toolchain);
+        }
+
+        // This should detect the host architecture to determine the path of the prebuilt toolchain
+        // instead of assuming there is only one folder in prebuilt directory.
+        File[] toolchainFolder = prebuiltFolder.listFiles();
+        if (toolchainFolder == null || toolchainFolder.length != 1) {
+            throw new InvalidUserDataException("Unable to find toolchain prebuilt folder in: "
+                    + prebuiltFolder);
+        }
+        return toolchainFolder[0];
+    }
+
+    /**
      * Returns the sysroot directory for the toolchain.
      */
     String getSysroot(Platform targetPlatform) {
-        return ndkFolder + "/platforms/" + ndkExtension.getCompileSdkVersion()
+        return ndkDirectory + "/platforms/" + ndkExtension.getCompileSdkVersion()
                 + "/arch-" + ARCHITECTURE_STRING.get(targetPlatform.getName());
     }
 
     /**
      * Determine the location of the NDK directory.
      */
-    private File findNdkDir(Project project) {
+    private static File findNdkDirectory(Project project) {
         File rootDir = project.getRootDir();
         File localProperties = new File(rootDir, FN_LOCAL_PROPERTIES);
 
@@ -119,41 +172,6 @@ public class NdkBuilder {
             }
         }
         return null;
-    }
-
-    public static String getToolchainName(
-            String toolchain,
-            String toolchainVersion,
-            String platform) {
-        return PLATFORM_STRING.get(platform) + "-" + TOOLCHAIN_STRING.get(toolchain)
-                + toolchainVersion;
-    }
-
-
-    public File getToolchainPath(String toolchain, String toolchainVersion, String platform) {
-        File prebuiltFolder;
-        if (toolchain.equals("gcc")) {
-            prebuiltFolder = new File(
-                    getNdkFolder(),
-                    "toolchains/" + getToolchainName(toolchain, toolchainVersion, platform)
-                            + "/prebuilt");
-
-        } else if (toolchain.equals("clang")) {
-            prebuiltFolder = new File(
-                    getNdkFolder(),
-                    "toolchains/llvm-" + toolchainVersion + "/prebuilt");
-        } else {
-            throw new GradleException("Unrecognized toolchain: " + toolchain);
-        }
-
-        // This should detect the host architecture to determine the path of the prebuilt toolchain
-        // instead of assuming there is only one folder in prebuilt directory.
-        File[] toolchainFolder = prebuiltFolder.listFiles();
-        if (toolchainFolder.length != 1) {
-            throw new GradleException("Unable to find toolchain prebuilt folder in: "
-                    + prebuiltFolder);
-        }
-        return toolchainFolder[0];
     }
 
 }

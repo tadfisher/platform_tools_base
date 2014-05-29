@@ -17,12 +17,10 @@
 package com.android.build.gradle.ndk.internal
 
 import com.android.build.gradle.ndk.NdkExtension
-import com.android.builder.BuilderConstants
+import com.android.builder.core.BuilderConstants
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.nativebinaries.BuildType
-import org.gradle.nativebinaries.LibraryBinary
-import org.gradle.nativebinaries.NativeBinary
 import org.gradle.nativebinaries.internal.ProjectSharedLibraryBinary
 import org.gradle.nativebinaries.platform.Platform
 
@@ -96,11 +94,12 @@ class NdkConfigurationAction implements Action<Project> {
                 }
 
                 // Currently do not support customization of stl library.
-                cppCompiler.args "-I${ndkBuilder.getNdkFolder()}/sources/cxx-stl/stlport/stlport"
-                cppCompiler.args "-I${ndkBuilder.getNdkFolder()}/sources/cxx-stl//gabi++/include"
+                cppCompiler.args "-I${ndkBuilder.getNdkDirectory()}/sources/cxx-stl/stlport/stlport"
+                cppCompiler.args "-I${ndkBuilder.getNdkDirectory()}/sources/cxx-stl//gabi++/include"
 
                 FlagConfiguration flagConfig =
-                        FlagConfigurationFactory.create(buildType, targetPlatform, ndkBuilder)
+                        FlagConfigurationFactory.create(ndkBuilder, buildType, targetPlatform
+                        )
 
                 for (String arg : flagConfig.getCFlags()) {
                     cCompiler.args arg
@@ -122,17 +121,8 @@ class NdkConfigurationAction implements Action<Project> {
                 for (String ldLibs : ndkExtension.getLdLibs()) {
                     linker.args "-l$ldLibs"
                 }
-
-                if (buildType.name.contains("debug")) {
-                    createNdkLibraryTask(binary)
-                }
             }
         }
-    }
-
-    private void createNdkLibraryTask(NativeBinary binary) {
-        println "createNdkLibraryTask"
-        println binary.namingScheme.getLifecycleTaskName()
     }
 
     /**

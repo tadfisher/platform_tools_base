@@ -1,9 +1,3 @@
-apply plugin: 'android-ndk'
-
-android_ndk {
-    moduleName "hello-jni"
-}
-
 apply plugin: 'android-library'
 
 android {
