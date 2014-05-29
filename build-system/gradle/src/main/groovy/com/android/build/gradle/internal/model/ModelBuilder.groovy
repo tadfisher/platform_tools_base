@@ -253,7 +253,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                 vC.packageName,
                 variantData.sourceGenTask.name,
                 variantData.javaCompileTask.name,
-                variantData.processManifestTask.manifestOutputFile,
+                variantData.mManifestProcessorTask.manifestOutputFile,
                 getGeneratedSourceFolders(variantData),
                 getGeneratedResourceFolders(variantData),
                 variantData.javaCompileTask.destinationDir,

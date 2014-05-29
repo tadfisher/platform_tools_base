@@ -16,8 +16,6 @@
 
 package com.android.manifmerger;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.sdklib.mock.MockLog;
 
 import junit.framework.TestCase;
@@ -48,27 +46,6 @@ public class ManifestMerger2SmallTest extends TestCase {
         MockitoAnnotations.initMocks(this);
     }
 
-    PlaceholderHandler.KeyBasedValueResolver<ManifestMerger2.SystemProperty> nullSystemResolver =
-            new PlaceholderHandler.KeyBasedValueResolver<ManifestMerger2.SystemProperty>() {
-                @Nullable
-                @Override
-                public String getValue(@NonNull ManifestMerger2.SystemProperty key) {
-                    return null;
-                }
-            };
-
-    PlaceholderHandler.KeyBasedValueResolver<ManifestMerger2.SystemProperty> keyBasedValueResolver =
-            new PlaceholderHandler.KeyBasedValueResolver<ManifestMerger2.SystemProperty>() {
-                @Nullable
-                @Override
-                public String getValue(@NonNull ManifestMerger2.SystemProperty key) {
-                    if (key == ManifestMerger2.SystemProperty.PACKAGE) {
-                        return "com.bar.new";
-                    }
-                    return null;
-                }
-            };
-
     public void testValidationFailure()
             throws ParserConfigurationException, SAXException, IOException,
             ManifestMerger2.MergeFailureException {
@@ -91,7 +68,8 @@ public class ManifestMerger2SmallTest extends TestCase {
         assertTrue(tmpFile.exists());
 
         try {
-            MergingReport mergingReport = ManifestMerger2.newInvoker(tmpFile, mockLog).merge();
+            MergingReport mergingReport = ManifestMerger2.newMerger(tmpFile, mockLog,
+                    ManifestMerger2.MergeType.APPLICATION).merge();
             assertEquals(MergingReport.Result.ERROR, mergingReport.getResult());
             // check the log complains about the incorrect "tools:replace"
             assertStringPresenceInLogRecords(mergingReport, "tools:replace");
@@ -227,7 +205,7 @@ public class ManifestMerger2SmallTest extends TestCase {
     /**
      * Utility method to save a {@link String} XML into a file.
      */
-    private File inputAsFile(String testName, String input) throws IOException {
+    private static File inputAsFile(String testName, String input) throws IOException {
         File tmpFile = File.createTempFile(testName, ".xml");
         FileWriter fw = null;
         try {
@@ -239,7 +217,7 @@ public class ManifestMerger2SmallTest extends TestCase {
         return tmpFile;
     }
 
-    private void assertStringPresenceInLogRecords(MergingReport mergingReport, String s) {
+    private static void assertStringPresenceInLogRecords(MergingReport mergingReport, String s) {
         for (MergingReport.Record record : mergingReport.getLoggingRecords()) {
             if (record.toString().contains(s)) {
                 return;
