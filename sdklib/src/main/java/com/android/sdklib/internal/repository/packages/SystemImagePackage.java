@@ -20,6 +20,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
+import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.AndroidVersion.AndroidVersionException;
 import com.android.sdklib.SdkManager;
@@ -411,7 +412,7 @@ public class SystemImagePackage extends MajorRevisionPackage
     @Override
     public File getInstallFolder(String osSdkRoot, SdkManager sdkManager) {
         File folder = new File(osSdkRoot, SdkConstants.FD_SYSTEM_IMAGES);
-        folder = new File(folder, SystemImage.ANDROID_PREFIX + mVersion.getApiString());
+        folder = new File(folder, AndroidTargetHash.getPlatformHashString(mVersion));
 
         // Computes a folder directory using the sanitized tag & abi strings.
         String tag = mTag.getId();

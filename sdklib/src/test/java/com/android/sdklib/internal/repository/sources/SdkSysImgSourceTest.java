@@ -329,6 +329,7 @@ public class SdkSysImgSourceTest extends TestCase {
         // Verbose log order matches the XML order and not the sorted display order.
         assertEquals(
                 "Found System Image for x86 CPU for API 2, Android API 2, revision 1\n" +
+                "Found x86 System Image for some add-on, Android API 2, revision 1\n" +
                 "Found System Image for x86-64 CPU for API 2, Android API 2, revision 1\n" +
                 "Found ARM EABI v7a System Image, Android API 2, revision 2\n" +
                 "Found ARM 64 v8a System Image, Android API 2, revision 2\n" +
@@ -350,7 +351,7 @@ public class SdkSysImgSourceTest extends TestCase {
 
         Package[] pkgs = mSource.getPackages();
 
-        assertEquals(9, pkgs.length);
+        assertEquals(10, pkgs.length);
         for (Package p : pkgs) {
             // We expected to find packages with each at least one archive.
             assertTrue(p.getArchives().length >= 1);
@@ -378,7 +379,8 @@ public class SdkSysImgSourceTest extends TestCase {
                  "2 armeabi-v7a: default [Ignored in description for default tag], " +
                  "2 x86_64: default [Default], " +
                  "2 x86: default [Default], " +
-                 "2 armeabi-v7a: other [Another tag name]]",
+                 "2 armeabi-v7a: other [Another tag name], " +
+                 "2 x86: some-addon [Some Add-on]]",
                 Arrays.toString(sysImgInfo.toArray()));
 
         // Check the default install-paths of the packages
@@ -391,14 +393,15 @@ public class SdkSysImgSourceTest extends TestCase {
         }
         assertEquals(Arrays.toString(new File[] {
                 FileOp.append("root", "system-images", "android-45", "tag-name-is-sanitized-if-display-is-missing", "mips"),
-                FileOp.append("root", "system-images", "android-44", "mips-only", "mips"),
-                FileOp.append("root", "system-images", "android-42", "default", "armeabi"),
-                FileOp.append("root", "system-images", "android-42", "default", "mips64"),
-                FileOp.append("root", "system-images", "android-2" , "default", "arm64-v8a"),
-                FileOp.append("root", "system-images", "android-2" , "default", "armeabi-v7a"),
-                FileOp.append("root", "system-images", "android-2" , "default", "x86_64"),
-                FileOp.append("root", "system-images", "android-2" , "default", "x86"),
-                FileOp.append("root", "system-images", "android-2" , "other",   "armeabi-v7a"),
+                FileOp.append("root", "system-images", "android-44", "mips-only",  "mips"),
+                FileOp.append("root", "system-images", "android-42", "default",    "armeabi"),
+                FileOp.append("root", "system-images", "android-42", "default",    "mips64"),
+                FileOp.append("root", "system-images", "android-2" , "default",    "arm64-v8a"),
+                FileOp.append("root", "system-images", "android-2" , "default",    "armeabi-v7a"),
+                FileOp.append("root", "system-images", "android-2" , "default",    "x86_64"),
+                FileOp.append("root", "system-images", "android-2" , "default",    "x86"),
+                FileOp.append("root", "system-images", "android-2" , "other",      "armeabi-v7a"),
+                FileOp.append("root", "system-images", "android-2" , "some-addon", "x86"),
                 }).replace(File.separatorChar, '/'),
                 Arrays.toString(sysImgPath.toArray()).replace(File.separatorChar, '/'));
 
@@ -416,7 +419,8 @@ public class SdkSysImgSourceTest extends TestCase {
                  "ARM EABI v7a System Image, " +
                  "System Image for x86-64 CPU for API 2, " +   // list-display override
                  "System Image for x86 CPU for API 2, " +      // list-display override
-                 "Another tag name ARM EABI v7a System Image]",
+                 "Another tag name ARM EABI v7a System Image, " +
+                 "x86 System Image for some add-on]",           // list-display override
                 Arrays.toString(listDescs.toArray()));
     }
 

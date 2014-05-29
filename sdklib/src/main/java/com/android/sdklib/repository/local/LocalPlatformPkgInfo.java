@@ -366,7 +366,7 @@ public class LocalPlatformPkgInfo extends LocalPkgInfo {
                 if (!tagToAbiFound.containsEntry(defaultTag, abi)) {
                     found.add(new SystemImage(
                             file,
-                            LocationType.IN_PLATFORM_SUBFOLDER,
+                            LocationType.IN_IMAGES_SUBFOLDER,
                             defaultTag,
                             abi,
                             FileOp.EMPTY_FILE_ARRAY));
@@ -387,7 +387,7 @@ public class LocalPlatformPkgInfo extends LocalPkgInfo {
             // has some img files in it. It must be a legacy ARM EABI system image folder.
             found.add(new SystemImage(
                     imgDir,
-                    LocationType.IN_PLATFORM_LEGACY,
+                    LocationType.IN_LEGACY_FOLDER,
                     defaultTag,
                     SdkConstants.ABI_ARMEABI,
                     FileOp.EMPTY_FILE_ARRAY));
