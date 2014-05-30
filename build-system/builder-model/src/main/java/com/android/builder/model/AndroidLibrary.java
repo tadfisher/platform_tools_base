@@ -139,4 +139,10 @@ public interface AndroidLibrary {
      */
     @NonNull
     File getLintJar();
+
+    /**
+     * Returns this library's Maven coordinates of this library.
+     */
+    @Nullable
+    MavenCoordinates getMavenCoordinates();
 }
