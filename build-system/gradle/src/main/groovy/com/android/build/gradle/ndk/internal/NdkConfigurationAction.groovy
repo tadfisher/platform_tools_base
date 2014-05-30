@@ -17,10 +17,12 @@
 package com.android.build.gradle.ndk.internal
 
 import com.android.build.gradle.ndk.NdkExtension
+import com.android.build.gradle.tasks.GdbSetupTask
 import com.android.builder.core.BuilderConstants
 import com.android.builder.model.AndroidProject
 import org.gradle.api.Action
 import org.gradle.api.Project
+import org.gradle.api.tasks.Copy
 import org.gradle.nativebinaries.BuildType
 import org.gradle.nativebinaries.internal.ProjectSharedLibraryBinary
 import org.gradle.nativebinaries.language.c.tasks.CCompile
@@ -46,7 +48,6 @@ class NdkConfigurationAction implements Action<Project> {
                 maybeCreate(BuilderConstants.RELEASE)
             }
         }
-
         project.libraries {
             create(ndkExtension.getModuleName())
         }
@@ -80,7 +81,7 @@ class NdkConfigurationAction implements Action<Project> {
 
                 // Set output library filename.
                 sharedLibraryFile = new File(
-                        getOutputDirectory(project, buildType, targetPlatform),
+                        ndkBuilder.getOutputDirectory( buildType, targetPlatform),
                         "/lib" + ndkExtension.getModuleName() + ".so")
 
                 // Replace output directory of compile tasks.
@@ -112,11 +113,10 @@ class NdkConfigurationAction implements Action<Project> {
 
                 // Currently do not support customization of stl library.
                 cppCompiler.args "-I${ndkBuilder.getNdkDirectory()}/sources/cxx-stl/stlport/stlport"
-                cppCompiler.args "-I${ndkBuilder.getNdkDirectory()}/sources/cxx-stl//gabi++/include"
+                cppCompiler.args "-I${ndkBuilder.getNdkDirectory()}/sources/cxx-stl/gabi++/include"
 
                 FlagConfiguration flagConfig =
-                        FlagConfigurationFactory.create(ndkBuilder, buildType, targetPlatform
-                        )
+                        FlagConfigurationFactory.create(ndkBuilder, buildType, targetPlatform)
 
                 for (String arg : flagConfig.getCFlags()) {
                     cCompiler.args arg
@@ -140,13 +140,5 @@ class NdkConfigurationAction implements Action<Project> {
                 }
             }
         }
-    }
-
-    /**
-     * Return the output directory of the native binary.
-     */
-    public File getOutputDirectory(Project project, BuildType buildType, Platform platform) {
-        new File("$project.buildDir/$AndroidProject.FD_INTERMEDIATES/binaries/",
-                "${ndkExtension.getModuleName()}SharedLibrary/$buildType.name/lib/$platform.name")
     }
 }

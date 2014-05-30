@@ -21,12 +21,14 @@ import static com.android.SdkConstants.FN_LOCAL_PROPERTIES;
 import com.android.SdkConstants;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.ndk.NdkExtension;
+import com.android.builder.model.AndroidProject;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Closeables;
 
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
+import org.gradle.nativebinaries.BuildType;
 import org.gradle.nativebinaries.platform.Platform;
 
 import java.io.File;
@@ -42,6 +44,7 @@ import java.util.Properties;
  */
 public class NdkBuilder {
     private NdkExtension ndkExtension;
+    private Project project;
     private File ndkDirectory;
 
     // Map of ABI to toolchain platform string.
@@ -65,8 +68,9 @@ public class NdkBuilder {
 
 
     public NdkBuilder(Project project, NdkExtension ndkExtension) {
-        ndkDirectory = findNdkDirectory(project);
+        this.project = project;
         this.ndkExtension = ndkExtension;
+        ndkDirectory = findNdkDirectory(project);
     }
 
     /**
@@ -130,9 +134,24 @@ public class NdkBuilder {
     /**
      * Returns the sysroot directory for the toolchain.
      */
-    String getSysroot(Platform targetPlatform) {
+    public String getSysroot(Platform platform) {
         return ndkDirectory + "/platforms/" + ndkExtension.getCompileSdkVersion()
-                + "/arch-" + ARCHITECTURE_STRING.get(targetPlatform.getName());
+                + "/arch-" + ARCHITECTURE_STRING.get(platform.getName());
+    }
+
+    /**
+     * Return the output directory for a BuildType and Platform.
+     */
+    public File getOutputDirectory(BuildType buildType, Platform platform) {
+        return new File(
+                project.getBuildDir() + "/" + AndroidProject.FD_INTERMEDIATES + "/binaries/",
+                ndkExtension.getModuleName() + "SharedLibrary/" + buildType.getName() + "/lib/" +
+                        platform.getName());
+    }
+
+    public File getPrebuiltDirectory(Platform platform) {
+        return new File(
+                ndkDirectory, "prebuilt/android-" + ARCHITECTURE_STRING.get(platform.getName()));
     }
 
     /**

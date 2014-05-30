@@ -21,11 +21,14 @@ import com.android.build.gradle.ndk.internal.NdkBuilder
 import com.android.build.gradle.ndk.internal.NdkConfigurationAction
 import com.android.build.gradle.ndk.internal.NdkExtensionConventionAction
 import com.android.build.gradle.ndk.internal.ToolchainConfigurationAction
+import com.android.build.gradle.tasks.GdbSetupTask
+import com.android.builder.core.BuilderConstants
 import com.android.builder.core.VariantConfiguration
 import com.android.builder.model.BuildType
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.tasks.Copy
 import org.gradle.configuration.project.ProjectConfigurationActionContainer
 import org.gradle.internal.Actions
 import org.gradle.internal.reflect.Instantiator
@@ -76,6 +79,10 @@ class NdkPlugin implements Plugin<Project> {
                 new NdkExtensionConventionAction(),
                 new ToolchainConfigurationAction(ndkBuilder, extension),
                 new NdkConfigurationAction(ndkBuilder, extension)))
+
+        project.afterEvaluate {
+            setupNdkGdbDebug()
+        }
     }
 
     /**
@@ -118,5 +125,43 @@ class NdkPlugin implements Plugin<Project> {
                 *.getParentFile()
                 *.getParentFile()
                 .unique())
+    }
+
+    /**
+     * Setup tasks to create gdb.setup and copy gdbserver for NDK debugging.
+     */
+    private void setupNdkGdbDebug() {
+        project.libraries.getByName(ndkExtension.getModuleName()) {
+            binaries.withType(ProjectSharedLibraryBinary.class) {
+                ProjectSharedLibraryBinary binary ->
+                    if (buildType.name.equals(BuilderConstants.DEBUG)) {
+                        Task copyGdbServerTask = project.tasks.create(
+                                name: "copyGdbServer${targetPlatform.name.capitalize()}" +
+                                        "${buildType.name.capitalize()}",
+                                type: Copy) {
+                            from(new File(
+                                    ndkBuilder.getPrebuiltDirectory(targetPlatform),
+                                    "gdbserver/gdbserver"))
+                            into(ndkBuilder.getOutputDirectory(buildType, targetPlatform))
+                        }
+                        project.tasks.getByName(binary.namingScheme.lifecycleTaskName) {
+                            dependsOn copyGdbServerTask
+                        }
+
+                        Task createGdbSetupTask = project.tasks.create(
+                                name: "createGdbsetup${targetPlatform.name.capitalize()}" +
+                                        "${buildType.name.capitalize()}",
+                                type: GdbSetupTask) {
+                            builder = ndkBuilder
+                            extension = ndkExtension
+                            type = buildType
+                            platform = targetPlatform
+                        }
+                        project.tasks.getByName(binary.namingScheme.lifecycleTaskName) {
+                            dependsOn createGdbSetupTask
+                        }
+                    }
+            }
+        }
     }
 }
