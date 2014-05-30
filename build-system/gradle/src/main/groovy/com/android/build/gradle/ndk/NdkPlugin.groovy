@@ -21,11 +21,14 @@ import com.android.build.gradle.ndk.internal.NdkBuilder
 import com.android.build.gradle.ndk.internal.NdkConfigurationAction
 import com.android.build.gradle.ndk.internal.NdkExtensionConventionAction
 import com.android.build.gradle.ndk.internal.ToolchainConfigurationAction
+import com.android.build.gradle.tasks.GdbSetupTask
+import com.android.builder.core.BuilderConstants
 import com.android.builder.core.VariantConfiguration
 import com.android.builder.model.BuildType
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.tasks.Copy
 import org.gradle.configuration.project.ProjectConfigurationActionContainer
 import org.gradle.internal.Actions
 import org.gradle.internal.reflect.Instantiator
@@ -119,4 +122,5 @@ class NdkPlugin implements Plugin<Project> {
                 *.getParentFile()
                 .unique())
     }
+
 }

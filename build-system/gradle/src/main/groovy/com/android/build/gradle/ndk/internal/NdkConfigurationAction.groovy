@@ -17,15 +17,16 @@
 package com.android.build.gradle.ndk.internal
 
 import com.android.build.gradle.ndk.NdkExtension
+import com.android.build.gradle.tasks.GdbSetupTask
 import com.android.builder.core.BuilderConstants
 import com.android.builder.model.AndroidProject
 import org.gradle.api.Action
 import org.gradle.api.Project
-import org.gradle.nativebinaries.BuildType
+import org.gradle.api.Task
+import org.gradle.api.tasks.Copy
 import org.gradle.nativebinaries.internal.ProjectSharedLibraryBinary
 import org.gradle.nativebinaries.language.c.tasks.CCompile
 import org.gradle.nativebinaries.language.cpp.tasks.CppCompile
-import org.gradle.nativebinaries.platform.Platform
 
 /**
  * Configure settings used by the native binaries.
@@ -46,7 +47,6 @@ class NdkConfigurationAction implements Action<Project> {
                 maybeCreate(BuilderConstants.RELEASE)
             }
         }
-
         project.libraries {
             create(ndkExtension.getModuleName())
         }
@@ -80,7 +80,7 @@ class NdkConfigurationAction implements Action<Project> {
 
                 // Set output library filename.
                 sharedLibraryFile = new File(
-                        getOutputDirectory(project, buildType, targetPlatform),
+                        ndkBuilder.getOutputDirectory( buildType, targetPlatform),
                         "/lib" + ndkExtension.getModuleName() + ".so")
 
                 // Replace output directory of compile tasks.
@@ -112,11 +112,10 @@ class NdkConfigurationAction implements Action<Project> {
 
                 // Currently do not support customization of stl library.
                 cppCompiler.args "-I${ndkBuilder.getNdkDirectory()}/sources/cxx-stl/stlport/stlport"
-                cppCompiler.args "-I${ndkBuilder.getNdkDirectory()}/sources/cxx-stl//gabi++/include"
+                cppCompiler.args "-I${ndkBuilder.getNdkDirectory()}/sources/cxx-stl/gabi++/include"
 
                 FlagConfiguration flagConfig =
-                        FlagConfigurationFactory.create(ndkBuilder, buildType, targetPlatform
-                        )
+                        FlagConfigurationFactory.create(ndkBuilder, buildType, targetPlatform)
 
                 for (String arg : flagConfig.getCFlags()) {
                     cCompiler.args arg
@@ -138,15 +137,37 @@ class NdkConfigurationAction implements Action<Project> {
                 for (String ldLibs : ndkExtension.getLdLibs()) {
                     linker.args "-l$ldLibs"
                 }
+
+                if (buildType.name.equals(BuilderConstants.DEBUG)) {
+                    setupNdkGdbDebug(project, binary)
+                }
             }
         }
     }
 
+
     /**
-     * Return the output directory of the native binary.
+     * Setup tasks to create gdb.setup and copy gdbserver for NDK debugging.
      */
-    public File getOutputDirectory(Project project, BuildType buildType, Platform platform) {
-        new File("$project.buildDir/$AndroidProject.FD_INTERMEDIATES/binaries/",
-                "${ndkExtension.getModuleName()}SharedLibrary/$buildType.name/lib/$platform.name")
+    private void setupNdkGdbDebug(Project project, ProjectSharedLibraryBinary binary) {
+        Task copyGdbServerTask = project.tasks.create(
+                name: binary.namingScheme.getTaskName("copy", "GdbServer"),
+                type: Copy) {
+            from(new File(
+                    ndkBuilder.getPrebuiltDirectory(binary.targetPlatform),
+                    "gdbserver/gdbserver"))
+            into(ndkBuilder.getOutputDirectory(binary.buildType, binary.targetPlatform))
+        }
+        binary.builtBy copyGdbServerTask
+
+        Task createGdbSetupTask = project.tasks.create(
+                name: binary.namingScheme.getTaskName("create", "Gdbsetup"),
+                type: GdbSetupTask) {
+            builder = ndkBuilder
+            extension = ndkExtension
+            buildType = binary.buildType
+            platform = binary.targetPlatform
+        }
+        binary.builtBy createGdbSetupTask
     }
 }
