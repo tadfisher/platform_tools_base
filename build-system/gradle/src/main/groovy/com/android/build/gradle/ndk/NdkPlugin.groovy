@@ -181,4 +181,3 @@ class NdkPlugin implements Plugin<Project> {
         }
     }
 }
-
