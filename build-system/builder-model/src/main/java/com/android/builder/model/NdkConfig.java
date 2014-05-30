@@ -19,7 +19,6 @@ package com.android.builder.model;
 import com.android.annotations.Nullable;
 
 import java.util.Collection;
-import java.util.Set;
 
 /**
  * Base class for NDK config file.
@@ -43,12 +42,6 @@ public interface NdkConfig {
      */
     @Nullable
     public Collection<String> getLdLibs();
-
-    /**
-     * The ABI Filters
-     */
-    @Nullable
-    public Set<String> getAbiFilters();
 
     /**
      * The APP_STL value

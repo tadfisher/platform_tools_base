@@ -28,6 +28,8 @@ import java.util.List;
  */
 public interface VariantFilter {
 
+    public static final String ABI_UNIVERSAL = "universal";
+
     /**
      * Sets whether or not to ignore this particular variant. Default is false.
      * @param ignore whether to ignore the variant
@@ -51,4 +53,10 @@ public interface VariantFilter {
      */
     @NonNull
     public List<ProductFlavor> getFlavors();
+
+    /**
+     * Returns the ABI filter or {@link #ABI_UNIVERSAL}
+     */
+    @NonNull
+    public String getAbi();
 }

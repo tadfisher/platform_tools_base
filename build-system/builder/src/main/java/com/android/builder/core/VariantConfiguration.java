@@ -38,6 +38,7 @@ import com.android.builder.testing.TestData;
 import com.android.ide.common.res2.AssetSet;
 import com.android.ide.common.res2.ResourceSet;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -114,6 +115,9 @@ public class VariantConfiguration implements TestData {
 
     private DefaultProductFlavor mMergedFlavor;
     private final MergedNdkConfig mMergedNdkConfig = new MergedNdkConfig();
+
+    /** The ABIs for this Variant */
+    private Set<String> mSupportedAbis;
 
     private final Set<JarDependency> mJars = Sets.newHashSet();
 
@@ -218,7 +222,7 @@ public class VariantConfiguration implements TestData {
 
     /**
      * Returns the full, unique name of the variant in camel case (starting with a lower case),
-     * including BuildType, Flavors and Test (if applicable).
+     * including BuildType, Flavors, ABIs and Test (if applicable).
      *
      * @return the name of the variant
      */
@@ -226,13 +230,25 @@ public class VariantConfiguration implements TestData {
     public String getFullName() {
         if (mFullName == null) {
             StringBuilder sb = new StringBuilder();
+
             String flavorName = getFlavorName();
             if (!flavorName.isEmpty()) {
                 sb.append(flavorName);
-                sb.append(StringHelper.capitalize(mBuildType.getName()));
-            } else {
-                sb.append(mBuildType.getName());
             }
+
+            if (mSupportedAbis != null && mSupportedAbis.size() == 1) {
+                String name = mSupportedAbis.iterator().next();
+                if (sb.length() != 0) {
+                    name = StringHelper.capitalize(name);
+                }
+                sb.append(name);
+            }
+
+            String typeName = mBuildType.getName();
+            if (sb.length() != 0) {
+                typeName = StringHelper.capitalize(typeName);
+            }
+            sb.append(typeName);
 
             if (mType == Type.TEST) {
                 sb.append("Test");
@@ -391,6 +407,18 @@ public class VariantConfiguration implements TestData {
         mMergedFlavor = productFlavor.mergeOver(mMergedFlavor);
         computeNdkConfig();
 
+        return this;
+    }
+
+    @NonNull
+    public VariantConfiguration setSupportedAbis(@NonNull Set<String> abis) {
+        mSupportedAbis = ImmutableSet.<String>builder().addAll(abis).build();
+        return this;
+    }
+
+    @NonNull
+    public VariantConfiguration setSupportedAbis(@NonNull String abi) {
+        mSupportedAbis = ImmutableSet.of(abi);
         return this;
     }
 
@@ -1584,11 +1612,11 @@ public class VariantConfiguration implements TestData {
     @Nullable
     @Override
     public Set<String> getSupportedAbis() {
-        if (mMergedNdkConfig != null) {
-            return mMergedNdkConfig.getAbiFilters();
+        if (mSupportedAbis != null) {
+            return mSupportedAbis;
         }
 
-        return null;
+        return Collections.emptySet();
     }
 
     @Override

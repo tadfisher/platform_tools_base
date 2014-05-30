@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.dsl.AaptOptionsImpl
 import com.android.build.gradle.internal.dsl.AndroidSourceSetFactory
 import com.android.build.gradle.internal.dsl.DexOptionsImpl
 import com.android.build.gradle.internal.dsl.LintOptionsImpl
+import com.android.build.gradle.internal.dsl.NativeOptions
 import com.android.build.gradle.internal.dsl.PackagingOptionsImpl
 import com.android.build.gradle.internal.dsl.ProductFlavorDsl
 import com.android.build.gradle.internal.test.TestOptions
@@ -66,6 +67,7 @@ public abstract class BaseExtension {
     final CompileOptions compileOptions
     final PackagingOptionsImpl packagingOptions
     final JacocoExtension jacoco
+    final NativeOptions nativeOptions
 
     final NamedDomainObjectContainer<DefaultProductFlavor> productFlavors
     final NamedDomainObjectContainer<DefaultBuildType> buildTypes
@@ -82,7 +84,7 @@ public abstract class BaseExtension {
     private Closure<Void> variantFilter
 
     private final DefaultDomainObjectSet<TestVariant> testVariantList =
-        new DefaultDomainObjectSet<TestVariant>(TestVariant.class)
+        new DefaultDomainObjectSet<TestVariant>(TestVariant)
 
     private final List<DeviceProvider> deviceProviderList = Lists.newArrayList();
     private final List<TestServer> testServerList = Lists.newArrayList();
@@ -107,16 +109,17 @@ public abstract class BaseExtension {
         this.productFlavors = productFlavors
         this.signingConfigs = signingConfigs
 
-        defaultConfig = instantiator.newInstance(ProductFlavorDsl.class, BuilderConstants.MAIN,
+        defaultConfig = instantiator.newInstance(ProductFlavorDsl, BuilderConstants.MAIN,
                 project.fileResolver, instantiator, project.getLogger())
 
-        aaptOptions = instantiator.newInstance(AaptOptionsImpl.class)
-        dexOptions = instantiator.newInstance(DexOptionsImpl.class)
-        lintOptions = instantiator.newInstance(LintOptionsImpl.class)
-        testOptions = instantiator.newInstance(TestOptions.class)
-        compileOptions = instantiator.newInstance(CompileOptions.class)
-        packagingOptions = instantiator.newInstance(PackagingOptionsImpl.class)
-        jacoco = instantiator.newInstance(JacocoExtension.class)
+        aaptOptions = instantiator.newInstance(AaptOptionsImpl)
+        dexOptions = instantiator.newInstance(DexOptionsImpl)
+        lintOptions = instantiator.newInstance(LintOptionsImpl)
+        testOptions = instantiator.newInstance(TestOptions)
+        compileOptions = instantiator.newInstance(CompileOptions)
+        packagingOptions = instantiator.newInstance(PackagingOptionsImpl)
+        jacoco = instantiator.newInstance(JacocoExtension)
+        nativeOptions = instantiator.newInstance(NativeOptions)
 
         sourceSetsContainer = project.container(AndroidSourceSet,
                 new AndroidSourceSetFactory(instantiator, project.fileResolver, isLibrary))
@@ -255,6 +258,11 @@ public abstract class BaseExtension {
     void jacoco(Action<JacocoExtension> action) {
         plugin.checkTasksAlreadyCreated()
         action.execute(jacoco)
+    }
+
+    void nativeOptions(Action<NativeOptions> action) {
+        plugin.checkTasksAlreadyCreated()
+        action.execute(nativeOptions)
     }
 
     void deviceProvider(DeviceProvider deviceProvider) {

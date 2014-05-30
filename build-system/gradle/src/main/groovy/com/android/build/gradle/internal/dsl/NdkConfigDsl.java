@@ -37,7 +37,6 @@ public class NdkConfigDsl implements NdkConfig, Serializable {
     private String moduleName;
     private String cFlags;
     private Set<String> ldLibs;
-    private Set<String> abiFilters;
     private String stl;
 
     public NdkConfigDsl() {
@@ -47,7 +46,6 @@ public class NdkConfigDsl implements NdkConfig, Serializable {
         moduleName = ndkConfig.moduleName;
         cFlags = ndkConfig.cFlags;
         setLdLibs(ndkConfig.ldLibs);
-        setAbiFilters(ndkConfig.abiFilters);
     }
 
     @Override
@@ -97,58 +95,16 @@ public class NdkConfigDsl implements NdkConfig, Serializable {
     @NonNull
     public NdkConfigDsl setLdLibs(Collection<String> libs) {
         if (libs != null) {
-            if (abiFilters == null) {
-                abiFilters = Sets.newHashSetWithExpectedSize(libs.size());
+            if (ldLibs == null) {
+                ldLibs = Sets.newHashSetWithExpectedSize(libs.size());
             } else {
-                abiFilters.clear();
+                ldLibs.clear();
             }
             for (String filter : libs) {
-                abiFilters.add(filter);
+                ldLibs.add(filter);
             }
         } else {
-            abiFilters = null;
-        }
-        return this;
-    }
-
-
-    @Override
-    @Input @Optional
-    public Set<String> getAbiFilters() {
-        return abiFilters;
-    }
-
-    @NonNull
-    public NdkConfigDsl abiFilter(String filter) {
-        if (abiFilters == null) {
-            abiFilters = Sets.newHashSetWithExpectedSize(2);
-        }
-        abiFilters.add(filter);
-        return this;
-    }
-
-    @NonNull
-    public NdkConfigDsl abiFilters(String... filters) {
-        if (abiFilters == null) {
-            abiFilters = Sets.newHashSetWithExpectedSize(2);
-        }
-        Collections.addAll(abiFilters, filters);
-        return this;
-    }
-
-    @NonNull
-    public NdkConfigDsl setAbiFilters(Collection<String> filters) {
-        if (filters != null) {
-            if (abiFilters == null) {
-                abiFilters = Sets.newHashSetWithExpectedSize(filters.size());
-            } else {
-                abiFilters.clear();
-            }
-            for (String filter : filters) {
-                abiFilters.add(filter);
-            }
-        } else {
-            abiFilters = null;
+            ldLibs = null;
         }
         return this;
     }

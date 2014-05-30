@@ -35,6 +35,7 @@ public class VariantFilterImpl implements VariantFilter {
     private ProductFlavor defaultConfig;
     private BuildType buildType;
     private List<ProductFlavor> flavors;
+    private String abi;
 
     VariantFilterImpl() {
     }
@@ -42,11 +43,13 @@ public class VariantFilterImpl implements VariantFilter {
     void reset(
             @NonNull ProductFlavor defaultConfig,
             @NonNull BuildType buildType,
-            @Nullable List<ProductFlavor> flavors) {
+            @Nullable List<ProductFlavor> flavors,
+            @Nullable String abi) {
         ignore = false;
         this.defaultConfig = defaultConfig;
         this.buildType = buildType;
         this.flavors = flavors;
+        this.abi = abi == null ? ABI_UNIVERSAL : abi;
     }
 
     boolean isIgnore() {
@@ -74,5 +77,11 @@ public class VariantFilterImpl implements VariantFilter {
     @Override
     public List<ProductFlavor> getFlavors() {
         return flavors != null ? flavors : Collections.<ProductFlavor>emptyList();
+    }
+
+    @NonNull
+    @Override
+    public String getAbi() {
+        return abi;
     }
 }

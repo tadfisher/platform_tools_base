@@ -31,14 +31,12 @@ public class MergedNdkConfig implements NdkConfig {
     private String moduleName;
     private String cFlags;
     private Set<String> ldLibs;
-    private Set<String> abiFilters;
     private String stl;
 
     public void reset() {
         moduleName = null;
         cFlags = null;
         ldLibs = null;
-        abiFilters = null;
     }
 
     @Override
@@ -61,12 +59,6 @@ public class MergedNdkConfig implements NdkConfig {
 
     @Override
     @Nullable
-    public Set<String> getAbiFilters() {
-        return abiFilters;
-    }
-
-    @Override
-    @Nullable
     public String getStl() {
         return stl;
     }
@@ -82,14 +74,6 @@ public class MergedNdkConfig implements NdkConfig {
         }
 
         // append
-        if (ndkConfig.getAbiFilters() != null) {
-            if (abiFilters == null) {
-                abiFilters = Sets.newHashSetWithExpectedSize(ndkConfig.getAbiFilters().size());
-            } else {
-                abiFilters.clear();
-            }
-            abiFilters.addAll(ndkConfig.getAbiFilters());
-        }
 
         if (cFlags == null) {
             cFlags = ndkConfig.getcFlags();
