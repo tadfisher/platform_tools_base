@@ -39,6 +39,47 @@ public class StlConfiguration {
             "c++_shared",
     ]
 
+    static final Map<String, Collection<String>> STL_SOURCES = [
+            "system" : [],
+            "stlport" : [
+                    "stlport/stlport",
+                    "gabi++/include",
+            ],
+            "gnustl" : [
+                    "gnu-libstdc++",
+                    "gnu-libstdc++/4.6/include",
+                    "gnu-libstdc++/4.6/libs/armeabi-v7a/include",
+                    "gnu-libstdc++/4.6/include/backward",
+            ],
+            "gabi++" : [
+                    "gabi++",
+                    "gabi++/include",
+            ],
+            "c++" : [
+                    "../android/support/include",
+                    "llvm-libc++",
+                    "../android/compiler-rt",
+                    "llvm-libc++/libcxx/include",
+                    "gabi++/include",
+                    "../android/support/include",
+            ],
+    ]
+
+    public static File getStlBaseDirectory(NdkHandler ndkHandler) {
+        return new File(ndkHandler.getNdkDirectory(), "sources/cxx-stl/");
+    }
+
+    public static Collection<String> getStlSources(NdkHandler ndkHandler, String stl) {
+        if (stl.equals("system")) {
+            return Collections.emptyList();
+        }
+        String stlBase = getStlBaseDirectory(ndkHandler);
+        return STL_SOURCES[stl.substring(0, stl.indexOf('_'))].collect { String sourceDir ->
+            stlBase.toString() + "/" + sourceDir
+        }
+    }
+
+
     public static void checkStl(String stl) {
         if (!VALID_STL.contains(stl)) {
             throw new InvalidUserDataException("Invalid STL: $stl")

@@ -30,6 +30,7 @@ import com.google.common.io.Closeables;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
 import org.gradle.nativebinaries.BuildType;
+import org.gradle.nativebinaries.NativeBinary;
 import org.gradle.nativebinaries.platform.Platform;
 
 import java.io.File;
@@ -241,16 +242,6 @@ public class NdkHandler {
     public String getSysroot(Platform platform) {
         return ndkDirectory + "/platforms/" + ndkExtension.getCompileSdkVersion()
                 + "/arch-" + ARCHITECTURE_STRING.get(platform.getName());
-    }
-
-    /**
-     * Return the output directory for a BuildType and Platform.
-     */
-    public File getOutputDirectory(BuildType buildType, Platform platform) {
-        return new File(
-                project.getBuildDir() + "/" + AndroidProject.FD_INTERMEDIATES + "/binaries/",
-                ndkExtension.getModuleName() + "SharedLibrary/" + buildType.getName() + "/lib/" +
-                        platform.getName());
     }
 
     /**
