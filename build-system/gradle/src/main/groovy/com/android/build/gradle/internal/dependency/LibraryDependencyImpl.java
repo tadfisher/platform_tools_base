@@ -22,6 +22,7 @@ import com.android.builder.dependency.LibraryBundle;
 import com.android.builder.dependency.LibraryDependency;
 import com.android.builder.dependency.ManifestDependency;
 import com.android.builder.model.AndroidLibrary;
+import com.android.builder.model.MavenCoordinates;
 
 import java.io.File;
 import java.util.List;
@@ -49,6 +50,12 @@ public class LibraryDependencyImpl extends LibraryBundle {
     @Override
     public List<? extends AndroidLibrary> getLibraryDependencies() {
         return dependencies;
+    }
+
+    @Nullable
+    @Override
+    public MavenCoordinates getMavenCoordinates() {
+        return null;
     }
 
     @Override
