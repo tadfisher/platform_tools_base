@@ -75,7 +75,8 @@ public class StlNativeToolSpecification extends AbstractNativeToolSpecification 
         }
 
         for (String dir : includeDirs) {
-            cppFlags.add("-I" + new File(getStlBaseDirectory(), dir).toString());
+            cppFlags.add("-I" +
+                    new File(StlConfiguration.getStlBaseDirectory(ndkHandler), dir).toString());
         }
         return cppFlags;
     }

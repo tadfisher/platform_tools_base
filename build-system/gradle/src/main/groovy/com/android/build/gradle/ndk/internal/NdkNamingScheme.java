@@ -16,14 +16,10 @@
 
 package com.android.build.gradle.ndk.internal;
 
-import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
 import com.google.common.base.Joiner;
 
-import org.gradle.nativebinaries.BuildType;
 import org.gradle.nativebinaries.NativeBinary;
-import org.gradle.nativebinaries.SharedLibraryBinary;
-import org.gradle.nativebinaries.platform.Platform;
 
 import java.io.File;
 
@@ -43,6 +39,6 @@ public class NdkNamingScheme {
     }
 
     public static String getSharedLibraryFileName(String moduleName) {
-        return "/lib" + moduleName + ".so";
+        return "lib" + moduleName + ".so";
     }
 }
