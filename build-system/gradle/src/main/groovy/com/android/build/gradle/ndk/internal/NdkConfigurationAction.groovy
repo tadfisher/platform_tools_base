@@ -17,10 +17,13 @@
 package com.android.build.gradle.ndk.internal
 
 import com.android.build.gradle.ndk.NdkExtension
+import com.android.build.gradle.tasks.GdbSetupTask
 import com.android.builder.core.BuilderConstants
 import com.android.builder.model.AndroidProject
 import org.gradle.api.Action
 import org.gradle.api.Project
+import org.gradle.api.Task
+import org.gradle.api.tasks.Copy
 import org.gradle.nativebinaries.internal.ProjectSharedLibraryBinary
 import org.gradle.nativebinaries.language.c.tasks.CCompile
 import org.gradle.nativebinaries.language.cpp.tasks.CppCompile
@@ -114,7 +117,7 @@ class NdkConfigurationAction implements Action<Project> {
 
                 // Currently do not support customization of stl library.
                 cppCompiler.args "-I${ndkBuilder.getNdkDirectory()}/sources/cxx-stl/stlport/stlport"
-                cppCompiler.args "-I${ndkBuilder.getNdkDirectory()}/sources/cxx-stl//gabi++/include"
+                cppCompiler.args "-I${ndkBuilder.getNdkDirectory()}/sources/cxx-stl/gabi++/include"
 
                 NativeToolSpecificationFactory.create(ndkBuilder, buildType, targetPlatform).apply(binary)
 
@@ -128,7 +131,36 @@ class NdkConfigurationAction implements Action<Project> {
                 for (String ldLibs : ndkExtension.getLdLibs()) {
                     linker.args "-l$ldLibs"
                 }
+
+                if (buildType.name.equals(BuilderConstants.DEBUG)) {
+                    setupNdkGdbDebug(project, binary)
+                }
             }
         }
+    }
+
+    /**
+     * Setup tasks to create gdb.setup and copy gdbserver for NDK debugging.
+     */
+    private void setupNdkGdbDebug(Project project, ProjectSharedLibraryBinary binary) {
+        Task copyGdbServerTask = project.tasks.create(
+                name: binary.namingScheme.getTaskName("copy", "GdbServer"),
+                type: Copy) {
+            from(new File(
+                    ndkBuilder.getPrebuiltDirectory(binary.targetPlatform),
+                    "gdbserver/gdbserver"))
+            into(ndkBuilder.getOutputDirectory(binary.buildType, binary.targetPlatform))
+        }
+        binary.builtBy copyGdbServerTask
+
+        Task createGdbSetupTask = project.tasks.create(
+                name: binary.namingScheme.getTaskName("create", "Gdbsetup"),
+                type: GdbSetupTask) {
+            builder = ndkBuilder
+            extension = ndkExtension
+            buildType = binary.buildType
+            platform = binary.targetPlatform
+        }
+        binary.builtBy createGdbSetupTask
     }
 }
