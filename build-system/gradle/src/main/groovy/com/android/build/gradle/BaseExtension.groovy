@@ -405,6 +405,15 @@ public abstract class BaseExtension {
         this.useOldManifestMerger = flag;
     }
 
+    // TEMP
+    // STOPSHIP Remove in 1.0
+
+    boolean shrinkResources = false;
+
+    void shrinkResources(boolean flag) {
+        this.shrinkResources = flag;
+    }
+
     private boolean enforceUniquePackageName = true
 
     public void enforceUniquePackageName(boolean value) {
