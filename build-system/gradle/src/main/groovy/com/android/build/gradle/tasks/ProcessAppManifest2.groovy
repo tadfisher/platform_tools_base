@@ -41,7 +41,7 @@ public class ProcessAppManifest2 extends ProcessManifest {
 
     @Input @Optional
     String getPackageOverride() {
-        return variantConfiguration.getPackageOverride();
+        return variantConfiguration.getIdOverride();
     }
 
     @Input

@@ -713,13 +713,13 @@ public class VariantConfiguration implements TestData {
     /**
      * Returns the original package name before any overrides from flavors.
      * If the variant is a test variant, then the package name is the one coming from the
-     * configuration of the tested variant, and this call is similar to #getPackageName()
-     * @return the package name
+     * configuration of the tested variant, and this call is similar to {@link #getApplicationId()}
+     * @return the original application id
      */
     @Nullable
-    public String getOriginalPackageName() {
+    public String getOriginalApplicationId() {
         if (mType == VariantConfiguration.Type.TEST) {
-            return getPackageName();
+            return getApplicationId();
         }
 
         return getPackageFromManifest();
@@ -732,20 +732,20 @@ public class VariantConfiguration implements TestData {
      */
     @Override
     @NonNull
-    public String getPackageName() {
+    public String getApplicationId() {
         String packageName;
 
         if (mType == Type.TEST) {
             assert mTestedConfig != null;
 
-            packageName = mMergedFlavor.getTestPackageName();
+            packageName = mMergedFlavor.getTestApplicationId();
             if (packageName == null) {
-                String testedPackage = mTestedConfig.getPackageName();
+                String testedPackage = mTestedConfig.getApplicationId();
                 packageName = testedPackage + ".test";
             }
         } else {
             // first get package override.
-            packageName = getPackageOverride();
+            packageName = getIdOverride();
             // if it's null, this means we just need the default package
             // from the manifest since both flavor and build type do nothing.
             if (packageName == null) {
@@ -762,13 +762,13 @@ public class VariantConfiguration implements TestData {
 
     @Override
     @Nullable
-    public String getTestedPackageName() {
+    public String getTestedApplicationId() {
         if (mType == Type.TEST) {
             assert mTestedConfig != null;
             if (mTestedConfig.mType == Type.LIBRARY) {
-                return getPackageName();
+                return getApplicationId();
             } else {
-                return mTestedConfig.getPackageName();
+                return mTestedConfig.getApplicationId();
             }
         }
 
@@ -776,29 +776,29 @@ public class VariantConfiguration implements TestData {
     }
 
     /**
-     * Returns the package override values coming from the Product Flavor and/or the Build Type.
-     * If the package is not overridden then this returns null.
+     * Returns the application id override values coming from the Product Flavor and/or the
+     * Build Type. If the package/id is not overridden then this returns null.
      *
-     * @return the package override or null
+     * @return the id override or null
      */
     @Nullable
-    public String getPackageOverride() {
-        String packageName = mMergedFlavor.getPackageName();
-        String packageSuffix = mBuildType.getPackageNameSuffix();
+    public String getIdOverride() {
+        String idName = mMergedFlavor.getApplicationId();
+        String idSuffix = mBuildType.getApplicationIdSuffix();
 
-        if (packageSuffix != null && !packageSuffix.isEmpty()) {
-            if (packageName == null) {
-                packageName = getPackageFromManifest();
+        if (idSuffix != null && !idSuffix.isEmpty()) {
+            if (idName == null) {
+                idName = getPackageFromManifest();
             }
 
-            if (packageSuffix.charAt(0) == '.') {
-                packageName = packageName + packageSuffix;
+            if (idSuffix.charAt(0) == '.') {
+                idName = idName + idSuffix;
             } else {
-                packageName = packageName + '.' + packageSuffix;
+                idName = idName + '.' + idSuffix;
             }
         }
 
-        return packageName;
+        return idName;
     }
 
     /**

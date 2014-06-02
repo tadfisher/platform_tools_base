@@ -571,7 +571,7 @@ public abstract class BasePlugin {
             config.manifestOverlays
         }
         processManifestTask.conventionMapping.packageNameOverride = {
-            config.packageOverride
+            config.idOverride
         }
         processManifestTask.conventionMapping.versionName = {
             config.versionName
@@ -623,8 +623,8 @@ public abstract class BasePlugin {
 
         VariantConfiguration config = variantData.variantConfiguration
 
-        processTestManifestTask.conventionMapping.testPackageName = {
-            config.packageName
+        processTestManifestTask.conventionMapping.testApplicationId = {
+            config.applicationId
         }
         processTestManifestTask.conventionMapping.minSdkVersion = {
             if (androidBuilder.isPreviewTarget()) {
@@ -640,8 +640,8 @@ public abstract class BasePlugin {
 
             return config.targetSdkVersion?.apiString
         }
-        processTestManifestTask.conventionMapping.testedPackageName = {
-            config.testedPackageName
+        processTestManifestTask.conventionMapping.testedApplicationId = {
+            config.testedApplicationId
         }
         processTestManifestTask.conventionMapping.instrumentationRunner = {
             config.instrumentationRunner
@@ -818,11 +818,11 @@ public abstract class BasePlugin {
         generateBuildConfigTask.plugin = this
 
         generateBuildConfigTask.conventionMapping.buildConfigPackageName = {
-            variantConfiguration.originalPackageName
+            variantConfiguration.originalApplicationId
         }
 
         generateBuildConfigTask.conventionMapping.appPackageName = {
-            variantConfiguration.packageName
+            variantConfiguration.applicationId
         }
 
         generateBuildConfigTask.conventionMapping.versionName = {
@@ -919,7 +919,7 @@ public abstract class BasePlugin {
             getTextSymbolDependencies(variantConfiguration.allLibraries)
         }
         processResources.conventionMapping.packageForR = {
-            variantConfiguration.originalPackageName
+            variantConfiguration.originalApplicationId
         }
 
         // TODO: unify with generateBuilderConfig, compileAidl, and library packaging somehow?
@@ -1090,7 +1090,7 @@ public abstract class BasePlugin {
             project.file("$project.buildDir/${FD_INTERMEDIATES}/${FD_GENERATED}/manifests/microapk/${variantData.variantConfiguration.dirName}/${FN_ANDROID_MANIFEST_XML}")
         }
         task.conventionMapping.mainPkgName = {
-            variantData.variantConfiguration.getPackageName()
+            variantData.variantConfiguration.getApplicationId()
         }
 
         task.dependsOn config
