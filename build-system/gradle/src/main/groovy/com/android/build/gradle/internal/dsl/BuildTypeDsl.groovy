@@ -157,6 +157,12 @@ public class BuildTypeDsl extends DefaultBuildType implements Serializable {
         action.execute(ndkConfig)
     }
 
+    boolean shrinkResources = false; // opt-in for now until we've validated it in the field
+
+    void shrinkResources(boolean flag) {
+        this.shrinkResources = flag;
+    }
+
     // ---------------
     // TEMP for compatibility
     // STOPSHIP Remove in 1.0

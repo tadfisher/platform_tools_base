@@ -33,6 +33,7 @@ import com.android.build.gradle.tasks.NdkCompile;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.RenderscriptCompile;
+import com.android.build.gradle.tasks.ShrinkResources;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.model.SourceProvider;
 import com.google.common.collect.Lists;
@@ -76,6 +77,7 @@ public abstract class BaseVariantData {
 
     public JavaCompile javaCompileTask;
     public Task obfuscationTask;
+    public ShrinkResources shrinkResourcesTask;
     public Copy processJavaResourcesTask;
     public NdkCompile ndkCompileTask;
 

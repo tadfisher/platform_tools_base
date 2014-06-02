@@ -952,6 +952,7 @@ public class AndroidBuilder {
      * @param libraries the flat list of libraries
      * @param packageForR Package override to generate the R class in a different package.
      * @param sourceOutputDir optional source folder to generate R.java
+     * @param symbolOutputDir the folder to write symbols into
      * @param resPackageOutput optional filepath for packaged resources
      * @param proguardOutput optional filepath for proguard file to generate
      * @param type the type of the variant being built
@@ -1106,7 +1107,8 @@ public class AndroidBuilder {
 
         // now if the project has libraries, R needs to be created for each libraries,
         // but only if the current project is not a library.
-        if (type != VariantConfiguration.Type.LIBRARY && !libraries.isEmpty()) {
+        if (type != VariantConfiguration.Type.LIBRARY && !libraries.isEmpty()
+                && sourceOutputDir != null && symbolOutputDir != null) {
             SymbolLoader fullSymbolValues = null;
 
             // First pass processing the libraries, collecting them by packageName,
