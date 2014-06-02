@@ -76,6 +76,7 @@ public abstract class BaseVariantData {
 
     public JavaCompile javaCompileTask;
     public Task obfuscationTask;
+    public Task stripUnusedResourcesTask;
     public Copy processJavaResourcesTask;
     public NdkCompile ndkCompileTask;
 

@@ -19,6 +19,7 @@ import com.android.annotations.NonNull
 import com.android.annotations.Nullable
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.api.BaseVariant
+import com.android.build.gradle.api.LibraryVariant
 import com.android.build.gradle.internal.BadPluginException
 import com.android.build.gradle.internal.ConfigurationDependencies
 import com.android.build.gradle.internal.LibraryCache
@@ -86,6 +87,7 @@ import com.android.build.gradle.tasks.ProcessAppManifest2
 import com.android.build.gradle.tasks.ProcessTestManifest
 import com.android.build.gradle.tasks.ProcessTestManifest2
 import com.android.build.gradle.tasks.RenderscriptCompile
+import com.android.build.gradle.tasks.StripUnusedResources
 import com.android.build.gradle.tasks.ZipAlign
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.DefaultBuildType
@@ -1668,6 +1670,10 @@ public abstract class BasePlugin {
         variantData.packageApplicationTask = packageApp
         packageApp.dependsOn variantData.processResourcesTask, dexTask, variantData.processJavaResourcesTask, variantData.ndkCompileTask
 
+        if (runProguard && variantData.stripUnusedResourcesTask != null) {
+            packageApp.dependsOn variantData.stripUnusedResourcesTask
+        }
+
         packageApp.plugin = this
 
         packageApp.conventionMapping.resourceFile = {
@@ -2022,6 +2028,34 @@ public abstract class BasePlugin {
         proguardTask.doFirst {
             proguardOut.mkdirs()
         }
+
+        // Create resource shrinking task
+        def stripUnusedResourcesTask = project.tasks.create(
+                "stripUnusedResources${variantData.variantConfiguration.fullName.capitalize()}",
+                StripUnusedResources)
+        stripUnusedResourcesTask.plugin = this
+        variantData.stripUnusedResourcesTask = stripUnusedResourcesTask
+        stripUnusedResourcesTask.variantData = variantData // HACK; used to look up stuff from the resource task
+        stripUnusedResourcesTask.dependsOn proguardTask
+        stripUnusedResourcesTask.dependsOn variantData.processManifestTask
+
+        // TODO: Have to depend on merge output task, and packaging task should depend
+        // on this one!
+
+        stripUnusedResourcesTask.classesJar = outFile
+        stripUnusedResourcesTask.proguardMapFile = new File(proguardOut, "mapping.txt")
+        stripUnusedResourcesTask.resources = variantData.mergeResourcesTask.outputDir
+
+        // TODO: Find a way to piggyback this task off of the proguard one!
+        // ./gradlew assembleRelease stripUnusedResourcesRelease
+
+        // This is hacky because I can't find a way to use the paths directly:
+        //variantData.processResourcesTask.conventionMapping.sourceOutputDir
+        stripUnusedResourcesTask.rDir = project.file("$project.buildDir/${FD_GENERATED}/source/r/${variantData.variantConfiguration.dirName}")
+
+        // Hack to get setting; variantData.processManifestTask.convention.manifestOutputFile doesn't work
+        def manifestOutDir = variantData instanceof LibraryVariantData ? DIR_BUNDLES : "manifests"
+        stripUnusedResourcesTask.mergedManifest = project.file("$project.buildDir/${FD_INTERMEDIATES}/${manifestOutDir}/${variantData.variantConfiguration.dirName}/AndroidManifest.xml")
 
         return outFile
     }
