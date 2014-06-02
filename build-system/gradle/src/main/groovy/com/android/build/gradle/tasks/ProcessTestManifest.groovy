@@ -28,7 +28,7 @@ public class ProcessTestManifest extends ProcessManifest {
     // ----- PRIVATE TASK API -----
 
     @Input
-    String testPackageName
+    String testApplicationId
 
     @Input @Optional
     String minSdkVersion
@@ -37,7 +37,7 @@ public class ProcessTestManifest extends ProcessManifest {
     String targetSdkVersion
 
     @Input
-    String testedPackageName
+    String testedApplicationId
 
     @Input
     String instrumentationRunner
@@ -49,6 +49,18 @@ public class ProcessTestManifest extends ProcessManifest {
     Boolean functionalTest;
 
     List<ManifestDependencyImpl> libraries
+
+    // ---------------
+    // TEMP for compatibility
+    // STOPSHIP Remove in 1.0
+
+    // Deprecated; will be removed; use testApplicationId instead!
+    @Input
+    String testPackageName
+
+    // Deprecated; will be removed; use testedApplicationId instead!
+    @Input
+    String testedPackageName
 
     /*
      * since libraries above can't return it's input files (@Nested doesn't
@@ -71,16 +83,32 @@ public class ProcessTestManifest extends ProcessManifest {
 
     @Override
     protected void doFullTaskAction() {
+        migrateProperties()
+
         getBuilder().processTestManifest(
-                getTestPackageName(),
+                getTestApplicationId(),
                 getMinSdkVersion(),
                 getTargetSdkVersion(),
-                getTestedPackageName(),
+                getTestedApplicationId(),
                 getInstrumentationRunner(),
                 getHandleProfiling(),
                 getFunctionalTest(),
                 getLibraries(),
                 getManifestOutputFile())
+    }
+
+    protected void migrateProperties() {
+        if (testPackageName != null) {
+            logger.warn(
+                    "WARNING: testPackageName is deprecated; change to \"testApplicationId\" instead");
+            testApplicationId = testPackageName;
+        }
+
+        if (testedPackageName != null) {
+            logger.warn(
+                    "WARNING: testedPackageName is deprecated; change to \"testedApplicationId\" instead");
+            testedApplicationId = testedPackageName;
+        }
     }
 
 }
