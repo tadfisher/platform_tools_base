@@ -86,7 +86,13 @@ public final class SdkConstants {
     public static final String FN_BUILD_GRADLE = "build.gradle";                      //$NON-NLS-1$
     /** An SDK Project's settings.gradle file */
     public static final String FN_SETTINGS_GRADLE = "settings.gradle";                //$NON-NLS-1$
-
+    /** An SDK Project's gradlew file */
+    public static final String FN_GRADLE_WRAPPER_UNIX = "gradlew";                    //$NON-NLS-1$
+    /** An SDK Project's gradlew.bat file (i.e. gradlew for windows) */
+    public static final String FN_GRADLE_WRAPPER_WIN = FN_GRADLE_WRAPPER_UNIX + ".bat"; //$NON-NLS-1$
+    /** An SDK Project's appropriate gradlew file (OS dependant) */
+    /** An SDK Project's gradle wrapper library */
+    public static final String FN_GRADLE_WRAPPER_JAR = "gradle-wrapper.jar";          //$NON-NLS-1$
     /** Name of the framework library, i.e. "android.jar" */
     public static final String FN_FRAMEWORK_LIBRARY = "android.jar";                  //$NON-NLS-1$
     /** Name of the framework library, i.e. "uiautomator.jar" */
@@ -422,12 +428,17 @@ public final class SdkConstants {
         "proguard" + File.separator +                                   //$NON-NLS-1$
         "bin" + File.separator;                                         //$NON-NLS-1$
 
+    /** The root folder for all gradle files. */
+    public static final String GRADLE_FOLDER = "gradle";
+
+    /** Path of the gradle wrapper folder.
+     *  This is an OS path, ending with a separator. */
+    public static final String GRADLE_WRAPPER_FOLDER = GRADLE_FOLDER + File.separator + "wrapper" + File.separator;
+
     /** Path of the template gradle wrapper folder relative to the sdk folder.
      *  This is an OS path, ending with a separator. */
     public static final String OS_SDK_TOOLS_TEMPLATES_GRADLE_WRAPPER_FOLDER =
-        OS_SDK_TOOLS_FOLDER + FD_TEMPLATES + File.separator +
-        "gradle" + File.separator +                                     //$NON-NLS-1$
-        "wrapper" + File.separator;                                     //$NON-NLS-1$
+      OS_SDK_TOOLS_FOLDER + FD_TEMPLATES + File.separator + GRADLE_WRAPPER_FOLDER;
 
     /* Folder paths relative to a platform or add-on folder */
 
