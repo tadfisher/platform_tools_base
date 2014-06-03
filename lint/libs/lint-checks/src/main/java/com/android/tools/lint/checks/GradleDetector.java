@@ -233,6 +233,8 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                 || property.equals("versionCode")
                 || property.equals("compileSdkVersion")
                 || property.equals("minSdkVersion")
+                || property.equals("applicationIdSuffix")
+                || property.equals("packageName")
                 || property.equals("packageNameSuffix");
     }
 
@@ -355,7 +357,10 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                     }
                 }
             }
-        } else if (property.equals("packageNameSuffix")) {
+        } else if (property.equals("packageNameSuffix") || property.equals("packageName")) {
+            String message = "Deprecated: Use " + property.replace("packageName", "applicationId") + " instead";
+            report(context, cookie, IDE_SUPPORT, message);
+        } else if (property.equals("applicationIdSuffix")) {
             String suffix = getStringLiteralValue(value);
             if (suffix != null && !suffix.startsWith(".")) {
                 String message = "Package suffix should probably start with a \".\"";
@@ -482,7 +487,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         Issue issue = DEPENDENCY;
         if ("com.android.tools.build".equals(dependency.getGroupId()) &&
                 "gradle".equals(dependency.getArtifactId())) {
-            version = getNewerRevision(dependency, 0, 10, 1);
+            version = getNewerRevision(dependency, 0, 11, 0);
         } else if ("com.google.guava".equals(dependency.getGroupId()) &&
                 "guava".equals(dependency.getArtifactId())) {
             version = getNewerRevision(dependency, 17, 0, 0);
