@@ -592,12 +592,12 @@ public class ProjectCreator {
                     keywords);
 
             // Create the gradle wrapper files
-            createDirs(projectFolder, "gradle/wrapper");
-            installGradleWrapperFile("gradle/wrapper/gradle-wrapper.jar", projectFolder);
-            installGradleWrapperFile("gradle/wrapper/gradle-wrapper.properties", projectFolder);
-            installGradleWrapperFile("gradlew.bat", projectFolder);
-            installGradleWrapperFile("gradlew", projectFolder);
-            new File(projectFolder, "gradlew").setExecutable(true, false);
+            createDirs(projectFolder, SdkConstants.GRADLE_WRAPPER_FOLDER);
+            installGradleWrapperFile(SdkConstants.GRADLE_WRAPPER_FOLDER + SdkConstants.FN_GRADLE_WRAPPER_PROPERTIES, projectFolder);
+            installGradleWrapperFile(SdkConstants.GRADLE_WRAPPER_FOLDER + SdkConstants.FN_GRADLE_WRAPPER_PROPERTIES , projectFolder);
+            installGradleWrapperFile(SdkConstants.FN_GRADLE_WRAPPER_WIN, projectFolder);
+            installGradleWrapperFile(SdkConstants.FN_GRADLE_WRAPPER_UNIX, projectFolder);
+            new File(projectFolder, SdkConstants.FN_GRADLE_WRAPPER_UNIX).setExecutable(true, false);
         } catch (Exception e) {
             mLog.error(e, null);
         }
