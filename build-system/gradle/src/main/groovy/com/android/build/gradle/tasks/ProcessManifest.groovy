@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks
 
 import com.android.builder.core.VariantConfiguration
 import com.android.manifmerger.ManifestMerger2
+import com.google.common.collect.ImmutableMap
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
@@ -75,6 +76,7 @@ class ProcessManifest extends ManifestProcessorTask {
                 getMinSdkVersion(),
                 getTargetSdkVersion(),
                 getManifestOutputFile().absolutePath,
-                ManifestMerger2.MergeType.LIBRARY)
+                ManifestMerger2.MergeType.LIBRARY,
+                ImmutableMap.of())
     }
 }
