@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks
 import com.android.build.gradle.internal.dependency.ManifestDependencyImpl
 import com.android.builder.core.VariantConfiguration
 import com.android.manifmerger.ManifestMerger2
+import com.google.common.base.Joiner
 import com.google.common.collect.Lists
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
@@ -61,6 +62,17 @@ public class MergeManifests extends ManifestProcessorTask {
     @Input @Optional
     String targetSdkVersion
 
+    /**
+     * Return a serializable version of our map of key value pairs for placeholder substitution.
+     * This serialized form is only used by gradle to compare past and present tasks to determine
+     * whether a task need to be re-run or not.
+     */
+    @Input @Optional
+    String getManifestPlaceholders() {
+        Joiner.on(",").join(variantConfiguration.getMergedFlavor()
+                .getManifestPlaceholders().values());
+    }
+
     VariantConfiguration variantConfiguration
     List<ManifestDependencyImpl> libraries
 
@@ -96,7 +108,7 @@ public class MergeManifests extends ManifestProcessorTask {
                 getMinSdkVersion(),
                 getTargetSdkVersion(),
                 getManifestOutputFile().absolutePath,
-                ManifestMerger2.MergeType.APPLICATION)
+                ManifestMerger2.MergeType.APPLICATION,
+                variantConfiguration.getMergedFlavor().getManifestPlaceholders())
     }
-
 }
