@@ -18,6 +18,10 @@ package com.android.build.gradle.tasks
 
 import com.android.builder.core.VariantConfiguration
 import com.android.manifmerger.ManifestMerger2
+import com.google.common.base.Function
+import com.google.common.base.Joiner
+import com.google.common.collect.Iterables
+import com.google.common.collect.Lists
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
@@ -62,6 +66,27 @@ class ProcessManifest extends ManifestProcessorTask {
         return variantConfiguration.getManifestOverlays();
     }
 
+    /**
+     * Return a serializable version of our map of key value pairs for placeholder substitution.
+     * This serialized form is only used by gradle to compare past and present tasks to determine
+     * whether a task need to be re-run or not.
+     */
+    @Input @Optional
+    String getManifestPlaceholders() {
+        Joiner keyValueJoiner = Joiner.on(":");
+        // transform the map on a list of key:value items, sort it and concatenate it.
+        return Joiner.on(",").join(
+                Lists.newArrayList(Iterables.transform(
+                        variantConfiguration.getMergedFlavor().getManifestPlaceholders().entrySet(),
+                        new Function<Map.Entry<String, String>, String>() {
+
+                            @Override
+                            public String apply(final Map.Entry<String, String> input) {
+                                return keyValueJoiner.join(input.getKey(), input.getValue());
+                            }
+                        })).sort())
+    }
+
     @Override
     protected void doFullTaskAction() {
 
@@ -75,6 +100,7 @@ class ProcessManifest extends ManifestProcessorTask {
                 getMinSdkVersion(),
                 getTargetSdkVersion(),
                 getManifestOutputFile().absolutePath,
-                ManifestMerger2.MergeType.LIBRARY)
+                ManifestMerger2.MergeType.LIBRARY,
+                variantConfiguration.getMergedFlavor().getManifestPlaceholders())
     }
 }
