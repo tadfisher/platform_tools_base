@@ -23,6 +23,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.ndk.NdkExtension;
 import com.android.builder.model.AndroidProject;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Closeables;
 
@@ -36,13 +37,15 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 /**
  * Handles NDK related paths.
  */
-public class NdkBuilder {
+public class NdkHandler {
 
     // Map of ABI to toolchain platform string.
     private static final Map<String, String> PLATFORM_STRING;
@@ -52,6 +55,21 @@ public class NdkBuilder {
 
     // Map of toolchain names to the subdirectory name containing the toolchain.
     private static final Map<String, String> TOOLCHAIN_STRING;
+
+    private static final List<String> ABI32 = ImmutableList.of(
+            SdkConstants.ABI_INTEL_ATOM,
+            SdkConstants.ABI_ARMEABI_V7A,
+            SdkConstants.ABI_ARMEABI,
+            SdkConstants.ABI_MIPS);
+
+    private static final List<String> ALL_ABI = ImmutableList.of(
+            SdkConstants.ABI_INTEL_ATOM,
+            SdkConstants.ABI_INTEL_ATOM64,
+            SdkConstants.ABI_ARMEABI_V7A,
+            SdkConstants.ABI_ARMEABI,
+            SdkConstants.ABI_ARM64_V8A,
+            SdkConstants.ABI_MIPS,
+            SdkConstants.ABI_MIPS64);
 
     private NdkExtension ndkExtension;
 
@@ -87,7 +105,7 @@ public class NdkBuilder {
                 .build();
     }
 
-    public NdkBuilder(Project project, NdkExtension ndkExtension) {
+    public NdkHandler(Project project, NdkExtension ndkExtension) {
         this.project = project;
         this.ndkExtension = ndkExtension;
         ndkDirectory = findNdkDirectory(project);
@@ -229,7 +247,7 @@ public class NdkBuilder {
     /**
      * Return true if compiledSdkVersion supports 64 bits ABI.
      */
-    public Boolean supports64Bits() {
+    public boolean supports64Bits() {
         String targetString = getNdkExtension().getCompileSdkVersion().replace("android-", "");
         try {
             return Integer.parseInt(targetString) >= 20;
@@ -237,7 +255,17 @@ public class NdkBuilder {
             // "android-L" supports 64-bits.
             return true;
         }
-
     }
 
+    public String getGccToolchainVersion() {
+        if (ndkExtension.getToolchain().equals("gcc")) {
+            return ndkExtension.getToolchainVersion();
+        } else {
+            return supports64Bits() ? "4.9" : "4.8";
+        }
+    }
+
+    public Collection<String> getSupportedAbis() {
+        return supports64Bits() ? ALL_ABI : ABI32;
+    }
 }
