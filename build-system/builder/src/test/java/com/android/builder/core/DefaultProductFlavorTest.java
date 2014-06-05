@@ -35,8 +35,8 @@ public class DefaultProductFlavorTest extends TestCase {
         mDefault2 = new DefaultProductFlavor("default2");
 
         mCustom = new DefaultProductFlavor("custom");
-        mCustom.setMinSdkVersion(new DefaultApiVersion(42));
-        mCustom.setTargetSdkVersion(new DefaultApiVersion(43));
+        mCustom.setMinApiVersion(new DefaultApiVersion(42));
+        mCustom.setTargetApiVersion(new DefaultApiVersion(43));
         mCustom.setRenderscriptTargetApi(17);
         mCustom.setVersionCode(44);
         mCustom.setVersionName("42.0");

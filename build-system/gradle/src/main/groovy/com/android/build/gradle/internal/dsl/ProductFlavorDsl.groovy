@@ -62,7 +62,7 @@ class ProductFlavorDsl extends DefaultProductFlavor {
 
     @NonNull
     public ProductFlavor setMinSdkVersion(int minSdkVersion) {
-        setMinSdkVersion(new DefaultApiVersion(minSdkVersion));
+        setMinApiVersion(new DefaultApiVersion(minSdkVersion));
         return this;
     }
 
@@ -73,20 +73,48 @@ class ProductFlavorDsl extends DefaultProductFlavor {
     }
 
     @NonNull
+    public ProductFlavor setMinSdkVersion(Integer minSdkVersion) {
+        if (minSdkVersion == null) {
+            super.setMinApiVersion(null);
+        } else {
+            setMinApiVersion(new DefaultApiVersion(minSdkVersion));
+        }
+        return this;
+    }
+
+    @NonNull
+    public ProductFlavor minSdkVersion(Integer minSdkVersion) {
+        if (minSdkVersion == null) {
+            super.setMinApiVersion(null);
+        } else {
+            setMinSdkVersion(minSdkVersion);
+        }
+        return this;
+    }
+
+    @NonNull
     public ProductFlavor setMinSdkVersion(String minSdkVersion) {
-        setMinSdkVersion(getApiVersion(minSdkVersion))
+        if (minSdkVersion == null) {
+            super.setMinApiVersion(null);
+        } else {
+            setMinApiVersion(getApiVersion(minSdkVersion))
+        }
         return this;
     }
 
     @NonNull
     public ProductFlavor minSdkVersion(String minSdkVersion) {
-        setMinSdkVersion(minSdkVersion);
+        if (minSdkVersion == null) {
+            super.setMinApiVersion(null);
+        } else {
+            setMinSdkVersion(minSdkVersion);
+        }
         return this;
     }
 
     @NonNull
     public ProductFlavor setTargetSdkVersion(int targetSdkVersion) {
-        setTargetSdkVersion(new DefaultApiVersion(targetSdkVersion));
+        setTargetApiVersion(new DefaultApiVersion(targetSdkVersion));
         return this;
     }
 
@@ -97,14 +125,42 @@ class ProductFlavorDsl extends DefaultProductFlavor {
     }
 
     @NonNull
+    public ProductFlavor setTargetSdkVersion(Integer targetSdkVersion) {
+        if (targetSdkVersion == null) {
+            super.setTargetApiVersion(null);
+        } else {
+            setTargetApiVersion(new DefaultApiVersion(targetSdkVersion));
+        }
+        return this;
+    }
+
+    @NonNull
+    public ProductFlavor targetSdkVersion(Integer targetSdkVersion) {
+        if (targetSdkVersion == null) {
+            super.setTargetApiVersion(null);
+        } else {
+            setTargetSdkVersion(targetSdkVersion);
+        }
+        return this;
+    }
+
+    @NonNull
     public ProductFlavor setTargetSdkVersion(String targetSdkVersion) {
-        setTargetSdkVersion(getApiVersion(targetSdkVersion))
+        if (targetSdkVersion == null) {
+            super.setTargetApiVersion(null);
+        } else {
+            setTargetApiVersion(getApiVersion(targetSdkVersion))
+        }
         return this;
     }
 
     @NonNull
     public ProductFlavor targetSdkVersion(String targetSdkVersion) {
-        setTargetSdkVersion(targetSdkVersion);
+        if (targetSdkVersion == null) {
+            super.setTargetApiVersion(null);
+        } else {
+            setTargetSdkVersion(targetSdkVersion);
+        }
         return this;
     }
 

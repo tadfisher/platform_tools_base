@@ -128,7 +128,7 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
 
     /** Sets the minSdkVersion to the given value. */
     @NonNull
-    public ProductFlavor setMinSdkVersion(ApiVersion minSdkVersion) {
+    public ProductFlavor setMinApiVersion(ApiVersion minSdkVersion) {
         mMinSdkVersion = minSdkVersion;
         return this;
     }
@@ -140,7 +140,7 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
 
     /** Sets the targetSdkVersion to the given value. */
     @NonNull
-    public ProductFlavor setTargetSdkVersion(ApiVersion targetSdkVersion) {
+    public ProductFlavor setTargetApiVersion(ApiVersion targetSdkVersion) {
         mTargetSdkVersion = targetSdkVersion;
         return this;
     }
