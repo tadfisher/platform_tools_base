@@ -1,0 +1,91 @@
+buildscript {
+    repositories {
+        maven { url '../../../../../out/repo' }
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:0.12.2'
+    }
+}
+
+subprojects {
+    apply plugin: 'android'
+
+    android {
+        compileSdkVersion 19
+        buildToolsVersion '19.1.0'
+
+        useNewNativePlugin true
+        ndk {
+            moduleName "stl"
+        }
+
+        sourceSets {
+            androidTest {
+                java {
+                    srcDir '../src/androidTest/java'
+                }
+            }
+            main {
+                manifest.srcFile '../src/main/AndroidManifest.xml'
+                res {
+                    srcDir '../src/main/res'
+                }
+                java {
+                    srcDir '../src/main/java'
+                }
+                jni {
+                    srcDir '../src/main/jni'
+                }
+            }
+        }
+
+        /*
+        productFlavors {
+            system {
+                ndk {
+                    stl = "system"
+                }
+            }
+            gabiStatic {
+                ndk {
+                    stl = "gabi++_static"
+                }
+            }
+            gabiShared {
+                ndk {
+                    stl = "gabi++_shared"
+                }
+            }
+            stlportStatic {
+                ndk {
+                    stl = "stlport_static"
+                }
+            }
+            stlportShared {
+                ndk {
+                    stl = "stlport_shared"
+                }
+            }
+            gnustlStatic {
+                ndk {
+                    stl = "gnustl_static"
+                }
+            }
+            gnustlShared {
+                ndk {
+                    stl = "gnustl_shared"
+                }
+            }
+        }
+        */
+    }
+}
+
+
+allprojects {
+    gradle.projectsEvaluated {
+        tasks.withType(JavaCompile) {
+            options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+        }
+    }
+}
