@@ -150,7 +150,10 @@ class ClangNativeToolSpecification extends AbstractNativeToolSpecification {
     private Iterable<String> getTargetFlags() {
         [
                 "-gcc-toolchain",
-                ndkBuilder.getToolchainPath("gcc", "4.8", platform.name),
+                ndkBuilder.getToolchainPath(
+                        "gcc",
+                        ndkBuilder.getGccToolchainVersion(),
+                        platform.name),
                 "-target",
                 TARGET_TRIPLE[platform.name]
         ]

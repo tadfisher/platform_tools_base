@@ -200,4 +200,12 @@ public class NdkBuilder {
                 ndkDirectory, "prebuilt/android-" + ARCHITECTURE_STRING.get(platform.getName()));
     }
 
+    public String getGccToolchainVersion() {
+        if (ndkExtension.getToolchain().equals("gcc")) {
+            return ndkExtension.getToolchainVersion();
+        } else {
+            return "4.8";
+        }
+    }
+
 }
