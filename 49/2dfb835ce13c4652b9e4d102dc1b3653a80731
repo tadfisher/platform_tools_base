@@ -1,0 +1,7 @@
+Code-Review+2: Jerome Dochez <jedo@google.com>
+Verified+1: Jerome Dochez <jedo@google.com>
+Submitted-by: Jerome Dochez <jedo@google.com>
+Submitted-at: Thu, 05 Jun 2014 22:21:23 +0000
+Reviewed-on: https://android-review.googlesource.com/96906
+Project: platform/tools/base
+Branch: refs/heads/gradle_0.11
