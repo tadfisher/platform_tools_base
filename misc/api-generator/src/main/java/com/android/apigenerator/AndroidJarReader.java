@@ -44,21 +44,30 @@ public class AndroidJarReader {
 
     private static final byte[] BUFFER = new byte[65535];
 
-    private final String mSdkFolder;
+    private final String mBaseFolder;
+    private final FolderType mFolderType;
+    private final int mMinApi;
 
-    public AndroidJarReader(String sdkFolder) {
-        mSdkFolder = sdkFolder;
+    enum FolderType {
+        SDK,
+        PREBUILT
+    }
+
+    public AndroidJarReader(FolderType folderType, String baseFolder, int minApi) {
+        mFolderType = folderType;
+        mBaseFolder = baseFolder;
+        mMinApi = minApi;
     }
 
     public Map<String, ApiClass> getClasses() {
         HashMap<String, ApiClass> map = new HashMap<String, ApiClass>();
 
         // Get all the android.jar. They are in platforms-#
-        int apiLevel = 0;
+        int apiLevel = mMinApi;
         while (true) {
             apiLevel++;
             try {
-                File jar = new File(mSdkFolder, "platforms/android-" + apiLevel + "/android.jar");
+                File jar = getAndroidJarFile(apiLevel);
                 if (jar.exists() == false) {
                     System.out.println("Last API level found: " + (apiLevel-1));
                     break;
@@ -143,6 +152,16 @@ public class AndroidJarReader {
         postProcessClasses(map);
 
         return map;
+    }
+
+    private File getAndroidJarFile(int apiLevel) {
+        switch (mFolderType) {
+        case SDK:
+            return new File(mBaseFolder, "platforms/android-" + apiLevel + "/android.jar");
+        case PREBUILT:
+            return new File(mBaseFolder, apiLevel + "/android.jar");
+        }
+        throw new IllegalArgumentException("Unsupported folder type: " + mFolderType.toString());
     }
 
     private void postProcessClasses(Map<String, ApiClass> classes) {

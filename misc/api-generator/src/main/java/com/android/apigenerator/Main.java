@@ -18,6 +18,8 @@ package com.android.apigenerator;
 
 
 
+import com.android.apigenerator.AndroidJarReader.FolderType;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
@@ -35,19 +37,62 @@ public class Main {
      * @param args
      */
     public static void main(String[] args) {
-        if (args.length != 2) {
+
+        boolean error = false;
+        int minApi = 1;
+        FolderType type = FolderType.SDK;
+        String baseFolder = null;
+        String outPath = null;
+
+        for (int i = 0; i < args.length && !error; i++) {
+            String arg = args[i];
+
+            if (arg.equals("--prebuilt")) {
+                type = FolderType.PREBUILT;
+
+            } else if (arg.equals("--min-api")) {
+                i++;
+                if (i < args.length) {
+                    minApi = Integer.parseInt(args[i]);
+                } else {
+                    System.err.println("Missing number >= 1 after " + arg);
+                    error = true;
+                }
+            } else if (baseFolder == null) {
+                baseFolder = arg;
+
+            } else if (outPath == null) {
+                outPath = arg;
+
+            } else {
+                System.err.println("Unknown argument: " + arg);
+                error = true;
+            }
+        }
+
+        if (!error && baseFolder == null) {
+            System.err.println("Missing base folder");
+            error = true;
+        }
+
+        if (!error && outPath == null) {
+            System.err.println("Missing out file path");
+            error = true;
+        }
+
+        if (error) {
             printUsage();
         }
 
-        AndroidJarReader reader = new AndroidJarReader(args[0]);
+        AndroidJarReader reader = new AndroidJarReader(type, baseFolder, minApi);
         Map<String, ApiClass> classes = reader.getClasses();
-        createApiFile(new File(args[1]), classes);
+        createApiFile(new File(outPath), classes);
     }
 
     private static void printUsage() {
-        System.err.println("Generates a single API file from the content of an SDK.\n");
+        System.err.println("\nGenerates a single API file from the content of an SDK.\n");
         System.err.println("Usage\n");
-        System.err.println("\tApiCheck SDKFOLDER OUTFILE\n");
+        System.err.println("\tApiCheck [--min-api=1] [--prebuilt] SDKFOLDER OUTFILE\n");
         System.exit(1);
     }
 
