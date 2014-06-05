@@ -85,8 +85,9 @@ public class AutomatedBuildTest extends BuildTest {
     };
 
     private static final List<String> ndkPluginTests = ImmutableList.of(
-            "ndkSanAngeles2",
             "ndkJniLib2",
+            "ndkSanAngeles2",
+            "ndkStl",
             "ndkVariants"
     );
 
