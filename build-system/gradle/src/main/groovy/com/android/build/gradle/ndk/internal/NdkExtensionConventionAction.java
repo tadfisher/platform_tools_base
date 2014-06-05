@@ -18,6 +18,7 @@ public class NdkExtensionConventionAction implements Action<ProjectInternal> {
     private static final String DEFAULT_TOOLCHAIN = "gcc";
     private static final String DEFAULT_GCC_VERSION = "4.6";
     private static final String DEFAULT_CLANG_VERSION = "3.3";
+    private static final String DEFAULT_STL = "system";
 
     @Override
     public void execute(ProjectInternal project) {
@@ -52,6 +53,10 @@ public class NdkExtensionConventionAction implements Action<ProjectInternal> {
             extension.setToolchainVersion(
                     extension.getToolchain().equals("gcc") ? DEFAULT_GCC_VERSION
                             : DEFAULT_CLANG_VERSION);
+        }
+
+        if (extension.getStl() == null) {
+            extension.setStl(DEFAULT_STL);
         }
 
         // Define default source set.  Currently do not support configuration of sourceSets for

@@ -24,6 +24,7 @@ import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.tasks.Copy
+import org.gradle.nativebinaries.NativeBinary
 import org.gradle.nativebinaries.internal.ProjectSharedLibraryBinary
 import org.gradle.nativebinaries.language.c.tasks.CCompile
 import org.gradle.nativebinaries.language.cpp.tasks.CppCompile
@@ -110,22 +111,8 @@ class NdkConfigurationAction implements Action<Project> {
                     linker.args "-L$sysroot/usr/lib/rs"
                 }
 
-                // Currently do not support customization of stl library.
-                cppCompiler.args "-I${ndkBuilder.getNdkDirectory()}/sources/cxx-stl/stlport/stlport"
-                cppCompiler.args "-I${ndkBuilder.getNdkDirectory()}/sources/cxx-stl/gabi++/include"
-
-                FlagConfiguration flagConfig =
-                        FlagConfigurationFactory.create(ndkBuilder, buildType, targetPlatform)
-
-                for (String arg : flagConfig.getCFlags()) {
-                    cCompiler.args arg
-                }
-                for (String arg : flagConfig.getCppFlags()) {
-                    cppCompiler.args arg
-                }
-                for (String arg : flagConfig.getLdFlags()) {
-                    linker.args arg
-                }
+                setupStlTasks(project, binary)
+                FlagConfigurationFactory.create(ndkBuilder, buildType, targetPlatform).apply(binary)
 
                 // Add flags defined in NdkExtension
                 if (ndkExtension.getcFlags() != null) {
@@ -144,7 +131,6 @@ class NdkConfigurationAction implements Action<Project> {
             }
         }
     }
-
 
     /**
      * Setup tasks to create gdb.setup and copy gdbserver for NDK debugging.
@@ -169,5 +155,21 @@ class NdkConfigurationAction implements Action<Project> {
             platform = binary.targetPlatform
         }
         binary.builtBy createGdbSetupTask
+    }
+
+    private void setupStlTasks(Project project, ProjectSharedLibraryBinary binary) {
+        StlNativeToolSpecification stlConfig =
+                new StlNativeToolSpecification(ndkBuilder, ndkExtension.stl, binary.targetPlatform)
+        stlConfig.apply(binary)
+
+        if (ndkExtension.stl.endsWith("_shared")) {
+            Task copySharedLib = project.tasks.create(
+                    name: binary.namingScheme.getTaskName("copy", "StlSharedLibrary"),
+                    type: Copy) {
+                from(stlConfig.getStlLib())
+                into(ndkBuilder.getOutputDirectory(binary.buildType, binary.targetPlatform))
+            }
+            binary.builtBy copySharedLib
+        }
     }
 }

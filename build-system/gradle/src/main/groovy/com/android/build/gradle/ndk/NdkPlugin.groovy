@@ -15,16 +15,18 @@
  */
 package com.android.build.gradle.ndk
 
+import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.api.AndroidSourceDirectorySet
 import com.android.build.gradle.internal.api.DefaultAndroidSourceDirectorySet
 import com.android.build.gradle.ndk.internal.NdkBuilder
 import com.android.build.gradle.ndk.internal.NdkConfigurationAction
 import com.android.build.gradle.ndk.internal.NdkExtensionConventionAction
 import com.android.build.gradle.ndk.internal.ToolchainConfigurationAction
-import com.android.build.gradle.tasks.GdbSetupTask
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.VariantConfiguration
 import com.android.builder.model.BuildType
+import com.android.builder.model.NdkConfig
+import com.android.builder.model.ProductFlavor
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -122,5 +124,4 @@ class NdkPlugin implements Plugin<Project> {
                 *.getParentFile()
                 .unique())
     }
-
 }

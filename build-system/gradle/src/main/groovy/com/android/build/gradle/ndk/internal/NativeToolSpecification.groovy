@@ -16,13 +16,17 @@
 
 package com.android.build.gradle.ndk.internal
 
+import org.gradle.nativebinaries.NativeBinary
+
 /**
  * Interface for native binaries flag configurations.
  */
-interface FlagConfiguration {
-    public List<String> getCFlags()
+interface NativeToolSpecification {
+    public Iterable<String> getCFlags()
 
-    public List<String> getCppFlags()
+    public Iterable<String> getCppFlags()
 
-    public List<String> getLdFlags()
+    public Iterable<String> getLdFlags()
+
+    public void apply(NativeBinary binary);
 }

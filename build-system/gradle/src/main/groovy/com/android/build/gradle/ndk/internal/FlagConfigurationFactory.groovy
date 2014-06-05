@@ -20,23 +20,23 @@ import org.gradle.nativebinaries.BuildType
 import org.gradle.nativebinaries.platform.Platform
 
 /**
- * Factory to create a FlagConfiguration.
+ * Factory to create a NativeToolSpecification.
  */
 class FlagConfigurationFactory {
     /**
-     * Returns a FlagConfiguration.
+     * Returns a NativeToolSpecification.
      *
      * @param buildType Build type of the native binary.
      * @param platform Target platform of the native binary.
-     * @return A FlagConfiguration for the targeted native binary.
+     * @return A NativeToolSpecification for the targeted native binary.
      */
-    public static FlagConfiguration create(
+    public static NativeToolSpecification create(
             NdkBuilder ndkBuilder,
             BuildType buildType,
             Platform platform) {
         String toolchain = ndkBuilder.getNdkExtension().getToolchain()
         return (toolchain == null || toolchain.equals("gcc")
-                ? new GccFlagConfiguration(buildType, platform)
-                : new ClangFlagConfiguration(ndkBuilder, buildType, platform))
+                ? new GccNativeToolSpecification(buildType, platform)
+                : new ClangNativeToolSpecification(ndkBuilder, buildType, platform))
     }
 }

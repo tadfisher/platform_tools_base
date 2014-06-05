@@ -22,10 +22,19 @@ import org.gradle.nativebinaries.BuildType
 import org.gradle.nativebinaries.platform.Platform
 
 /**
- * Flag configuration for GCC toolchain.
+ * Flag configuration for Clang toolchain.
  */
+class ClangNativeToolSpecification extends AbstractNativeToolSpecification {
+    private NdkBuilder ndkBuilder
+    private Platform platform
+    private boolean isDebugBuild
 
-class GccFlagConfiguration implements FlagConfiguration{
+    private static final def TARGET_TRIPLE = [
+            (SdkConstants.ABI_INTEL_ATOM) : "i686-none-linux-android",
+            (SdkConstants.ABI_ARMEABI_V7A) : "armv7-none-linux-android",
+            (SdkConstants.ABI_ARMEABI) : "armv5-none-linux-android",
+            (SdkConstants.ABI_MIPS) : "mipsel-none-linux-android",
+    ]
 
     private static final def RELEASE_CFLAGS = [
             (SdkConstants.ABI_ARMEABI) : [
@@ -39,11 +48,9 @@ class GccFlagConfiguration implements FlagConfiguration{
                     "-msoft-float",
                     "-mthumb",
                     "-Os",
-                    "-g",
                     "-DNDEBUG",
                     "-fomit-frame-pointer",
                     "-fno-strict-aliasing",
-                    "-finline-limit=64",
             ],
             (SdkConstants.ABI_ARMEABI_V7A) : [
                     "-fpic",
@@ -52,28 +59,24 @@ class GccFlagConfiguration implements FlagConfiguration{
                     "-fstack-protector",
                     "-no-canonical-prefixes",
                     "-march=armv7-a",
-                    "-mfpu=vfpv3-d16",
                     "-mfloat-abi=softfp",
+                    "-mfpu=vfpv3-d16",
                     "-mthumb",
                     "-Os",
-                    "-g",
                     "-DNDEBUG",
                     "-fomit-frame-pointer",
                     "-fno-strict-aliasing",
-                    "-finline-limit=64",
             ],
             (SdkConstants.ABI_INTEL_ATOM) : [
                     "-ffunction-sections",
                     "-funwind-tables",
-                    "-no-canonical-prefixes",
                     "-fstack-protector",
+                    "-fPIC",
+                    "-no-canonical-prefixes",
                     "-O2",
-                    "-g",
                     "-DNDEBUG",
                     "-fomit-frame-pointer",
                     "-fstrict-aliasing",
-                    "-funswitch-loops",
-                    "-finline-limit=300",
             ],
             (SdkConstants.ABI_MIPS) : [
                     "-fpic",
@@ -82,17 +85,11 @@ class GccFlagConfiguration implements FlagConfiguration{
                     "-ffunction-sections",
                     "-funwind-tables",
                     "-fmessage-length=0",
-                    "-fno-inline-functions-called-once",
-                    "-fgcse-after-reload",
-                    "-frerun-cse-after-loop",
-                    "-frename-registers",
                     "-no-canonical-prefixes",
                     "-O2",
                     "-g",
                     "-DNDEBUG",
                     "-fomit-frame-pointer",
-                    "-funswitch-loops",
-                    "-finline-limit=300",
             ]
     ]
 
@@ -100,53 +97,56 @@ class GccFlagConfiguration implements FlagConfiguration{
             (SdkConstants.ABI_ARMEABI) : [
                     "-O0",
                     "-UNDEBUG",
-                    "-fno-omit-frame-pointer",
+                    "-marm",
                     "-fno-strict-aliasing",
             ],
             (SdkConstants.ABI_ARMEABI_V7A) : [
                     "-O0",
                     "-UNDEBUG",
-                    "-fno-omit-frame-pointer",
+                    "-marm",
                     "-fno-strict-aliasing",
             ],
             (SdkConstants.ABI_INTEL_ATOM) : [
                     "-O0",
                     "-UNDEBUG",
-                    "-fno-omit-frame-pointer",
+                    "-fomit-frame-pointer",
                     "-fno-strict-aliasing",
             ],
             (SdkConstants.ABI_MIPS) : [
                     "-O0",
                     "-UNDEBUG",
-                    "-fno-omit-frame-pointer",
-                    "-fno-unswitch-loops",
-            ],
+                    "-fomit-frame-pointer",
+            ]
     ]
 
-    private static final List<String> LDFLAGS = [
-            "-no-canonical-prefixes",
-    ]
-
-    private Platform platform
-    private boolean isDebugBuild
-
-    GccFlagConfiguration(BuildType buildType, Platform platform) {
+    public ClangNativeToolSpecification(NdkBuilder ndkBuilder, BuildType buildType, Platform platform) {
+        this.ndkBuilder = ndkBuilder
         this.isDebugBuild = (buildType.name.equals(BuilderConstants.DEBUG))
         this.platform = platform
     }
 
     @Override
-    public List<String> getCFlags() {
-        RELEASE_CFLAGS[platform.name] + (isDebugBuild ? DEBUG_CFLAGS[platform.name] : [])
+    public Iterable<String> getCFlags() {
+         getTargetFlags() + RELEASE_CFLAGS[platform.name] + DEBUG_CFLAGS[platform.name]
     }
 
     @Override
-    public List<String> getCppFlags() {
+    public Iterable<String> getCppFlags() {
         getCFlags()
     }
 
     @Override
-    public List<String> getLdFlags() {
-        LDFLAGS
+    public Iterable<String> getLdFlags() {
+        getTargetFlags() +
+                (platform.name.equals(SdkConstants.ABI_ARMEABI_V7A) ? ["-Wl,--fix-cortex-a8"] : [])
+    }
+
+    private Iterable<String> getTargetFlags() {
+        [
+                "-gcc-toolchain",
+                ndkBuilder.getToolchainPath("gcc", "4.8", platform.name),
+                "-target",
+                TARGET_TRIPLE[platform.name]
+        ]
     }
 }

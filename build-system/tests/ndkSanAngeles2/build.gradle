@@ -13,7 +13,7 @@ android_ndk {
     moduleName "sanangeles"
     cFlags "-DDISABLE_IMPORTGL"
     ldLibs "GLESv1_CM", "dl", "log"
-    stl "stlport_static"
+    stl "c++static"
     toolchain "clang"
 }
 

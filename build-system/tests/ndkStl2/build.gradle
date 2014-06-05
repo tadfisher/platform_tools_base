@@ -1,0 +1,75 @@
+buildscript {
+    repositories {
+        maven { url '../../../../../out/repo' }
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:0.12.0'
+    }
+}
+
+apply plugin: 'android-ndk'
+android_ndk {
+    moduleName "stl"
+    stl "gabi++_static"
+    toolchain "clang"
+}
+
+apply plugin: 'android'
+
+android {
+    compileSdkVersion 19
+    buildToolsVersion '19.1.0'
+}
+
+/*
+android {
+    compileSdkVersion 19
+    buildToolsVersion '19.1.0'
+
+    defaultConfig {
+        ndk {
+            moduleName "stl"
+        }
+    }
+
+    buildTypes.debug.jniDebugBuild true
+
+    productFlavors {
+        system {
+            ndk {
+                stl = "system"
+            }
+        }
+        gabiStatic {
+            ndk {
+                stl = "gabi++_static"
+            }
+        }
+        gabiShared {
+            ndk {
+                stl = "gabi++_shared"
+            }
+        }
+        stlportStatic {
+            ndk {
+                stl = "stlport_static"
+            }
+        }
+        stlportShared {
+            ndk {
+                stl = "stlport_shared"
+            }
+        }
+        gnustlStatic {
+            ndk {
+                stl = "gnustl_static"
+            }
+        }
+        gnustlShared {
+            ndk {
+                stl = "gnustl_shared"
+            }
+        }
+    }
+}
+*/
