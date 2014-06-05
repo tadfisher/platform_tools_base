@@ -124,10 +124,7 @@ class NdkConfigurationAction implements Action<Project> {
                     linker.args "-L$sysroot/usr/lib/rs"
                 }
 
-                // Currently do not support customization of stl library.
-                cppCompiler.args "-I${ndkBuilder.getNdkDirectory()}/sources/cxx-stl/stlport/stlport"
-                cppCompiler.args "-I${ndkBuilder.getNdkDirectory()}/sources/cxx-stl//gabi++/include"
-
+                StlConfiguration.apply(ndkBuilder, ndkExtension.getStl(), project, binary)
                 NativeToolSpecificationFactory.create(ndkBuilder, buildType, targetPlatform).apply(binary)
 
                 // Add flags defined in NdkExtension
