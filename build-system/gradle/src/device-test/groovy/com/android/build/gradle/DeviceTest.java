@@ -63,6 +63,7 @@ public class DeviceTest extends BuildTest {
             "ndkJniLib2",
             "ndkPrebuilts",
             "ndkLibPrebuilts",
+            "ndkStl",
             "overlay1",
             "overlay2",
             "packagingOptions",
@@ -73,7 +74,8 @@ public class DeviceTest extends BuildTest {
     };
 
     private static final List<String> ndkPluginTests = ImmutableList.of(
-            "ndkJniLib2"
+            "ndkJniLib2",
+            "ndkStl"
     );
 
     public static Test suite() {
