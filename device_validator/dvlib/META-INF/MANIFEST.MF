@@ -1,0 +1,8 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: dvlib
+Bundle-SymbolicName: com.android.tools.dvlib
+Bundle-Version: 22.9.0.qualifier
+Export-Package: com.android.dvlib,
+ com.android.dvlib.extras
+Require-Bundle: com.android.tools.common;bundle-version="22.9.0"

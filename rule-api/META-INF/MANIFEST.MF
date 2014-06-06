@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: rule-api
+Bundle-SymbolicName: com.android.tools.rule-api
+Bundle-Version: 22.9.0.qualifier
+Export-Package: com.android.ide.common.api
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Require-Bundle: com.google.guava;bundle-version="15.0.0",
+ com.android.tools.layoutlib.layoutlib-api;bundle-version="22.9.0",
+ com.android.tools.common;bundle-version="22.9.0"

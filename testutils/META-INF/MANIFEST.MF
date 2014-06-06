@@ -1,0 +1,8 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: testutils
+Bundle-SymbolicName: com.android.tools.testutils
+Bundle-Version: 22.9.0.qualifier
+Export-Package: com.android.testutils
+Require-Bundle: com.google.guava;bundle-version="15.0.0",
+ com.android.tools.common;bundle-version="22.9.0"

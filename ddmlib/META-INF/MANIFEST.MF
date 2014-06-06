@@ -1,0 +1,14 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: ddmlib
+Bundle-SymbolicName: com.android.tools.ddms.ddmlib
+Bundle-Version: 22.9.0.qualifier
+Export-Package: com.android.ddmlib,
+ com.android.ddmlib.log,
+ com.android.ddmlib.logcat,
+ com.android.ddmlib.testrunner,
+ com.android.ddmlib.utils
+Require-Bundle: com.google.guava;bundle-version="15.0.0",
+ net.sf.kxml.2;bundle-version="2.3.0",
+ com.android.tools.common;bundle-version="22.9.0"
+Bundle-ActivationPolicy: lazy

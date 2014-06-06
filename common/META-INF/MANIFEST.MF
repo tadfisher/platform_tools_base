@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: common
+Bundle-SymbolicName: com.android.tools.common
+Bundle-Version: 22.9.0.qualifier
+Export-Package: com.android,
+ com.android.annotations,
+ com.android.annotations.concurrency,
+ com.android.io,
+ com.android.prefs,
+ com.android.utils,
+ com.android.xml
+Require-Bundle: com.google.guava;bundle-version="15.0.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-ActivationPolicy: lazy

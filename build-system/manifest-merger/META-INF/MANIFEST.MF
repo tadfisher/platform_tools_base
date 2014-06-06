@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: manifest-merger
+Bundle-SymbolicName: com.android.tools.build.manifest-merger
+Bundle-Version: 22.9.0.qualifier
+Export-Package: com.android.manifmerger
+Require-Bundle: com.google.guava;bundle-version="15.0.0",
+ com.android.tools.common;bundle-version="22.9.0",
+ com.android.tools.sdklib;bundle-version="22.9.0",
+ com.android.tools.sdk-common;bundle-version="22.9.0"
