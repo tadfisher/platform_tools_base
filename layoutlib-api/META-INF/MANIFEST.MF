@@ -1,0 +1,11 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: layoutlib-api
+Bundle-SymbolicName: com.android.tools.layoutlib.layoutlib-api
+Bundle-Version: 22.9.0.qualifier
+Export-Package: com.android.ide.common.rendering.api,
+ com.android.layoutlib.api,
+ com.android.resources,
+ com.android.util
+Require-Bundle: com.android.tools.common;bundle-version="22.9.0",
+ com.android.tools.prebuilts.kxml2;bundle-version="2.3.0"

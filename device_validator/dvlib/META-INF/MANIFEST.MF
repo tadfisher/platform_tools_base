@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: dvlib
+Bundle-SymbolicName: dvlib
+Bundle-Version: 1.0.0.qualifier
+Export-Package: com.android.dvlib,
+ com.android.dvlib.extras

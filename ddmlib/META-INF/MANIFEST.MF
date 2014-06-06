@@ -1,0 +1,12 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: ddmlib
+Bundle-SymbolicName: com.android.tools.ddms.ddmlib
+Bundle-Version: 22.9.0.qualifier
+Export-Package: com.android.ddmlib,
+ com.android.ddmlib.log,
+ com.android.ddmlib.logcat,
+ com.android.ddmlib.testrunner,
+ com.android.ddmlib.utils
+Require-Bundle: com.android.tools.common;bundle-version="22.9.0",
+ com.android.tools.prebuilts.kxml2;bundle-version="2.3.0"

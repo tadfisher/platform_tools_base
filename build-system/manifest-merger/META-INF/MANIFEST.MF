@@ -1,0 +1,6 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: manifest-merger
+Bundle-SymbolicName: manifest-merger
+Bundle-Version: 1.0.0.qualifier
+Export-Package: com.android.manifmerger
