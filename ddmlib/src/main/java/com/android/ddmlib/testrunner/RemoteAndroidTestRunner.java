@@ -62,6 +62,7 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
     private static final String COVERAGE_ARG_NAME = "coverage";
     private static final String PACKAGE_ARG_NAME = "package";
     private static final String SIZE_ARG_NAME = "size";
+    private String mRunOptions = "";
 
     /**
      * Creates a remote Android test runner.
@@ -79,6 +80,22 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
         mRunnerName = runnerName;
         mRemoteDevice = remoteDevice;
         mArgMap = new Hashtable<String, String>();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
 
     /**
@@ -208,8 +225,8 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
     public void run(Collection<ITestRunListener> listeners)
             throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
             IOException {
-        final String runCaseCommandStr = String.format("am instrument -w -r %1$s %2$s",
-            getArgsCommand(), getRunnerPath());
+        final String runCaseCommandStr = String.format("am instrument -w %s -r %1$s %2$s",
+                getRunOptions(), getArgsCommand(), getRunnerPath());
         Log.i(LOG_TAG, String.format("Running %1$s on %2$s", runCaseCommandStr,
                 mRemoteDevice.getName()));
         String runName = mRunName == null ? mPackageName : mRunName;
@@ -246,6 +263,14 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
             mParser.handleTestRunFailed(e.toString());
             throw e;
         }
+    }
+
+    private String getRunOptions() {
+        return mRunOptions;
+    }
+
+    public void setRunOptions(String options) {
+        mRunOptions = options;
     }
 
     @Override
