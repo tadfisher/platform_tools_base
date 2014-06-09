@@ -21,6 +21,8 @@ import com.android.build.gradle.internal.tasks.BaseTask
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.DexOptions
 import com.android.ide.common.internal.WaitableExecutor
+import com.google.common.base.Charsets
+import com.google.common.collect.ImmutableList
 import com.google.common.collect.Sets
 import com.google.common.hash.HashCode
 import com.google.common.hash.HashFunction
@@ -31,6 +33,7 @@ import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs
+import org.gradle.api.tasks.incremental.InputFileDetails
 
 import java.util.concurrent.Callable
 
@@ -66,14 +69,22 @@ public class PreDex extends BaseTask {
         final AndroidBuilder builder = getBuilder()
         final Set<String> hashs = Sets.newHashSet()
         final WaitableExecutor<Void> executor = new WaitableExecutor<Void>()
+        final ImmutableList.Builder<InputFileDetails> inputFileDetailses = ImmutableList.builder();
 
         taskInputs.outOfDate { change ->
+            System.err.println("adding " + change.file);
+            inputFileDetailses.add(change);
+        }
 
+        for (InputFileDetails change : inputFileDetailses.build()) {
+            System.err.println("processing " + change.file);
+            final File fileToProcess = change.file;
             executor.execute(new Callable<Void>() {
                 @Override
                 public Void call() throws Exception {
                     // TODO remove once we can properly add a library as a dependency of its test.
-                    String hash = getFileHash(change.file)
+                    System.err.println("I am " + fileToProcess)
+                    String hash = getFileHash(fileToProcess)
 
                     synchronized (hashs) {
                         if (hashs.contains(hash)) {
@@ -84,9 +95,9 @@ public class PreDex extends BaseTask {
                     }
 
                     //noinspection GroovyAssignabilityCheck
-                    File preDexedFile = getDexFileName(outFolder, change.file)
+                    File preDexedFile = getDexFileName(outFolder, fileToProcess)
                     //noinspection GroovyAssignabilityCheck
-                    builder.preDexLibrary(change.file, preDexedFile, options)
+                    builder.preDexLibrary(fileToProcess, preDexedFile, options)
 
                     return null
                 }
@@ -134,7 +145,7 @@ public class PreDex extends BaseTask {
         // add a hash of the original file path.
         String input = inputFile.getAbsolutePath();
         HashFunction hashFunction = Hashing.sha1()
-        HashCode hashCode = hashFunction.hashString(input)
+        HashCode hashCode = hashFunction.hashString(input, Charsets.UTF_16LE)
 
         return new File(outFolder, name + "-" + hashCode.toString() + SdkConstants.DOT_JAR)
     }
