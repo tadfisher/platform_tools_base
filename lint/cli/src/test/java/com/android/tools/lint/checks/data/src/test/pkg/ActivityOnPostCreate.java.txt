@@ -1,0 +1,35 @@
+package test.pkg;
+
+import android.app.Activity;
+import android.os.Bundle;
+
+public class ActivityOnPostCreate {
+    private static class Test1 extends Activity {
+        protected void onPostCreate(Bundle savedInstanceState) {
+            // Error
+        }
+    }
+
+    private static class Test2 extends Activity {
+        protected void onPostCreate() {
+            // OK: not overriding the right method
+        }
+    }
+
+    private static class Test3 extends Activity {
+        protected void onPostCreate(Bundle savedInstanceState) {
+            // OK: Calling super
+            super.onPostCreate(savedInstanceState);
+        }
+    }
+
+    private static class Test4 extends Activity {
+        protected void onPostCreate(Bundle savedInstanceState) {
+            // Error: missing detach call
+            int x = 1;
+            x++;
+            System.out.println(x);
+        }
+    }
+
+}

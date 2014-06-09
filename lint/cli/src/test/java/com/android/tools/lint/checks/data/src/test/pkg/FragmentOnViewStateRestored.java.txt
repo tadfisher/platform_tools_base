@@ -1,0 +1,35 @@
+package test.pkg;
+
+import android.app.Fragment;
+import android.os.Bundle;
+
+public class FragmentOnViewStateRestored {
+    private static class Test1 extends Fragment {
+        protected void onViewStateRestored(Bundle savedInstanceState) {
+            // Error
+        }
+    }
+
+    private static class Test2 extends Fragment {
+        protected void onViewStateRestored() {
+            // OK: not overriding the right method
+        }
+    }
+
+    private static class Test3 extends Fragment {
+        protected void onViewStateRestored(Bundle savedInstanceState) {
+            // OK: Calling super
+            super.onViewStateRestored(savedInstanceState);
+        }
+    }
+
+    private static class Test4 extends Fragment {
+        protected void onViewStateRestored(Bundle savedInstanceState) {
+            // Error: missing detach call
+            int x = 1;
+            x++;
+            System.out.println(x);
+        }
+    }
+
+}

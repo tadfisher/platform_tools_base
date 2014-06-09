@@ -2,28 +2,28 @@ package test.pkg;
 
 import android.view.View;
 
-public class DetachedFromWindow {
+public class ViewOnCancelPendingInputEvents {
     private static class Test1 extends View {
-        protected void onDetachedFromWindow() {
+        protected void onCancelPendingInputEvents() {
             // Error
         }
     }
 
     private static class Test2 extends View {
-        protected void onDetachedFromWindow(int foo) {
+        protected void onCancelPendingInputEvents(int foo) {
             // OK: not overriding the right method
         }
     }
 
     private static class Test3 extends View {
-        protected void onDetachedFromWindow() {
+        protected void onCancelPendingInputEvents() {
             // OK: Calling super
-            super.onDetachedFromWindow();
+            super.onCancelPendingInputEvents();
         }
     }
 
     private static class Test4 extends View {
-        protected void onDetachedFromWindow() {
+        protected void onCancelPendingInputEvents() {
             // Error: missing detach call
             int x = 1;
             x++;

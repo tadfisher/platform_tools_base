@@ -16,6 +16,9 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.client.api.JavaParser.ResolvedMethod;
+import static com.android.tools.lint.client.api.JavaParser.ResolvedNode;
+
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
@@ -29,6 +32,7 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -63,10 +67,118 @@ public class CallSuperDetector extends Detector implements Detector.JavaScanner 
             Severity.WARNING,
             IMPLEMENTATION);
 
-    static final String ON_DETACHED_FROM_WINDOW = "onDetachedFromWindow";   //$NON-NLS-1$
+    static final String BUNDLE = "android.os.Bundle";   //$NON-NLS-1$
+    static final String CONFIGURATION = "android.content.res.Configuration";   //$NON-NLS-1$
+    static final String ACTIVITY = "android.app.Activity";   //$NON-NLS-1$
+
+    private static class ApplicableMethod {
+
+        // View
+        static final ApplicableMethod ON_DETACHED_FROM_WINDOW = new ApplicableMethod("onDetachedFromWindow");   //$NON-NLS-1$
+        static final ApplicableMethod ON_CANCEL_PENDING_INPUT_EVENTS = new ApplicableMethod("onCancelPendingInputEvents");   //$NON-NLS-1$
+
+        // Activity
+        static final ApplicableMethod ON_CREATE= new ApplicableMethod("onCreate",   //$NON-NLS-1$
+                                                                       new String[] {BUNDLE});
+        static final ApplicableMethod ON_START = new ApplicableMethod("onStart");   //$NON-NLS-1$
+        static final ApplicableMethod ON_RESTART = new ApplicableMethod("onRestart");   //$NON-NLS-1$
+        static final ApplicableMethod ON_RESUME = new ApplicableMethod("onResume");   //$NON-NLS-1$
+        static final ApplicableMethod ON_POST_RESUME = new ApplicableMethod("onPostResume");   //$NON-NLS-1$
+        static final ApplicableMethod ON_PAUSE = new ApplicableMethod("onPause");   //$NON-NLS-1$
+        static final ApplicableMethod ON_STOP = new ApplicableMethod("onStop");   //$NON-NLS-1$
+        static final ApplicableMethod ON_POST_CREATE = new ApplicableMethod("onPostCreate",   //$NON-NLS-1$
+                                                                            new String[] {BUNDLE});
+        static final ApplicableMethod ON_DESTROY = new ApplicableMethod("onDestroy");   //$NON-NLS-1$
+        static final ApplicableMethod ON_CONFIGURATION_CHANGED = new ApplicableMethod("onConfigurationChanged",   //$NON-NLS-1$
+                                                                                      new String[] {CONFIGURATION});
+
+        // Fragment
+        static final ApplicableMethod ON_ATTACH = new ApplicableMethod("onAttach",
+                                                                       new String[] {ACTIVITY});   //$NON-NLS-1$
+        static final ApplicableMethod ON_DETACH = new ApplicableMethod("onDetach");   //$NON-NLS-1$
+        static final ApplicableMethod ON_VIEW_STATE_RESTORED = new ApplicableMethod("onViewStateRestored",   //$NON-NLS-1$
+                                                                                    new String[] {BUNDLE});
+        static final ApplicableMethod ON_ACTIVITY_CREATED = new ApplicableMethod("onActivityCreated",
+                                                                                 new String[] {BUNDLE});   //$NON-NLS-1$
+        static final ApplicableMethod ON_DESTROY_VIEW = new ApplicableMethod("onDestroyView");   //$NON-NLS-1$
+
+        static final List<ApplicableMethod> ALL = Arrays.asList(
+                ON_DETACHED_FROM_WINDOW,
+                ON_CANCEL_PENDING_INPUT_EVENTS,
+                ON_CREATE,
+                ON_START,
+                ON_RESTART,
+                ON_RESUME,
+                ON_POST_RESUME,
+                ON_PAUSE,
+                ON_STOP,
+                ON_POST_CREATE,
+                ON_DESTROY,
+                ON_CONFIGURATION_CHANGED,
+                ON_ATTACH,
+                ON_DETACH,
+                ON_VIEW_STATE_RESTORED,
+                ON_ACTIVITY_CREATED,
+                ON_DESTROY_VIEW
+        );
+
+        final String name;
+        final String[] arguments;
+
+        private ApplicableMethod(String name, String[] arguments) {
+            this.name = name;
+            this.arguments = arguments;
+        }
+
+        private ApplicableMethod(String name) {
+            this(name, new String[0]);
+        }
+
+        public boolean isAppricable(String name, ResolvedMethod resolved) {
+            if (!this.name.equals(name)) {
+                return false;
+            }
+
+            int size = resolved.getArgumentCount();
+            if (size != arguments.length) {
+                return false;
+            }
+
+            for (int i=0; i < size; i++) {
+                if (!resolved.getArgumentType(i).matchesName(arguments[i])) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+    }
 
     /** Constructs a new {@link CallSuperDetector} check */
     public CallSuperDetector() {
+    }
+
+    @Override
+    public List<String> getApplicableMethodNames() {
+        return Arrays.asList(
+            ApplicableMethod.ON_DETACHED_FROM_WINDOW.name,
+            ApplicableMethod.ON_CANCEL_PENDING_INPUT_EVENTS.name,
+            ApplicableMethod.ON_CREATE.name,
+            ApplicableMethod.ON_START.name,
+            ApplicableMethod.ON_RESTART.name,
+            ApplicableMethod.ON_RESUME.name,
+            ApplicableMethod.ON_POST_RESUME.name,
+            ApplicableMethod.ON_PAUSE.name,
+            ApplicableMethod.ON_STOP.name,
+            ApplicableMethod.ON_POST_CREATE.name,
+            ApplicableMethod.ON_DESTROY.name,
+            ApplicableMethod.ON_CONFIGURATION_CHANGED.name,
+            ApplicableMethod.ON_ATTACH.name,
+            ApplicableMethod.ON_DETACH.name,
+            ApplicableMethod.ON_VIEW_STATE_RESTORED.name,
+            ApplicableMethod.ON_ACTIVITY_CREATED.name,
+            ApplicableMethod.ON_DESTROY_VIEW.name
+        );
     }
 
     @Override
@@ -101,17 +213,24 @@ public class CallSuperDetector extends Detector implements Detector.JavaScanner 
 
         @Override
         public boolean visitMethodDeclaration(MethodDeclaration node) {
-            // TODO: Check methods in Activity that require super as well
-            if (node.astMethodName().astValue().equals(ON_DETACHED_FROM_WINDOW) &&
-                    node.astParameters() != null && node.astParameters().isEmpty()) {
-                if (!callsSuper(node, ON_DETACHED_FROM_WINDOW)) {
-                    String message = "Overriding method should call super."
-                            + ON_DETACHED_FROM_WINDOW;
-                    Location location = mContext.getLocation(node.astMethodName());
-                    mContext.report(ISSUE, node, location, message, null);
+            for (ApplicableMethod method : ApplicableMethod.ALL) {
+                String name = node.astMethodName().astValue();
+
+                // Ignore if the method doesn't fit our description.
+                ResolvedNode resolved = mContext.resolve(node);
+                if (!(resolved instanceof ResolvedMethod)) {
+                    continue;
+                }
+
+                if (method.isAppricable(name, (ResolvedMethod)resolved)) {
+                    if (!callsSuper(node, name)) {
+                        String message = "Overriding method should call super."
+                                + name;
+                        Location location = mContext.getLocation(node.astMethodName());
+                        mContext.report(ISSUE, node, location, message, null);
+                    }
                 }
             }
-
             return super.visitMethodDeclaration(node);
         }
 
