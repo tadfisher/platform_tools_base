@@ -1,0 +1,35 @@
+package test.pkg;
+
+import android.app.Activity;
+import android.app.Fragment;
+
+public class FragmentOnAttach {
+    private static class Test1 extends Fragment {
+        protected void onAttach(Activity activity) {
+            // Error
+        }
+    }
+
+    private static class Test2 extends Fragment {
+        protected void onAttach() {
+            // OK: not overriding the right method
+        }
+    }
+
+    private static class Test3 extends Fragment {
+        protected void onAttach(Activity activity) {
+            // OK: Calling super
+            super.onAttach(activity);
+        }
+    }
+
+    private static class Test4 extends Fragment {
+        protected void onAttach(Activity activity) {
+            // Error: missing detach call
+            int x = 1;
+            x++;
+            System.out.println(x);
+        }
+    }
+
+}
