@@ -174,7 +174,7 @@ public class DexExecTask extends SingleDependencyTask {
 
         // add a hash of the original file path
         HashFunction hashFunction = Hashing.md5();
-        HashCode hashCode = hashFunction.hashString(inputFile.getAbsolutePath());
+        HashCode hashCode = hashFunction.hashUnencodedChars(inputFile.getAbsolutePath());
 
         return name + "-" + hashCode.toString() + ".jar";
     }
