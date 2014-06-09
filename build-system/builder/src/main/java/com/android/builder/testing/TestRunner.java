@@ -62,5 +62,13 @@ public interface TestRunner {
                       int timeout,
             @NonNull  File resultsDir,
             @NonNull  File coverageDir,
-            @NonNull  ILogger logger) throws TestException, InterruptedException;
+            @NonNull  ILogger logger)
+                throws TestException, NoSuitableDeviceConnected, InterruptedException;
+
+    public class NoSuitableDeviceConnected extends Exception {
+
+        public NoSuitableDeviceConnected() {
+            super("No suitable device connected");
+        }
+    }
 }

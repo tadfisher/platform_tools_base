@@ -47,18 +47,23 @@ public class SimpleTestRunner implements TestRunner {
                       int timeout,
             @NonNull  File resultsDir,
             @NonNull  File coverageDir,
-            @NonNull  ILogger logger) throws TestException, InterruptedException {
+            @NonNull  ILogger logger) throws TestException, NoSuitableDeviceConnected, InterruptedException {
 
         WaitableExecutor<Boolean> executor = new WaitableExecutor<Boolean>(maxThreads);
 
+        boolean executedOnOneDevice = false;
         for (DeviceConnector device : deviceList) {
             if (filterOutDevice(device, testData, logger, projectName, variantName)) {
+                executedOnOneDevice = true;
                 executor.execute(new SimpleTestCallable(device, projectName, variantName,
                         testApk, testedApk, testData,
                         resultsDir, coverageDir, timeout, logger));
             }
         }
 
+        if (!executedOnOneDevice) {
+            throw new NoSuitableDeviceConnected();
+        }
         List<WaitableExecutor.TaskResult<Boolean>> results = executor.waitForAllTasks();
 
         boolean success = true;
