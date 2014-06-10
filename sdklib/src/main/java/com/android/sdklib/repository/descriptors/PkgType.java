@@ -63,7 +63,7 @@ public enum PkgType implements IPkgCapabilities {
 
     /** Filter the SDK/docs folder.
      *  Has {@link MajorRevision}. */
-    PKG_DOCS(0x0010, SdkConstants.FD_DOCS,
+    PKG_DOC(0x0010, SdkConstants.FD_DOCS,
             "Documentation for Android SDK $API{?$MAJ>1:, rev $MAJ}",
             true /*maj-r*/, false, true /*api*/, false, false, false, false, false),
 
@@ -98,13 +98,13 @@ public enum PkgType implements IPkgCapabilities {
     /** Filter the SDK/samples folder.
      *  Note: this will not detect samples located in the SDK/extras packages.
      *  Has {@link AndroidVersion}. Has {@link MajorRevision}. */
-    PKG_SAMPLES(0x1000, SdkConstants.FD_SAMPLES,
+    PKG_SAMPLE(0x1000, SdkConstants.FD_SAMPLES,
             "Samples for Android $API{?$MAJ>1:, rev $MAJ}",
             true /*maj-r*/, false, true /*api*/, false, false, false, true /*min-t-r*/, false),
 
     /** Filter the SDK/sources folder.
      *  Has {@link AndroidVersion}. Has {@link MajorRevision}. */
-    PKG_SOURCES(0x2000, SdkConstants.FD_ANDROID_SOURCES,
+    PKG_SOURCE(0x2000, SdkConstants.FD_ANDROID_SOURCES,
             "Sources for Android $API{?$MAJ>1:, rev $MAJ}",
             true /*maj-r*/, false, true /*api*/, false, false, false, false, false),
 
@@ -112,7 +112,7 @@ public enum PkgType implements IPkgCapabilities {
      *  Has {@code Path}. Has {@link MajorRevision}.
      *  Path returns the combined vendor id + extra path.
      *  Cast the descriptor to {@link IPkgDescExtra} to get extra's specific attributes. */
-    PKG_EXTRAS(0x4000, SdkConstants.FD_EXTRAS,
+    PKG_EXTRA(0x4000, SdkConstants.FD_EXTRAS,
             "{|$NAME|$VEND $PATH|}{?$FULL>1:, rev $FULL}",
             false, true /*full-r*/, false, true /*path*/, false, true /*vend*/, false, false);
 

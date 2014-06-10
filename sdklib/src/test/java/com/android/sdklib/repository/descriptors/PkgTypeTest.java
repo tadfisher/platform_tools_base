@@ -48,7 +48,7 @@ public class PkgTypeTest extends TestCase {
     }
 
     public final void testPkgTypeDoc() {
-        IPkgCapabilities p = PkgType.PKG_DOCS;
+        IPkgCapabilities p = PkgType.PKG_DOC;
         assertTrue (p.hasMajorRevision());
         assertFalse(p.hasFullRevision());
         assertTrue (p.hasAndroidVersion());
@@ -72,7 +72,7 @@ public class PkgTypeTest extends TestCase {
     }
 
     public final void testPkgTypeExtra() {
-        IPkgCapabilities p = PkgType.PKG_EXTRAS;
+        IPkgCapabilities p = PkgType.PKG_EXTRA;
 
         assertFalse(p.hasMajorRevision());
         assertTrue (p.hasFullRevision());
@@ -85,7 +85,7 @@ public class PkgTypeTest extends TestCase {
     }
 
     public final void testPkgTypeSource() throws Exception {
-        IPkgCapabilities p = PkgType.PKG_SOURCES;
+        IPkgCapabilities p = PkgType.PKG_SOURCE;
 
         assertTrue (p.hasMajorRevision());
         assertFalse(p.hasFullRevision());
@@ -98,7 +98,7 @@ public class PkgTypeTest extends TestCase {
     }
 
     public final void testPkgTypeSample() throws Exception {
-        IPkgCapabilities p = PkgType.PKG_SAMPLES;
+        IPkgCapabilities p = PkgType.PKG_SAMPLE;
 
         assertTrue (p.hasMajorRevision());
         assertFalse(p.hasFullRevision());

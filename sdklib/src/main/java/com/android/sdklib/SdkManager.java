@@ -289,7 +289,7 @@ public class SdkManager {
     @NonNull
     public Map<File, String> getExtraSamples() {
 
-        LocalPkgInfo[] pkgsInfos = mLocalSdk.getPkgsInfos(PkgType.PKG_EXTRAS);
+        LocalPkgInfo[] pkgsInfos = mLocalSdk.getPkgsInfos(PkgType.PKG_EXTRA);
         Map<File, String> samples = new HashMap<File, String>();
 
         for (LocalPkgInfo info : pkgsInfos) {
@@ -327,7 +327,7 @@ public class SdkManager {
     @Deprecated
     @NonNull
     public Map<String, Integer> getExtrasVersions() {
-        LocalPkgInfo[] pkgsInfos = mLocalSdk.getPkgsInfos(PkgType.PKG_EXTRAS);
+        LocalPkgInfo[] pkgsInfos = mLocalSdk.getPkgsInfos(PkgType.PKG_EXTRA);
         Map<String, Integer> extraVersions = new TreeMap<String, Integer>();
 
         for (LocalPkgInfo info : pkgsInfos) {

@@ -67,7 +67,7 @@ public class LocalSdkParser {
     /** Parse the SDK/platform-tools folder */
     public static final int PARSE_PLATFORM_TOOLS = PkgType.PKG_PLATFORM_TOOLS.getIntValue();
     /** Parse the SDK/docs folder. */
-    public static final int PARSE_DOCS           = PkgType.PKG_DOCS.getIntValue();
+    public static final int PARSE_DOCS           = PkgType.PKG_DOC.getIntValue();
     /**
      * Equivalent to parsing the SDK/platforms folder but does so
      * by using the <em>valid</em> targets loaded by the {@link SdkManager}.
@@ -81,11 +81,11 @@ public class LocalSdkParser {
     public static final int PARSE_ADDONS         = PkgType.PKG_ADDONS.getIntValue();
     /** Parse the SDK/samples folder.
      * Note: this will not detect samples located in the SDK/extras packages. */
-    public static final int PARSE_SAMPLES        = PkgType.PKG_SAMPLES.getIntValue();
+    public static final int PARSE_SAMPLES        = PkgType.PKG_SAMPLE.getIntValue();
     /** Parse the SDK/sources folder. */
-    public static final int PARSE_SOURCES        = PkgType.PKG_SOURCES.getIntValue();
+    public static final int PARSE_SOURCES        = PkgType.PKG_SOURCE.getIntValue();
     /** Parse the SDK/extras folder. */
-    public static final int PARSE_EXTRAS         = PkgType.PKG_EXTRAS.getIntValue();
+    public static final int PARSE_EXTRAS         = PkgType.PKG_EXTRA.getIntValue();
     /** Parse the SDK/build-tools folder. */
     public static final int PARSE_BUILD_TOOLS    = PkgType.PKG_BUILD_TOOLS.getIntValue();
 

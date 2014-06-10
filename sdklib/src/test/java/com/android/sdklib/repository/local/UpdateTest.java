@@ -138,30 +138,30 @@ public class UpdateTest extends TestCase {
         assertNotNull(result);
         assertEquals(
                 "[" +
-                "<LocalDocPkgInfo <PkgDesc Type=docs Android=API 18 MajorRev=1> " +
-                     "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=docs Android=API 19 MajorRev=3>>>\n" +
+                "<LocalDocPkgInfo <PkgDesc Type=doc Android=API 18 MajorRev=1> " +
+                     "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=doc Android=API 19 MajorRev=3>>>\n" +
 
-                "<LocalExtraPkgInfo <PkgDesc Type=extras Vendor=android [The Android] Path=compat FullRev=18.0.2> " +
-                       "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=extras Vendor=android [The Android] Path=compat FullRev=18.5.6>>>\n" +
+                "<LocalExtraPkgInfo <PkgDesc Type=extra Vendor=android [The Android] Path=compat FullRev=18.0.2> " +
+                       "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=extra Vendor=android [The Android] Path=compat FullRev=18.5.6>>>\n" +
 
-                "<LocalExtraPkgInfo <PkgDesc Type=extras Vendor=android [The Android] Path=support FullRev=18.0.1> " +
-                       "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=extras Vendor=android [The Android] Path=support FullRev=18.3.4>>>" +
+                "<LocalExtraPkgInfo <PkgDesc Type=extra Vendor=android [The Android] Path=support FullRev=18.0.1> " +
+                       "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=extra Vendor=android [The Android] Path=support FullRev=18.3.4>>>" +
                 "]",
                 Arrays.toString(allLocalPkgs).replace(", ", "\n"));
         assertEquals(
                 "[" +
-                "<LocalDocPkgInfo <PkgDesc Type=docs Android=API 18 MajorRev=1> " +
-                     "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=docs Android=API 19 MajorRev=3>>>\n" +
+                "<LocalDocPkgInfo <PkgDesc Type=doc Android=API 18 MajorRev=1> " +
+                     "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=doc Android=API 19 MajorRev=3>>>\n" +
 
-                "<LocalExtraPkgInfo <PkgDesc Type=extras Vendor=android [The Android] Path=compat FullRev=18.0.2> " +
-                       "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=extras Vendor=android [The Android] Path=compat FullRev=18.5.6>>>\n" +
-                "<LocalExtraPkgInfo <PkgDesc Type=extras Vendor=android [The Android] Path=support FullRev=18.0.1> " +
-                       "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=extras Vendor=android [The Android] Path=support FullRev=18.3.4>>>" +
+                "<LocalExtraPkgInfo <PkgDesc Type=extra Vendor=android [The Android] Path=compat FullRev=18.0.2> " +
+                       "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=extra Vendor=android [The Android] Path=compat FullRev=18.5.6>>>\n" +
+                "<LocalExtraPkgInfo <PkgDesc Type=extra Vendor=android [The Android] Path=support FullRev=18.0.1> " +
+                       "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=extra Vendor=android [The Android] Path=support FullRev=18.3.4>>>" +
                 "]",
                 result.getUpdatedPkgs().toString().replace(", ", "\n"));
         assertEquals(
                 "[" +
-                 "<RemotePkgInfo Source:source <PkgDesc Type=extras Vendor=android [The Android] Path=whatever FullRev=19.7.8>>" +
+                 "<RemotePkgInfo Source:source <PkgDesc Type=extra Vendor=android [The Android] Path=whatever FullRev=19.7.8>>" +
                  "]",
                 result.getNewPkgs().toString().replace(", ", "\n"));
     }
@@ -208,11 +208,11 @@ public class UpdateTest extends TestCase {
                 "<LocalSysImgPkgInfo <PkgDesc Type=sys_images Android=API 18 Tag=tag-1 [Tag 1] Path=eabi MajorRev=6> " +
                         "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=sys_images Android=API 18 Tag=tag-1 [Tag 1] Path=eabi MajorRev=16>>>\n" +
 
-                "<LocalSamplePkgInfo <PkgDesc Type=samples Android=API 18 MajorRev=4 MinToolsRev=22.1.2> " +
-                        "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=samples Android=API 18 MajorRev=14 MinToolsRev=22.0.0>>>\n" +
+                "<LocalSamplePkgInfo <PkgDesc Type=sample Android=API 18 MajorRev=4 MinToolsRev=22.1.2> " +
+                        "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=sample Android=API 18 MajorRev=14 MinToolsRev=22.0.0>>>\n" +
 
-                "<LocalSourcePkgInfo <PkgDesc Type=sources Android=API 18 MajorRev=3> " +
-                        "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=sources Android=API 18 MajorRev=13>>>" +
+                "<LocalSourcePkgInfo <PkgDesc Type=source Android=API 18 MajorRev=3> " +
+                        "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=source Android=API 18 MajorRev=13>>>" +
                 "]",
                 Arrays.toString(allLocalPkgs).replace(", ", "\n"));
         assertEquals(
@@ -226,11 +226,11 @@ public class UpdateTest extends TestCase {
                 "<LocalSysImgPkgInfo <PkgDesc Type=sys_images Android=API 18 Tag=tag-1 [Tag 1] Path=eabi MajorRev=6> " +
                         "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=sys_images Android=API 18 Tag=tag-1 [Tag 1] Path=eabi MajorRev=16>>>\n" +
 
-                "<LocalSamplePkgInfo <PkgDesc Type=samples Android=API 18 MajorRev=4 MinToolsRev=22.1.2> " +
-                        "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=samples Android=API 18 MajorRev=14 MinToolsRev=22.0.0>>>\n" +
+                "<LocalSamplePkgInfo <PkgDesc Type=sample Android=API 18 MajorRev=4 MinToolsRev=22.1.2> " +
+                        "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=sample Android=API 18 MajorRev=14 MinToolsRev=22.0.0>>>\n" +
 
-                "<LocalSourcePkgInfo <PkgDesc Type=sources Android=API 18 MajorRev=3> " +
-                        "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=sources Android=API 18 MajorRev=13>>>" +
+                "<LocalSourcePkgInfo <PkgDesc Type=source Android=API 18 MajorRev=3> " +
+                        "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=source Android=API 18 MajorRev=13>>>" +
                 "]",
                 result.getUpdatedPkgs().toString().replace(", ", "\n"));
         assertEquals(
@@ -241,9 +241,9 @@ public class UpdateTest extends TestCase {
                  "<RemotePkgInfo Source:source <PkgDesc Type=sys_images Android=API 19 Tag=tag-1 [Tag 1] Path=eabi MajorRev=26>>\n" +
                  "<RemotePkgInfo Source:source <PkgDesc Type=sys_images Android=API 19 Tag=tag-2 [Tag 2] Path=eabi MajorRev=27>>\n" +
 
-                 "<RemotePkgInfo Source:source <PkgDesc Type=samples Android=API 19 MajorRev=24 MinToolsRev=23.0.0>>\n" +
+                 "<RemotePkgInfo Source:source <PkgDesc Type=sample Android=API 19 MajorRev=24 MinToolsRev=23.0.0>>\n" +
 
-                 "<RemotePkgInfo Source:source <PkgDesc Type=sources Android=API 19 MajorRev=23>>" +
+                 "<RemotePkgInfo Source:source <PkgDesc Type=source Android=API 19 MajorRev=23>>" +
                  "]",
                 result.getNewPkgs().toString().replace(", ", "\n"));
     }
@@ -406,8 +406,8 @@ public class UpdateTest extends TestCase {
                 "<LocalBuildToolPkgInfo <PkgDesc Type=build_tools FullRev=18.0.0>>\n" +
                 "<LocalBuildToolPkgInfo <PkgDesc Type=build_tools FullRev=19.0.0>>\n" +
                 //---
-                "<LocalDocPkgInfo <PkgDesc Type=docs Android=API 18 MajorRev=1> " +
-                     "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=docs Android=API 19 MajorRev=3>>>\n" +
+                "<LocalDocPkgInfo <PkgDesc Type=doc Android=API 18 MajorRev=1> " +
+                     "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=doc Android=API 19 MajorRev=3>>>\n" +
                 //---
                 "<LocalPlatformPkgInfo <PkgDesc Type=platforms Android=API 18 Path=android-18 MajorRev=2 MinToolsRev=22.1.2> " +
                           "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=platforms Android=API 18 Path=android-18 MajorRev=12 MinToolsRev=22.0.0>>>\n" +
@@ -422,17 +422,17 @@ public class UpdateTest extends TestCase {
                              "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=addon_sys_images Android=API 18 Vendor=android [The Android] Tag=cool_addon [The Add-on] Path=abi32 MajorRev=18>>>\n" +
                 "<LocalAddonSysImgPkgInfo <PkgDesc Type=addon_sys_images Android=API 18 Vendor=android [The Android] Tag=cool_addon [The Add-on] Path=abi64 MajorRev=9>>\n" +
                 //---
-                "<LocalSamplePkgInfo <PkgDesc Type=samples Android=API 18 MajorRev=4 MinToolsRev=22.1.2> " +
-                        "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=samples Android=API 18 MajorRev=14 MinToolsRev=22.0.0>>>\n" +
+                "<LocalSamplePkgInfo <PkgDesc Type=sample Android=API 18 MajorRev=4 MinToolsRev=22.1.2> " +
+                        "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=sample Android=API 18 MajorRev=14 MinToolsRev=22.0.0>>>\n" +
 
-                "<LocalSourcePkgInfo <PkgDesc Type=sources Android=API 18 MajorRev=3> " +
-                        "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=sources Android=API 18 MajorRev=13>>>\n" +
+                "<LocalSourcePkgInfo <PkgDesc Type=source Android=API 18 MajorRev=3> " +
+                        "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=source Android=API 18 MajorRev=13>>>\n" +
                 //---
-                "<LocalExtraPkgInfo <PkgDesc Type=extras Vendor=android [The Android] Path=compat FullRev=18.0.2> " +
-                       "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=extras Vendor=android [The Android] Path=compat FullRev=18.5.6>>>\n" +
+                "<LocalExtraPkgInfo <PkgDesc Type=extra Vendor=android [The Android] Path=compat FullRev=18.0.2> " +
+                       "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=extra Vendor=android [The Android] Path=compat FullRev=18.5.6>>>\n" +
 
-                "<LocalExtraPkgInfo <PkgDesc Type=extras Vendor=android [The Android] Path=support FullRev=18.0.1> " +
-                       "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=extras Vendor=android [The Android] Path=support FullRev=18.3.4>>>" +
+                "<LocalExtraPkgInfo <PkgDesc Type=extra Vendor=android [The Android] Path=support FullRev=18.0.1> " +
+                       "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=extra Vendor=android [The Android] Path=support FullRev=18.3.4>>>" +
                 "]",
                 Arrays.toString(allLocalPkgs).replace(", ", "\n"));
         assertEquals(
@@ -443,8 +443,8 @@ public class UpdateTest extends TestCase {
                 "<LocalPlatformToolPkgInfo <PkgDesc Type=platform_tools FullRev=1.0.2> " +
                               "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=platform_tools FullRev=1.0.3>>>\n" +
                 //---
-                "<LocalDocPkgInfo <PkgDesc Type=docs Android=API 18 MajorRev=1> " +
-                     "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=docs Android=API 19 MajorRev=3>>>\n" +
+                "<LocalDocPkgInfo <PkgDesc Type=doc Android=API 18 MajorRev=1> " +
+                     "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=doc Android=API 19 MajorRev=3>>>\n" +
                 //---
                 "<LocalPlatformPkgInfo <PkgDesc Type=platforms Android=API 18 Path=android-18 MajorRev=2 MinToolsRev=22.1.2> " +
                           "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=platforms Android=API 18 Path=android-18 MajorRev=12 MinToolsRev=22.0.0>>>\n" +
@@ -460,17 +460,17 @@ public class UpdateTest extends TestCase {
                 "<LocalAddonSysImgPkgInfo <PkgDesc Type=addon_sys_images Android=API 18 Vendor=android [The Android] Tag=cool_addon [The Add-on] Path=abi32 MajorRev=8> " +
                              "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=addon_sys_images Android=API 18 Vendor=android [The Android] Tag=cool_addon [The Add-on] Path=abi32 MajorRev=18>>>\n" +
                 //---
-                "<LocalSamplePkgInfo <PkgDesc Type=samples Android=API 18 MajorRev=4 MinToolsRev=22.1.2> " +
-                        "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=samples Android=API 18 MajorRev=14 MinToolsRev=22.0.0>>>\n" +
+                "<LocalSamplePkgInfo <PkgDesc Type=sample Android=API 18 MajorRev=4 MinToolsRev=22.1.2> " +
+                        "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=sample Android=API 18 MajorRev=14 MinToolsRev=22.0.0>>>\n" +
 
-                "<LocalSourcePkgInfo <PkgDesc Type=sources Android=API 18 MajorRev=3> " +
-                        "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=sources Android=API 18 MajorRev=13>>>\n" +
+                "<LocalSourcePkgInfo <PkgDesc Type=source Android=API 18 MajorRev=3> " +
+                        "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=source Android=API 18 MajorRev=13>>>\n" +
                 //---
 
-                "<LocalExtraPkgInfo <PkgDesc Type=extras Vendor=android [The Android] Path=compat FullRev=18.0.2> " +
-                       "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=extras Vendor=android [The Android] Path=compat FullRev=18.5.6>>>\n" +
-                "<LocalExtraPkgInfo <PkgDesc Type=extras Vendor=android [The Android] Path=support FullRev=18.0.1> " +
-                       "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=extras Vendor=android [The Android] Path=support FullRev=18.3.4>>>" +
+                "<LocalExtraPkgInfo <PkgDesc Type=extra Vendor=android [The Android] Path=compat FullRev=18.0.2> " +
+                       "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=extra Vendor=android [The Android] Path=compat FullRev=18.5.6>>>\n" +
+                "<LocalExtraPkgInfo <PkgDesc Type=extra Vendor=android [The Android] Path=support FullRev=18.0.1> " +
+                       "Updated by: <RemotePkgInfo Source:source <PkgDesc Type=extra Vendor=android [The Android] Path=support FullRev=18.3.4>>>" +
                   "]",
                 result.getUpdatedPkgs().toString().replace(", ", "\n"));
         assertEquals(
@@ -495,11 +495,11 @@ public class UpdateTest extends TestCase {
                  "<RemotePkgInfo Source:source <PkgDesc Type=addon_sys_images Android=API 19 Vendor=android [The Android] Tag=cool_addon [The Add-on] Path=abi32 MajorRev=28>>\n" +
                  "<RemotePkgInfo Source:source <PkgDesc Type=addon_sys_images Android=API 19 Vendor=android [The Android] Tag=cool_addon [The Add-on] Path=abi64 MajorRev=29>>\n" +
                  //---
-                 "<RemotePkgInfo Source:source <PkgDesc Type=samples Android=API 19 MajorRev=24 MinToolsRev=23.0.0>>\n" +
+                 "<RemotePkgInfo Source:source <PkgDesc Type=sample Android=API 19 MajorRev=24 MinToolsRev=23.0.0>>\n" +
 
-                 "<RemotePkgInfo Source:source <PkgDesc Type=sources Android=API 19 MajorRev=23>>\n" +
+                 "<RemotePkgInfo Source:source <PkgDesc Type=source Android=API 19 MajorRev=23>>\n" +
                  //---
-                 "<RemotePkgInfo Source:source <PkgDesc Type=extras Vendor=android [The Android] Path=whatever FullRev=19.7.8>>" +
+                 "<RemotePkgInfo Source:source <PkgDesc Type=extra Vendor=android [The Android] Path=whatever FullRev=19.7.8>>" +
                  "]",
                 result.getNewPkgs().toString().replace(", ", "\n"));
 

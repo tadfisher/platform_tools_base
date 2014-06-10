@@ -709,7 +709,7 @@ public class PkgDesc implements IPkgDesc {
         @NonNull
         public static Builder newDoc(@NonNull AndroidVersion version,
                                      @NonNull MajorRevision revision) {
-            Builder p = new Builder(PkgType.PKG_DOCS);
+            Builder p = new Builder(PkgType.PKG_DOC);
             p.mAndroidVersion = version;
             p.mMajorRevision = revision;
             p.mCustomIsUpdateFor = new IIsUpdateFor() {
@@ -748,7 +748,7 @@ public class PkgDesc implements IPkgDesc {
                                        @NonNull  String displayName,
                                        @Nullable String[] oldPaths,
                                        @NonNull  NoPreviewRevision revision) {
-            Builder p = new Builder(PkgType.PKG_EXTRAS);
+            Builder p = new Builder(PkgType.PKG_EXTRA);
             p.mFullRevision = revision;
             p.mVendor = vendor;
             p.mPath = path;
@@ -872,7 +872,7 @@ public class PkgDesc implements IPkgDesc {
         @NonNull
         public static Builder newSource(@NonNull AndroidVersion version,
                                         @NonNull MajorRevision revision) {
-            Builder p = new Builder(PkgType.PKG_SOURCES);
+            Builder p = new Builder(PkgType.PKG_SOURCE);
             p.mAndroidVersion = version;
             p.mMajorRevision = revision;
             return p;
@@ -892,7 +892,7 @@ public class PkgDesc implements IPkgDesc {
         public static Builder newSample(@NonNull AndroidVersion version,
                                         @NonNull MajorRevision revision,
                                         @NonNull FullRevision minToolsRev) {
-            Builder p = new Builder(PkgType.PKG_SAMPLES);
+            Builder p = new Builder(PkgType.PKG_SAMPLE);
             p.mAndroidVersion = version;
             p.mMajorRevision  = revision;
             p.mMinToolsRev    = minToolsRev;
@@ -948,7 +948,7 @@ public class PkgDesc implements IPkgDesc {
                         mNameIdDisplay);
             }
 
-            if (mType == PkgType.PKG_EXTRAS) {
+            if (mType == PkgType.PKG_EXTRA) {
                 return new PkgDescExtra(
                     mType,
                     mLicense,

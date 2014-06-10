@@ -311,16 +311,16 @@ public class LocalSdk {
      * Note: don't use this for {@link PkgType#PKG_SYS_IMAGES} since there can be more than
      * one ABI and this method only returns a single package per filter type.
      *
-     * @param filter {@link PkgType#PKG_PLATFORMS}, {@link PkgType#PKG_SAMPLES}
-     *                or {@link PkgType#PKG_SOURCES}.
+     * @param filter {@link PkgType#PKG_PLATFORMS}, {@link PkgType#PKG_SAMPLE}
+     *                or {@link PkgType#PKG_SOURCE}.
      * @param version The {@link AndroidVersion} specific for this package type.
      * @return An existing package information or null if not found.
      */
     @Nullable
     public LocalPkgInfo getPkgInfo(@NonNull PkgType filter, @NonNull AndroidVersion version) {
         assert filter == PkgType.PKG_PLATFORMS ||
-               filter == PkgType.PKG_SAMPLES ||
-               filter == PkgType.PKG_SOURCES;
+               filter == PkgType.PKG_SAMPLE ||
+               filter == PkgType.PKG_SOURCE;
 
         for (LocalPkgInfo pkg : getPkgsInfos(filter)) {
             IPkgDesc d = pkg.getDesc();
@@ -388,7 +388,7 @@ public class LocalSdk {
      * For add-ons the path is target hash string
      * (see {@link AndroidTargetHash} for helpers methods to generate this string.)
      *
-     * @param filter {@link PkgType#PKG_EXTRAS}, {@link PkgType#PKG_ADDONS}.
+     * @param filter {@link PkgType#PKG_EXTRA}, {@link PkgType#PKG_ADDONS}.
      * @param vendor The vendor id of the extra package.
      * @param path The path uniquely identifying this package for its vendor.
      * @return An existing package information or null if not found.
@@ -398,7 +398,7 @@ public class LocalSdk {
                                    @NonNull String vendor,
                                    @NonNull String path) {
 
-        assert filter == PkgType.PKG_EXTRAS ||
+        assert filter == PkgType.PKG_EXTRA ||
                filter == PkgType.PKG_ADDONS;
 
         for (LocalPkgInfo pkg : getPkgsInfos(filter)) {
@@ -421,7 +421,7 @@ public class LocalSdk {
      */
     @Nullable
     public LocalExtraPkgInfo getExtra(@NonNull String vendor, @NonNull String path) {
-        return (LocalExtraPkgInfo) getPkgInfo(PkgType.PKG_EXTRAS, vendor, path);
+        return (LocalExtraPkgInfo) getPkgInfo(PkgType.PKG_EXTRA, vendor, path);
     }
 
     /**
@@ -430,7 +430,7 @@ public class LocalSdk {
      * Loads it from disk if not cached.
      *
      * @param filter {@link PkgType#PKG_TOOLS} or {@link PkgType#PKG_PLATFORM_TOOLS}
-     *               or {@link PkgType#PKG_DOCS}.
+     *               or {@link PkgType#PKG_DOC}.
      * @return null if the package is not installed.
      */
     @Nullable
@@ -438,11 +438,11 @@ public class LocalSdk {
 
         assert filter == PkgType.PKG_TOOLS ||
                filter == PkgType.PKG_PLATFORM_TOOLS ||
-               filter == PkgType.PKG_DOCS;
+               filter == PkgType.PKG_DOC;
 
         if (filter != PkgType.PKG_TOOLS &&
             filter != PkgType.PKG_PLATFORM_TOOLS &&
-            filter != PkgType.PKG_DOCS) {
+            filter != PkgType.PKG_DOC) {
             return null;
         }
 
@@ -464,7 +464,7 @@ public class LocalSdk {
                 case PKG_PLATFORM_TOOLS:
                     info = scanPlatformTools(uniqueDir);
                     break;
-                case PKG_DOCS:
+                case PKG_DOC:
                     info = scanDoc(uniqueDir);
                     break;
                 default:
@@ -490,7 +490,7 @@ public class LocalSdk {
      * The resulting array is sorted according to the PkgInfo's sort order.
      * <p/>
      * Note: you can use this with {@link PkgType#PKG_TOOLS}, {@link PkgType#PKG_PLATFORM_TOOLS} and
-     * {@link PkgType#PKG_DOCS} but since there can only be one package of these types, it is
+     * {@link PkgType#PKG_DOC} but since there can only be one package of these types, it is
      * more efficient to use {@link #getPkgInfo(PkgType)} to query them.
      *
      * @param filter One of {@link PkgType} constants.
@@ -511,12 +511,12 @@ public class LocalSdk {
      * with the {@link PkgType#PKG_ALL} argument to load all the known package types.
      * <p/>
      * Note: you can use this with {@link PkgType#PKG_TOOLS}, {@link PkgType#PKG_PLATFORM_TOOLS} and
-     * {@link PkgType#PKG_DOCS} but since there can only be one package of these types, it is
+     * {@link PkgType#PKG_DOC} but since there can only be one package of these types, it is
      * more efficient to use {@link #getPkgInfo(PkgType)} to query them.
      *
      * @param filters One or more of {@link PkgType#PKG_ADDONS}, {@link PkgType#PKG_PLATFORMS},
-     *                               {@link PkgType#PKG_BUILD_TOOLS}, {@link PkgType#PKG_EXTRAS},
-     *                               {@link PkgType#PKG_SOURCES}, {@link PkgType#PKG_SYS_IMAGES}
+     *                               {@link PkgType#PKG_BUILD_TOOLS}, {@link PkgType#PKG_EXTRA},
+     *                               {@link PkgType#PKG_SOURCE}, {@link PkgType#PKG_SYS_IMAGES}
      * @return A list (possibly empty) of matching installed packages. Never returns null.
      */
     @NonNull
@@ -526,7 +526,7 @@ public class LocalSdk {
         for (PkgType filter : filters) {
             if (filter == PkgType.PKG_TOOLS ||
                     filter == PkgType.PKG_PLATFORM_TOOLS ||
-                    filter == PkgType.PKG_DOCS) {
+                    filter == PkgType.PKG_DOC) {
                 LocalPkgInfo info = getPkgInfo(filter);
                 if (info != null) {
                     list.add(info);
@@ -565,21 +565,21 @@ public class LocalSdk {
                             scanAddons(subDir, existing);
                             break;
 
-                        case PKG_SAMPLES:
+                        case PKG_SAMPLE:
                             scanSamples(subDir, existing);
                             break;
 
-                        case PKG_SOURCES:
+                        case PKG_SOURCE:
                             scanSources(subDir, existing);
                             break;
 
-                        case PKG_EXTRAS:
+                        case PKG_EXTRA:
                             scanExtras(subDir, existing);
                             break;
 
                         case PKG_TOOLS:
                         case PKG_PLATFORM_TOOLS:
-                        case PKG_DOCS:
+                        case PKG_DOC:
                             break;
                         default:
                             throw new IllegalArgumentException(
@@ -1037,7 +1037,7 @@ public class LocalSdk {
 
     private void scanSamples(File collectionDir, Collection<LocalPkgInfo> outCollection) {
         for (File platformDir : mFileOp.listFiles(collectionDir)) {
-            if (!shouldVisitDir(PkgType.PKG_SAMPLES, platformDir)) {
+            if (!shouldVisitDir(PkgType.PKG_SAMPLE, platformDir)) {
                 continue;
             }
 
@@ -1068,7 +1068,7 @@ public class LocalSdk {
     private void scanSources(File collectionDir, Collection<LocalPkgInfo> outCollection) {
         // The build-tool root folder contains a list of per-revision folders.
         for (File platformDir : mFileOp.listFiles(collectionDir)) {
-            if (!shouldVisitDir(PkgType.PKG_SOURCES, platformDir)) {
+            if (!shouldVisitDir(PkgType.PKG_SOURCE, platformDir)) {
                 continue;
             }
 
@@ -1092,12 +1092,12 @@ public class LocalSdk {
 
     private void scanExtras(File collectionDir, Collection<LocalPkgInfo> outCollection) {
         for (File vendorDir : mFileOp.listFiles(collectionDir)) {
-            if (!shouldVisitDir(PkgType.PKG_EXTRAS, vendorDir)) {
+            if (!shouldVisitDir(PkgType.PKG_EXTRA, vendorDir)) {
                 continue;
             }
 
             for (File extraDir : mFileOp.listFiles(vendorDir)) {
-                if (!shouldVisitDir(PkgType.PKG_EXTRAS, extraDir)) {
+                if (!shouldVisitDir(PkgType.PKG_EXTRA, extraDir)) {
                     continue;
                 }
 
