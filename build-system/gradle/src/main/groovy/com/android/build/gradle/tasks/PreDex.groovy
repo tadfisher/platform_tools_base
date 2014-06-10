@@ -22,6 +22,8 @@ import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.DexOptions
 import com.android.ide.common.internal.WaitableExecutor
 import com.google.common.base.Charsets
+import com.google.common.collect.ImmutableList
+import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Sets
 import com.google.common.hash.HashCode
 import com.google.common.hash.HashFunction
@@ -32,6 +34,7 @@ import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs
+import org.gradle.api.tasks.incremental.InputFileDetails
 
 import java.util.concurrent.Callable
 
@@ -67,14 +70,19 @@ public class PreDex extends BaseTask {
         final AndroidBuilder builder = getBuilder()
         final Set<String> hashs = Sets.newHashSet()
         final WaitableExecutor<Void> executor = new WaitableExecutor<Void>()
+        final ImmutableList.Builder<File> inputFileDetailses = ImmutableList.builder()
 
         taskInputs.outOfDate { change ->
+            inputFileDetailses.add(change.file)
+        }
 
+        for (final File fileToProcess : inputFileDetailses.build()) {
             executor.execute(new Callable<Void>() {
                 @Override
                 public Void call() throws Exception {
+                    System.out.println("file to process = " + fileToProcess)
                     // TODO remove once we can properly add a library as a dependency of its test.
-                    String hash = getFileHash(change.file)
+                    String hash = getFileHash(fileToProcess)
 
                     synchronized (hashs) {
                         if (hashs.contains(hash)) {
@@ -85,9 +93,9 @@ public class PreDex extends BaseTask {
                     }
 
                     //noinspection GroovyAssignabilityCheck
-                    File preDexedFile = getDexFileName(outFolder, change.file)
+                    File preDexedFile = getDexFileName(outFolder, fileToProcess)
                     //noinspection GroovyAssignabilityCheck
-                    builder.preDexLibrary(change.file, preDexedFile, options)
+                    builder.preDexLibrary(fileToProcess, preDexedFile, options)
 
                     return null
                 }
@@ -96,6 +104,7 @@ public class PreDex extends BaseTask {
 
         taskInputs.removed { change ->
             //noinspection GroovyAssignabilityCheck
+            System.out.println("file removed" + change.file)
             File preDexedFile = getDexFileName(outFolder, change.file)
             preDexedFile.delete()
         }
