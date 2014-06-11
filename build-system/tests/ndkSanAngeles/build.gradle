@@ -8,6 +8,8 @@ buildscript {
 }
 apply plugin: 'android'
 
+project.extensions.create("android", BaseExtension, args)
+
 android {
     compileSdkVersion 19
     buildToolsVersion '19.1.0'

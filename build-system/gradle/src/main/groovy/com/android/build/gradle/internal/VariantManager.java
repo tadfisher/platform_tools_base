@@ -23,7 +23,7 @@ import static com.android.builder.core.BuilderConstants.UI_TEST;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.BaseExtension;
+import com.android.build.gradle.AndroidExtension;
 import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.api.BaseVariant;
@@ -66,7 +66,7 @@ public class VariantManager {
     @NonNull
     private final BasePlugin basePlugin;
     @NonNull
-    private final BaseExtension extension;
+    private final AndroidExtension extension;
     @NonNull
     private final VariantFactory variantFactory;
 
@@ -79,7 +79,7 @@ public class VariantManager {
     public VariantManager(
             @NonNull Project project,
             @NonNull BasePlugin basePlugin,
-            @NonNull BaseExtension extension,
+            @NonNull AndroidExtension extension,
             @NonNull VariantFactory variantFactory) {
         this.extension = extension;
         this.basePlugin = basePlugin;

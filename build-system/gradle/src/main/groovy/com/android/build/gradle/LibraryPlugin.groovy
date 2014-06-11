@@ -41,7 +41,7 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
     }
 
     @Override
-    public Class<? extends BaseExtension> getExtensionClass() {
+    public Class<? extends AndroidExtension> getExtensionClass() {
         return LibraryExtension.class
     }
 

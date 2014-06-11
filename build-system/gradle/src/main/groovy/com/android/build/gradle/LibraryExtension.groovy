@@ -27,17 +27,15 @@ import org.gradle.internal.reflect.Instantiator
 /**
  * Extension for 'library' project.
  */
-public class LibraryExtension extends BaseExtension {
+public class LibraryExtension extends AndroidExtension {
 
     private final DefaultDomainObjectSet<LibraryVariant> libraryVariantList =
         new DefaultDomainObjectSet<LibraryVariant>(LibraryVariant.class)
 
     LibraryExtension(BasePlugin plugin, ProjectInternal project, Instantiator instantiator,
-            NamedDomainObjectContainer<DefaultBuildType> buildTypes,
-            NamedDomainObjectContainer<DefaultProductFlavor> productFlavors,
             NamedDomainObjectContainer<SigningConfig> signingConfigs,
             boolean isLibrary) {
-        super(plugin, project, instantiator, buildTypes, productFlavors, signingConfigs, isLibrary)
+        super(plugin, project, instantiator, signingConfigs, isLibrary)
     }
 
     public DefaultDomainObjectSet<LibraryVariant> getLibraryVariants() {

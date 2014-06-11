@@ -197,7 +197,8 @@ public abstract class BasePlugin {
 
     protected JacocoPlugin jacocoPlugin
 
-    private BaseExtension extension
+    private BaseExtension base
+    private AndroidExtension extension
     private VariantManager variantManager
 
     final List<BaseVariantData> variantDataList = []
@@ -240,7 +241,7 @@ public abstract class BasePlugin {
         }
     }
 
-    protected abstract Class<? extends BaseExtension> getExtensionClass()
+    protected abstract Class<? extends AndroidExtension> getExtensionClass()
     protected abstract VariantFactory getVariantFactory()
 
     public Instantiator getInstantiator() {
@@ -251,7 +252,7 @@ public abstract class BasePlugin {
         return variantManager
     }
 
-    BaseExtension getExtension() {
+    AndroidExtension getExtension() {
         return extension
     }
 
@@ -279,10 +280,16 @@ public abstract class BasePlugin {
         def signingConfigContainer = project.container(SigningConfig,
                 new SigningConfigFactory(instantiator))
 
-        extension = project.extensions.create('android', getExtensionClass(),
+        base = project.extensions.create(
+                'android', BaseExtension, this, buildTypeContainer, productFlavorContainer)
+        extension = instantiator.newInstance(getExtensionClass(),
                 this, (ProjectInternal) project, instantiator,
-                buildTypeContainer, productFlavorContainer, signingConfigContainer,
+                signingConfigContainer,
                 this instanceof LibraryPlugin)
+//        extension = project.extensions.create('android', getExtensionClass(),
+//                this, (ProjectInternal) project, instantiator,
+//                buildTypeContainer, productFlavorContainer, signingConfigContainer,
+//                this instanceof LibraryPlugin)
         setBaseExtension(extension)
 
         variantManager = new VariantManager(project, this, extension, getVariantFactory())
@@ -365,7 +372,7 @@ public abstract class BasePlugin {
         }
     }
 
-    private void setBaseExtension(@NonNull BaseExtension extension) {
+    private void setBaseExtension(@NonNull AndroidExtension extension) {
         mainSourceSet = (DefaultAndroidSourceSet) extension.sourceSets.create(extension.defaultConfig.name)
         testSourceSet = (DefaultAndroidSourceSet) extension.sourceSets.create(ANDROID_TEST)
 
@@ -521,7 +528,7 @@ public abstract class BasePlugin {
         TargetInfo targetInfo = androidBuilder.getTargetInfo()
         if (targetInfo == null) {
             sdkHandler.initTarget(
-                    extension.getCompileSdkVersion(),
+                    base.getCompileSdkVersion(),
                     extension.buildToolsRevision,
                     androidBuilder)
         }

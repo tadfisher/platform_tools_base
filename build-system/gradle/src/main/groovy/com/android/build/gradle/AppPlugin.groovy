@@ -38,7 +38,7 @@ class AppPlugin extends BasePlugin implements Plugin<Project> {
     }
 
     @Override
-    protected Class<? extends BaseExtension> getExtensionClass() {
+    protected Class<? extends AndroidExtension> getExtensionClass() {
         return AppExtension.class
     }
 

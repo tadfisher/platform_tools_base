@@ -26,17 +26,15 @@ import org.gradle.internal.reflect.Instantiator
 /**
  * Extension for 'application' project.
  */
-public class AppExtension extends BaseExtension {
+public class AppExtension extends AndroidExtension {
 
     private final DefaultDomainObjectSet<ApplicationVariant> applicationVariantList =
         new DefaultDomainObjectSet<ApplicationVariant>(ApplicationVariant.class)
 
     AppExtension(AppPlugin plugin, ProjectInternal project, Instantiator instantiator,
-                 NamedDomainObjectContainer<DefaultBuildType> buildTypes,
-                 NamedDomainObjectContainer<DefaultProductFlavor> productFlavors,
                  NamedDomainObjectContainer<SigningConfig> signingConfigs,
                  boolean isLibrary) {
-        super(plugin, project, instantiator, buildTypes, productFlavors, signingConfigs, isLibrary)
+        super(plugin, project, instantiator, signingConfigs, isLibrary)
     }
 
     public DefaultDomainObjectSet<ApplicationVariant> getApplicationVariants() {
