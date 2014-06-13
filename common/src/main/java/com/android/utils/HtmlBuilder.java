@@ -233,8 +233,9 @@ public class HtmlBuilder {
         mStringBuilder.append("<img src='");
         mStringBuilder.append(link);
 
+        mStringBuilder.append("'");
         if (altText != null) {
-            mStringBuilder.append("' alt=\"");
+            mStringBuilder.append(" alt=\"");
             mStringBuilder.append(altText);
             mStringBuilder.append("\"");
         }
