@@ -119,7 +119,7 @@ public class AllocationInfo implements IStackTraceInfo {
     /*
      * Simple constructor.
      */
-    AllocationInfo(int allocNumber, String allocatedClass, int allocationSize,
+    public AllocationInfo(int allocNumber, String allocatedClass, int allocationSize,
         short threadId, StackTraceElement[] stackTrace) {
         mAllocNumber = allocNumber;
         mAllocatedClass = allocatedClass;
