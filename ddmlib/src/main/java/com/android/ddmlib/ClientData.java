@@ -164,6 +164,7 @@ public class ClientData {
 
     private static IHprofDumpHandler sHprofDumpHandler;
     private static IMethodProfilingHandler sMethodProfilingHandler;
+    private static IAllocationTrackingHandler sAllocationTrackingHandler;
 
     // is this a DDM-aware client?
     private boolean mIsDdmAware;
@@ -383,6 +384,18 @@ public class ClientData {
         void onEndFailure(Client client, String message);
     }
 
+    /*
+     * Handlers able to act on allocation tracking info
+     */
+    public interface IAllocationTrackingHandler {
+      /**
+       * Called when an allocation tracking was successful.
+       * @param data the data containing the allocation file.
+       * @param client the client for which allocations were tracked.
+       */
+      void onSuccess(byte[] data, Client client);
+    }
+
     /**
      * Sets the handler to receive notifications when an HPROF dump succeeded or failed.
      */
@@ -404,6 +417,13 @@ public class ClientData {
     static IMethodProfilingHandler getMethodProfilingHandler() {
         return sMethodProfilingHandler;
     }
+
+    /**
+    * Sets the handler to receive notifications when an allocation tracking succeeded or failed.
+    */
+    public static void setAllocationTrackingHandler(IAllocationTrackingHandler handler) { sAllocationTrackingHandler = handler; }
+
+    static IAllocationTrackingHandler getAllocationTrackingHandler() { return sAllocationTrackingHandler; }
 
     /**
      * Generic constructor.
@@ -698,7 +718,7 @@ public class ClientData {
      * @see Client#requestAllocationDetails()
      */
     public synchronized AllocationInfo[] getAllocations() {
-        return mAllocations;
+      return mAllocations;
     }
 
     void addFeature(String feature) {

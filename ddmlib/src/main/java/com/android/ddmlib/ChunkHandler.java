@@ -25,7 +25,7 @@ import java.nio.ByteOrder;
 /**
  * Subclass this with a class that handles one or more chunk types.
  */
-abstract class ChunkHandler {
+public abstract class ChunkHandler {
 
     public static final int CHUNK_HEADER_LEN = 8;   // 4-byte type, 4-byte len
     public static final ByteOrder CHUNK_ORDER = ByteOrder.BIG_ENDIAN;
