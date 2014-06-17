@@ -26,6 +26,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
@@ -89,8 +90,9 @@ import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -470,14 +472,14 @@ public class AndroidBuilder {
     }
 
     /**
-     * Saves the {@link com.android.manifmerger.XmlDocument} to a file.
+     * Saves the {@link com.android.manifmerger.XmlDocument} to a file in UTF-8 encoding.
      * @param xmlDocument xml document to save.
      * @param out file to save to.
      */
     private void save(XmlDocument xmlDocument, File out) {
-        FileWriter os;
+        OutputStreamWriter os;
         try {
-            os = new FileWriter(out);
+            os = new OutputStreamWriter(new FileOutputStream(out), SdkConstants.UTF_8);
         } catch(IOException e) {
             throw new RuntimeException(e);
         }
