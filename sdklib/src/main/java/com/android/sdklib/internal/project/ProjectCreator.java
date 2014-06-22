@@ -113,9 +113,9 @@ public class ProjectCreator {
     public static final String CHARS_ACTIVITY_NAME = "a-z A-Z 0-9 _";
 
     /** Gradle plugin to use with standard projects */
-    private static final String PLUGIN_PROJECT = "android";
+    private static final String PLUGIN_PROJECT = "com.android.application";
     /** Gradle plugin to use with library projects */
-    private static final String PLUGIN_LIB_PROJECT = "android-library";
+    private static final String PLUGIN_LIB_PROJECT = "com.android.library";
 
 
     public enum OutputLevel {
@@ -417,12 +417,6 @@ public class ProjectCreator {
         try {
             // first create the project properties.
 
-            // location of the SDK goes in localProperty
-            ProjectPropertiesWorkingCopy localProperties = ProjectProperties.create(folderPath,
-                    PropertyType.LOCAL);
-            localProperties.setProperty(ProjectProperties.PROPERTY_SDK, mSdkFolder);
-            localProperties.save();
-
             // create the map for place-holders of values to replace in the templates
             final HashMap<String, String> keywords = new HashMap<String, String>();
             final HashMap<String, String> testKeywords = new HashMap<String, String>();
@@ -522,9 +516,13 @@ public class ProjectCreator {
                                  testActivityClassName : projectFolder.getName());
             }
 
-            String srcMainPath = SdkConstants.FD_SOURCES + File.separator +
+            String projectInnerPath = keywords.get(PH_PROJECT_NAME);
+
+            String srcMainPath = projectInnerPath + File.separator +
+                    SdkConstants.FD_SOURCES + File.separator +
                     SdkConstants.FD_MAIN;
-            String srcTestPath = SdkConstants.FD_SOURCES + File.separator +
+            String srcTestPath = projectInnerPath + File.separator +
+                    SdkConstants.FD_SOURCES + File.separator +
                     SdkConstants.FD_TEST;
 
             // create the source folders for the activity
@@ -582,13 +580,22 @@ public class ProjectCreator {
 
             String buildToolRev = mSdkManager.getLatestBuildTool().getRevision().toString();
 
+            if (artifactVersion == null)
+                artifactVersion = SdkConstants.GRADLE_PLUGIN_LATEST_VERSION;
+
             keywords.put(PH_BUILD_TOOL_REV, buildToolRev);
             keywords.put(PH_ARTIFACT_VERSION, artifactVersion);
             keywords.put(PH_TARGET, target.hashString());
             keywords.put(PH_PLUGIN, (library) ? PLUGIN_LIB_PROJECT : PLUGIN_PROJECT);
 
             installTemplate("build_gradle.template",
-                    new File(projectFolder, SdkConstants.FN_BUILD_GRADLE),
+                    new File(projectFolder, projectInnerPath + File.separator +
+                            SdkConstants.FN_BUILD_GRADLE),
+                    keywords);
+
+            // Install the settings.gradle file at the top level
+            installTemplate("settings_gradle.template",
+                    new File(projectFolder, SdkConstants.FN_SETTINGS_GRADLE),
                     keywords);
 
             // Create the gradle wrapper files
