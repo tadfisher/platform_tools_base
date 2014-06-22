@@ -113,9 +113,9 @@ public class ProjectCreator {
     public static final String CHARS_ACTIVITY_NAME = "a-z A-Z 0-9 _";
 
     /** Gradle plugin to use with standard projects */
-    private static final String PLUGIN_PROJECT = "android";
+    private static final String PLUGIN_PROJECT = "com.android.application";
     /** Gradle plugin to use with library projects */
-    private static final String PLUGIN_LIB_PROJECT = "android-library";
+    private static final String PLUGIN_LIB_PROJECT = "com.android.library";
 
 
     public enum OutputLevel {
@@ -403,10 +403,12 @@ public class ProjectCreator {
      * @param target the project target.
      * @param library whether the project is a library.
      * @param artifactVersion the version of the gradle artifact in maven.
+     * @param multiModule whether the created project should have a multi-module (true) or
+     *          single-module (false) layout.
      */
     public void createGradleProject(String folderPath, String projectName,
             String packageName, String activityEntry, IAndroidTarget target, boolean library,
-            String artifactVersion) {
+            String artifactVersion, boolean multiModule) {
 
         // create project folder if it does not exist
         File projectFolder = checkNewProjectLocation(folderPath);
@@ -522,9 +524,15 @@ public class ProjectCreator {
                                  testActivityClassName : projectFolder.getName());
             }
 
-            String srcMainPath = SdkConstants.FD_SOURCES + File.separator +
+            String modulePath = "";
+            if (multiModule == true)
+                modulePath = keywords.get(PH_PROJECT_NAME) + File.separator;
+
+            String srcMainPath = modulePath +
+                    SdkConstants.FD_SOURCES + File.separator +
                     SdkConstants.FD_MAIN;
-            String srcTestPath = SdkConstants.FD_SOURCES + File.separator +
+            String srcTestPath = modulePath +
+                    SdkConstants.FD_SOURCES + File.separator +
                     SdkConstants.FD_TEST;
 
             // create the source folders for the activity
@@ -582,14 +590,25 @@ public class ProjectCreator {
 
             String buildToolRev = mSdkManager.getLatestBuildTool().getRevision().toString();
 
+            if (artifactVersion == null)
+                artifactVersion = SdkConstants.GRADLE_PLUGIN_RECOMMENDED_VERSION;
+
             keywords.put(PH_BUILD_TOOL_REV, buildToolRev);
             keywords.put(PH_ARTIFACT_VERSION, artifactVersion);
             keywords.put(PH_TARGET, target.hashString());
             keywords.put(PH_PLUGIN, (library) ? PLUGIN_LIB_PROJECT : PLUGIN_PROJECT);
 
             installTemplate("build_gradle.template",
-                    new File(projectFolder, SdkConstants.FN_BUILD_GRADLE),
+                    new File(projectFolder, modulePath +
+                            SdkConstants.FN_BUILD_GRADLE),
                     keywords);
+
+            // Install the settings.gradle file at the root of multi-module projects
+            if (multiModule == true) {
+                installTemplate("settings_gradle.template",
+                        new File(projectFolder, SdkConstants.FN_SETTINGS_GRADLE),
+                        keywords);
+            }
 
             // Create the gradle wrapper files
             createDirs(projectFolder, SdkConstants.FD_GRADLE_WRAPPER);
