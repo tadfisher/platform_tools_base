@@ -22,7 +22,6 @@ import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.DexOptions
 import com.android.ide.common.internal.WaitableExecutor
 import com.google.common.base.Charsets
-import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Sets
 import com.google.common.hash.HashCode
@@ -34,7 +33,6 @@ import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs
-import org.gradle.api.tasks.incremental.InputFileDetails
 
 import java.util.concurrent.Callable
 
@@ -76,33 +74,9 @@ public class PreDex extends BaseTask {
             inputFileDetailses.add(change.file)
         }
 
-        for (final File f : inputFileDetailses.build()) {
-            executor.execute(new Callable<Void>() {
-                // this assignement should not be necessary, however groovy 2.3.2 seems
-                // quite lost with multithreading and access to contextual final variables.
-                final File fileToProcess = f;
-
-                @Override
-                public Void call() throws Exception {
-                    // TODO remove once we can properly add a library as a dependency of its test.
-                    String hash = getFileHash(fileToProcess)
-
-                    synchronized (hashs) {
-                        if (hashs.contains(hash)) {
-                            return null
-                        }
-
-                        hashs.add(hash)
-                    }
-
-                    //noinspection GroovyAssignabilityCheck
-                    File preDexedFile = getDexFileName(outFolder, fileToProcess)
-                    //noinspection GroovyAssignabilityCheck
-                    builder.preDexLibrary(fileToProcess, preDexedFile, options)
-
-                    return null
-                }
-            });
+        for (final File file : inputFileDetailses.build()) {
+            Callable<Void> action = new XXXTaskZZZ(file, hashs);
+            executor.execute(action);
         }
 
         taskInputs.removed { change ->
@@ -112,6 +86,40 @@ public class PreDex extends BaseTask {
         }
 
         executor.waitForTasksWithQuickFail(false)
+    }
+
+    private final class XXXTaskZZZ implements Callable<Void> {
+        private final File fileToProcess;
+        private final Set<String> hashs;
+        private final DexOptions options = getDexOptions()
+        final File outFolder = getOutputFolder()
+
+
+        private XXXTaskZZZ(File file, Set<String> hashs) {
+            this.fileToProcess = file;
+            this.hashs = hashs;
+        }
+
+        @Override
+        Void call() throws Exception {
+            // TODO remove once we can properly add a library as a dependency of its test.
+            String hash = getFileHash(fileToProcess)
+
+            synchronized (hashs) {
+                if (hashs.contains(hash)) {
+                    return null
+                }
+
+                hashs.add(hash)
+            }
+
+            //noinspection GroovyAssignabilityCheck
+            File preDexedFile = getDexFileName(outFolder, fileToProcess)
+            //noinspection GroovyAssignabilityCheck
+            builder.preDexLibrary(fileToProcess, preDexedFile, options)
+
+            return null
+        }
     }
 
     /**
