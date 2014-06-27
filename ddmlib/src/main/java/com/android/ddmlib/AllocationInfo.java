@@ -49,6 +49,11 @@ public class AllocationInfo implements IStackTraceInfo {
             }
         }
 
+        public void setSortMode(SortMode mode, boolean descending) {
+          mSortMode = mode;
+          mDescending = descending;
+        }
+
         public SortMode getSortMode() {
             return mSortMode;
         }
