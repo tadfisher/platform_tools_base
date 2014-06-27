@@ -29,7 +29,7 @@ public class AllocationInfo implements IStackTraceInfo {
     private final short mThreadId;
     private final StackTraceElement[] mStackTrace;
 
-    public static enum SortMode {
+    public enum SortMode {
         NUMBER, SIZE, CLASS, THREAD, IN_CLASS, IN_METHOD
     }
 
@@ -47,6 +47,11 @@ public class AllocationInfo implements IStackTraceInfo {
             } else {
                 mSortMode = mode;
             }
+        }
+
+        public void setSortMode(SortMode mode, boolean descending) {
+          mSortMode = mode;
+          mDescending = descending;
         }
 
         public SortMode getSortMode() {
