@@ -47,7 +47,9 @@ import java.util.Locale;
  * methods provided in the base {@link PkgDesc}.
  */
 public class PkgDesc implements IPkgDesc {
-    private final PkgType mType;
+  private static final String ANDROID_PLATFORM_HASH_PREFIX = "android-";
+
+  private final PkgType mType;
     private final FullRevision mFullRevision;
     private final MajorRevision mMajorRevision;
     private final AndroidVersion mAndroidVersion;
@@ -270,7 +272,7 @@ public class PkgDesc implements IPkgDesc {
             break;
 
         case PKG_PLATFORM:
-            sb.append("android-").append(getAndroidVersion().getApiString());
+            sb.append(ANDROID_PLATFORM_HASH_PREFIX).append(getAndroidVersion().getApiString());
             break;
 
         case PKG_ADDON:
@@ -337,12 +339,12 @@ public class PkgDesc implements IPkgDesc {
         case PKG_PLATFORM:
         case PKG_SAMPLE:
         case PKG_SOURCE:
-            f = FileOp.append(f, "android-" + sanitize(getAndroidVersion().getApiString()));
+            f = FileOp.append(f, ANDROID_PLATFORM_HASH_PREFIX + sanitize(getAndroidVersion().getApiString()));
             break;
 
         case PKG_SYS_IMAGE:
             f = FileOp.append(f,
-                    "android-" + sanitize(getAndroidVersion().getApiString()),
+                    ANDROID_PLATFORM_HASH_PREFIX + sanitize(getAndroidVersion().getApiString()),
                     sanitize(SystemImage.DEFAULT_TAG.equals(getTag()) ? "android" : getTag().getId()),
                     sanitize(getPath()));   // path==abi
             break;
@@ -1140,6 +1142,12 @@ public class PkgDesc implements IPkgDesc {
 
     @NonNull
     private static String sanitize(@NonNull String str) {
+        if (str.startsWith(ANDROID_PLATFORM_HASH_PREFIX)) {
+            String platform = str.substring(ANDROID_PLATFORM_HASH_PREFIX.length());
+            if (!Character.isDigit(platform.charAt(0))) {
+                return str;
+            }
+        }
         str = str.toLowerCase(Locale.US).replaceAll("[^a-z0-9_.-]+", "_").replaceAll("_+", "_");
         return str;
     }
