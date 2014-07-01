@@ -1,0 +1,35 @@
+buildscript {
+    repositories {
+        maven { url '../../../../../out/repo' }
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:0.12.2'
+    }
+}
+
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 19
+    buildToolsVersion '19.1.0'
+
+    useNewNativePlugin true
+    ndk {
+        moduleName "hello-jni"
+    }
+
+    productFlavors {
+        free
+        premium
+    }
+}
+
+sources {
+    "hello-jni" {
+        all {
+            exportedHeaders {
+                srcDir "src/include"
+            }
+        }
+    }
+}
