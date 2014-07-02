@@ -60,6 +60,22 @@ public class AppCompatCallDetectorTest extends AbstractCheckTest {
             ));
     }
 
+    public void testGetOldCall() throws Exception {
+        assertEquals("setProgressBarVisibility", AppCompatCallDetector.getOldCall(
+            "Should use setSupportProgressBarVisibility instead of setProgressBarVisibility name"));
+        assertEquals("getActionBar", AppCompatCallDetector.getOldCall(
+                "Should use getSupportActionBar instead of getActionBar name"));
+        assertNull(AppCompatCallDetector.getOldCall("No match"));
+    }
+
+    public void testGetNewCall() throws Exception {
+        assertEquals("setSupportProgressBarVisibility", AppCompatCallDetector.getNewCall(
+                "Should use setSupportProgressBarVisibility instead of setProgressBarVisibility name"));
+        assertEquals("getSupportActionBar", AppCompatCallDetector.getNewCall(
+                "Should use getSupportActionBar instead of getActionBar name"));
+        assertNull(AppCompatCallDetector.getNewCall("No match"));
+    }
+
     @Override
     protected Detector getDetector() {
         return new AppCompatCallDetector();
