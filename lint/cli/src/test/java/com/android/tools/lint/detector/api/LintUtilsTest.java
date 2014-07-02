@@ -18,6 +18,7 @@ package com.android.tools.lint.detector.api;
 
 import static com.android.tools.lint.detector.api.LintUtils.computeResourceName;
 import static com.android.tools.lint.detector.api.LintUtils.convertVersion;
+import static com.android.tools.lint.detector.api.LintUtils.findSubstring;
 import static com.android.tools.lint.detector.api.LintUtils.getLocaleAndRegion;
 import static com.android.tools.lint.detector.api.LintUtils.isImported;
 import static com.android.tools.lint.detector.api.LintUtils.splitPath;
@@ -470,6 +471,13 @@ public class LintUtilsTest extends TestCase {
             fail("Not needed in this test");
             return "<invalid>";
         }
+    }
+
+    public void testFindSubstring() {
+       assertEquals("foo", findSubstring("foo", null, null));
+       assertEquals("foo", findSubstring("foo  ", null, "  "));
+       assertEquals("foo", findSubstring("  foo", "  ", null));
+       assertEquals("foo", findSubstring("[foo]", "[", "]"));
     }
 
     private static class TestContext extends JavaContext {

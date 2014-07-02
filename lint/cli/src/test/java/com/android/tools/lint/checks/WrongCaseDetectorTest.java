@@ -43,4 +43,14 @@ public class WrongCaseDetectorTest extends AbstractCheckTest {
 
                 lintProject("res/layout/case.xml"));
     }
+
+    public void testGetOldValue() {
+        assertEquals("Merge", WrongCaseDetector.getOldValue(
+                "Invalid tag <Merge>; should be <merge>"));
+    }
+
+    public void testGetNewValue() {
+        assertEquals("merge", WrongCaseDetector.getNewValue(
+                "Invalid tag <Merge>; should be <merge>"));
+    }
 }

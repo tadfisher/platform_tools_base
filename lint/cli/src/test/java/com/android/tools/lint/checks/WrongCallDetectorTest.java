@@ -16,6 +16,10 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.checks.GradleDetector.DEPENDENCY;
+import static com.android.tools.lint.checks.GradleDetector.DEPRECATED;
+import static com.android.tools.lint.checks.GradleDetector.STRING_INTEGER;
+
 import com.android.tools.lint.detector.api.Detector;
 
 @SuppressWarnings("javadoc")
@@ -54,5 +58,15 @@ public class WrongCallDetectorTest extends AbstractCheckTest {
                     "bytecode/LayoutTest.java.txt=>src/test/pkg/LayoutTest.java",
                     "bytecode/LayoutTest.class.data=>bin/classes/test/pkg/LayoutTest.class"
             ));
+    }
+
+    public void testGetOldValue() {
+        assertEquals("onLayout", WrongCallDetector.getOldValue(
+                "Suspicious method call; should probably call \"layout\" rather than \"onLayout\""));
+    }
+
+    public void testGetNewValue() {
+        assertEquals("layout", WrongCallDetector.getNewValue(
+                "Suspicious method call; should probably call \"layout\" rather than \"onLayout\""));
     }
 }
