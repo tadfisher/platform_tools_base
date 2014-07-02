@@ -32,6 +32,8 @@ import com.android.tools.lint.detector.api.Speed;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import lombok.ast.AstVisitor;
 import lombok.ast.MethodInvocation;
@@ -56,6 +58,8 @@ public class AppCompatCallDetector extends Detector implements Detector.JavaScan
     private static final String SET_PROGRESS_BAR_IN_VIS = "setProgressBarIndeterminateVisibility";
     private static final String SET_PROGRESS_BAR_INDETERMINATE = "setProgressBarIndeterminate";
     private static final String REQUEST_WINDOW_FEATURE = "requestWindowFeature";
+    /** If you change number of parameters or order, update {@link #getMessagePart(String, int)} */
+    private static final String ERROR_MESSAGE_FORMAT = "Should use %1$s instead of %2$s name";
 
     private boolean mDependsOnAppCompat;
 
@@ -107,8 +111,7 @@ public class AppCompatCallDetector extends Detector implements Detector.JavaScan
             }
 
             if (replace != null) {
-                String message = String.format("Should use %1$s instead of %2$s name",
-                        replace, name);
+                String message = String.format(ERROR_MESSAGE_FORMAT, replace, name);
                 context.report(ISSUE, node, context.getLocation(node), message, null);
             }
         }
@@ -125,5 +128,42 @@ public class AppCompatCallDetector extends Detector implements Detector.JavaScan
             }
         }
         return false;
+    }
+
+    /**
+     * Given an error message created by this lint check, return the corresponding old method name
+     * that it suggests should be deleted. (Intended to support quickfix implementations
+     * for this lint check.)
+     *
+     * @param errorMessage the error message originally produced by this detector
+     * @return the corresponding old method name, or null if not recognized
+     */
+    @Nullable
+    public static String getOldCall(@NonNull String errorMessage) {
+        return getMessagePart(errorMessage, 2);
+    }
+
+    /**
+     * Given an error message created by this lint check, return the corresponding new method name
+     * that it suggests replace the old method name. (Intended to support quickfix implementations
+     * for this lint check.)
+     *
+     * @param errorMessage the error message originally produced by this detector
+     * @return the corresponding new method name, or null if not recognized
+     */
+    @Nullable
+    public static String getNewCall(@NonNull String errorMessage) {
+        return getMessagePart(errorMessage, 1);
+    }
+
+    @Nullable
+    private static String getMessagePart(@NonNull String errorMessage, int group) {
+        String pattern = ERROR_MESSAGE_FORMAT.replace("%1$s", "(.*)").replace("%2$s", "(.*)");
+        Matcher matcher = Pattern.compile(pattern).matcher(errorMessage);
+        if (matcher.find()) {
+            return matcher.group(group);
+        }
+
+        return null;
     }
 }

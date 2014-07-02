@@ -107,4 +107,9 @@ public class DuplicateResourceDetectorTest extends AbstractCheckTest {
 
             lintProject("res/values/refs.xml"));
     }
+
+    public void testGetExpectedType() {
+        assertEquals("string", DuplicateResourceDetector.getExpectedType(
+                "Unexpected resource reference type; expected value of type @string/"));
+    }
 }

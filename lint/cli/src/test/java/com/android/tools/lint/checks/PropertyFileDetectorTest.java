@@ -26,7 +26,7 @@ public class PropertyFileDetectorTest extends AbstractCheckTest {
 
     public void test() throws Exception {
         assertEquals(""
-                + "local.properties:11: Error: Colon (:) must be escaped in .property files [PropertyEscape]\n"
+                + "local.properties:11: Error: Colon (:) must be escaped in .property files; use C\\:\\my\\path\\to\\sdk [PropertyEscape]\n"
                 + "windows.dir=C:\\my\\path\\to\\sdk\n"
                 + "             ~\n"
                 + "local.properties:11: Error: Windows file separators (\\) must be escaped (\\\\); use C:\\\\my\\\\path\\\\to\\\\sdk [PropertyEscape]\n"
@@ -34,5 +34,10 @@ public class PropertyFileDetectorTest extends AbstractCheckTest {
                 + "            ~~~~~~~~~~~~~~~~~\n"
                 + "2 errors, 0 warnings\n",
                 lintProject("local.properties=>local.properties"));
+    }
+
+    public void testGetSuggestedEscape() {
+        assertEquals("C:\\\\my\\\\path\\\\to\\\\sdk", PropertyFileDetector.getSuggestedEscape(
+                "Windows file separators (\\) must be escaped (\\\\); use C:\\\\my\\\\path\\\\to\\\\sdk"));
     }
 }

@@ -1075,4 +1075,36 @@ public class LintUtils {
 
         return false;
     }
+
+    /**
+     * Looks for a certain string within a larger string, which should immediately follow
+     * the given prefix and immediately precede the given suffix.
+     *
+     * @param string the full string to search
+     * @param prefix the optional prefix to follow
+     * @param suffix the optional suffix to precede
+     * @return the corresponding substring, if present
+     */
+    @Nullable
+    public static String findSubstring(@NonNull String string, @Nullable String prefix,
+            @Nullable String suffix) {
+        int start = 0;
+        if (prefix != null) {
+            start = string.indexOf(prefix);
+            if (start == -1) {
+                return null;
+            }
+            start += prefix.length();
+        }
+
+        if (suffix != null) {
+            int end = string.indexOf(suffix, start);
+            if (end == -1) {
+                return null;
+            }
+            return string.substring(start, end);
+        }
+
+        return string.substring(start);
+    }
 }

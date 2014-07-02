@@ -313,7 +313,7 @@ public class MissingClassDetectorTest extends AbstractCheckTest {
             "AndroidManifest.xml:14: Error: Class referenced in the manifest, test.pkg.Foo.Bar, was not found in the project or the libraries [MissingRegistered]\n" +
             "        <activity\n" +
             "        ^\n" +
-            "AndroidManifest.xml:15: Warning: Use '$' instead of '.' for inner classes (or use only lowercase letters in package names) [InnerclassSeparator]\n" +
+            "AndroidManifest.xml:15: Warning: Use '$' instead of '.' for inner classes (or use only lowercase letters in package names); replace \".Foo.Bar\" with \".Foo$Bar\" [InnerclassSeparator]\n" +
             "            android:name=\".Foo.Bar\"\n" +
             "            ~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "1 errors, 1 warnings\n",
@@ -498,5 +498,16 @@ public class MissingClassDetectorTest extends AbstractCheckTest {
                         "bytecode/FragmentTest.java.txt=>src/test/pkg/FragmentTest.java",
                         "bytecode/.classpath=>.classpath",
                         "res/xml/prefs_headers.xml"));
+    }
+
+
+    public void testGetOldValue() {
+        assertEquals(".Foo.Bar", MissingClassDetector.getOldValue(INNERCLASS,
+                "Use '$' instead of '.' for inner classes (or use only lowercase letters in package names); replace \".Foo.Bar\" with \".Foo$Bar\" [InnerclassSeparator]"));
+    }
+
+    public void testGetNewValue() {
+        assertEquals(".Foo$Bar", MissingClassDetector.getNewValue(INNERCLASS,
+                "Use '$' instead of '.' for inner classes (or use only lowercase letters in package names); replace \".Foo.Bar\" with \".Foo$Bar\" [InnerclassSeparator]"));
     }
 }
