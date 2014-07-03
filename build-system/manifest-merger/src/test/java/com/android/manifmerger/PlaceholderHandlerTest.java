@@ -85,12 +85,14 @@ public class PlaceholderHandlerTest extends TestCase {
                 new TestUtils.TestSourceLocation(getClass(), "testPlaceholders#xml"), xml);
 
         PlaceholderHandler handler = new PlaceholderHandler();
-        handler.visit(refDocument, new KeyBasedValueResolver<String>() {
-            @Override
-            public String getValue(@NonNull String key) {
-                return "newValue";
-            }
-        }, mBuilder);
+        handler.visit(
+                ManifestMerger2.MergeType.APPLICATION,
+                refDocument, new KeyBasedValueResolver<String>() {
+                    @Override
+                    public String getValue(@NonNull String key) {
+                        return "newValue";
+                    }
+                }, mBuilder);
 
         Optional<XmlElement> activityOne = refDocument.getRootNode()
                 .getNodeByTypeAndKey(ManifestModel.NodeTypes.ACTIVITY, ".activityOne");
@@ -135,7 +137,7 @@ public class PlaceholderHandlerTest extends TestCase {
                 new TestUtils.TestSourceLocation(getClass(), "testPlaceholders#xml"), xml);
 
         PlaceholderHandler handler = new PlaceholderHandler();
-        handler.visit(refDocument, nullResolver, mBuilder);
+        handler.visit(ManifestMerger2.MergeType.APPLICATION, refDocument, nullResolver, mBuilder);
         // verify the error was recorded.
         verify(mBuilder).addMessage(
                 any(XmlLoader.SourceLocation.class), anyInt(), anyInt(),
