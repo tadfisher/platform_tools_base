@@ -210,6 +210,8 @@ public class ArchFilter {
             hostOS = HostOs.WINDOWS;
         } else if (os.startsWith("Linux")) {                //$NON-NLS-1$
             hostOS = HostOs.LINUX;
+        } else if (os.startsWith("FreeBSD")) {              //$NON-NLS-1$
+            hostOS = HostOs.LINUX;
         }
 
         BitSize jvmBits;

@@ -596,6 +596,8 @@ public final class SdkConstants {
             return PLATFORM_WINDOWS;
         } else if (os.startsWith("Linux")) {                //$NON-NLS-1$
             return PLATFORM_LINUX;
+        } else if (os.startsWith("FreeBSD")) {              //$NON-NLS-1$
+            return PLATFORM_LINUX;
         }
 
         return PLATFORM_UNKNOWN;
@@ -613,6 +615,8 @@ public final class SdkConstants {
         } else if (os.startsWith("Windows")) {              //$NON-NLS-1$
             return "Windows";                               //$NON-NLS-1$
         } else if (os.startsWith("Linux")) {                //$NON-NLS-1$
+            return "Linux";                                 //$NON-NLS-1$
+        } else if (os.startsWith("FreeBSD")) {              //$NON-NLS-1$
             return "Linux";                                 //$NON-NLS-1$
         }
 

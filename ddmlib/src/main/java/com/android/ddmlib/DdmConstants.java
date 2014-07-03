@@ -56,6 +56,8 @@ public final class DdmConstants {
             return PLATFORM_WINDOWS;
         } else if (os.startsWith("Linux")) {                //$NON-NLS-1$
             return PLATFORM_LINUX;
+        } else if (os.startsWith("FreeBSD")) {              //$NON-NLS-1$
+            return PLATFORM_LINUX;
         }
 
         return PLATFORM_UNKNOWN;
