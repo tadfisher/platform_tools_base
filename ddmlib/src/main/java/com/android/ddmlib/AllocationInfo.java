@@ -32,7 +32,7 @@ public class AllocationInfo implements IStackTraceInfo {
     private final StackTraceElement[] mStackTrace;
 
     public enum SortMode {
-        NUMBER, SIZE, CLASS, THREAD, IN_CLASS, IN_METHOD
+        NUMBER, SIZE, CLASS, THREAD, ALLOCATION_SITE, IN_CLASS, IN_METHOD
     }
 
     public static final class AllocationSorter implements Comparator<AllocationInfo> {
@@ -91,6 +91,11 @@ public class AllocationInfo implements IStackTraceInfo {
                     String method1 = o1.getFirstTraceMethodName();
                     String method2 = o2.getFirstTraceMethodName();
                     diff = compareOptionalString(method1, method2);
+                    break;
+                case ALLOCATION_SITE:
+                    String desc1 = o1.getFirstTraceDescription();
+                    String desc2 = o2.getFirstTraceDescription();
+                    diff = compareOptionalString(desc1, desc2);
                     break;
             }
 
@@ -176,6 +181,13 @@ public class AllocationInfo implements IStackTraceInfo {
 
     public int compareTo(AllocationInfo otherAlloc) {
         return otherAlloc.mAllocationSize - mAllocationSize;
+    }
+
+    public String getFirstTraceDescription() {
+      if (mStackTrace.length > 0) {
+        return mStackTrace[0].toString();
+      }
+      return null;
     }
 
     public String getFirstTraceClassName() {
