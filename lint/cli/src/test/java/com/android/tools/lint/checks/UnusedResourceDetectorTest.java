@@ -292,4 +292,16 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 "No warnings.",
                 lintProject("res/values/integer_arrays.xml=>res/values/integer_arrays.xml"));
     }
+
+    public void testIncludedLayout() throws Exception {
+        // See https://code.google.com/p/android/issues/detail?id=73262
+        mEnableIds = false;
+        assertEquals(""
+                + "res/layout/layout1.xml: Warning: The resource R.layout.layout1 appears to be unused [UnusedResources]\n"
+                + "0 errors, 1 warnings\n",
+                lintProject(
+                        "res/layout/layout1.xml=>res/layout/layout1.xml", // includes layout2
+                        "res/layout/layout1.xml=>res/layout/layout2.xml"
+                ));
+    }
 }
