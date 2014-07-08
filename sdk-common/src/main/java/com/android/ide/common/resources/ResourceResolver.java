@@ -61,6 +61,10 @@ public class ResourceResolver extends RenderResources {
     private LayoutLog mLogger;
     private String mThemeName;
     private boolean mIsProjectTheme;
+    // These maps store the ResourceValue for each style name. The style name is normalised by
+    // converting '.', ':' and '-' to '_'. This is because aapt does the same.
+    private Map<String, ResourceValue> mNormalisedFrameworkStyles;
+    private Map<String, ResourceValue> mNormalisedProjectStyles;
 
     private ResourceResolver(
             Map<ResourceType, Map<String, ResourceValue>> projectResources,
@@ -114,6 +118,7 @@ public class ResourceResolver extends RenderResources {
             if (from instanceof StyleResourceValue) {
                 ResourceValue to = map.get(toStyleName);
                 if (to instanceof StyleResourceValue) {
+                    // TODO
                     mStyleInheritanceMap.put((StyleResourceValue)from, (StyleResourceValue)to);
                     return true;
                 }
@@ -558,6 +563,10 @@ public class ResourceResolver extends RenderResources {
         return null;
     }
 
+  private static String getNormalisedStyleName(String styleName) {
+    return styleName.replaceAll("[.:-]", "_");
+  }
+
     /**
      * Searches for and returns the {@link StyleResourceValue} from a given name.
      * <p/>The format of the name can be:
@@ -624,6 +633,48 @@ public class ResourceResolver extends RenderResources {
         }
 
         return null;
+    }
+
+    @Override
+    public ResourceValue getStyle(String styleName, boolean isFramework) {
+        ResourceValue res;
+        Map<String, ResourceValue> styleMap;
+        // First check the resource map if the style exists.
+        if (isFramework) {
+            styleMap = mFrameworkResources.get(ResourceType.STYLE);
+        } else {
+            styleMap = mProjectResources.get(ResourceType.STYLE);
+        }
+        res = styleMap.get(styleName);
+        if (res != null) {
+            return res;
+        }
+        // If the style isn't available, it may be because aapt has flattened it to use '_' instead
+        // of dot, colon or dash. Check normalisedStyleMap
+        Map<String, ResourceValue> normalisedStyleMap;
+        if (isFramework) {
+            // initialize the normalized style map if it hasn't been initialized.
+            if (mNormalisedFrameworkStyles == null) {
+                mNormalisedFrameworkStyles = new HashMap<String, ResourceValue>(styleMap.size());
+                normaliseStyleMap(styleMap, mNormalisedFrameworkStyles);
+            }
+            normalisedStyleMap = mNormalisedFrameworkStyles;
+        } else {
+            if (mNormalisedProjectStyles == null) {
+                mNormalisedProjectStyles = new HashMap<String, ResourceValue>(styleMap.size());
+                normaliseStyleMap(styleMap, mNormalisedProjectStyles);
+            }
+            normalisedStyleMap = mNormalisedProjectStyles;
+        }
+        return normalisedStyleMap.get(getNormalisedStyleName(styleName));
+    }
+
+    private static void normaliseStyleMap(Map<String, ResourceValue> from,
+            Map<String, ResourceValue> to) {
+        for (Map.Entry<String, ResourceValue> styleEntry : from.entrySet()) {
+            String normalisedStyleName = getNormalisedStyleName(styleEntry.getKey());
+            to.put(normalisedStyleName, styleEntry.getValue());
+        }
     }
 
     /** Returns true if the given {@link ResourceValue} represents a theme */

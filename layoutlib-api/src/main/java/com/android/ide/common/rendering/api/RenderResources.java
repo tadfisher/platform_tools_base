@@ -275,4 +275,11 @@ public class RenderResources {
     public ResourceValue resolveResValue(ResourceValue value) {
         return null;
     }
+
+    /**
+     * Returns the style resource matching the given style name.
+     */
+     public ResourceValue getStyle(String styleName, boolean isFramework) {
+         return null;
+     }
 }
