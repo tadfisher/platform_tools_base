@@ -45,7 +45,7 @@ import java.util.regex.Pattern;
  * A Device. It can be a physical device or an emulator.
  */
 final class Device implements IDevice {
-    private static final int INSTALL_TIMEOUT = 2*60*1000; //2min
+    private static final int INSTALL_TIMEOUT = 5*60*1000; //5min
     private static final int BATTERY_TIMEOUT = 2*1000; //2 seconds
     private static final int GETPROP_TIMEOUT = 2*1000; //2 seconds
 
