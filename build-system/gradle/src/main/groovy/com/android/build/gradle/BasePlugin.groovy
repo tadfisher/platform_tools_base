@@ -1122,7 +1122,7 @@ public abstract class BasePlugin {
             compileTask.options.bootClasspath = androidBuilder.getBootClasspath().join(File.pathSeparator)
         }
     }
-
+/*
     public void createCopyMicroApkTask(@NonNull BaseVariantData variantData,
                                        @NonNull Configuration config) {
         Copy copyTask = project.tasks.create("copy${variantData.variantConfiguration.fullName.capitalize()}MicroApk",
@@ -1143,11 +1143,11 @@ public abstract class BasePlugin {
         copyTask.dependsOn config
         variantData.assetGenTask.dependsOn copyTask
     }
-
+*/
     public void createGenerateMicroApkDataTask(@NonNull BaseVariantData variantData,
                                                @NonNull Configuration config) {
         GenerateApkDataTask task = project.tasks.create(
-                "generate${variantData.variantConfiguration.fullName.capitalize()}ApkData",
+                "handle${variantData.variantConfiguration.fullName.capitalize()}MicroApk",
                 GenerateApkDataTask)
 
         variantData.generateApkDataTask = task
