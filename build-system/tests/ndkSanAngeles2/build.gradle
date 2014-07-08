@@ -68,3 +68,8 @@ android {
         variant.mergedFlavor.versionCode = flavorVersion * 1000000 + defaultConfig.versionCode
     }
 }
+
+configurations.all {
+  println it
+}
+
