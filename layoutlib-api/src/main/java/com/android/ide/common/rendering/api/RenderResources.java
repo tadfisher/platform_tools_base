@@ -285,4 +285,11 @@ public class RenderResources {
         return null;
     }
 
+    /**
+     * Get a style matching the given name. The name should not contain any namespace prefix.
+     * @param styleName Name of the style. For example, "Widget.ListView.DropDown".
+     */
+     public StyleResourceValue getStyle(String styleName, boolean isFramework) {
+         return null;
+     }
 }
