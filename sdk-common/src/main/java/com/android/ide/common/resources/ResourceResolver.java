@@ -61,6 +61,13 @@ public class ResourceResolver extends RenderResources {
     private LayoutLog mLogger;
     private String mThemeName;
     private boolean mIsProjectTheme;
+    // AAPT flattens the names by converting '.', '-' and ':' to '_'. These maps undo the
+    // flattening. We prefer lazy initialization of these maps since they are not used in many
+    // applications.
+    @Nullable
+    private Map<String, String> mReverseFrameworkStyles;
+    @Nullable
+    private Map<String, String> mReverseProjectStyles;
 
     private ResourceResolver(
             Map<ResourceType, Map<String, ResourceValue>> projectResources,
@@ -229,9 +236,9 @@ public class ResourceResolver extends RenderResources {
         // this method is deprecated because it doesn't know about the namespace of the
         // attribute so we search for the project namespace first and then in the
         // android namespace if needed.
-        ResourceValue item = findItemInStyle(style, attrName, false /*isFrameworkAttr*/);
+        ResourceValue item = findItemInStyle(style, attrName, false);
         if (item == null) {
-            item = findItemInStyle(style, attrName, true /*isFrameworkAttr*/);
+            item = findItemInStyle(style, attrName, true);
         }
 
         return item;
@@ -562,6 +569,117 @@ public class ResourceResolver extends RenderResources {
     @Nullable
     public StyleResourceValue getParent(@NonNull StyleResourceValue style) {
         return mStyleInheritanceMap.get(style);
+    }
+
+    @Override
+    @Nullable
+    public StyleResourceValue getStyle(@NonNull String styleName, boolean isFramework) {
+        ResourceValue res;
+        Map<String, ResourceValue> styleMap;
+
+        // First check if we can find the style directly.
+        if (isFramework) {
+            styleMap = mFrameworkResources.get(ResourceType.STYLE);
+        } else {
+            styleMap = mProjectResources.get(ResourceType.STYLE);
+        }
+        res = getStyleFromMap(styleMap, styleName);
+        if (res != null) {
+            // If the obtained resource is not StyleResourceValue, return null.
+            return res instanceof StyleResourceValue ? (StyleResourceValue) res : null;
+        }
+
+        // We cannot find the style directly. The style name may have been flattened by AAPT for use
+        // in the R class. Try and obtain the original name.
+        Map<String, String> reverseStyles;
+        if (isFramework) {
+            if (mReverseFrameworkStyles == null) {
+                mReverseFrameworkStyles = new HashMap<String, String>(styleMap.size());
+                initializeReverseStyleMap(mReverseFrameworkStyles, styleMap.keySet());
+            }
+            reverseStyles = mReverseFrameworkStyles;
+        } else {
+            if (mReverseProjectStyles == null) {
+                mReverseProjectStyles = new HashMap<String, String>(styleMap.size());
+                initializeReverseStyleMap(mReverseProjectStyles, styleMap.keySet());
+            }
+            reverseStyles = mReverseProjectStyles;
+        }
+        String xmlStyleName = reverseStyles.get(getNormalizedStyleName(styleName));
+        if (!styleName.equals(xmlStyleName)) {
+            res = getStyleFromMap(styleMap, xmlStyleName);
+        }
+        return res instanceof StyleResourceValue ? (StyleResourceValue) res : null;
+    }
+
+    @Override
+    @Nullable
+    public String getXmlName(@NonNull ResourceType type, @NonNull String name,
+            boolean isFramework) {
+        if (type != ResourceType.STYLE) {
+            return null;
+        }
+        Map<String, String> reverseStyles;
+        if (isFramework) {
+            // The reverse style map may need to be initialized.
+            if (mReverseFrameworkStyles == null) {
+                Map<String, ResourceValue> styleMap = mFrameworkResources.get(ResourceType.STYLE);
+                mReverseFrameworkStyles = new HashMap<String, String>(styleMap.size());
+                initializeReverseStyleMap(mReverseFrameworkStyles, styleMap.keySet());
+            }
+            reverseStyles = mReverseFrameworkStyles;
+        } else {
+            if (mReverseProjectStyles == null) {
+                Map<String, ResourceValue> styleMap = mProjectResources.get(ResourceType.STYLE);
+                mReverseProjectStyles = new HashMap<String, String>(styleMap.size());
+                initializeReverseStyleMap(mReverseProjectStyles, styleMap.keySet());
+            }
+            reverseStyles = mReverseProjectStyles;
+        }
+        return reverseStyles.get(name);
+    }
+
+    /**
+     * Create a map from the normalized form of the style names in {@code styles} to the original
+     * style name.
+     *
+     * @see #getNormalizedStyleName(String)
+     */
+    private static void initializeReverseStyleMap(@NonNull Map<String, String> reverseStyles,
+            @NonNull Set<String> styles) {
+        for (String style : styles) {
+            reverseStyles.put(getNormalizedStyleName(style), style);
+        }
+    }
+
+    /**
+     * Flatten the styleName like AAPT by replacing dots, dashes and colons with underscores.
+     */
+    @NonNull
+    private static String getNormalizedStyleName(@NonNull String styleName) {
+        return styleName.replace('.', '_').replace('-', '_').replace(':', '_');
+    }
+
+    /**
+     * Search for the style in the given map and log an error if the obtained resource is not
+     * {@link StyleResourceValue}.
+     *
+     * @return The {@link ResourceValue} found in the map.
+     */
+    @Nullable
+    private ResourceValue getStyleFromMap(@NonNull Map<String, ResourceValue> styleMap,
+            @NonNull String styleName) {
+        ResourceValue res;
+        res = styleMap.get(styleName);
+        if (res != null) {
+            if (!(res instanceof StyleResourceValue) && mLogger != null) {
+                mLogger.error(null, String.format(
+                                "Style %1$s is not of type STYLE (instead %2$s)",
+                                styleName, res.getResourceType().toString()),
+                        null);
+            }
+        }
+        return res;
     }
 
     /**
