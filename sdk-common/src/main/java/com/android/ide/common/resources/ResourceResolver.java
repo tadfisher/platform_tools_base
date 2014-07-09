@@ -61,6 +61,13 @@ public class ResourceResolver extends RenderResources {
     private LayoutLog mLogger;
     private String mThemeName;
     private boolean mIsProjectTheme;
+    // These maps store the ResourceValue for each style name. The style name is normalized by
+    // converting '.', ':' and '-' to '_'. This is because aapt does the same. We prefer lazy
+    // initialization of normalized style maps since they are not used in many applications.
+    @Nullable
+    private Map<String, ResourceValue> mNormalizedFrameworkStyles;
+    @Nullable
+    private Map<String, ResourceValue> mNormalizedProjectStyles;
 
     private ResourceResolver(
             Map<ResourceType, Map<String, ResourceValue>> projectResources,
@@ -229,9 +236,9 @@ public class ResourceResolver extends RenderResources {
         // this method is deprecated because it doesn't know about the namespace of the
         // attribute so we search for the project namespace first and then in the
         // android namespace if needed.
-        ResourceValue item = findItemInStyle(style, attrName, false /*isFrameworkAttr*/);
+        ResourceValue item = findItemInStyle(style, attrName, false);
         if (item == null) {
-            item = findItemInStyle(style, attrName, true /*isFrameworkAttr*/);
+            item = findItemInStyle(style, attrName, true);
         }
 
         return item;
@@ -562,6 +569,86 @@ public class ResourceResolver extends RenderResources {
     @Nullable
     public StyleResourceValue getParent(@NonNull StyleResourceValue style) {
         return mStyleInheritanceMap.get(style);
+    }
+
+    @Override
+    @Nullable
+    public StyleResourceValue getStyle(@NonNull String styleName, boolean isFramework) {
+        ResourceValue res;
+        Map<String, ResourceValue> styleMap;
+
+        // First check if we can find the style directly.
+        if (isFramework) {
+            styleMap = mFrameworkResources.get(ResourceType.STYLE);
+        } else {
+            styleMap = mProjectResources.get(ResourceType.STYLE);
+        }
+        res = getStyleFromMap(styleMap, styleName, styleName);
+        if (res != null) {
+            // If the obtained resource is not StyleResourceValue, return null.
+            return res instanceof StyleResourceValue ? (StyleResourceValue) res : null;
+        }
+
+        // We cannot find the style directly. The style name may have been flattened by AAPT for use
+        // in the R class. Check in the normalized style map.
+        Map<String, ResourceValue> normalizedStyleMap;
+        if (isFramework) {
+            if (mNormalizedFrameworkStyles == null) {
+                mNormalizedFrameworkStyles = new HashMap<String, ResourceValue>(styleMap.size());
+                normalizeStyleMap(styleMap, mNormalizedFrameworkStyles);
+            }
+            normalizedStyleMap = mNormalizedFrameworkStyles;
+        } else {
+            if (mNormalizedProjectStyles == null) {
+                mNormalizedProjectStyles = new HashMap<String, ResourceValue>(styleMap.size());
+                normalizeStyleMap(styleMap, mNormalizedProjectStyles);
+            }
+            normalizedStyleMap = mNormalizedProjectStyles;
+        }
+        res = getStyleFromMap(normalizedStyleMap, getNormalizedStyleName(styleName), styleName);
+        return res instanceof StyleResourceValue ? (StyleResourceValue) res : null;
+    }
+
+    /**
+     * Copy all entries from the {@code from} map to the {@code to} map while normalizing the keys.
+     */
+    private static void normalizeStyleMap(@NonNull Map<String, ResourceValue> from,
+            @NonNull Map<String, ResourceValue> to) {
+        for (Map.Entry<String, ResourceValue> styleEntry : from.entrySet()) {
+            String normalizedStyleName = getNormalizedStyleName(styleEntry.getKey());
+            to.put(normalizedStyleName, styleEntry.getValue());
+        }
+    }
+
+    /**
+     * Flatten the styleName like AAPT by replacing dots, dashes and colons with underscores.
+     */
+    @NonNull
+    private static String getNormalizedStyleName(@NonNull String styleName) {
+        return styleName.replace('.', '_').replace('-', '_').replace(':', '_');
+    }
+
+    /**
+     * Search for the style in the given map and log an error if the obtained resource is not
+     * {@link StyleResourceValue}.
+     *
+     * @param originalStyleName used to log error when styleName is not found.
+     * @return The {@link ResourceValue} found in the map.
+     */
+    @Nullable
+    private ResourceValue getStyleFromMap(@NonNull Map<String, ResourceValue> styleMap,
+            @NonNull String styleName, @Nullable String originalStyleName) {
+        ResourceValue res;
+        res = styleMap.get(styleName);
+        if (res != null) {
+            if (!(res instanceof StyleResourceValue) && mLogger != null) {
+                mLogger.error(null, String.format(
+                                "Style %1$s is not of type STYLE (instead %2$s)",
+                                originalStyleName, res.getResourceType().toString()),
+                        null);
+            }
+        }
+        return res;
     }
 
     /**
