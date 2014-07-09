@@ -61,6 +61,10 @@ public class ResourceResolver extends RenderResources {
     private LayoutLog mLogger;
     private String mThemeName;
     private boolean mIsProjectTheme;
+    // These maps store the ResourceValue for each style name. The style name is normalised by
+    // converting '.', ':' and '-' to '_'. This is because aapt does the same.
+    private Map<String, ResourceValue> mNormalisedFrameworkStyles;
+    private Map<String, ResourceValue> mNormalisedProjectStyles;
 
     private ResourceResolver(
             Map<ResourceType, Map<String, ResourceValue>> projectResources,
@@ -114,6 +118,7 @@ public class ResourceResolver extends RenderResources {
             if (from instanceof StyleResourceValue) {
                 ResourceValue to = map.get(toStyleName);
                 if (to instanceof StyleResourceValue) {
+                    // TODO
                     mStyleInheritanceMap.put((StyleResourceValue)from, (StyleResourceValue)to);
                     return true;
                 }
@@ -229,9 +234,9 @@ public class ResourceResolver extends RenderResources {
         // this method is deprecated because it doesn't know about the namespace of the
         // attribute so we search for the project namespace first and then in the
         // android namespace if needed.
-        ResourceValue item = findItemInStyle(style, attrName, false /*isFrameworkAttr*/);
+        ResourceValue item = findItemInStyle(style, attrName, false);
         if (item == null) {
-            item = findItemInStyle(style, attrName, true /*isFrameworkAttr*/);
+            item = findItemInStyle(style, attrName, true);
         }
 
         return item;
@@ -562,6 +567,82 @@ public class ResourceResolver extends RenderResources {
     @Nullable
     public StyleResourceValue getParent(@NonNull StyleResourceValue style) {
         return mStyleInheritanceMap.get(style);
+    }
+
+    @Override
+    public StyleResourceValue getStyle(String styleName, boolean isFramework) {
+        // TODO: check the exact format of the styleName. For now assume there is no prefix.
+        ResourceValue res;
+        Map<String, ResourceValue> styleMap;
+
+        if (isFramework) {
+            styleMap = mFrameworkResources.get(ResourceType.STYLE);
+        } else {
+            styleMap = mProjectResources.get(ResourceType.STYLE);
+        }
+        res = styleMap.get(styleName);
+        if (res != null) {
+            if (res instanceof StyleResourceValue) {
+                return (StyleResourceValue) res;
+            } else {
+                if (mLogger != null) {
+                    mLogger.error(null, String.format(
+                                    "Style %1$s is not of type STYLE (instead %2$s)",
+                                    styleName, res.getResourceType().toString()),
+                            null);
+                }
+                return null;
+            }
+        }
+        Map<String, ResourceValue> normalisedStyleMap;
+        if (isFramework) {
+            // initialize the normalized style map if it hasn't been initialized.
+            if (mNormalisedFrameworkStyles == null) {
+                mNormalisedFrameworkStyles = new HashMap<String, ResourceValue>(styleMap.size());
+                normaliseStyleMap(styleMap, mNormalisedFrameworkStyles);
+            }
+            normalisedStyleMap = mNormalisedFrameworkStyles;
+        } else {
+            if (mNormalisedProjectStyles == null) {
+                mNormalisedProjectStyles = new HashMap<String, ResourceValue>(styleMap.size());
+                normaliseStyleMap(styleMap, mNormalisedProjectStyles);
+            }
+            normalisedStyleMap = mNormalisedProjectStyles;
+        }
+        res = normalisedStyleMap.get(getNormalisedStyleName(styleName));
+        if (res != null) {
+            if (res instanceof StyleResourceValue) {
+                return (StyleResourceValue) res;
+            } else {
+                if (mLogger != null) {
+                    mLogger.error(null, String.format(
+                                    "Style %1$s is not of type STYLE (instead %2$s)",
+                                    styleName, res.getResourceType().toString()),
+                            null);
+                }
+                return null;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Copy all entries from the {@code from} map to the {@code to} map while normalising the keys.
+     */
+    private static void normaliseStyleMap(@NonNull Map<String, ResourceValue> from,
+            @NonNull Map<String, ResourceValue> to) {
+        for (Map.Entry<String, ResourceValue> styleEntry : from.entrySet()) {
+            String normalisedStyleName = getNormalisedStyleName(styleEntry.getKey());
+            to.put(normalisedStyleName, styleEntry.getValue());
+        }
+    }
+
+    /**
+     * Flatten the styleName like AAPT by replacing dots, colons and dashes with underscores.
+     */
+    @NonNull
+    private static String getNormalisedStyleName(@NonNull String styleName) {
+        return styleName.replace('.', '_').replace(':', '_').replace('-', '_');
     }
 
     /**
