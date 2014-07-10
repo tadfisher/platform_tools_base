@@ -19,8 +19,11 @@ package com.android.tools.perflib.heap;
 import java.util.Set;
 
 public class RootObj extends Instance {
+
     RootType mType = RootType.UNKNOWN;
+
     int mIndex;
+
     int mThread;
 
     /*
@@ -28,6 +31,7 @@ public class RootObj extends Instance {
      * fields of class objects
      */
     long mParent;
+
     String mComment;
 
     public RootObj(RootType type) {
@@ -51,9 +55,7 @@ public class RootObj extends Instance {
         if (mType == RootType.SYSTEM_CLASS) {
             theClass = state.findClass(mId);
         } else {
-            Instance instance = state.findReference(mId);
-
-            theClass = state.findClass(instance.mClassId);
+            theClass = state.findReference(mId).getClassObj();
         }
 
         if (theClass == null) {
@@ -93,11 +95,6 @@ public class RootObj extends Instance {
         } else {
             resultSet.add(this);
         }
-    }
-
-    @Override
-    public final void resolveReferences(State state) {
-        //  Nothing to do here
     }
 
     @Override

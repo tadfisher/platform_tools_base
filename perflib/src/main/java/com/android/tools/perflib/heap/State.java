@@ -168,12 +168,4 @@ public class State {
             heap.dumpSubclasses();
         }
     }
-
-    public final void resolveReferences() {
-        for (Heap heap: mHeaps.values()) {
-            heap.resolveInstanceRefs(this);
-            heap.resolveClassStatics(this);
-            heap.resolveRoots(this);
-        }
-    }
 }
