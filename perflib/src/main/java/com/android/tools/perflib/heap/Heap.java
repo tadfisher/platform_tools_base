@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Heap {
+
     String mName;
 
     //  List of individual stack frames
@@ -36,6 +37,7 @@ public class Heap {
 
     //  Class definitions
     HashMap<Long, ClassObj> mClassesById = new HashMap<Long, ClassObj>();
+
     HashMap<String, ClassObj> mClassesByName = new HashMap<String, ClassObj>();
 
     //  List of instances of above class definitions
@@ -110,7 +112,7 @@ public class Heap {
     }
 
     public final void dumpInstanceCounts() {
-        for (ClassObj theClass: mClassesById.values()) {
+        for (ClassObj theClass : mClassesById.values()) {
             int count = theClass.mInstances.size();
 
             if (count > 0) {
@@ -120,7 +122,7 @@ public class Heap {
     }
 
     public final void dumpSubclasses() {
-        for (ClassObj theClass: mClassesById.values()) {
+        for (ClassObj theClass : mClassesById.values()) {
             int count = theClass.mSubclasses.size();
 
             if (count > 0) {
@@ -131,55 +133,17 @@ public class Heap {
     }
 
     public final void dumpSizes() {
-        for (ClassObj theClass: mClassesById.values()) {
+        for (ClassObj theClass : mClassesById.values()) {
             int size = 0;
 
-            for (Instance instance: theClass.mInstances) {
+            for (Instance instance : theClass.mInstances) {
                 size += instance.getCompositeSize();
             }
 
             if (size > 0) {
                 System.out.println(theClass + ": base " + theClass.getSize()
-                    + ", composite " + size);
+                        + ", composite " + size);
             }
-        }
-    }
-
-    /*
-     * Spin through all of the class instances and link them to their
-     * parent class definition objects.  Then have each instance resolve
-     * its own internal object references.
-     */
-    public final void resolveInstanceRefs(State state) {
-        for (Instance instance : mInstances.values()) {
-            ClassObj theClass = mClassesById.get(instance.mClassId);
-
-            if (theClass == null) {
-                continue;
-            }
-
-            String name = theClass.mClassName;
-            String superclassName = "none";
-            ClassObj superClass = mClassesById.get(theClass.mSuperclassId);
-
-            if (superClass != null) {
-                superclassName = superClass.mClassName;
-            }
-
-            theClass.addInstance(instance);
-            instance.resolveReferences(state);
-        }
-    }
-
-    public final void resolveClassStatics(State state) {
-        for (ClassObj theClass: mClassesById.values()) {
-            theClass.resolveReferences(state);
-        }
-    }
-
-    public final void resolveRoots(State state) {
-        for (RootObj root: mRoots) {
-            root.resolveReferences(state);
         }
     }
 }
