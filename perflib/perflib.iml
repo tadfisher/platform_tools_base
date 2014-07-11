@@ -9,7 +9,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="ddmlib" />
+    <orderEntry type="module" module-name="perflib" />
     <orderEntry type="library" scope="TEST" name="JUnit3" level="project" />
   </component>
 </module>
