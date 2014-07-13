@@ -18,8 +18,10 @@ package com.android.ddmlib;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.google.common.collect.Lists;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -213,23 +215,23 @@ public class AllocationInfo implements IStackTraceInfo {
      * the given locale) this allocation info.
      */
     public boolean filter(String filter, boolean fullTrace, Locale locale) {
-        filter = filter.toLowerCase(locale);
+        return filterByAllocatedClass(filter, locale) || filterByAllocationSite(filter, fullTrace, locale).contains(true);
+    }
 
-        if (mAllocatedClass.toLowerCase(locale).contains(filter)) {
-            return true;
+    public boolean filterByAllocatedClass(String filter, Locale locale) {
+      return mAllocatedClass.toLowerCase(locale).contains(filter.toLowerCase(locale));
+    }
+
+    public List<Boolean> filterByAllocationSite(String filter, boolean fullTrace, Locale locale) {
+      filter = filter.toLowerCase();
+      List<Boolean> frameIsMatch = Lists.newArrayList();
+      // check the top of the stack trace always
+      if (mStackTrace.length > 0) {
+        final int length = fullTrace ? mStackTrace.length : 1;
+        for (int i = 0; i < length; ++i) {
+          frameIsMatch.add(mStackTrace[i].toString().toLowerCase(locale).contains(filter));
         }
-
-        if (mStackTrace.length > 0) {
-            // check the top of the stack trace always
-            final int length = fullTrace ? mStackTrace.length : 1;
-
-            for (int i = 0 ; i < length ; i++) {
-                if (mStackTrace[i].toString().toLowerCase(locale).contains(filter)) {
-                  return true;
-                }
-            }
-        }
-
-        return false;
+      }
+      return frameIsMatch;
     }
 }
