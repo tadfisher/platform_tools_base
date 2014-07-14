@@ -558,7 +558,8 @@ public abstract class BasePlugin {
         processManifestTask.conventionMapping.libraries = {
             List<ManifestDependencyImpl> manifests = getManifestDependencies(config.directLibraries)
 
-            if (variantData.generateApkDataTask != null) {
+            if (variantData.generateApkDataTask != null
+                    && variantData.generateApkDataTask.getManifestFile().exists()) {
                 manifests.add(new ManifestDependencyImpl(
                         variantData.generateApkDataTask.getManifestFile(),
                         Collections.emptyList()))
