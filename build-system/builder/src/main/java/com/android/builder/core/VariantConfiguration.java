@@ -125,6 +125,10 @@ public class VariantConfiguration {
      * of latter ones. */
     private final List<LibraryDependency> mFlatLibraries = Lists.newArrayList();
 
+    /** True if the output of a library tested config had been added as a direct library
+     *  dependency. */
+    private boolean mAddedLibraryOutput = false;
+
     /**
      * Signing Override to be used instead of any signing config provided by Build Type or
      * Product Flavors.
@@ -220,12 +224,6 @@ public class VariantConfiguration {
 
         mMergedFlavor = mDefaultConfig;
         computeNdkConfig();
-
-        if (testedConfig != null &&
-                testedConfig.mType == Type.LIBRARY &&
-                testedConfig.mOutput != null) {
-            mDirectLibraries.add(testedConfig.mOutput);
-        }
     }
 
     /**
@@ -658,6 +656,16 @@ public class VariantConfiguration {
      */
     @NonNull
     public VariantConfiguration setDependencies(@NonNull DependencyContainer container) {
+        // Output of mTestedConfig will not be initialized until the tasks for the tested config are
+        // created.  If library output has never been added to mDirectLibraries, checked the output
+        // of the mTestedConfig to see if the tasks are now created.
+        if (!mAddedLibraryOutput &&
+                mTestedConfig != null &&
+                mTestedConfig.mType == Type.LIBRARY &&
+                mTestedConfig.mOutput != null) {
+            mDirectLibraries.add(mTestedConfig.mOutput);
+            mAddedLibraryOutput = true;
+        }
 
         mDirectLibraries.addAll(container.getAndroidDependencies());
         mJars.addAll(container.getJarDependencies());
@@ -753,6 +761,7 @@ public class VariantConfiguration {
      */
     @NonNull
     public List<LibraryDependency> getDirectLibraries() {
+
         return mDirectLibraries;
     }
 
