@@ -391,7 +391,7 @@ final class HandleHeap extends ChunkHandler {
           handler.onSuccess(stuff, client);
         } else {
           // Allocation tracking did not start from Android Studio's device panel
-          client.getClientData().setAllocations(AllocationsParser.parse(data));
+          client.getClientData().setAllocations(new AllocationsParser(data).getAllocations());
           client.update(Client.CHANGE_HEAP_ALLOCATIONS);
         }
     }
