@@ -535,6 +535,13 @@ public abstract class BasePlugin {
         return androidBuilder.getBootClasspath()
     }
 
+    public List<BaseVariantData<? extends BaseVariantOutputData>> getVariantDataList() {
+        if (variantManager.getVariantDataList().isEmpty()) {
+            variantManager.createBaseVariantData(getSigningOverride())
+        }
+        return variantManager.getVariantDataList();
+    }
+
     public void ensureTargetSetup() {
         // check if the target has been set.
         TargetInfo targetInfo = androidBuilder.getTargetInfo()
@@ -1387,13 +1394,13 @@ public abstract class BasePlugin {
     /**
      * Creates the tasks to build the test apk.
      *
-     * @param variant the test variant
+     * @param variantData the test variant
      * @param testedVariant the tested variant
-     * @param configDependencies the list of config dependencies
      */
-    public void createTestApkTasks(
-            @NonNull TestVariantData variantData,
-            @NonNull BaseVariantData<? extends BaseVariantOutputData> testedVariantData) {
+    public void createTestApkTasks(@NonNull TestVariantData variantData) {
+
+        BaseVariantData<? extends BaseVariantOutputData> testedVariantData =
+                (BaseVariantData<? extends BaseVariantOutputData>) variantData.getTestedVariantData()
 
         // get single output for now (though this may always be the case for tests).
         BaseVariantOutputData variantOutputData = variantData.outputs.get(0)
@@ -1484,9 +1491,10 @@ public abstract class BasePlugin {
         project.tasks.check.dependsOn lint
         lintAll = lint
 
-        int count = variantDataList.size()
+        int count = variantManager.getVariantDataList().size()
         for (int i = 0 ; i < count ; i++) {
-            final BaseVariantData<? extends BaseVariantOutputData> baseVariantData = variantDataList.get(i)
+            final BaseVariantData<? extends BaseVariantOutputData> baseVariantData =
+                    variantManager.getVariantDataList().get(i)
             if (!isLintVariant(baseVariantData)) {
                 continue;
             }
@@ -1593,9 +1601,9 @@ public abstract class BasePlugin {
         // now look for the testedvariant and create the check tasks for them.
         // don't use an auto loop as we can't reuse baseVariantData or the closure lower
         // gets broken.
-        int count = variantDataList.size();
+        int count = variantManager.getVariantDataList().size();
         for (int i = 0 ; i < count ; i++) {
-            final BaseVariantData<? extends BaseVariantOutputData> baseVariantData = variantDataList.get(i);
+            final BaseVariantData<? extends BaseVariantOutputData> baseVariantData = variantManager.getVariantDataList().get(i);
             if (baseVariantData instanceof TestedVariantData) {
                 final TestVariantData testVariantData = ((TestedVariantData) baseVariantData).testVariantData
                 if (testVariantData == null) {
@@ -2385,12 +2393,12 @@ public abstract class BasePlugin {
     private void createReportTasks() {
         def dependencyReportTask = project.tasks.create("androidDependencies", DependencyReportTask)
         dependencyReportTask.setDescription("Displays the Android dependencies of the project")
-        dependencyReportTask.setVariants(variantDataList)
+        dependencyReportTask.setVariants(variantManager.getVariantDataList())
         dependencyReportTask.setGroup("Android")
 
         def signingReportTask = project.tasks.create("signingReport", SigningReportTask)
         signingReportTask.setDescription("Displays the signing info for each variant")
-        signingReportTask.setVariants(variantDataList)
+        signingReportTask.setVariants(variantManager.getVariantDataList())
         signingReportTask.setGroup("Android")
     }
 
