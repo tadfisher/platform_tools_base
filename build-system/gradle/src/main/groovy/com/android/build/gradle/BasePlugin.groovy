@@ -1232,11 +1232,8 @@ public abstract class BasePlugin {
      * Creates the tasks to build the test apk.
      *
      * @param variant the test variant
-     * @param testedVariant the tested variant
-     * @param configDependencies the list of config dependencies
      */
-    public void createTestApkTasks(@NonNull TestVariantData variantData,
-                                   @NonNull BaseVariantData testedVariantData) {
+    public void createTestApkTasks(@NonNull TestVariantData variantData) {
         createAnchorTasks(variantData)
 
         // Add a task to process the manifest
@@ -1254,6 +1251,7 @@ public abstract class BasePlugin {
         // Add a task to merge the assets folders
         createMergeAssetsTask(variantData, null /*default location*/, true /*includeDependencies*/)
 
+        BaseVariantData testedVariantData = variantData.testedVariantData
         if (testedVariantData.variantConfiguration.type == VariantConfiguration.Type.LIBRARY) {
             // in this case the tested library must be fully built before test can be built!
             if (testedVariantData.assembleTask != null) {
