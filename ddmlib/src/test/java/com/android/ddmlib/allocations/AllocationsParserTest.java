@@ -28,13 +28,13 @@ public class AllocationsParserTest extends TestCase {
 
   public void testParsingOnNoAllocations() throws IOException {
     ByteBuffer data = putAllocationInfo(new String[0], new String[0], new String[0], new int[0][], new short[0][][]);
-    assertEquals(0, AllocationsParser.parse(data).length);
+    assertEquals(0, new AllocationsParser(data).getAllocations().length);
   }
 
   public void testParsingOnOneAllocationWithoutStackTrace() throws IOException {
     ByteBuffer data =
             putAllocationInfo(new String[]{"path.Foo"}, new String[0], new String[0], new int[][]{{32, 4, 0, 0}}, new short[][][]{{}});
-    AllocationInfo[] info = AllocationsParser.parse(data);
+    AllocationInfo[] info = new AllocationsParser(data).getAllocations();
     assertEquals(1, info.length);
 
     AllocationInfo alloc = info[0];
@@ -47,7 +47,7 @@ public class AllocationsParserTest extends TestCase {
     ByteBuffer data = putAllocationInfo(new String[]{"path.Foo", "path.Bar", "path.Baz"}, new String[]{"foo", "bar", "baz"},
             new String[]{"Foo.java", "Bar.java"}, new int[][]{{64, 0, 1, 3}},
             new short[][][]{{{1, 1, 1, -1}, {2, 0, 1, 2000}, {0, 2, 0, 10}}});
-    AllocationInfo[] info = AllocationsParser.parse(data);
+    AllocationInfo[] info = new AllocationsParser(data).getAllocations();
     assertEquals(1, info.length);
 
     AllocationInfo alloc = info[0];
@@ -68,7 +68,7 @@ public class AllocationsParserTest extends TestCase {
             new String[]{"Red.java", "SomewhatBlue.java", "LightCanaryishGrey.java"},
             new int[][]{{128, 8, 0, 2}, {16, 8, 2, 1}, {42, 2, 1, 3}},
             new short[][][]{{{1, 0, 1, 100}, {2, 5, 1, -2}}, {{0, 1, 0, -1}}, {{3, 4, 2, 10001}, {0, 3, 0, 0}, {2, 2, 1, 16}}});
-    AllocationInfo[] info = AllocationsParser.parse(data);
+    AllocationInfo[] info = new AllocationsParser(data).getAllocations();
     assertEquals(3, info.length);
 
     AllocationInfo alloc1 = info[0];
@@ -131,13 +131,22 @@ public class AllocationsParserTest extends TestCase {
       offset += entryHdrLen + (stackFrameLen * entry[3]);
     }
 
+    int sizeOfInt = Integer.SIZE / Byte.SIZE;
+    int sizeOfChar = Character.SIZE / Byte.SIZE;
+
     // Number of bytes in string tables
     int strNamesLen = 0;
-    for (String name : classNames) { strNamesLen += 4 + (2 * name.length()); }
-    for (String name : methodNames) { strNamesLen += 4 + (2 * name.length()); }
-    for (String name : fileNames) { strNamesLen += 4 + (2 * name.length()); }
+    for (String name : classNames) {
+      strNamesLen += sizeOfInt + (sizeOfChar * name.length());
+    }
+    for (String name : methodNames) {
+      strNamesLen += sizeOfInt + (sizeOfChar * name.length());
+    }
+    for (String name : fileNames) {
+      strNamesLen += sizeOfInt + (sizeOfChar * name.length());
+    }
 
-    ByteBuffer data = ByteBuffer.allocate(offset + strNamesLen);
+    ByteBuffer data = ByteBuffer.allocate(offset + strNamesLen + sizeOfInt);
 
     data.put(new byte[]{msgHdrLen, entryHdrLen, stackFrameLen});
     data.putShort((short) entries.length);
@@ -173,6 +182,10 @@ public class AllocationsParserTest extends TestCase {
       data.putInt(name.length());
       data.put(strToBytes(name));
     }
+
+    // No thread names
+    data.putInt(0);
+
     data.rewind();
     return data;
   }

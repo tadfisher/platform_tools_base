@@ -23,6 +23,7 @@ import com.google.common.collect.Lists;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * Holds an Allocation information.
@@ -34,8 +35,10 @@ public class AllocationInfo implements IStackTraceInfo {
     private final short mThreadId;
     private final StackTraceElement[] mStackTrace;
 
+    private static Map<Short,String> sThreadMap;
+
     public enum SortMode {
-        NUMBER, SIZE, CLASS, THREAD, ALLOCATION_SITE, IN_CLASS, IN_METHOD
+        NUMBER, SIZE, CLASS, THREAD, THREAD_NAME, ALLOCATION_SITE, IN_CLASS, IN_METHOD
     }
 
     public static final class AllocationSorter implements Comparator<AllocationInfo> {
@@ -85,6 +88,9 @@ public class AllocationInfo implements IStackTraceInfo {
                 case THREAD:
                     diff = o1.mThreadId - o2.mThreadId;
                     break;
+                case THREAD_NAME:
+                    diff = o1.getThreadName(o1.mThreadId).compareTo(o2.getThreadName(o2.mThreadId));
+                    break;
                 case IN_CLASS:
                     String class1 = o1.getFirstTraceClassName();
                     String class2 = o2.getFirstTraceClassName();
@@ -132,6 +138,9 @@ public class AllocationInfo implements IStackTraceInfo {
         }
     }
 
+    public static void setThreadMap(Map<Short,String> threadMap) {
+      sThreadMap = threadMap;
+    }
     /*
      * Simple constructor.
      */
@@ -171,6 +180,15 @@ public class AllocationInfo implements IStackTraceInfo {
      */
     public short getThreadId() {
         return mThreadId;
+    }
+
+    @NonNull
+    public String getThreadName(short threadId) {
+      if (sThreadMap == null || !sThreadMap.containsKey(threadId)) {
+        return Short.toString(threadId);
+      } else {
+        return sThreadMap.get(threadId);
+      }
     }
 
     /*

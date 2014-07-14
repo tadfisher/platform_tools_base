@@ -16,10 +16,19 @@
 package com.android.ddmlib;
 
 import com.android.annotations.NonNull;
+import com.google.common.collect.Maps;
 
 import java.nio.ByteBuffer;
+import java.util.Map;
 
 public class AllocationsParser {
+  private AllocationInfo[] myAllocations;
+  private Map<Short,String> myThreadMap;
+
+  public AllocationsParser(@NonNull ByteBuffer data) {
+    parse(data);
+  }
+
   /**
    * Converts a VM class descriptor string ("Landroid/os/Debug;") to
    * a dot-notation class name ("android.os.Debug").
@@ -34,7 +43,7 @@ public class AllocationsParser {
 
     int len = str.length();
 
-        /* strip off leading 'L' and trailing ';' if appropriate */
+    /* strip off leading 'L' and trailing ';' if appropriate */
     if (len >= 2 && str.charAt(0) == 'L' && str.charAt(len - 1) == ';') {
       str = str.substring(1, len-1);
       str = str.replace('/', '.');
@@ -108,12 +117,15 @@ public class AllocationsParser {
    *   (xb) class name strings
    *   (xb) method name strings
    *   (xb) source file strings
+   *   (4b) number of thread id -> thread name pairs
+   *   For each pair:
+   *     (2b) threadId
+   *     (xb) thread name string
    *
    *   As with other DDM traffic, strings are sent as a 4-byte length
    *   followed by UTF-16 data.
   */
-  @NonNull
-  public static AllocationInfo[] parse(@NonNull ByteBuffer data) {
+  private void parse(@NonNull ByteBuffer data) {
     int messageHdrLen, entryHdrLen, stackFrameLen;
     int numEntries, offsetToStrings;
     int numClassNames, numMethodNames, numFileNames;
@@ -145,12 +157,21 @@ public class AllocationsParser {
     readStringTable(data, fileNames);
 
     /*
+     * Read the thread names.
+     */
+    int numThreadNames = data.getInt();
+    myThreadMap = Maps.newHashMap();
+    for (int i = 0; i < numThreadNames; ++i) {
+      myThreadMap.put(data.getShort(), ByteBufferUtil.getString(data, data.getInt()));
+    }
+
+    /*
      * Skip back to a point just past the header and start reading
      * entries.
      */
     data.position(messageHdrLen);
 
-    AllocationInfo[] allocations = new AllocationInfo[numEntries];
+    myAllocations = new AllocationInfo[numEntries];
     for (int i = 0; i < numEntries; i++) {
       int totalSize;
       int threadId, classNameIndex, stackDepth;
@@ -191,8 +212,17 @@ public class AllocationsParser {
           data.get();
       }
 
-      allocations[i] = new AllocationInfo(numEntries - i, classNames[classNameIndex], totalSize, (short) threadId, steArray);
+      myAllocations[i] = new AllocationInfo(numEntries - i, classNames[classNameIndex], totalSize, (short) threadId, steArray);
     }
-    return allocations;
+  }
+
+  @NonNull
+  public AllocationInfo[] getAllocations() {
+    return myAllocations;
+  }
+
+  @NonNull
+  public Map<Short,String> getThreadMap() {
+    return myThreadMap;
   }
 }
