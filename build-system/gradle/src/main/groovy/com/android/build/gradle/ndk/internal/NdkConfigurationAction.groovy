@@ -26,6 +26,7 @@ import org.gradle.language.base.FunctionalSourceSet
 import org.gradle.language.base.LanguageSourceSet
 import org.gradle.language.c.CSourceSet
 import org.gradle.language.cpp.CppSourceSet
+import org.gradle.nativebinaries.NativeLibrary
 import org.gradle.nativebinaries.internal.ProjectSharedLibraryBinary
 import org.gradle.nativebinaries.language.c.tasks.CCompile
 import org.gradle.nativebinaries.language.cpp.tasks.CppCompile
@@ -76,16 +77,22 @@ class NdkConfigurationAction implements Action<Project> {
         project.libraries.getByName(ndkExtension.getModuleName()) {
             binaries.withType(ProjectSharedLibraryBinary.class) {
                     ProjectSharedLibraryBinary binary ->
-                source projectSourceSet.getByName("mainC")
-                source projectSourceSet.getByName("mainCpp")
+//                source projectSourceSet.findByName("mainC")
+//                source projectSourceSet.findByName("mainCpp")
+                sourceIfExist(binary, projectSourceSet, "mainC")
+                sourceIfExist(binary, projectSourceSet, "mainCpp")
 
                 // TODO: Support flavorDimension.
                 if (!flavor.name.equals("default")) {
-                    source projectSourceSet.getByName("${flavor.name}C")
-                    source projectSourceSet.getByName("${flavor.name}Cpp")
+//                    source projectSourceSet.findByName("${flavor.name}C")
+//                    source projectSourceSet.findByName("${flavor.name}Cpp")
+                    sourceIfExist(binary, projectSourceSet, "${flavor.name}C")
+                    sourceIfExist(binary, projectSourceSet, "${flavor.name}Cpp")
                 }
-                source projectSourceSet.getByName("${buildType.name}C")
-                source projectSourceSet.getByName("${buildType.name}Cpp")
+                sourceIfExist(binary, projectSourceSet, "${buildType.name}C")
+                sourceIfExist(binary, projectSourceSet, "${buildType.name}Cpp")
+//                source projectSourceSet.findByName("${buildType.name}C")
+//                source projectSourceSet.findByName("${buildType.name}Cpp")
 
                 cCompiler.define "ANDROID"
                 cppCompiler.define "ANDROID"
@@ -141,6 +148,16 @@ class NdkConfigurationAction implements Action<Project> {
                     linker.args "-l$ldLibs"
                 }
             }
+        }
+    }
+
+    private static void sourceIfExist(
+            ProjectSharedLibraryBinary binary,
+            FunctionalSourceSet projectSourceSet,
+            String sourceSetName) {
+        def sourceSet = projectSourceSet.findByName(sourceSetName)
+        if (sourceSet != null) {
+            binary.source(sourceSet)
         }
     }
 }

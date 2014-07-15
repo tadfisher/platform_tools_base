@@ -21,8 +21,10 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.api.AndroidSourceDirectorySet;
 import com.android.build.gradle.api.AndroidSourceFile;
 import com.android.build.gradle.api.AndroidSourceSet;
+import com.android.build.gradle.ndk.NdkPlugin;
 import com.android.builder.model.SourceProvider;
 
+import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.util.ConfigureUtil;
@@ -31,6 +33,7 @@ import org.gradle.util.GUtil;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 
 import groovy.lang.Closure;
@@ -41,6 +44,7 @@ public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider
     @NonNull
     private final String name;
     private final boolean isLibrary;
+    private final Project project;
 
     private final AndroidSourceDirectorySet javaSource;
     private final AndroidSourceDirectorySet javaResources;
@@ -56,6 +60,7 @@ public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider
     public DefaultAndroidSourceSet(@NonNull String name,
             Project project, boolean isLibrary) {
         this.name = name;
+        this.project = project;
         this.isLibrary = isLibrary;
         displayName = GUtil.toWords(this.name);
 

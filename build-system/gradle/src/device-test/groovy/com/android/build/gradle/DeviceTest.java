@@ -56,6 +56,7 @@ public class DeviceTest extends BuildTest {
             "libsTest",
             "migrated",
             "multires",
+            "ndkHello",
             "ndkJniLib",
             "ndkJniLib2",
             "ndkPrebuilts",

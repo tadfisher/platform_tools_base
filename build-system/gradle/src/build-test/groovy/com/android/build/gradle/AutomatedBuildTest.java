@@ -59,6 +59,7 @@ public class AutomatedBuildTest extends BuildTest {
             "multires",
             "ndkSanAngeles",
             "ndkSanAngeles2",
+            "ndkHello",
             "ndkJniLib",
             "ndkJniLib2",
             "ndkPrebuilts",

@@ -11,6 +11,8 @@ import com.android.builder.core.BuilderConstants;
 import org.gradle.api.Action;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.internal.project.ProjectInternal;
+import org.gradle.nativebinaries.BuildType;
+import org.gradle.nativebinaries.BuildTypeContainer;
 
 /**
  * Action to setup default values for NdkExtension.
