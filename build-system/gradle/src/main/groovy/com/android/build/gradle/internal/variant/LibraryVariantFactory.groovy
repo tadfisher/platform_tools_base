@@ -23,7 +23,6 @@ import com.android.build.gradle.BasePlugin
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
-import com.android.build.gradle.internal.api.ApkVariantOutputImpl
 import com.android.build.gradle.internal.api.LibraryVariantImpl
 import com.android.build.gradle.internal.api.LibraryVariantOutputImpl
 import com.android.build.gradle.internal.coverage.JacocoInstrumentTask
@@ -186,8 +185,8 @@ public class LibraryVariantFactory implements VariantFactory {
         // Add dependencies on NDK tasks if NDK plugin is applied.
         if (extension.getUseNewNativePlugin()) {
             NdkPlugin ndkPlugin = project.plugins.getPlugin(NdkPlugin.class)
-            packageJniLibs.dependsOn(ndkPlugin.getNdkTasks(variantConfig))
-            packageJniLibs.from(ndkPlugin.getOutputDirectory(variantConfig)).include("**/*.so")
+            packageJniLibs.dependsOn ndkPlugin.getBinaries(variantConfig)
+            packageJniLibs.from(ndkPlugin.getOutputDirectories(variantConfig)).include("**/*.so")
         } else {
             // Add NDK tasks
             basePlugin.createNdkTasks(variantData);

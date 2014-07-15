@@ -1810,10 +1810,15 @@ public abstract class BasePlugin {
         // Add dependencies on NDK tasks if NDK plugin is applied.
         if (extension.getUseNewNativePlugin()) {
             NdkPlugin ndkPlugin = project.plugins.getPlugin(NdkPlugin.class)
-            packageApp.dependsOn (ndkPlugin.getNdkTasks(variantConfig))
+            packageApp.dependsOn ndkPlugin.getBinaries(variantConfig)
         } else {
             packageApp.dependsOn variantData.ndkCompileTask
         }
+
+        if (extension.ndkLib != null) {
+            packageApp.dependsOn extension.ndkLib.getBinaries(variantConfig)
+        }
+
 
         packageApp.plugin = this
 
@@ -1830,13 +1835,17 @@ public abstract class BasePlugin {
             Set<File> set = Sets.newHashSet()
             if (extension.getUseNewNativePlugin()) {
                 NdkPlugin ndkPlugin = project.plugins.getPlugin(NdkPlugin.class)
-                set.addAll(ndkPlugin.getOutputDirectory(variantConfig))
+                set.addAll(ndkPlugin.getOutputDirectories(variantConfig))
             } else {
                 set.addAll(variantData.ndkCompileTask.soFolder)
             }
             set.addAll(variantData.renderscriptCompileTask.libOutputDir)
             set.addAll(variantConfig.libraryJniFolders)
             set.addAll(variantConfig.jniLibsList)
+
+            if (extension.ndkLib != null) {
+                set.addAll(extension.ndkLib.getOutputDirectories(variantConfig))
+            }
 
             if (variantConfig.mergedFlavor.renderscriptSupportMode) {
                 File rsLibs = androidBuilder.getSupportNativeLibFolder()
