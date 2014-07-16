@@ -101,12 +101,16 @@ public class GenerateBuildConfig extends BaseTask {
         // at source code.
         //map.put(PH_DEBUG, Boolean.toString(mDebug));
         generator.addField("boolean", "DEBUG", getDebuggable() ? "Boolean.parseBoolean(\"true\")" : "false")
-            .addField("String", "PACKAGE_NAME", "\"${getAppPackageName()}\"")
+            .addField("String", "APPLICATION_ID", "\"${getAppPackageName()}\"")
             .addField("String", "BUILD_TYPE", "\"${getBuildTypeName()}\"")
             .addField("String", "FLAVOR", "\"${getFlavorName()}\"")
             .addField("int", "VERSION_CODE", Integer.toString(getVersionCode()))
             .addField("String", "VERSION_NAME", "\"${vn}\"")
             .addItems(getItems())
+
+        // Generate the legacy PACKAGE_NAME field for now. In leiu of exposing a means of
+        // properly annotating a field with @Deprecated, sneak it into the field type.
+        generator.addField("@Deprecated String", "PACKAGE_NAME", "\"${getAppPackageName()}\"")
 
         List<String> flavors = getFlavorNamesWithDimensionNames()
         int count = flavors.size()
