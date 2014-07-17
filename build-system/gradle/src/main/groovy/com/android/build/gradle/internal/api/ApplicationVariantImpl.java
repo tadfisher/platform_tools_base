@@ -37,7 +37,8 @@ public class ApplicationVariantImpl extends ApkVariantImpl implements Applicatio
     @Nullable
     private TestVariant testVariant = null;
 
-    public ApplicationVariantImpl(@NonNull ApplicationVariantData variantData,
+    public ApplicationVariantImpl(
+            @NonNull ApplicationVariantData variantData,
             @NonNull BasePlugin plugin) {
         super(plugin);
         this.variantData = variantData;
