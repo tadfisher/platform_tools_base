@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 The Android Open Source Project
+ * Copyright (C) 2014 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,28 +17,17 @@
 package com.android.build.gradle.api;
 
 import com.android.annotations.Nullable;
+
 import org.gradle.api.tasks.bundling.Zip;
 
 /**
- * A Build variant and all its public data.
+ * A variant output for library variants.
  */
-public interface LibraryVariant extends BaseVariant {
+public interface LibraryVariantOutput {
 
     /**
-     * Returns the build variant that will test this build variant.
-     *
-     * Will return null if this build variant is a test build already.
+     * Returns the Library AAR packaging task.
      */
     @Nullable
-    TestVariant getTestVariant();
-
-    // ---- Deprecated, will be removed in 1.0
-    //STOPSHIP
-
-    /**
-     * @deprecated use getPackageLibrary on the Library Variant Output
-     */
-    @Nullable
-    @Deprecated
     Zip getPackageLibrary();
 }

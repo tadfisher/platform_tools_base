@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.variant;
+package com.android.build.gradle.api;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.tasks.PackageApplication;
 import com.android.build.gradle.tasks.ZipAlign;
 
@@ -25,34 +26,30 @@ import org.gradle.api.DefaultTask;
 import java.io.File;
 
 /**
- * Base output data for a variant that generates an APK file.
+ * A variant output for apk-generating variants.
  */
-public class ApkVariantOutputData extends BaseVariantOutputData {
+public interface ApkVariantOutput extends BaseVariantOutput {
 
-    public PackageApplication packageApplicationTask;
-    public ZipAlign zipAlignTask;
+    /**
+     * Returns the packaging task
+     */
+    @Nullable
+    PackageApplication getPackageApplication();
 
-    public DefaultTask installTask;
-
-    private String densityFilter;
-    private String abiFilter;
-
-    @Override
-    public void setOutputFile(@NonNull File file) {
-        if (zipAlignTask != null) {
-            zipAlignTask.setOutputFile(file);
-        } else {
-            packageApplicationTask.setOutputFile(file);
-        }
-    }
+    /**
+     * Returns the Zip align task.
+     */
+    @Nullable
+    ZipAlign getZipAlign();
 
     @NonNull
-    @Override
-    public File getOutputFile() {
-        if (zipAlignTask != null) {
-            return zipAlignTask.getOutputFile();
-        }
+    ZipAlign createZipAlignTask(@NonNull String taskName, @NonNull File inputFile, @NonNull File outputFile);
 
-        return packageApplicationTask.getOutputFile();
-    }
+    /**
+     * Returns the installation task.
+     *
+     * Even for variant for regular project, this can be null if the app cannot be signed.
+     */
+    @Nullable
+    DefaultTask getInstall();
 }

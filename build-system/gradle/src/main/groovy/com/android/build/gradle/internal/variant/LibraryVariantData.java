@@ -25,8 +25,6 @@ import org.gradle.api.tasks.bundling.Zip;
  */
 public class LibraryVariantData extends BaseVariantData<LibVariantOutputData> implements TestedVariantData {
 
-    public Zip packageLibTask;
-
     @Nullable
     private TestVariantData testVariantData = null;
 

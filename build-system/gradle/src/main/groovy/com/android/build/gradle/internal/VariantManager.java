@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BuildTypeDsl;
 import com.android.build.gradle.internal.dsl.GroupableProductFlavorDsl;
 import com.android.build.gradle.internal.dsl.SigningConfigDsl;
+import com.android.build.gradle.internal.variant.ApplicationVariantFactory;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.TestVariantData;
@@ -603,6 +604,9 @@ public class VariantManager {
         TestVariantImpl testVariant = null;
         if (testVariantData != null) {
             testVariant = basePlugin.getInstantiator().newInstance(TestVariantImpl.class, testVariantData, basePlugin);
+
+            // add the test output.
+            ApplicationVariantFactory.createApkOutputApiObjects(basePlugin, testVariantData, testVariant);
         }
 
         if (testVariant != null) {

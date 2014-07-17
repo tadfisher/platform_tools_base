@@ -34,11 +34,8 @@ import java.util.Collection;
 
 public abstract class ApkVariantImpl extends BaseVariantImpl implements ApkVariant {
 
-    @NonNull
-    private BasePlugin plugin;
-
     protected ApkVariantImpl(@NonNull BasePlugin plugin) {
-        this.plugin = plugin;
+        super(plugin);
     }
 
     @NonNull
@@ -56,47 +53,8 @@ public abstract class ApkVariantImpl extends BaseVariantImpl implements ApkVaria
     }
 
     @Override
-    public void setOutputFile(@NonNull File outputFile) {
-        // get single output for now.
-        ApkVariantOutputData variantOutputData = getApkVariantData().getOutputs().get(0);
-
-        if (variantOutputData.zipAlignTask != null) {
-            variantOutputData.zipAlignTask.setOutputFile(outputFile);
-        } else {
-            variantOutputData.packageApplicationTask.setOutputFile(outputFile);
-        }
-
-        // also set it on the variant Data so that the values are in sync
-        variantOutputData.setOutputFile(outputFile);
-    }
-
-    @Override
     public Dex getDex() {
         return getApkVariantData().dexTask;
-    }
-
-    @Override
-    public PackageApplication getPackageApplication() {
-        // get single output for now.
-        ApkVariantOutputData variantOutputData = getApkVariantData().getOutputs().get(0);
-
-        return variantOutputData.packageApplicationTask;
-    }
-
-    @Override
-    public ZipAlign getZipAlign() {
-        // get single output for now.
-        ApkVariantOutputData variantOutputData = getApkVariantData().getOutputs().get(0);
-
-        return variantOutputData.zipAlignTask;
-    }
-
-    @Override
-    public DefaultTask getInstall() {
-        // get single output for now.
-        ApkVariantOutputData variantOutputData = getApkVariantData().getOutputs().get(0);
-
-        return variantOutputData.installTask;
     }
 
     @Override
@@ -153,4 +111,35 @@ public abstract class ApkVariantImpl extends BaseVariantImpl implements ApkVaria
     public Collection<File> getApkLibraries() {
         return plugin.getAndroidBuilder().getPackagedJars(getVariantData().getVariantConfiguration());
     }
+
+    // ---- Deprecated, will be removed in 1.0
+    //STOPSHIP
+
+    @Override
+    @Deprecated
+    public PackageApplication getPackageApplication() {
+        // get single output for now.
+        ApkVariantOutputData variantOutputData = getApkVariantData().getOutputs().get(0);
+
+        return variantOutputData.packageApplicationTask;
+    }
+
+    @Override
+    @Deprecated
+    public ZipAlign getZipAlign() {
+        // get single output for now.
+        ApkVariantOutputData variantOutputData = getApkVariantData().getOutputs().get(0);
+
+        return variantOutputData.zipAlignTask;
+    }
+
+    @Override
+    @Deprecated
+    public DefaultTask getInstall() {
+        // get single output for now.
+        ApkVariantOutputData variantOutputData = getApkVariantData().getOutputs().get(0);
+
+        return variantOutputData.installTask;
+    }
+
 }

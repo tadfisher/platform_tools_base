@@ -16,9 +16,29 @@
 
 package com.android.build.gradle.internal.variant;
 
+import com.android.annotations.NonNull;
+
+import org.gradle.api.tasks.bundling.Zip;
+
+import java.io.File;
+
 /**
  * Output Data about a variant that produce a Library bundle (.aar)
  */
 public class LibVariantOutputData extends BaseVariantOutputData {
 
+    public Zip packageLibTask;
+
+    @Override
+    public void setOutputFile(@NonNull File file) {
+        packageLibTask.setDestinationDir(file.getParentFile());
+        packageLibTask.setArchiveName(file.getName());
+
+    }
+
+    @NonNull
+    @Override
+    public File getOutputFile() {
+        return packageLibTask.getArchivePath();
+    }
 }
