@@ -1084,7 +1084,7 @@ public class AndroidBuilder {
 
         // now if the project has libraries, R needs to be created for each libraries,
         // but only if the current project is not a library.
-        if (type != VariantConfiguration.Type.LIBRARY && !libraries.isEmpty()) {
+        if (sourceOutputDir != null && type != VariantConfiguration.Type.LIBRARY && !libraries.isEmpty()) {
             SymbolLoader fullSymbolValues = null;
 
             // First pass processing the libraries, collecting them by packageName,

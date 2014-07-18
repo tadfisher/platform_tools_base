@@ -256,6 +256,26 @@ public class VariantConfiguration implements TestData {
         return mFullName;
     }
 
+    @NonNull
+    public String computeFullNameWithSplits(String splitName) {
+        StringBuilder sb = new StringBuilder();
+        String flavorName = getFlavorName();
+        if (!flavorName.isEmpty()) {
+            sb.append(flavorName);
+            sb.append(StringHelper.capitalize(splitName));
+        } else {
+            sb.append(splitName);
+        }
+
+        sb.append(StringHelper.capitalize(mBuildType.getName()));
+
+        if (mType == Type.TEST) {
+            sb.append("Test");
+        }
+
+        return sb.toString();
+    }
+
     /**
      * Returns the flavor name of the variant, including all flavors in camel case (starting
      * with a lower case). If the variant has no flavor, then an empty string is returned.
