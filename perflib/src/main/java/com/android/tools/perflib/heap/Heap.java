@@ -16,9 +16,12 @@
 
 package com.android.tools.perflib.heap;
 
+import com.google.common.collect.Maps;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Map;
 
 public class Heap {
 
@@ -42,7 +45,7 @@ public class Heap {
     HashMap<String, ClassObj> mClassesByName = new HashMap<String, ClassObj>();
 
     //  List of instances of above class definitions
-    HashMap<Long, Instance> mInstances = new HashMap<Long, Instance>();
+    private final Map<Long, Instance> mInstances = Maps.newHashMap();
 
     //  The snapshot that this heap is part of
     Snapshot mSnapshot;
@@ -152,4 +155,7 @@ public class Heap {
         return mClassesByName.values();
     }
 
+    public Collection<Instance> getInstances() {
+        return mInstances.values();
+    }
 }
