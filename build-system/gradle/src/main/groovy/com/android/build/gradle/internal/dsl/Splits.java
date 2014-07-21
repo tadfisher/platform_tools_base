@@ -68,11 +68,11 @@ public class Splits {
             }
         }
 
-        return density.computeList(fullList);
+        return density.getApplicableFilters(fullList);
     }
 
     @NonNull
     public Set<String> getAbiList() {
-        return abi.computeList(ABI_LIST);
+        return abi.getApplicableFilters(ABI_LIST);
     }
 }
