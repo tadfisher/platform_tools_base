@@ -1537,7 +1537,7 @@ public class AndroidBuilder {
         for (File f : inputs) {
             if (f != null && f.exists()) {
                 inputList.add(f.getAbsolutePath());
-            }
+            }	
         }
 
         if (!inputList.isEmpty()) {
@@ -1545,21 +1545,46 @@ public class AndroidBuilder {
             command.addAll(inputList);
         }
 
+        File dexLibsDir = new File(outDexFolder, "dexLibs");
+        if(!dexLibsDir.exists()){
+            dexLibsDir.mkdirs();
+        }else{
+            // Clean the libs directory if it already exists.
+            cleanDirectory(dexLibsDir);
+        }
+
         // clean up and add library inputs.
         List<String> libraryList = Lists.newArrayList();
         for (File f : preDexedLibraries) {
             if (f != null && f.exists()) {
                 libraryList.add(f.getAbsolutePath());
+                Files.copy(f, new File(dexLibsDir, f.getName()));
             }
         }
 
         if (!libraryList.isEmpty()) {
             mLogger.verbose("Dex pre-dexed inputs: " + libraryList);
-            command.addAll(libraryList);
+            command.add(dexLibsDir.getAbsolutePath());
         }
 
         mCmdLineRunner.runCmdLine(command, null);
     }
+
+	private void cleanDirectory(File directory){
+		File[] files = directory.listFiles();
+		if(files == null){
+			// Some JVMs return null for empty dirs
+			return;
+		}
+		for(File f : files){
+			if(f.isDirectory()){
+				cleanDirectory(f);
+			}
+			else{
+				f.delete();
+			}
+		}
+	}
 
     /**
      * Converts the bytecode to Dalvik format
