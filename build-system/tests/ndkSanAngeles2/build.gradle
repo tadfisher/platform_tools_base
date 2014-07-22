@@ -10,7 +10,7 @@ buildscript {
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 19
+    compileSdkVersion "android-L"
     buildToolsVersion "19.1.0"
 
     defaultConfig {
@@ -32,7 +32,7 @@ android {
     productFlavors {
         x86 {
             ndk {
-                abiFilter "x86"
+                abiFilter "x86_64"
             }
 
             // this is the flavor part of the version code.

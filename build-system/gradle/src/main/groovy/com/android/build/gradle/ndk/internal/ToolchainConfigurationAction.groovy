@@ -30,9 +30,12 @@ class ToolchainConfigurationAction implements Action<Project> {
 
     private static final GCC_PREFIX = [
             (SdkConstants.ABI_INTEL_ATOM) : "i686-linux-android",
+            (SdkConstants.ABI_INTEL_ATOM64) : "x86_64-linux-android",
             (SdkConstants.ABI_ARMEABI_V7A) : "arm-linux-androideabi",
             (SdkConstants.ABI_ARMEABI) : "arm-linux-androideabi",
-            (SdkConstants.ABI_MIPS) : "mipsel-linux-android"
+            (SdkConstants.ABI_ARM64_V8A) : "aarch64-linux-android",
+            (SdkConstants.ABI_MIPS) : "mipsel-linux-android",
+            (SdkConstants.ABI_MIPS64) : "mips64el-linux-android"
     ]
 
     private Project project
@@ -51,15 +54,22 @@ class ToolchainConfigurationAction implements Action<Project> {
         project.model {
             platforms {
                 "$SdkConstants.ABI_INTEL_ATOM" {
-                    architecture SdkConstants.CPU_ARCH_INTEL_ATOM
+                    architecture "ppc"
                     operatingSystem "linux"
                 }
+                "$SdkConstants.ABI_INTEL_ATOM64" {
+                    architecture "ppc"
+                }
                 "$SdkConstants.ABI_ARMEABI" {
-                    architecture SdkConstants.CPU_ARCH_ARM
+                    architecture "ppc"
                     operatingSystem "linux"
                 }
                 "$SdkConstants.ABI_ARMEABI_V7A" {
-                    architecture SdkConstants.CPU_ARCH_ARM
+                    architecture "ppc"
+                    operatingSystem "linux"
+                }
+                "$SdkConstants.ABI_ARM64_V8A" {
+                    architecture "ppc"
                     operatingSystem "linux"
                 }
                 "$SdkConstants.ABI_MIPS" {
@@ -71,6 +81,9 @@ class ToolchainConfigurationAction implements Action<Project> {
                     architecture "ppc"
                     operatingSystem "linux"
                 }
+                "$SdkConstants.ABI_MIPS64" {
+                    architecture "ppc"
+                }
             }
         }
 
@@ -80,9 +93,12 @@ class ToolchainConfigurationAction implements Action<Project> {
         // way to remove x86 support in GCC or Clang toolchain.
         for (String platform : [
                 SdkConstants.ABI_INTEL_ATOM,
+                SdkConstants.ABI_INTEL_ATOM64,
                 SdkConstants.ABI_ARMEABI_V7A,
                 SdkConstants.ABI_ARMEABI,
-                SdkConstants.ABI_MIPS]) {
+                SdkConstants.ABI_ARM64_V8A,
+                SdkConstants.ABI_MIPS,
+                SdkConstants.ABI_MIPS64]) {
             configureToolchain(
                     project,
                     ndkExtension.getToolchain(),
