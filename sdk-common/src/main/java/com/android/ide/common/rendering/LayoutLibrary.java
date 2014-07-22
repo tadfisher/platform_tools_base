@@ -480,15 +480,14 @@ public class LayoutLibrary {
     }
 
     private RenderSession createLegacySession(SessionParams params) {
-        if (params.getLayoutDescription() instanceof IXmlPullParser == false) {
+        if (!(params.getLayoutDescription() instanceof IXmlPullParser)) {
             throw new IllegalArgumentException("Parser must be of type ILegacyPullParser");
         }
-        if (params.getProjectCallback() instanceof
-                com.android.layoutlib.api.IProjectCallback == false) {
+        if (!(params.getProjectCallback() instanceof IProjectCallback)) {
             throw new IllegalArgumentException("Project callback must be of type ILegacyCallback");
         }
 
-        if (params.getResources() instanceof ResourceResolver == false) {
+        if (!(params.getResources() instanceof ResourceResolver)) {
             throw new IllegalArgumentException("RenderResources object must be of type ResourceResolver");
         }
 
