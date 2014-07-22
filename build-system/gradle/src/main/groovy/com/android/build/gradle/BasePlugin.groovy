@@ -1876,6 +1876,8 @@ public abstract class BasePlugin {
             String outputDirName = multiOutput ? variantOutputData.dirName : config.dirName
             String outputBaseName = multiOutput ? variantOutputData.baseName : config.baseName
 
+            println "PKG NAME: $outputBaseName"
+
             // Add a task to generate application package
             PackageApplication packageApp = project.tasks.create("package${outputName.capitalize()}",
                     PackageApplication)
@@ -1926,9 +1928,9 @@ public abstract class BasePlugin {
             }
             packageApp.conventionMapping.abiFilters = {
                 if (variantOutputData.abiFilter != null) {
-                    ImmutableSet.of(variantOutputData.abiFilter)
+                    return ImmutableSet.of(variantOutputData.abiFilter)
                 }
-                config.supportedAbis
+                return config.supportedAbis
             }
             packageApp.conventionMapping.jniDebugBuild = { config.buildType.jniDebugBuild }
 
