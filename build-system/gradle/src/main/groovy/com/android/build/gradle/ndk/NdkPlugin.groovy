@@ -123,8 +123,10 @@ class NdkPlugin implements Plugin<Project> {
             // moment.
             return []
         }
+//        println "getLibraryBinaries"
 
         project.binaries.withType(ProjectSharedLibraryBinary).matching { binary ->
+//            println binary.targetPlatform.name
             (binary.buildType.name.equals(variantConfig.getBuildType().getName())
                     && (binary.flavor.name.equals(variantConfig.getFlavorName())
                             || (binary.flavor.name.equals("default")
@@ -178,6 +180,8 @@ class NdkPlugin implements Plugin<Project> {
                     binaries.withType(ProjectStaticLibraryBinary.class)*.getBuildTask()
             nonExecutableTask.dependsOn lifecycleTasks
             lifecycleTasks*.group = null
+            lifecycleTasks*.enabled = false
+            lifecycleTasks*.setDependsOn([])
         }
     }
 }
