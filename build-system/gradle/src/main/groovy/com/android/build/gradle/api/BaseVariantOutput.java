@@ -60,4 +60,9 @@ public interface BaseVariantOutput {
     @Nullable
     Task getAssemble();
 
+    @Nullable
+    String getDensityFilter();
+
+    @Nullable
+    String getAbiFilter();
 }
