@@ -34,19 +34,14 @@ public class BuildTypeFactory implements NamedDomainObjectFactory<DefaultBuildTy
     @NonNull
     private final Project project;
 
-    @NonNull
-    private final Logger logger;
-
     public BuildTypeFactory(@NonNull Instantiator instantiator,
-                            @NonNull Project project,
-                            @NonNull Logger logger) {
+                            @NonNull Project project) {
         this.instantiator = instantiator;
         this.project = project;
-        this.logger = logger;
     }
 
     @Override
     public DefaultBuildType create(String name) {
-        return instantiator.newInstance(BuildTypeDsl.class, name, project, instantiator, logger);
+        return instantiator.newInstance(BuildTypeDsl.class, name, project, instantiator);
     }
 }
