@@ -130,6 +130,7 @@ import com.google.common.collect.Multimap
 import com.google.common.collect.Sets
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
+import org.gradle.api.InvalidUserCodeException
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration
@@ -202,13 +203,13 @@ public abstract class BasePlugin {
     public static final String FILE_JACOCO_AGENT = 'jacocoagent.jar'
 
     protected Instantiator instantiator
-    private ToolingModelBuilderRegistry registry
+    protected ToolingModelBuilderRegistry registry
 
     protected JacocoPlugin jacocoPlugin
-    private NdkPlugin ndkPlugin
+    protected NdkPlugin ndkPlugin
 
-    private BaseExtension extension
-    private VariantManager variantManager
+    protected BaseExtension extension
+    public VariantManager variantManager
 
     final List<BaseVariantData<? extends BaseVariantOutputData>> variantDataList = []
     final Map<LibraryDependencyImpl, PrepareLibraryTask> prepareTaskMap = [:]
@@ -217,7 +218,7 @@ public abstract class BasePlugin {
     protected Project project
     private LoggerWrapper loggerWrapper
     protected SdkHandler sdkHandler
-    private AndroidBuilder androidBuilder
+    protected AndroidBuilder androidBuilder
     private String creator
 
     private boolean hasCreatedTasks = false
@@ -384,7 +385,8 @@ public abstract class BasePlugin {
         }
     }
 
-    private void setBaseExtension(@NonNull BaseExtension extension) {
+    protected void setBaseExtension(@NonNull BaseExtension extension) {
+        this.extension = extension
         mainSourceSet = (DefaultAndroidSourceSet) extension.sourceSets.create(extension.defaultConfig.name)
         testSourceSet = (DefaultAndroidSourceSet) extension.sourceSets.create(ANDROID_TEST)
 
@@ -427,9 +429,9 @@ public abstract class BasePlugin {
         // Unless TEST_SDK_DIR is set in which case this is unit tests and we don't return.
         // This is because project don't get evaluated in the unit test setup.
         // See AppPluginDslTest
-        if (!force && (!project.state.executed || project.state.failure != null) && TEST_SDK_DIR == null) {
-            return
-        }
+//        if (!force && (!project.state.executed || project.state.failure != null) && TEST_SDK_DIR == null) {
+//            return
+//        }
 
         if (hasCreatedTasks) {
             return
@@ -455,7 +457,7 @@ public abstract class BasePlugin {
         }
     }
 
-    private SigningConfig getSigningOverride() {
+    public SigningConfig getSigningOverride() {
         if (project.hasProperty(PROPERTY_SIGNING_STORE_FILE) &&
                 project.hasProperty(PROPERTY_SIGNING_STORE_PASSWORD) &&
                 project.hasProperty(PROPERTY_SIGNING_KEY_ALIAS) &&
@@ -2954,5 +2956,19 @@ public abstract class BasePlugin {
 
     private static String createDeprecationWarning(String projectName, String message) {
         return "WARNING [Project: $projectName] $message"
+    }
+
+    /**
+     * Returns a plugin that is an instance of BasePlugin.  Returns null if a BasePlugin cannot
+     * be found, and throws an InvalidUserCodeException if more than one is found.
+     */
+    public static BasePlugin findBasePlugin(Project project) {
+        def plugin = project.plugins.withType(BasePlugin)
+        if (plugin.isEmpty()) {
+            return null
+        } else if (plugin.size() != 1) {
+            throw new InvalidUserCodeException("Cannot apply more than one Android plugins.")
+        }
+        return plugin[0]
     }
 }

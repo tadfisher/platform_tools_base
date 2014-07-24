@@ -33,8 +33,8 @@ import org.gradle.api.specs.Spec
 import org.gradle.configuration.project.ProjectConfigurationActionContainer
 import org.gradle.internal.Actions
 import org.gradle.internal.reflect.Instantiator
-import org.gradle.nativebinaries.internal.DefaultSharedLibraryBinarySpec
-import org.gradle.nativebinaries.internal.DefaultStaticLibraryBinarySpec
+import org.gradle.nativeplatform.internal.DefaultSharedLibraryBinarySpec
+import org.gradle.nativeplatform.internal.DefaultStaticLibraryBinarySpec
 
 import javax.inject.Inject
 
@@ -94,15 +94,17 @@ class NdkPlugin implements Plugin<Project> {
                 new Spec<Project>() {
                     @Override
                     boolean isSatisfiedBy(Project p) {
-                        BasePlugin androidPlugin = project.getPlugins().findPlugin(AppPlugin.class)
-                        if (androidPlugin == null) {
-                            androidPlugin = project.getPlugins().findPlugin(LibraryPlugin.class)
-                        }
-                        if (androidPlugin == null) {
-                            return true
-                        }
-                        return androidPlugin.extension.useNewNativePlugin &&
-                                extension.moduleName != null
+                        // Disable NdkPlugin for now.
+                        return false
+//                        BasePlugin androidPlugin = project.getPlugins().findPlugin(AppPlugin.class)
+//                        if (androidPlugin == null) {
+//                            androidPlugin = project.getPlugins().findPlugin(LibraryPlugin.class)
+//                        }
+//                        if (androidPlugin == null) {
+//                            return true
+//                        }
+//                        return androidPlugin.extension.useNewNativePlugin &&
+//                                extension.moduleName != null
                     }
                 }))
 
@@ -116,7 +118,7 @@ class NdkPlugin implements Plugin<Project> {
     /**
      * Return library binaries for a VariantConfiguration.
      */
-    public Collection<ProjectSharedLibraryBinary> getBinaries(
+    public Collection<DefaultSharedLibraryBinarySpec> getBinaries(
             VariantConfiguration variantConfig) {
         if (variantConfig.getType() == VariantConfiguration.Type.TEST) {
             // Do not return binaries for test variants as test source set is not supported at the
