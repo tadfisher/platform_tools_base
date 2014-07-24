@@ -98,10 +98,8 @@ class NdkPlugin implements Plugin<Project> {
                 new Spec<Project>() {
                     @Override
                     boolean isSatisfiedBy(Project p) {
-                        BasePlugin androidPlugin = project.getPlugins().findPlugin(AppPlugin.class)
-                        if (androidPlugin == null) {
-                            androidPlugin = project.getPlugins().findPlugin(LibraryPlugin.class)
-                        }
+                        // Disable NdkPlugin for now.
+                        BasePlugin androidPlugin = BasePlugin.findBasePlugin(p)
                         if (androidPlugin == null) {
                             return true
                         }
