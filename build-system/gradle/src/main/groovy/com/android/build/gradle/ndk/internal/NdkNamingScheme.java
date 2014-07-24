@@ -16,14 +16,10 @@
 
 package com.android.build.gradle.ndk.internal;
 
-import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
 import com.google.common.base.Joiner;
 
-import org.gradle.nativeplatform.BuildType;
 import org.gradle.nativeplatform.NativeBinary;
-import org.gradle.nativeplatform.SharedLibraryBinary;
-import org.gradle.nativeplatform.platform.Platform;
 
 import java.io.File;
 
