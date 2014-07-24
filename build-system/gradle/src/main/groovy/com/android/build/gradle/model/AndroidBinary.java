@@ -14,20 +14,25 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.ndk.internal
+package com.android.build.gradle.model;
 
-import org.gradle.nativeplatform.NativeBinary
+import com.android.build.gradle.internal.variant.BaseVariantData;
+
+import org.gradle.platform.base.BinarySpec;
+import org.gradle.platform.base.binary.BaseBinarySpec;
 
 /**
- * Interface for native binaries flag configurations.
+ * Binary for Android.
  */
-interface NativeToolSpecification {
+public class AndroidBinary extends BaseBinarySpec implements BinarySpec {
 
-    public Iterable<String> getCFlags()
+    private BaseVariantData variantData;
 
-    public Iterable<String> getCppFlags()
+    void setVariantData(BaseVariantData variantData) {
+        this.variantData = variantData;
+    }
 
-    public Iterable<String> getLdFlags()
-
-    public void apply(NativeBinary binary);
+    BaseVariantData getVariantData() {
+        return variantData;
+    }
 }

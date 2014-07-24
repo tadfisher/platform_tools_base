@@ -202,13 +202,13 @@ public abstract class BasePlugin {
     public static final String FILE_JACOCO_AGENT = 'jacocoagent.jar'
 
     protected Instantiator instantiator
-    private ToolingModelBuilderRegistry registry
+    protected ToolingModelBuilderRegistry registry
 
     protected JacocoPlugin jacocoPlugin
-    private NdkPlugin ndkPlugin
+    protected NdkPlugin ndkPlugin
 
-    private BaseExtension extension
-    private VariantManager variantManager
+    protected BaseExtension extension
+    public VariantManager variantManager
 
     final List<BaseVariantData<? extends BaseVariantOutputData>> variantDataList = []
     final Map<LibraryDependencyImpl, PrepareLibraryTask> prepareTaskMap = [:]
@@ -217,7 +217,7 @@ public abstract class BasePlugin {
     protected Project project
     private LoggerWrapper loggerWrapper
     protected SdkHandler sdkHandler
-    private AndroidBuilder androidBuilder
+    protected AndroidBuilder androidBuilder
     private String creator
 
     private boolean hasCreatedTasks = false
@@ -384,7 +384,8 @@ public abstract class BasePlugin {
         }
     }
 
-    private void setBaseExtension(@NonNull BaseExtension extension) {
+    protected void setBaseExtension(@NonNull BaseExtension extension) {
+        this.extension = extension
         mainSourceSet = (DefaultAndroidSourceSet) extension.sourceSets.create(extension.defaultConfig.name)
         testSourceSet = (DefaultAndroidSourceSet) extension.sourceSets.create(ANDROID_TEST)
 
@@ -427,9 +428,9 @@ public abstract class BasePlugin {
         // Unless TEST_SDK_DIR is set in which case this is unit tests and we don't return.
         // This is because project don't get evaluated in the unit test setup.
         // See AppPluginDslTest
-        if (!force && (!project.state.executed || project.state.failure != null) && TEST_SDK_DIR == null) {
-            return
-        }
+//        if (!force && (!project.state.executed || project.state.failure != null) && TEST_SDK_DIR == null) {
+//            return
+//        }
 
         if (hasCreatedTasks) {
             return
@@ -455,7 +456,7 @@ public abstract class BasePlugin {
         }
     }
 
-    private SigningConfig getSigningOverride() {
+    public SigningConfig getSigningOverride() {
         if (project.hasProperty(PROPERTY_SIGNING_STORE_FILE) &&
                 project.hasProperty(PROPERTY_SIGNING_STORE_PASSWORD) &&
                 project.hasProperty(PROPERTY_SIGNING_KEY_ALIAS) &&

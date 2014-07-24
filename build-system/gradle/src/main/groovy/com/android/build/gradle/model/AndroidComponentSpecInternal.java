@@ -14,20 +14,25 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.ndk.internal
+package com.android.build.gradle.model;
 
-import org.gradle.nativeplatform.NativeBinary
+import com.android.build.gradle.BaseExtension;
+import com.android.build.gradle.internal.SdkHandler;
+import com.android.build.gradle.internal.VariantManager;
+
+import org.gradle.platform.base.ComponentSpec;
 
 /**
- * Interface for native binaries flag configurations.
+ * Internal interface for Android component spec.
  */
-interface NativeToolSpecification {
+public interface AndroidComponentSpecInternal extends AndroidComponentSpec{
+    public void setExtension(BaseExtension extension);
 
-    public Iterable<String> getCFlags()
+    public SdkHandler getSdkHandler();
 
-    public Iterable<String> getCppFlags()
+    public void setSdkHandler(SdkHandler handler);
 
-    public Iterable<String> getLdFlags()
+    public VariantManager getVariantManager();
 
-    public void apply(NativeBinary binary);
+    public void setVariantManager(VariantManager variantManager);
 }

@@ -28,6 +28,7 @@ import com.android.builder.model.SigningConfig
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.logging.Logger
+import org.gradle.api.logging.Logging
 import org.gradle.internal.reflect.Instantiator
 /**
  * DSL overlay to make methods that accept String... work.
@@ -45,8 +46,7 @@ public class BuildTypeDsl extends DefaultBuildType implements Serializable {
 
     public BuildTypeDsl(@NonNull String name,
                         @NonNull Project project,
-                        @NonNull Instantiator instantiator,
-                        @NonNull Logger logger) {
+                        @NonNull Instantiator instantiator) {
         super(name)
         this.project = project
         this.logger = logger
@@ -55,11 +55,10 @@ public class BuildTypeDsl extends DefaultBuildType implements Serializable {
 
     @VisibleForTesting
     BuildTypeDsl(@NonNull String name,
-                 @NonNull Project project,
-                 @NonNull Logger logger) {
+                 @NonNull Project project) {
         super(name)
         this.project = project
-        this.logger = logger
+        this.logger = Logging.getLogger(this.class)
         ndkConfig = null
     }
 
