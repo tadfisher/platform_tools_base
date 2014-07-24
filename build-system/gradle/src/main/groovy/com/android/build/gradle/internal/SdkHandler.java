@@ -33,6 +33,7 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Closeables;
 
 import org.gradle.api.Project;
+import org.gradle.api.logging.Logging;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -58,7 +59,12 @@ public class SdkHandler {
     public SdkHandler(@NonNull Project project,
                       @NonNull ILogger logger) {
         this.logger = logger;
-        findLocation(project);
+        findLocation(project.getRootDir());
+    }
+
+    public SdkHandler(@NonNull File rootDir) {
+        this.logger = new LoggerWrapper(Logging.getLogger(SdkHandler.class));
+        findLocation(rootDir);
     }
 
     public SdkInfo getSdkInfo() {
@@ -180,13 +186,12 @@ public class SdkHandler {
         }
     }
 
-    private void findLocation(@NonNull Project project) {
+    private void findLocation(@NonNull File rootDir) {
         if (TEST_SDK_DIR != null) {
             sdkFolder = TEST_SDK_DIR;
             return;
         }
 
-        File rootDir = project.getRootDir();
         File localProperties = new File(rootDir, FN_LOCAL_PROPERTIES);
         Properties properties = new Properties();
 
