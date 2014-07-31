@@ -72,7 +72,7 @@ public class MergeManifests extends ManifestProcessorTask {
     @Input @Optional
     String getManifestPlaceholders() {
 
-        return serializeMap(variantConfiguration.getMergedFlavor().getManifestPlaceholders());
+        return serializeMap(variantConfiguration.getManifestPlaceholders());
     }
 
     VariantConfiguration variantConfiguration
@@ -112,6 +112,6 @@ public class MergeManifests extends ManifestProcessorTask {
                 getTargetSdkVersion(),
                 getManifestOutputFile().absolutePath,
                 ManifestMerger2.MergeType.APPLICATION,
-                variantConfiguration.getMergedFlavor().getManifestPlaceholders())
+                variantConfiguration.getManifestPlaceholders())
     }
 }
