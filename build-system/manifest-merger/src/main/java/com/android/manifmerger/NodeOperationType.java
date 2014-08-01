@@ -84,7 +84,7 @@ public enum NodeOperationType implements ConvertibleName {
     /**
      * Returns true if this operation supports a {@link com.android.manifmerger.Selector}
      */
-    public boolean isSelectable() {
+    public boolean isSelectable(XmlElement xmlElement) {
         return mIsSelectable;
     }
 
