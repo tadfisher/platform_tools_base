@@ -348,6 +348,13 @@ public class XmlElement extends OrphanXmlElement {
         }
     }
 
+    /**
+     * Returns true if this element supports having a tools:selector decoration, false otherwise.
+     */
+    public boolean supportsSelector() {
+        return getOperationType().isSelectable();
+    }
+
     // merge a child of a lower priority node into this higher priority node.
     private void mergeChild(XmlElement lowerPriorityChild, MergingReport.Builder mergingReport) {
 
@@ -586,7 +593,7 @@ public class XmlElement extends OrphanXmlElement {
         NodeOperationType operationType = higherPriority.getOperationType();
         // if the operation's selector exists and the lower priority node is not selected,
         // we revert to default operation type which is merge.
-        if (operationType.isSelectable()
+        if (higherPriority.supportsSelector()
                 && higherPriority.mSelector != null
                 && !higherPriority.mSelector.appliesTo(lowerPriority)) {
             operationType = NodeOperationType.MERGE;
@@ -621,6 +628,14 @@ public class XmlElement extends OrphanXmlElement {
 
     public boolean isEquals(XmlElement otherNode) {
         return !compareTo(otherNode).isPresent();
+    }
+
+    /**
+     * Returns a potentially null (if not present) selector decoration on this element.
+     */
+    @Nullable
+    public Selector getSelector() {
+        return mSelector;
     }
 
     /**
