@@ -37,6 +37,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Tests for the {@link com.android.manifmerger.ManifestMerger2} class
@@ -76,6 +78,7 @@ public class ManifestMerger2Test extends ManifestMergerTest {
             "30_uses_sdk_ok",
             "32_uses_sdk_minsdk_ok",
             "33_uses_sdk_minsdk_conflict",
+            "33b_uses_sdk_minsdk_conflict",
             "34_inject_uses_sdk_no_dup.xml",
             "36_uses_sdk_targetsdk_warning",
             "40_uses_feat_merge",
