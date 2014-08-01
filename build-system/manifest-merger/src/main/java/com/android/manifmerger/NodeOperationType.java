@@ -17,6 +17,7 @@
 package com.android.manifmerger;
 
 import com.android.utils.SdkUtils;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Defines node operation types as it can be provided by user's through attributes on the
@@ -77,14 +78,14 @@ public enum NodeOperationType implements ConvertibleName {
     // specifies whether the node operation can support an associated {@link Selector}
     private final boolean mIsSelectable;
 
-    private NodeOperationType(boolean isSelectable) {
+    private NodeOperationType(boolean isSelectable, ManifestModel.NodeTypes... exceptions) {
         mIsSelectable = isSelectable;
     }
 
     /**
      * Returns true if this operation supports a {@link com.android.manifmerger.Selector}
      */
-    public boolean isSelectable() {
+    public boolean isSelectable(XmlElement xmlElement) {
         return mIsSelectable;
     }
 

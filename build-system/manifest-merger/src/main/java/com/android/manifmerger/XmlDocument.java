@@ -405,7 +405,7 @@ public class XmlDocument {
             }
         }
 
-        if (!checkUsesSdkMinVersion(lowerPriorityDocument)) {
+        if (!checkUsesSdkMinVersion(lowerPriorityDocument, mergingReport)) {
             mergingReport.addMessage(getSourceLocation(), 0, 0, MergingReport.Record.Severity.ERROR,
                     String.format(
                             "uses-sdk:minSdkVersion %1$s cannot be smaller than version "
@@ -481,7 +481,8 @@ public class XmlDocument {
      * Returns true if the minSdkVersion of the application and the library are compatible, false
      * otherwise.
      */
-    private boolean checkUsesSdkMinVersion(XmlDocument lowerPriorityDocument) {
+    private boolean checkUsesSdkMinVersion(XmlDocument lowerPriorityDocument,
+            MergingReport.Builder mergingReport) {
 
         int thisMinSdk = getApiLevelFromAttribute(getMinSdkVersion());
         int libraryMinSdk = getApiLevelFromAttribute(
@@ -491,19 +492,31 @@ public class XmlDocument {
         if (thisMinSdk < libraryMinSdk) {
 
             // check if this higher priority document has any tools instructions for the node
-            // or the attribute.
             Optional<XmlElement> xmlElementOptional = getByTypeAndKey(USES_SDK, null);
             if (!xmlElementOptional.isPresent()) {
                 return false;
             }
             XmlElement xmlElement = xmlElementOptional.get();
 
-            if (!xmlElement.getOperationType().isOverriding()) {
-                // last chance, check the attribute.
-                if (xmlElement.getAttributeOperationType(XmlNode.fromXmlName(
-                        "android:minSdkVersion")) == AttributeOperationType.STRICT) {
+            if (xmlElement.getAttributeOperationType(XmlNode.fromXmlName(
+                    "android:minSdkVersion")) != AttributeOperationType.STRICT) {
+                mergingReport.addMessage(getSourceLocation(), 0, 0, MergingReport.Record.Severity.ERROR,
+                        String.format(
+                                "uses-sdk:minSdkVersion %1$s cannot be annotated with tools:replace, "
+                                        + "use tools:node=\"replace\" with a selector to override libraries" ,
+                                getMinSdkVersion()));
+                return false;
+            }
+
+            switch(xmlElement.getOperationType()) {
+                case REMOVE_ALL: return true;
+                case REMOVE:
+                case REPLACE:
+                    // enforce selector presence and if it applies to this library.
+                    return xmlElement.getSelector() != null &&
+                            xmlElement.getSelector().appliesTo(lowerPriorityDocument.getRootNode());
+                default:
                     return false;
-                }
             }
         }
         return true;
