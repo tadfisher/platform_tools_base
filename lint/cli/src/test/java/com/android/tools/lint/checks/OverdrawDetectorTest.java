@@ -134,4 +134,19 @@ public class OverdrawDetectorTest extends AbstractCheckTest {
                         "overdraw/res/values/styles.xml=>res/values/styles.xml"
                 ));
     }
+
+    public void testNull() throws Exception {
+        assertEquals(
+                "No warnings.",
+
+                lintProject(
+                        "overdraw/.classpath=>.classpath",
+                        "overdraw/.project=>.project",
+                        "overdraw/AndroidManifest.xml=>AndroidManifest.xml",
+                        "overdraw/project.properties=>project.properties",
+                        "overdraw/res/layout/null.xml=>res/layout/null.xml",
+                        "overdraw/res/values/strings.xml=>res/values/strings.xml",
+                        "overdraw/res/values/styles.xml=>res/values/styles.xml"
+                ));
+    }
 }
