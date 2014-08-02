@@ -325,7 +325,10 @@ public class AndroidBuilder {
 
         ProductFlavor mergedFlavor = variantConfiguration.getMergedFlavor();
 
-        if (mergedFlavor.getRenderscriptSupportMode()) {
+        // Do not package the renderscript jar if this is a test variant. It will have been
+        // included in the normal APK.
+        if (mergedFlavor.getRenderscriptSupportMode()
+                && variantConfiguration.getType() != VariantConfiguration.Type.TEST) {
             File renderScriptSupportJar = getRenderScriptSupportJar();
 
             Set<File> fullJars = Sets.newHashSetWithExpectedSize(packagedJars.size() + 1);
