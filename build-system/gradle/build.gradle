@@ -9,11 +9,17 @@ sourceSets {
     }
     buildTest {
         groovy.srcDir file('src/build-test/groovy')
+        groovy.srcDir file('src/integ-test/groovy')
         resources.srcDir file('src/build-test/resources')
+        resources.srcDir file('src/integ-test/resources')
     }
     deviceTest {
         groovy.srcDir file('src/device-test/groovy')
         resources.srcDir file('src/device-test/resources')
+    }
+    integTest {
+        groovy.srcDir file('src/integ-test/groovy')
+        resources.srcDir file('src/integ-test/resources')
     }
 }
 
@@ -38,6 +44,11 @@ dependencies {
     deviceTestCompile sourceSets.buildTest.output
     deviceTestCompile configurations.testCompile
     deviceTestCompile configurations.testRuntime
+
+    integTestCompile sourceSets.main.output
+    integTestCompile sourceSets.test.output
+    integTestCompile configurations.testCompile
+    integTestCompile configurations.testRuntime
 }
 
 // configuration for dependencies provided by the runtime,
@@ -76,6 +87,20 @@ task buildTest(type: Test) {
     testClassesDir = sourceSets.buildTest.output.classesDir
     classpath = sourceSets.buildTest.runtimeClasspath
     description = "Runs the project build tests. This requires an SDK either from the Android source tree, under out/..., or an env var ANDROID_HOME."
+    group = "verification"
+    systemProperties['jar.path'] = jar.archivePath
+
+    useJUnit {
+        excludeCategories "com.android.build.gradle.internal.test.category.DeviceTests"
+    }
+}
+
+task integTest(type: Test) {
+    testClassesDir = sourceSets.integTest.output.classesDir
+    classpath = sourceSets.integTest.runtimeClasspath
+    description =
+            "Runs the project integration tests. This requires an SDK either from the Android " +
+                    "source tree, under out/..., or an env var ANDROID_HOME and a device."
     group = "verification"
     systemProperties['jar.path'] = jar.archivePath
 }
