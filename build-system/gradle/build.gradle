@@ -1,3 +1,4 @@
+
 apply plugin: 'groovy'
 apply plugin: 'clone-artifacts'
 apply plugin: 'idea'
@@ -78,6 +79,10 @@ task buildTest(type: Test) {
     description = "Runs the project build tests. This requires an SDK either from the Android source tree, under out/..., or an env var ANDROID_HOME."
     group = "verification"
     systemProperties['jar.path'] = jar.archivePath
+
+    useJUnit {
+        excludeCategories "com.android.build.gradle.internal.test.category.DeviceTests"
+    }
 }
 
 buildTest.dependsOn ':publishLocal'
