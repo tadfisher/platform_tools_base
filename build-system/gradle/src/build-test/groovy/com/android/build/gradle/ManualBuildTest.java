@@ -50,6 +50,7 @@ import java.util.jar.JarInputStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
 import javax.imageio.ImageIO;
@@ -275,6 +276,29 @@ public class ManualBuildTest extends BuildTest {
 
         // check the resulting .aar file to ensure annotations.zip inclusion.
         File archiveFile = new File(project, "build/outputs/aar/extractAnnotations.aar");
+        assertTrue(archiveFile.isFile());
+        ZipFile archive = null;
+        try {
+            archive = new ZipFile(archiveFile);
+            ZipEntry entry = archive.getEntry("annotations.zip");
+            assertNotNull(entry);
+        } finally {
+            if (archive != null) {
+                archive.close();
+            }
+        }
+    }
+
+    public void testRsEnabledAnnotations() throws IOException {
+        File project = new File(testDir, "extractRsEnabledAnnotations");
+
+        runGradleTasks(sdkDir, ndkDir, BasePlugin.GRADLE_TEST_VERSION,
+                project,
+                Collections.<String>emptyList(),
+                "clean", "assembleDebug");
+
+        // check the resulting .aar file to ensure annotations.zip inclusion.
+        File archiveFile = new File(project, "build/outputs/aar/extractRsEnabledAnnotations.aar");
         assertTrue(archiveFile.isFile());
         ZipFile archive = null;
         try {
