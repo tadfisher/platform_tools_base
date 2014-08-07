@@ -18,6 +18,8 @@ package com.android.ddmlib.testrunner;
 
 import com.android.annotations.NonNull;
 import com.android.ddmlib.AdbCommandRejectedException;
+import com.android.ddmlib.CollectingOutputReceiver;
+import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IShellEnabledDevice;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
@@ -29,6 +31,7 @@ import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -62,7 +65,12 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
     private static final String COVERAGE_ARG_NAME = "coverage";
     private static final String PACKAGE_ARG_NAME = "package";
     private static final String SIZE_ARG_NAME = "size";
+    private static final String DELAY_MSEC_ARG_NAME = "delay_msec";
     private String mRunOptions = "";
+
+    private int mApiLevel;
+    private static final int GETPROP_TIMEOUT = 2 * 1000; //2 seconds
+    private static final int TEST_COLLECTION_TIMEOUT = 2 * 60 * 1000; //2 min
 
     /**
      * Creates a remote Android test runner.
@@ -183,6 +191,29 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
     }
 
     @Override
+    public void setTestCollection(boolean collect) {
+        if (collect) {
+            // skip test execution
+            setLogOnly(true);
+            // force a timeout for test collection
+            setMaxTimeToOutputResponse(TEST_COLLECTION_TIMEOUT, TimeUnit.MILLISECONDS);
+            if (getApiLevel() < 16 ) {
+                // On older platforms, collecting tests can fail for large volume of tests.
+                // Insert a small delay between each test to prevent this
+                addInstrumentationArg(DELAY_MSEC_ARG_NAME, "15" /* msec */);
+            }
+        } else {
+            setLogOnly(false);
+            // restore timeout to its original set value
+            setMaxTimeToOutputResponse(mMaxTimeToOutputResponse, TimeUnit.MILLISECONDS);
+            if (getApiLevel() < 16 ) {
+                // remove delay
+                removeInstrumentationArg(DELAY_MSEC_ARG_NAME);
+            }
+        }
+    }
+
+    @Override
     public void setMaxtimeToOutputResponse(int maxTimeToOutputResponse) {
         setMaxTimeToOutputResponse(maxTimeToOutputResponse, TimeUnit.MILLISECONDS);
     }
@@ -281,5 +312,53 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
             commandBuilder.append(argCmd);
         }
         return commandBuilder.toString();
+    }
+
+    /**
+     * Attempts to retrieve the Api level of the Android device to execute tests on
+     * @return  the api level or -1 if the communication with the device wasn't successful
+     */
+    private int getApiLevel() {
+        if (mApiLevel > 0) {
+            return mApiLevel;
+        }
+
+        try {
+            mApiLevel = Integer.parseInt(getPropertySync(IDevice.PROP_BUILD_API_LEVEL));
+            return mApiLevel;
+        } catch (Exception e) {
+            return -1;
+        }
+    }
+
+    /**
+     * Attempt to retrieve the given property from device directly
+     *
+     * @param name the name of the value to return.
+     * @return the value or <code>null</code> if the property does not exist
+     * @throws TimeoutException in case of timeout on the connection.
+     * @throws AdbCommandRejectedException if adb rejects the command
+     * @throws ShellCommandUnresponsiveException in case the shell command doesn't send output for a
+     *             given time.
+     * @throws IOException in case of I/O error on the connection.
+     */
+    private String getPropertySync(String name) throws TimeoutException,
+            AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException {
+        CountDownLatch latch = new CountDownLatch(1);
+        CollectingOutputReceiver receiver = new CollectingOutputReceiver(latch);
+        String cmdStr = String.format("getprop '%s'", name);
+        mRemoteDevice.executeShellCommand(cmdStr, receiver, GETPROP_TIMEOUT, mMaxTimeUnits);
+        try {
+            latch.await(GETPROP_TIMEOUT, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            return null;
+        }
+
+        String value = receiver.getOutput().trim();
+        if (value.isEmpty()) {
+            return null;
+        }
+
+        return value;
     }
 }
