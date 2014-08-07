@@ -26,7 +26,7 @@ import org.gradle.language.base.FunctionalSourceSet
 import org.gradle.language.base.LanguageSourceSet
 import org.gradle.language.c.CSourceSet
 import org.gradle.language.cpp.CppSourceSet
-import org.gradle.nativebinaries.internal.ProjectSharedLibraryBinary
+import org.gradle.nativebinaries.internal.DefaultSharedLibraryBinarySpec
 import org.gradle.nativebinaries.language.c.tasks.CCompile
 import org.gradle.nativebinaries.language.cpp.tasks.CppCompile
 
@@ -74,8 +74,8 @@ class NdkConfigurationAction implements Action<Project> {
             }
         }
         project.libraries.getByName(ndkExtension.getModuleName()) {
-            binaries.withType(ProjectSharedLibraryBinary.class) {
-                    ProjectSharedLibraryBinary binary ->
+            binaries.withType(DefaultSharedLibraryBinarySpec) {
+                    DefaultSharedLibraryBinarySpec binary ->
                 source projectSourceSet.getByName("mainC")
                 source projectSourceSet.getByName("mainCpp")
 
