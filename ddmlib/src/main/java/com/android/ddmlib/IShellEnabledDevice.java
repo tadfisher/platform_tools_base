@@ -62,4 +62,10 @@ public interface IShellEnabledDevice {
             long maxTimeToOutputResponse, TimeUnit maxTimeUnits)
             throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
             IOException;
+
+    /**
+     * Attempts to retrieve the Api level of the Android device
+     * @return  the api level or -1 if the communication with the device wasn't successful
+     */
+    public int getApiLevel();
 }
