@@ -25,6 +25,8 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs
 
+import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES
+
 import java.util.concurrent.atomic.AtomicBoolean
 
 public class Dex extends BaseTask {
@@ -52,6 +54,9 @@ public class Dex extends BaseTask {
 
     @Input
     boolean multiDex = false
+
+    @OutputDirectory
+    File inputListFolder = project.file("$project.buildDir/${FD_INTERMEDIATES}/tmp")
 
     /**
      * Actual entry point for the action.
@@ -108,6 +113,7 @@ public class Dex extends BaseTask {
                 getMultiDex(),
                 getDexOptions(),
                 getAdditionalParameters(),
+                getInputListFolder(),
                 incremental)
     }
 }
