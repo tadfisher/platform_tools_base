@@ -1951,6 +1951,9 @@ public abstract class BasePlugin {
             isMultiDex(config)
         }
 
+        dexTask.inputListFolder = project.file("$project.buildDir/${FD_INTERMEDIATES}/dextmp/" +
+                        variantData.variantConfiguration.fullName)
+
         JacocoInstrumentTask jacocoTask = null
         Copy agentTask = null
         File jacocoAgentJar = null

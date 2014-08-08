@@ -53,6 +53,9 @@ public class Dex extends BaseTask {
     @Input
     boolean multiDex = false
 
+    @OutputDirectory
+    File inputListFolder
+
     /**
      * Actual entry point for the action.
      * Calls out to the doTaskAction as needed.
@@ -108,6 +111,7 @@ public class Dex extends BaseTask {
                 getMultiDex(),
                 getDexOptions(),
                 getAdditionalParameters(),
+                getInputListFolder(),
                 incremental)
     }
 }
