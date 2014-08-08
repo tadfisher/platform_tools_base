@@ -87,8 +87,11 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -1536,6 +1539,25 @@ public class AndroidBuilder {
 
         command.add("--output");
         command.add(outDexFolder.getAbsolutePath());
+        
+        // clean up and add library inputs.
+        List<String> libraryList = Lists.newArrayList();
+        for (File f : preDexedLibraries) {
+            if (f != null && f.exists()) {
+                libraryList.add(f.getAbsolutePath());
+            }
+        }
+
+        File inputListFile = null;
+        if (!libraryList.isEmpty()) {
+            mLogger.verbose("Dex pre-dexed inputs: " + libraryList);
+            
+            // write each library line by line to a temp file
+            inputListFile = File.createTempFile("libraryList", ".txt");
+            writeLinesToFile(inputListFile, libraryList);
+            command.add("--input-list");
+            command.add(inputListFile.getAbsolutePath());
+        }
 
         // clean up input list
         List<String> inputList = Lists.newArrayList();
@@ -1550,20 +1572,25 @@ public class AndroidBuilder {
             command.addAll(inputList);
         }
 
-        // clean up and add library inputs.
-        List<String> libraryList = Lists.newArrayList();
-        for (File f : preDexedLibraries) {
-            if (f != null && f.exists()) {
-                libraryList.add(f.getAbsolutePath());
+        mCmdLineRunner.runCmdLine(command, null);
+        if(inputListFile != null){
+            // clean up temporary file
+            inputListFile.delete();
+        }
+    }
+    
+    private void writeLinesToFile(File file, List<String> lines) throws IOException {
+        PrintWriter writer = null;
+        try{
+            writer = new PrintWriter(Files.newWriter(file, Charsets.UTF_8));
+            for(String line : lines){
+                writer.println(line);
+            }
+        } finally{
+            if(writer != null){
+                writer.close();
             }
         }
-
-        if (!libraryList.isEmpty()) {
-            mLogger.verbose("Dex pre-dexed inputs: " + libraryList);
-            command.addAll(libraryList);
-        }
-
-        mCmdLineRunner.runCmdLine(command, null);
     }
 
     /**
