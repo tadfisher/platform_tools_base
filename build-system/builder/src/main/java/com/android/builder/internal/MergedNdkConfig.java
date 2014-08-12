@@ -30,6 +30,8 @@ public class MergedNdkConfig implements NdkConfig {
 
     private String moduleName;
     private String cFlags;
+    private String cppFlags;
+    private Set<String> cppFeatures;
     private Set<String> ldLibs;
     private Set<String> abiFilters;
     private String stl;
@@ -37,8 +39,11 @@ public class MergedNdkConfig implements NdkConfig {
     public void reset() {
         moduleName = null;
         cFlags = null;
+        cppFlags = null;
+        cppFeatures = null;
         ldLibs = null;
         abiFilters = null;
+        stl = null;
     }
 
     @Override
@@ -51,6 +56,18 @@ public class MergedNdkConfig implements NdkConfig {
     @Nullable
     public String getcFlags() {
         return cFlags;
+    }
+
+    @Override
+    @Nullable
+    public String getCppFlags() {
+        return cppFlags;
+    }
+
+    @Override
+    @Nullable
+    public Set<String> getCppFeatures() {
+        return cppFeatures;
     }
 
     @Override
@@ -95,6 +112,21 @@ public class MergedNdkConfig implements NdkConfig {
             cFlags = ndkConfig.getcFlags();
         } else if (ndkConfig.getcFlags() != null) {
             cFlags = cFlags + " " + ndkConfig.getcFlags();
+        }
+
+        if (cppFlags == null) {
+            cppFlags = ndkConfig.getCppFlags();
+        } else if (ndkConfig.getCppFlags() != null) {
+            cppFlags = cppFlags + " " + ndkConfig.getCppFlags();
+        }
+
+        if (ndkConfig.getCppFeatures() != null) {
+            if (cppFeatures == null) {
+                cppFeatures = Sets.newHashSetWithExpectedSize(ndkConfig.getCppFeatures().size());
+            } else {
+                cppFeatures.clear();
+            }
+            cppFeatures.addAll(ndkConfig.getCppFeatures());
         }
 
         if (ndkConfig.getLdLibs() != null) {

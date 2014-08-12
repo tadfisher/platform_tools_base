@@ -114,7 +114,7 @@ class NdkConfigurationAction implements Action<Project> {
 
                 // Currently do not support customization of stl library.
                 cppCompiler.args "-I${ndkBuilder.getNdkDirectory()}/sources/cxx-stl/stlport/stlport"
-                cppCompiler.args "-I${ndkBuilder.getNdkDirectory()}/sources/cxx-stl//gabi++/include"
+                cppCompiler.args "-I${ndkBuilder.getNdkDirectory()}/sources/cxx-stl/gabi++/include"
 
                 NativeToolSpecificationFactory.create(ndkBuilder, buildType, targetPlatform).apply(binary)
 
@@ -124,6 +124,9 @@ class NdkConfigurationAction implements Action<Project> {
                 }
                 if (ndkExtension.getCppFlags() != null) {
                     cppCompiler.args ndkExtension.getCppFlags()
+                }
+                for (String feature : ndkExtension.getCppFeatures()) {
+                    cppCompiler.args "-f$feature"
                 }
                 for (String ldLibs : ndkExtension.getLdLibs()) {
                     linker.args "-l$ldLibs"

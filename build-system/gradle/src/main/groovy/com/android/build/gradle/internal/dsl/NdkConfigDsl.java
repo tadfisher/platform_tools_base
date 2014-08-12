@@ -36,6 +36,8 @@ public class NdkConfigDsl implements NdkConfig, Serializable {
 
     private String moduleName;
     private String cFlags;
+    private String cppFlags;
+    private Set<String> cppFeatures;
     private Set<String> ldLibs;
     private Set<String> abiFilters;
     private String stl;
@@ -46,6 +48,8 @@ public class NdkConfigDsl implements NdkConfig, Serializable {
     public NdkConfigDsl(@NonNull NdkConfigDsl ndkConfig) {
         moduleName = ndkConfig.moduleName;
         cFlags = ndkConfig.cFlags;
+        cppFlags = ndkConfig.cppFlags;
+        setCppFeatures(ndkConfig.cppFeatures);
         setLdLibs(ndkConfig.ldLibs);
         setAbiFilters(ndkConfig.abiFilters);
     }
@@ -68,6 +72,57 @@ public class NdkConfigDsl implements NdkConfig, Serializable {
 
     public void setcFlags(String cFlags) {
         this.cFlags = cFlags;
+    }
+
+    @Override
+    @Input @Optional
+    public String getCppFlags() {
+        return cppFlags;
+    }
+
+    public void setCppFlags(String cppFlags) {
+        this.cppFlags = cppFlags;
+    }
+
+    @Override
+    @Input @Optional
+    public Set<String> getCppFeatures() {
+        return cppFeatures;
+    }
+
+    @NonNull
+    public NdkConfigDsl cppFeatures(String feature) {
+        if (cppFeatures == null) {
+            cppFeatures = Sets.newHashSet();
+        }
+        cppFeatures.add(feature);
+        return this;
+    }
+
+    @NonNull
+    public NdkConfigDsl cppFeatures(String... features) {
+        if (cppFeatures == null) {
+            cppFeatures = Sets.newHashSetWithExpectedSize(features.length);
+        }
+        Collections.addAll(cppFeatures, features);
+        return this;
+    }
+
+    @NonNull
+    public NdkConfigDsl setCppFeatures(Collection<String> features) {
+        if (cppFeatures != null) {
+            if (cppFeatures == null) {
+                cppFeatures = Sets.newHashSetWithExpectedSize(features.size());
+            } else {
+                cppFeatures.clear();
+            }
+            for (String feature : features) {
+                cppFeatures.add(feature);
+            }
+        } else {
+            cppFeatures = null;
+        }
+        return this;
     }
 
     @Override
@@ -97,16 +152,16 @@ public class NdkConfigDsl implements NdkConfig, Serializable {
     @NonNull
     public NdkConfigDsl setLdLibs(Collection<String> libs) {
         if (libs != null) {
-            if (abiFilters == null) {
-                abiFilters = Sets.newHashSetWithExpectedSize(libs.size());
+            if (ldLibs == null) {
+                ldLibs = Sets.newHashSetWithExpectedSize(libs.size());
             } else {
-                abiFilters.clear();
+                ldLibs.clear();
             }
-            for (String filter : libs) {
-                abiFilters.add(filter);
+            for (String lib : libs) {
+                ldLibs.add(lib);
             }
         } else {
-            abiFilters = null;
+            ldLibs = null;
         }
         return this;
     }

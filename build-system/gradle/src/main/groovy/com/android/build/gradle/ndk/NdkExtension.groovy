@@ -36,6 +36,8 @@ public class NdkExtension {
 
     private String cppFlags;
 
+    private Set<String> cppFeatures;
+
     private Set<String> ldLibs;
 
     private String toolchain;
@@ -115,6 +117,45 @@ public class NdkExtension {
 
     public void setCppFlags(String cppFlags) {
         this.cppFlags = cppFlags;
+    }
+
+    public Set<String> getCppFeatures() {
+        return cppFeatures;
+    }
+
+    @NonNull
+    public NdkExtension cppFeatures(String feature) {
+        if (cppFeatures == null) {
+            cppFeatures = Sets.newHashSet();
+        }
+        cppFeatures.add(feature);
+        return this;
+    }
+
+    @NonNull
+    public NdkExtension cppFeatures(String... features) {
+        if (cppFeatures == null) {
+            cppFeatures = Sets.newHashSetWithExpectedSize(features.length);
+        }
+        Collections.addAll(cppFeatures, features);
+        return this;
+    }
+
+    @NonNull
+    public NdkExtension setCppFeatures(Collection<String> features) {
+        if (cppFeatures != null) {
+            if (cppFeatures == null) {
+                cppFeatures = Sets.newHashSetWithExpectedSize(features.size());
+            } else {
+                cppFeatures.clear();
+            }
+            for (String feature : features) {
+                cppFeatures.add(feature);
+            }
+        } else {
+            cppFeatures = null;
+        }
+        return this;
     }
 
     public Set<String> getLdLibs() {

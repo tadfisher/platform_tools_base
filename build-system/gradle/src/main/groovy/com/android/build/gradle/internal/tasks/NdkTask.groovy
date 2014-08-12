@@ -38,6 +38,16 @@ class NdkTask extends BaseTask {
     }
 
     @Input @Optional
+    String getCppFlags() {
+        return getNdkConfig()?.cppFlags
+    }
+
+    @Input @Optional
+    Set<String> getCppFeatures() {
+        return getNdkConfig()?.cppFeatures
+    }
+
+    @Input @Optional
     Set<String> getLdLibs() {
         return getNdkConfig()?.ldLibs
     }

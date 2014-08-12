@@ -138,6 +138,14 @@ class NdkCompile extends NdkTask {
             sb.append('LOCAL_CFLAGS := ').append(ndk.cFlags).append('\n')
         }
 
+        if (ndk.cppFlags != null) {
+            sb.append('LOCAL_CPPFLAGS := ').append(ndk.cppFlags).append('\n')
+        }
+
+        if (ndk.cppFeatures) { 
+            sb.append('LOCAL_CPP_FEATURES := ').append(ndk.cppFeatures.join(' ')).append('\n')
+        }
+
         List<String> fullLdlibs = Lists.newArrayList()
         if (ndk.ldLibs != null) {
             fullLdlibs.addAll(ndk.ldLibs)
