@@ -70,13 +70,55 @@ public class NodeUtilsTest extends TestCase {
 
         Node child1a = document.createElement("child1");
         Node child1b = document.createElement("child2");
-        node1.appendChild(child1a).appendChild(child1b);
+        node1.appendChild(child1a);
+        node1.appendChild(child1b);
 
         Node child2a = document.createElement("child1");
         Node child2b = document.createElement("child2");
-        node2.appendChild(child2a).appendChild(child2b);
+        node2.appendChild(child2a);
+        node2.appendChild(child2b);
 
-        assertTrue(NodeUtils.compareElementNode(node1, node2));
+        assertTrue(NodeUtils.compareElementNode(node1, node2, true));
+    }
+
+    public void testNodesWithChildrenNodesInWrongOrder() throws Exception {
+        Document document = createDocument();
+
+        // create two nodes
+        Node node1 = document.createElement("some-node");
+        Node node2 = document.createElement("some-node");
+
+        Node child1a = document.createElement("child1");
+        Node child1b = document.createElement("child2");
+        node1.appendChild(child1a);
+        node1.appendChild(child1b);
+
+        Node child2a = document.createElement("child2");
+        Node child2b = document.createElement("child1");
+        node2.appendChild(child2a);
+        node2.appendChild(child2b);
+
+        assertFalse(NodeUtils.compareElementNode(node1, node2, true));
+    }
+
+    public void testNodesWithChildrenNodesInOtherOrder() throws Exception {
+        Document document = createDocument();
+
+        // create two nodes
+        Node node1 = document.createElement("some-node");
+        Node node2 = document.createElement("some-node");
+
+        Node child1a = document.createElement("child1");
+        Node child1b = document.createElement("child2");
+        node1.appendChild(child1a);
+        node1.appendChild(child1b);
+
+        Node child2a = document.createElement("child2");
+        Node child2b = document.createElement("child1");
+        node2.appendChild(child2a);
+        node2.appendChild(child2b);
+
+        assertTrue(NodeUtils.compareElementNode(node1, node2, false));
     }
 
     public void testAdoptNode() throws Exception {
@@ -105,7 +147,7 @@ public class NodeUtilsTest extends TestCase {
         rootNode = document2.createElement("root");
         document2.appendChild(rootNode);
 
-        assertTrue(NodeUtils.compareElementNode(node, NodeUtils.adoptNode(document2, node)));
+        assertTrue(NodeUtils.compareElementNode(node, NodeUtils.adoptNode(document2, node), true));
     }
 
     private static Document createDocument() throws ParserConfigurationException {
