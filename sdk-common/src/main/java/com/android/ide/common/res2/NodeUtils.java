@@ -48,6 +48,45 @@ class NodeUtils {
         return newNode;
     }
 
+    static Node duplicateNode(Document document, Node node) {
+        Node newNode;
+        if (node.getNamespaceURI() != null) {
+            newNode = document.createElementNS(node.getNamespaceURI(), node.getLocalName());
+        } else {
+            newNode = document.createElement(node.getNodeName());
+        }
+
+        // copy the attributes
+        NamedNodeMap attributes = node.getAttributes();
+        for (int i = 0 ; i < attributes.getLength(); i++) {
+            Attr attr = (Attr) attributes.item(i);
+
+            Attr newAttr;
+            if (attr.getNamespaceURI() != null) {
+                newAttr = document.createAttributeNS(attr.getNamespaceURI(), attr.getLocalName());
+                newNode.getAttributes().setNamedItemNS(newAttr);
+            } else {
+                newAttr = document.createAttribute(attr.getName());
+                newNode.getAttributes().setNamedItem(newAttr);
+            }
+
+            newAttr.setValue(attr.getValue());
+        }
+
+        // then duplicate the sub-nodes.
+        NodeList children = node.getChildNodes();
+        for (int i = 0 ; i < children.getLength() ; i++) {
+            Node child = children.item(i);
+            if (child.getNodeType() != Node.ELEMENT_NODE) {
+                continue;
+            }
+            Node duplicatedChild = duplicateNode(document, child);
+            newNode.appendChild(duplicatedChild);
+        }
+
+        return newNode;
+    }
+
     static void addAttribute(Document document, Node node,
                              String namespaceUri, String attrName, String attrValue) {
         Attr attr;

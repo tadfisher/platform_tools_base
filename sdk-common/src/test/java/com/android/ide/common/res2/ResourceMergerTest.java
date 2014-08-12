@@ -987,6 +987,8 @@ public class ResourceMergerTest extends BaseTestCase {
         MergedResourceWriter writer = new MergedResourceWriter(folder, null /*aaptRunner*/);
         resourceMerger.mergeData(writer, false /*doCleanUp*/);
 
+        resourceMerger.writeBlobTo(folder, writer);
+
         // load the result as a set.
         ResourceSet mergedSet = new ResourceSet("merged");
         mergedSet.addSource(folder);
