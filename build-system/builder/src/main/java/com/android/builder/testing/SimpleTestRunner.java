@@ -42,6 +42,8 @@ public class SimpleTestRunner implements TestRunner {
             @NonNull  String variantName,
             @NonNull  File testApk,
             @Nullable File testedApk,
+            @Nullable File[] splitAks,
+            @NonNull  File adbExec,
             @NonNull  TestData testData,
             @NonNull  List<? extends DeviceConnector> deviceList,
                       int maxThreads,
@@ -58,7 +60,7 @@ public class SimpleTestRunner implements TestRunner {
                 foundAtLeastOneAuthorizedDevice = true;
                 if (filterOutDevice(device, testData, logger, projectName, variantName)) {
                     executor.execute(new SimpleTestCallable(device, projectName, variantName,
-                            testApk, testedApk, testData,
+                            testApk, testedApk, splitAks, adbExec, testData,
                             resultsDir, coverageDir, timeout, logger));
                 }
             }
@@ -100,7 +102,7 @@ public class SimpleTestRunner implements TestRunner {
         if (apiVersion != null && apiVersion.getCodename() != null) {
             String deviceCodeName = device.getApiCodeName();
             if (deviceCodeName != null) {
-                if (deviceCodeName.equals(apiVersion.getCodename())) {
+                if (!deviceCodeName.equals(apiVersion.getCodename())) {
                     logger.info("Skipping device '%1$s', due to different API preview '%2$s' and '%3$s'",
                             device.getName(), deviceCodeName, apiVersion.getCodename());
                     return false;
