@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.StringHelper;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
+import com.android.build.gradle.tasks.PackageSplitRes;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 
 import org.gradle.api.Task;
@@ -43,6 +44,7 @@ public abstract class BaseVariantOutputData {
 
     public ManifestProcessorTask manifestProcessorTask;
     public ProcessAndroidResources processResourcesTask;
+    public PackageSplitRes packageSplitResourcesTask;
     public Task assembleTask;
 
     public BaseVariantOutputData(

@@ -62,6 +62,9 @@ public class ProcessAndroidResources extends IncrementalTask {
     @Input @Optional
     String packageForR
 
+    @Nested @Optional
+    Collection<String> splits
+
     @Input
     boolean enforceUniquePackageName
 
@@ -96,7 +99,8 @@ public class ProcessAndroidResources extends IncrementalTask {
                 getDebuggable(),
                 getAaptOptions(),
                 getResourceConfigs(),
-                getEnforceUniquePackageName()
+                getEnforceUniquePackageName(),
+                getSplits()
         )
     }
 }

@@ -84,6 +84,7 @@ import com.android.build.gradle.tasks.MergeManifests
 import com.android.build.gradle.tasks.MergeResources
 import com.android.build.gradle.tasks.NdkCompile
 import com.android.build.gradle.tasks.PackageApplication
+import com.android.build.gradle.tasks.PackageSplitRes
 import com.android.build.gradle.tasks.PreDex
 import com.android.build.gradle.tasks.ProcessAndroidResources
 import com.android.build.gradle.tasks.ProcessAppManifest
@@ -127,6 +128,7 @@ import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import com.google.common.collect.Multimap
 import com.google.common.collect.Sets
+import com.google.common.base.Predicate
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.Project
@@ -1066,6 +1068,20 @@ public abstract class BasePlugin {
                     variantData.mergeResourcesTask, variantData.mergeAssetsTask
             processResources.plugin = this
 
+            if (variantData.getSplit_handling_policy() ==
+                    BaseVariantData.SPLIT_HANDLING_POLICY.POST_20_POLICY) {
+
+                Set<String> filters = Sets.filter(getExtension().getSplits().getDensityFilters(),
+                        new Predicate<? super String>() {
+
+                            @Override
+                            boolean apply(Object o) {
+                                return o != null;
+                            }
+                        });
+                processResources.splits = filters;
+            }
+
             // only generate code if the filters are null
             if (variantOutputData.densityFilter == null && variantOutputData.abiFilter == null) {
                 variantData.sourceGenTask.dependsOn processResources
@@ -1135,6 +1151,51 @@ public abstract class BasePlugin {
                 return resConfigs
             }
         }
+    }
+
+    /**
+     * Creates the split resources packages task if necessary. AAPT will produce split packages
+     * for all --split provided parameters. These split packages should be signed and moved
+     * unchanged to the APK build output directory.
+     * @param variantData the variant configuration.
+     */
+
+    public void createPackageSplitResTask(
+            @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData) {
+
+        if (variantData.getSplit_handling_policy() !=
+                BaseVariantData.SPLIT_HANDLING_POLICY.POST_20_POLICY)
+            return;
+
+        VariantConfiguration config = variantData.variantConfiguration
+        Set<String> filters = Sets.filter(getExtension().getSplits().getDensityFilters(),
+                new Predicate<? super String>() {
+
+                    @Override
+                    boolean apply(Object o) {
+                        return o != null;
+                    }
+                });
+        def outputs = variantData.outputs;
+        if (outputs.size() != 1) {
+            println("this is an error !")
+            return;
+        }
+
+        BaseVariantOutputData variantOutputData = outputs.get(0);
+        variantOutputData.packageSplitResourcesTask =
+                project.tasks.create("package${config.fullName.capitalize()}SplitResources",
+                        PackageSplitRes);
+        variantOutputData.packageSplitResourcesTask.inputDirectory =
+                new File("$project.buildDir/${FD_INTERMEDIATES}/res")
+        variantOutputData.packageSplitResourcesTask.splits = filters
+        variantOutputData.packageSplitResourcesTask.outputBaseName = config.fullName
+        variantOutputData.packageSplitResourcesTask.signingConfig =
+                (SigningConfigDsl) config.signingConfig
+        variantOutputData.packageSplitResourcesTask.outputDirectory =
+                new File("$project.buildDir/outputs/apk")
+        variantOutputData.packageSplitResourcesTask.plugin = this
+        variantOutputData.packageSplitResourcesTask.dependsOn variantOutputData.processResourcesTask
     }
 
     public void createProcessJavaResTask(
@@ -1882,6 +1943,9 @@ public abstract class BasePlugin {
             variantOutputData.packageApplicationTask = packageApp
             packageApp.dependsOn variantOutputData.processResourcesTask, dexTask,
                     variantData.processJavaResourcesTask
+            if (variantOutputData.packageSplitResourcesTask != null) {
+                packageApp.dependsOn variantOutputData.packageSplitResourcesTask
+            }
 
             // Add dependencies on NDK tasks if NDK plugin is applied.
             if (extension.getUseNewNativePlugin()) {
