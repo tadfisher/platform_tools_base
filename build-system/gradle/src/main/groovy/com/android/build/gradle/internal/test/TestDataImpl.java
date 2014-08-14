@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.test;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.SplitOutput;
+import com.android.build.gradle.api.APKOutput;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
@@ -28,6 +29,8 @@ import com.android.builder.testing.TestData;
 import com.android.ide.common.build.SplitOutputMatcher;
 
 import java.io.File;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -108,5 +111,20 @@ public class TestDataImpl implements TestData {
         }
 
         return null;
+    }
+
+    @Nullable
+    @Override
+    public File[] getSplitApks() {
+        TestedVariantData testedVariantData = testVariantData.getTestedVariantData();
+        BaseVariantData<?> testedVariantData2 = (BaseVariantData) testedVariantData;
+
+        ArrayList<File> splits = new ArrayList<File>();
+        for (APKOutput apkOutput : testedVariantData2.getOutputs().get(0).getOutputFiles()) {
+            if (apkOutput.getType() == APKOutput.OutputType.SPLIT) {
+                splits.add(apkOutput.getOutputFile());
+            }
+        }
+        return splits.isEmpty() ? null : splits.toArray(new File[splits.size()]);
     }
 }

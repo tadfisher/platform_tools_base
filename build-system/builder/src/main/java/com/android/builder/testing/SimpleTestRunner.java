@@ -38,6 +38,7 @@ public class SimpleTestRunner implements TestRunner {
             @NonNull String projectName,
             @NonNull String variantName,
             @NonNull File testApk,
+            @NonNull File adbExec,
             @NonNull TestData testData,
             @NonNull List<? extends DeviceConnector> deviceList,
                      int maxThreads,
@@ -68,7 +69,7 @@ public class SimpleTestRunner implements TestRunner {
                     }
 
                     executor.execute(new SimpleTestCallable(device, projectName, variantName,
-                            testApk, testedApk, testData,
+                            testApk, testedApk, testData.getSplitApks(), adbExec, testData,
                             resultsDir, coverageDir, timeout, logger));
                 }
             }
