@@ -31,6 +31,7 @@ import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -56,11 +57,16 @@ public class ApplicationVariantFactory implements VariantFactory<ApplicationVari
             @NonNull Set<String> abis) {
         ApplicationVariantData variant = new ApplicationVariantData(basePlugin, variantConfiguration);
 
-        // create its outputs
-        for (String density : densities) {
-            for (String abi : abis) {
-                variant.createOutput(density, abi);
+        if (variant.getSplit_handling_policy() ==
+                ApplicationVariantData.SPLIT_HANDLING_POLICY.PRE_20_POLICY) {
+            // create its outputs
+            for (String density : densities) {
+                for (String abi : abis) {
+                    variant.createOutput(density, abi);
+                }
             }
+        } else {
+            variant.createOutput(null, null);
         }
 
         return variant;
@@ -161,6 +167,7 @@ public class ApplicationVariantFactory implements VariantFactory<ApplicationVari
             basePlugin.createNdkTasks(variantData);
         }
 
+        basePlugin.createPackageSplitResTask(appVariantData);
         basePlugin.addPackageTasks(appVariantData, assembleTask, true /*publishApk*/);
     }
 

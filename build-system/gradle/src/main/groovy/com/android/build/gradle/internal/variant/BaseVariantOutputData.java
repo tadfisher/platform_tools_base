@@ -18,9 +18,13 @@ package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.api.BaseVariantOutput;
+import com.android.build.gradle.api.VariantOutput;
 import com.android.build.gradle.internal.StringHelper;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
+import com.android.build.gradle.tasks.PackageSplitRes;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
+import com.google.common.collect.ImmutableList;
 
 import org.gradle.api.Task;
 
@@ -43,6 +47,7 @@ public abstract class BaseVariantOutputData {
 
     public ManifestProcessorTask manifestProcessorTask;
     public ProcessAndroidResources processResourcesTask;
+    public PackageSplitRes packageSplitResourcesTask;
     public Task assembleTask;
 
     public BaseVariantOutputData(
@@ -67,6 +72,12 @@ public abstract class BaseVariantOutputData {
     public abstract void setOutputFile(@NonNull File file);
     @NonNull
     public abstract File getOutputFile();
+
+    public abstract ImmutableList<VariantOutput> getOutputFiles();
+
+    public ImmutableList<File> getRawOutputFiles() {
+        return ImmutableList.of();
+    }
 
     @NonNull
     public String getFullName() {

@@ -55,6 +55,7 @@ import com.android.builder.packaging.SealedPackageException;
 import com.android.builder.packaging.SigningException;
 import com.android.builder.sdk.SdkInfo;
 import com.android.builder.sdk.TargetInfo;
+import com.android.builder.signing.SignedJarBuilder;
 import com.android.ide.common.internal.AaptCruncher;
 import com.android.ide.common.internal.CommandLineRunner;
 import com.android.ide.common.internal.LoggedErrorException;
@@ -88,8 +89,12 @@ import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 
 import java.io.File;
+import java.io.FileFilter;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -958,7 +963,8 @@ public class AndroidBuilder {
                       boolean debuggable,
             @NonNull  AaptOptions options,
             @NonNull  Collection<String> resourceConfigs,
-                      boolean enforceUniquePackageName)
+                      boolean enforceUniquePackageName,
+            @Nullable Collection<String> splits)
             throws IOException, InterruptedException, LoggedErrorException {
 
         checkNotNull(manifestFile, "manifestFile cannot be null.");
@@ -1030,6 +1036,14 @@ public class AndroidBuilder {
             command.add(proguardOutput);
         }
 
+        if (splits != null) {
+            for (String split : splits) {
+
+                command.add("--split");
+                command.add(split);
+            }
+        }
+
         // options controlled by build variants
 
         if (debuggable) {
@@ -1083,6 +1097,26 @@ public class AndroidBuilder {
         }
 
         mCmdLineRunner.runCmdLine(command, null);
+
+        /**
+        File resOutputBaseNameFile = new File(resPackageOutput);
+        File resOutBaseDirectory = resOutputBaseNameFile.getParentFile();
+        String resOutputBaseName = resOutputBaseNameFile.getName();
+        String allSplits = Joiner.on('|').join(splits);
+        final Pattern pattern = Pattern.compile(resOutputBaseName + "_([" + allSplits + "].*)");
+
+        VariantOutput variantOutput;
+        Lists.<VariantOuput>transform(resOutBaseDirectory.listFiles(new FileFilter() {
+            @Override
+            public boolean accept(File pathname) {
+                return pattern.matcher(pathname.getName()).matches();
+            }
+        }), ;
+
+        for (File f : resFiles) {
+            System.out.println(f.getAbsolutePath());
+        }
+         **/
 
         // now if the project has libraries, R needs to be created for each libraries,
         // but only if the current project is not a library.
@@ -1729,6 +1763,45 @@ public class AndroidBuilder {
             // shouldn't happen since we control the package from start to end.
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Signs a single jar file using the passed {@link SigningConfig}.
+     * @param in the jar file to sign.
+     * @param signingConfig the signing configuration
+     * @param out the file path for the signed jar.
+     * @throws IOException
+     * @throws KeytoolException
+     * @throws SigningException
+     * @throws NoSuchAlgorithmException
+     * @throws SignedJarBuilder.IZipEntryFilter.ZipAbortException
+     * @throws com.android.builder.signing.SigningException
+     */
+    public void signApk(File in, SigningConfig signingConfig, File out)
+            throws IOException, KeytoolException, SigningException, NoSuchAlgorithmException,
+            SignedJarBuilder.IZipEntryFilter.ZipAbortException,
+            com.android.builder.signing.SigningException {
+
+        CertificateInfo certificateInfo = null;
+        if (signingConfig != null && signingConfig.isSigningReady()) {
+            certificateInfo = KeystoreHelper.getCertificateInfo(signingConfig.getStoreType(),
+                    signingConfig.getStoreFile(), signingConfig.getStorePassword(),
+                    signingConfig.getKeyPassword(), signingConfig.getKeyAlias());
+            if (certificateInfo == null) {
+                throw new SigningException("Failed to read key from keystore");
+            }
+        }
+
+        SignedJarBuilder signedJarBuilder = new SignedJarBuilder(
+                new FileOutputStream(out),
+                certificateInfo != null ? certificateInfo.getKey() : null,
+                certificateInfo != null ? certificateInfo.getCertificate() : null,
+                Packager.getLocalVersion(), mCreatedBy);
+
+
+        signedJarBuilder.writeZip(new FileInputStream(in), null);
+        signedJarBuilder.close();
+
     }
 
     /**
