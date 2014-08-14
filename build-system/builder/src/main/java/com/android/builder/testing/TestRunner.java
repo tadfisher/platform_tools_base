@@ -56,6 +56,8 @@ public interface TestRunner {
             @NonNull  String variantName,
             @NonNull  File testApk,
             @Nullable File testedApk,
+            @Nullable File[] splitApks,
+            @NonNull  File adbExec,
             @NonNull  TestData testData,
             @NonNull  List<? extends DeviceConnector> deviceList,
                       int maxThreads,
