@@ -50,6 +50,13 @@ import java.util.List;
  */
 public abstract class BaseVariantData<T extends BaseVariantOutputData> {
 
+    public enum SPLIT_HANDLING_POLICY {
+        PRE_20_POLICY,
+
+        POST_20_POLICY
+    }
+
+
     @NonNull
     protected final BasePlugin basePlugin;
     @NonNull
@@ -87,12 +94,28 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
 
     private final List<T> outputs = Lists.newArrayListWithExpectedSize(4);
 
+    private SPLIT_HANDLING_POLICY mSplit_handling_policy;
+
+
     public BaseVariantData(
             @NonNull BasePlugin basePlugin,
             @NonNull VariantConfiguration variantConfiguration) {
         this.basePlugin = basePlugin;
         this.variantConfiguration = variantConfiguration;
+
+        // eventually, this will require a more open ended comparison.
+        mSplit_handling_policy =
+                variantConfiguration.getMinSdkVersion() != null
+                        && variantConfiguration.getMinSdkVersion().getApiString().equals("L")
+                    ? SPLIT_HANDLING_POLICY.POST_20_POLICY
+                    : SPLIT_HANDLING_POLICY.PRE_20_POLICY;
+
         variantConfiguration.checkSourceProviders();
+    }
+
+
+    public SPLIT_HANDLING_POLICY getSplit_handling_policy() {
+        return mSplit_handling_policy;
     }
 
     @NonNull

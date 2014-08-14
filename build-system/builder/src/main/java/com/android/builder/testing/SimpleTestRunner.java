@@ -100,7 +100,7 @@ public class SimpleTestRunner implements TestRunner {
         if (apiVersion != null && apiVersion.getCodename() != null) {
             String deviceCodeName = device.getApiCodeName();
             if (deviceCodeName != null) {
-                if (deviceCodeName.equals(apiVersion.getCodename())) {
+                if (!deviceCodeName.equals(apiVersion.getCodename())) {
                     logger.info("Skipping device '%1$s', due to different API preview '%2$s' and '%3$s'",
                             device.getName(), deviceCodeName, apiVersion.getCodename());
                     return false;
