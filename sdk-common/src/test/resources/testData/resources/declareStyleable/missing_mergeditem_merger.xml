@@ -20,47 +20,34 @@
     <dataSet config="main" >
         <source path="$TOP$$SEP$base" >
             <file
-                    path="$TOP$$SEP$base$SEP$values$SEP$values.xml"
-                    qualifiers="" >
+                path="$TOP$$SEP$base$SEP$values$SEP$values.xml"
+                qualifiers="" >
                 <declare-styleable name="foo" >
-                    <attr name="bar" format="boolean" />
+                    <attr name="bar" format="boolean"/>
                     <attr name="bar1" />
                 </declare-styleable>
 
                 <attr
-                        name="bar1"
-                        format="boolean" />
-
-                <string name="removed_string">foo</string>
+                    name="bar1"
+                    format="boolean" />
             </file>
         </source>
     </dataSet>
     <dataSet config="overlay" >
         <source path="$TOP$$SEP$overlay" >
             <file
-                    path="$TOP$$SEP$overlay$SEP$values$SEP$values.xml"
-                    qualifiers="" >
+                path="$TOP$$SEP$overlay$SEP$values$SEP$values.xml"
+                qualifiers="" >
                 <attr
-                        name="boo"
-                        format="boolean" />
+                    name="boo"
+                    format="boolean" />
 
                 <declare-styleable name="foo" >
                     <attr name="bar" />
-                    <attr name="bar1" />
                     <attr name="boo" />
                 </declare-styleable>
             </file>
         </source>
     </dataSet>
-
-    <mergedItems>
-        <configuration qualifiers="" >
-            <declare-styleable name="foo" >
-                <attr name="bar" />
-                <attr name="boo" />
-                <attr name="bar1" />
-            </declare-styleable>
-        </configuration>
-    </mergedItems>
 
 </merger>
