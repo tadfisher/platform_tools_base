@@ -24,8 +24,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+
+import sun.nio.ch.DirectBuffer;
 
 public class MemoryMappedFileBuffer implements HprofBuffer {
 
@@ -71,6 +72,20 @@ public class MemoryMappedFileBuffer implements HprofBuffer {
 
     public MemoryMappedFileBuffer(@NonNull File f) throws IOException {
         this(f, DEFAULT_SIZE, DEFAULT_PADDING);
+    }
+
+    /**
+     * Attempts to unmap the buffer. It is the caller's responsibility to ensure there are no other
+     * accesses to this buffer, otherwise this leads to a (platform-dependent) crash.
+     */
+    public void unmap() {
+        try {
+            for (int i = 0; i < mByteBuffers.length; i++) {
+                ((DirectBuffer) mByteBuffers[i]).cleaner().clean();
+            }
+        } catch (Exception ex) {
+            // ignore, this is a best effort attempt.
+        }
     }
 
     @Override
