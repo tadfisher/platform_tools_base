@@ -22,6 +22,8 @@ import com.android.tools.perflib.heap.Snapshot;
 import junit.framework.TestCase;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 
 public class HprofBufferTest extends TestCase {
 
@@ -44,6 +46,21 @@ public class HprofBufferTest extends TestCase {
         MemoryMappedFileBuffer shardedBuffer = new MemoryMappedFileBuffer(file, 9973, 8);
         Snapshot snapshot = (new HprofParser(shardedBuffer)).parse();
         assertSnapshotCorrect(snapshot);
+    }
+
+    public void testMemoryMappingLimits() throws Exception {
+        File f = new File("f");
+
+        RandomAccessFile raf = new RandomAccessFile(f, "rw");
+        raf.setLength(2000000000L);
+
+        try {
+            MemoryMappedFileBuffer buffer = new MemoryMappedFileBuffer(f);
+            buffer.unmap(); // Remove this on a 32-bit JVM to have the test fail.
+            MemoryMappedFileBuffer buffer2 = new MemoryMappedFileBuffer(f);
+        } catch (IOException ex) {
+            fail("Failed to free mapped buffer");
+        }
     }
 
     private void assertSnapshotCorrect(Snapshot snapshot) {
