@@ -30,6 +30,7 @@ public class Main {
             long start = System.nanoTime();
             HprofBuffer buffer = new MemoryMappedFileBuffer(new File(argv[0]));
             Snapshot snapshot = (new HprofParser(buffer)).parse();
+            snapshot.computeRetainedSizes();
 
             testClassesQuery(snapshot);
             testAllClassesQuery(snapshot);
