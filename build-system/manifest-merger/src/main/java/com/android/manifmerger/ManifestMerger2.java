@@ -560,7 +560,13 @@ public class ManifestMerger2 {
          * annotations will not be removed as they can be useful when later importing the resulting
          * merged android manifest into an application.
          */
-        LIBRARY
+        LIBRARY,
+        /**
+         * Template merging type is used when inflating a template. The template's contribution to the manifest
+         * should be loaded as a library. Behavior is much the same as the Application type, but tools annotations
+         * are preserved.
+         */
+        TEMPLATE
     }
 
     /**
