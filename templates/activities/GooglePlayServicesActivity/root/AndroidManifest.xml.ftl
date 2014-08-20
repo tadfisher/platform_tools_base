@@ -16,9 +16,26 @@
             </#if>
         </activity>
 
+        <#if includeCloudSave>
+        <service android:name="${cloudSaveService}"
+              android:permission="com.google.android.gms.cloudsave.EVENT_BROADCAST">
+            <intent-filter>
+                <action android:name="com.google.android.gms.cloudsave.EVENT"/>
+            </intent-filter>
+        </service>
+        </#if>
+
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
+        <#if includeCloudSave>
+        <meta-data
+            android:name="com.google.android.gms.cloudsave.APP_ID"
+            android:value="@string/app_id" />
+
+        <uses-permission android:name="android.permission.INTERNET" />
+        <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+        </#if>
     </application>
 
 </manifest>

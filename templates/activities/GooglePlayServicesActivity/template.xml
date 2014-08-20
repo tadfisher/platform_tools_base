@@ -76,6 +76,24 @@
         default="false">
     </parameter>
 
+    <parameter
+        id="includeCloudSave"
+        name="Enable Cloud Save APIs"
+        type="boolean"
+        default="false">
+    </parameter>
+
+    <parameter
+        id="cloudSaveService"
+        name="Event Service Class"
+        classname="com.google.gct.idea.appengine.pantheon.ProjectSelector"
+        dependson="includeWallet"
+        type="string"
+        constraints="class"
+        default="CloudSaveEventService"
+        visibility="includeCloudSave"
+        help="Name of the class implementing the Cloud Save event service">
+    </parameter>
 
     <!-- 128x128 thumbnails relative to template.xml -->
     <thumbs>
