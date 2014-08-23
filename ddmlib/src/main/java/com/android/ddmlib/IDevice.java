@@ -150,7 +150,7 @@ public interface IDevice extends IShellEnabledDevice {
     public DeviceState getState();
 
     /**
-     * Returns the device properties. It contains the whole output of 'getprop'
+     * Returns the cached device properties. It contains the whole output of 'getprop'
      */
     public Map<String, String> getProperties();
 
@@ -190,8 +190,8 @@ public interface IDevice extends IShellEnabledDevice {
 
     /**
      * A combination of {@link #getProperty(String)} and {@link #getPropertySync(String)} that
-     * will attempt to retrieve the property from cache if available, and if not, will query the
-     * device directly.
+     * will attempt to retrieve the property from cache. If not found, will synchronously
+     * attempt to query device directly and repopulate the cache if successful.
      *
      * @param name the name of the value to return.
      * @return the value or <code>null</code> if the property does not exist
@@ -203,6 +203,16 @@ public interface IDevice extends IShellEnabledDevice {
      */
     public String getPropertyCacheOrSync(String name) throws TimeoutException,
             AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException;
+
+    /**
+     * Similar to @link {@link #getPropertyCacheOrSync(String)}} in that
+     * will attempt to retrieve the property from cache if propulated. If not, will immediately return
+     * null but will asychronously attempt to populate cache if no recent attempts have been made
+     *
+     * @param name the name of the value to return.
+     * @return the value or <code>null</code> if the property does not exist
+     */
+    public String getPropertyAsync(String name);
 
     /** Returns whether this device supports the given software feature. */
     boolean supportsFeature(@NonNull Feature feature);

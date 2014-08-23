@@ -442,9 +442,8 @@ final class DeviceMonitor {
     private void queryNewDeviceForInfo(Device device) {
         // TODO: do this in a separate thread.
         try {
-            // first get the list of properties.
-            device.executeShellCommand(GetPropReceiver.GETPROP_COMMAND,
-                    new GetPropReceiver(device));
+            // first attempt to populate the list of properties.
+            device.fetchProperties();
 
             queryNewDeviceForMountingPoint(device, IDevice.MNT_EXTERNAL_STORAGE);
             queryNewDeviceForMountingPoint(device, IDevice.MNT_DATA);

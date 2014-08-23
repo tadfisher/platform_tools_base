@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +46,6 @@ import java.util.regex.Pattern;
 final class Device implements IDevice {
     private static final int INSTALL_TIMEOUT = 2*60*1000; //2min
     private static final int BATTERY_TIMEOUT = 2*1000; //2 seconds
-    private static final int GETPROP_TIMEOUT = 2*1000; //2 seconds
 
     /** Emulator Serial Number regexp. */
     static final String RE_EMULATOR_SN = "emulator-(\\d+)"; //$NON-NLS-1$
@@ -62,7 +60,7 @@ final class Device implements IDevice {
     private DeviceState mState = null;
 
     /** Device properties. */
-    private final Map<String, String> mProperties = new HashMap<String, String>();
+    private PropertyFetcher mPropFetcher = new PropertyFetcher(this);
     private final Map<String, String> mMountPoints = new HashMap<String, String>();
 
     @GuardedBy("mClients")
@@ -82,13 +80,12 @@ final class Device implements IDevice {
      */
     private SocketChannel mSocketChannel;
 
-    private boolean mArePropertiesSet = false;
-
     private Integer mLastBatteryLevel = null;
     private long mLastBatteryCheckTime = 0;
 
     /** Path to the screen recorder binary on the device. */
     private static final String SCREEN_RECORDER_DEVICE_PATH = "/system/bin/screenrecord";
+    private static final long LS_TIMEOUT_SEC = 2;
 
     /** Flag indicating whether the device has the screen recorder binary. */
     private Boolean mHasScreenRecorder;
@@ -358,7 +355,7 @@ final class Device implements IDevice {
      */
     @Override
     public Map<String, String> getProperties() {
-        return Collections.unmodifiableMap(mProperties);
+        return Collections.unmodifiableMap(mPropFetcher.getProperties());
     }
 
     /*
@@ -367,7 +364,7 @@ final class Device implements IDevice {
      */
     @Override
     public int getPropertyCount() {
-        return mProperties.size();
+        return mPropFetcher.getProperties().size();
     }
 
     /*
@@ -376,42 +373,33 @@ final class Device implements IDevice {
      */
     @Override
     public String getProperty(String name) {
-        return mProperties.get(name);
+        return mPropFetcher.getProperty(name);
     }
 
     @Override
     public boolean arePropertiesSet() {
-        return mArePropertiesSet;
+        return mPropFetcher.arePropertiesSet();
     }
 
     @Override
     public String getPropertyCacheOrSync(String name) throws TimeoutException,
             AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException {
-        if (mArePropertiesSet) {
-            return getProperty(name);
-        } else {
-            return getPropertySync(name);
-        }
+        return mPropFetcher.getPropertyCacheOrSync(name);
     }
 
     @Override
     public String getPropertySync(String name) throws TimeoutException,
             AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException {
-        CountDownLatch latch = new CountDownLatch(1);
-        CollectingOutputReceiver receiver = new CollectingOutputReceiver(latch);
-        executeShellCommand(String.format("getprop '%s'", name), receiver, GETPROP_TIMEOUT);
-        try {
-            latch.await(GETPROP_TIMEOUT, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
-            return null;
-        }
+        return mPropFetcher.getPropertySync(name);
+    }
 
-        String value = receiver.getOutput().trim();
-        if (value.isEmpty()) {
-            return null;
-        }
+    @Override
+    public String getPropertyAsync(String name) {
+        return mPropFetcher.getPropertyAsync(name);
+    }
 
-        return value;
+    void fetchProperties() throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException {
+        mPropFetcher.fetchProperties();
     }
 
     @Override
@@ -472,7 +460,7 @@ final class Device implements IDevice {
         }
 
         try {
-            latch.await(GETPROP_TIMEOUT, TimeUnit.MILLISECONDS);
+            latch.await(LS_TIMEOUT_SEC, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             return false;
         }
@@ -764,19 +752,12 @@ final class Device implements IDevice {
     }
 
     void update(int changeMask) {
-        if ((changeMask & CHANGE_BUILD_INFO) != 0) {
-            mArePropertiesSet = true;
-        }
         mMonitor.getServer().deviceChanged(this, changeMask);
     }
 
     void update(Client client, int changeMask) {
         mMonitor.getServer().clientChanged(client, changeMask);
         updateClientInfo(client, changeMask);
-    }
-
-    void addProperty(String label, String value) {
-        mProperties.put(label, value);
     }
 
     void setMountingPoint(String name, String value) {
@@ -1046,6 +1027,7 @@ final class Device implements IDevice {
                 && mLastBatteryCheckTime > (System.currentTimeMillis() - freshnessMs)) {
             return mLastBatteryLevel;
         }
+
         // first try to get it from sysfs
         SysFsBatteryLevelReceiver sysBattReceiver = new SysFsBatteryLevelReceiver();
         executeShellCommand("cat /sys/class/power_supply/*/capacity",
