@@ -11,5 +11,15 @@
     <instantiate from="src/app_package/activity.java.ftl"
             to="${escapeXmlAttribute(srcOut)}/${activityClass}.java" />
 
+    <#if includeCloudSave>
+      <instantiate from="src/app_package/eventservice.java.ftl"
+            to="${escapeXmlAttribute(srcOut)}/${cloudSaveService}.java" />
+    </#if>
+
     <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.java" />
+    <#if includeCloudSave>
+      <open file="${escapeXmlAttribute(srcOut)}/${cloudSaveService}.java" />
+    </#if>
+
+
 </recipe>

@@ -7,83 +7,108 @@
     minApi="7"
     minBuildApi="7">
 
-    <category value="Google" />
-    <formfactor value="Mobile" />
+  <category value="Google" />
+  <formfactor value="Mobile" />
 
-    <parameter
-        id="activityClass"
-        name="Activity Name"
-        type="string"
-        constraints="class|unique|nonempty"
-        default="GooglePlayServicesActivity"
-        help="The name of the activity class to create" />
+  <parameter
+      id="activityClass"
+      name="Activity Name"
+      type="string"
+      constraints="class|unique|nonempty"
+      default="GooglePlayServicesActivity"
+      help="The name of the activity class to create" />
 
-    <parameter
-        id="activityTitle"
-        name="Title"
-        type="string"
-        constraints="nonempty"
-        default="GooglePlayServicesActivity"
-        suggest="${activityClass}"
-        help="The name of the activity. For launcher activities, the application title." />
+  <parameter
+      id="activityTitle"
+      name="Title"
+      type="string"
+      constraints="nonempty"
+      default="GooglePlayServicesActivity"
+      suggest="${activityClass}"
+      help="The name of the activity. For launcher activities, the application title." />
 
-    <parameter
-        id="isLauncher"
-        name="Launcher Activity"
-        type="boolean"
-        default="false"
-        help="If true, this activity will have a CATEGORY_LAUNCHER intent filter, making it visible in the launcher" />
+  <parameter
+      id="isLauncher"
+      name="Launcher Activity"
+      type="boolean"
+      default="false"
+      help="If true, this activity will have a CATEGORY_LAUNCHER intent filter, making it visible in the launcher" />
 
-    <parameter
-        id="packageName"
-        name="Package name"
-        type="string"
-        constraints="package"
-        default="com.mycompany.myapp" />
+  <parameter
+      id="packageName"
+      name="Package name"
+      type="string"
+      constraints="package"
+      default="com.mycompany.myapp" />
 
-    <parameter
-        id="includeGames"
-        name="Enable Google Play Games Services"
-        type="boolean"
-        default="false">
-    </parameter>
+  <parameter
+      id="includeGames"
+      name="Enable Google Play Games Services"
+      type="boolean"
+      default="false">
+  </parameter>
 
-    <parameter
-        id="includePlus"
-        name="Enable Google+ APIs"
-        type="boolean"
-        default="false">
-    </parameter>
+  <parameter
+      id="includePlus"
+      name="Enable Google+ APIs"
+      type="boolean"
+      default="false">
+  </parameter>
 
-    <parameter
-        id="includeDrive"
-        name="Enable Google Drive APIs"
-        type="boolean"
-        default="false">
-    </parameter>
+  <parameter
+      id="includeDrive"
+      name="Enable Google Drive APIs"
+      type="boolean"
+      default="false">
+  </parameter>
 
-    <parameter
-        id="includeCast"
-        name="Enable Google Cast APIs"
-        type="boolean"
-        default="false">
-    </parameter>
+  <parameter
+      id="includeCast"
+      name="Enable Google Cast APIs"
+      type="boolean"
+      default="false">
+  </parameter>
 
-    <parameter
-        id="includeWallet"
-        name="Enable Google Wallet Instant Buy APIs"
-        type="boolean"
-        default="false">
-    </parameter>
+  <parameter
+      id="includeWallet"
+      name="Enable Google Wallet Instant Buy APIs"
+      type="boolean"
+      default="false">
+  </parameter>
 
+  <parameter
+      id="includeCloudSave"
+      name="Enable Cloud Save APIs"
+      type="boolean"
+      default="false">
+  </parameter>
 
-    <!-- 128x128 thumbnails relative to template.xml -->
-    <thumbs>
-        <!-- default thumbnail is required -->
-        <thumb>template_play_services_activity.png</thumb>
-    </thumbs>
+  <parameter
+      id="cloudSaveService"
+      name="Event Service Class"
+      type="string"
+      constraints="class"
+      default="SyncDisambiguationService"
+      visibility="includeCloudSave"
+      help="Name of the class implementing the Cloud Save event service">
+  </parameter>
 
-    <globals file="globals.xml.ftl" />
-    <execute file="recipe.xml.ftl" />
+  <parameter
+      id="cloudsaveProjectID"
+      name="Project ID"
+      classname="com.google.gct.idea.appengine.elysium.ProjectSelector"
+      type="string"
+      visibility="includeCloudSave"
+      help="Name of the Google Developers Console project that has CloudSave enabled.">
+  </parameter>
+
+  <!-- 128x128 thumbnails relative to template.xml -->
+  <thumbs>
+    <!-- default thumbnail is required -->
+    <thumb>template_play_services_activity.png</thumb>
+  </thumbs>
+
+  <globals file="globals.xml.ftl" />
+  <execute file="recipe.xml.ftl" />
 
 </template>
