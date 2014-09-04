@@ -33,7 +33,7 @@ import ${packageName}.dummy.DummyContent;
  * with a GridView.
 </#if>
  * <p />
- * Activities containing this fragment MUST implement the {@link Callbacks}
+ * Activities containing this fragment MUST implement the {@link OnFragmentInteractionListener}
  * interface.
  */
 <#if switchGrid == true>
