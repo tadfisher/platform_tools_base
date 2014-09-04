@@ -304,7 +304,7 @@ public class ResourceItem extends DataItem<ResourceFile>
         assert mValue != null;
 
         NamedNodeMap attributes = mValue.getAttributes();
-        ResourceType type = getType(mValue.getLocalName(), attributes);
+        ResourceType type = getType(mValue.getNodeName(), attributes);
         if (type == null) {
             return null;
         }
