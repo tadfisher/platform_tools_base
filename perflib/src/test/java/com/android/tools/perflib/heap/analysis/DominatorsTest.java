@@ -25,13 +25,12 @@ import com.android.tools.perflib.heap.io.MemoryMappedFileBuffer;
 import junit.framework.TestCase;
 
 import java.io.File;
-import java.util.Map;
 
 public class DominatorsTest extends TestCase {
 
     private Snapshot mSnapshot;
 
-    private Map<Instance, Instance> mDominators;
+    private Dominators mDominators;
 
     public void testSimpleGraph() {
         mSnapshot = new SnapshotBuilder(6)
@@ -42,8 +41,9 @@ public class DominatorsTest extends TestCase {
                 .addRoot(1)
                 .getSnapshot();
 
-        mDominators = Dominators.getDominatorMap(mSnapshot);
-        assertEquals(6, mDominators.size());
+        mDominators = mSnapshot.computeDominators();
+
+        assertEquals(6, mDominators.getReachableInstances().size());
         assertDominates(1, 2);
         assertDominates(1, 3);
         assertDominates(1, 4);
@@ -60,8 +60,9 @@ public class DominatorsTest extends TestCase {
                 .addRoot(1)
                 .getSnapshot();
 
-        mDominators = Dominators.getDominatorMap(mSnapshot);
-        assertEquals(4, mDominators.size());
+        mDominators = mSnapshot.computeDominators();
+
+        assertEquals(4, mDominators.getReachableInstances().size());
         assertDominates(1, 2);
         assertDominates(1, 3);
         assertDominates(1, 4);
@@ -78,37 +79,65 @@ public class DominatorsTest extends TestCase {
                 .addRoot(2)
                 .getSnapshot();
 
-        mDominators = Dominators.getDominatorMap(mSnapshot);
-        assertEquals(6, mDominators.size());
+        mDominators = mSnapshot.computeDominators();
+
+        assertEquals(6, mDominators.getReachableInstances().size());
         assertDominates(1, 3);
         assertDominates(2, 4);
         // Node 5 is reachable via both roots, neither of which can be the sole dominator.
-        assertEquals(mSnapshot.SENTINEL_ROOT, mDominators.get(mSnapshot.findReference(5)));
+        assertEquals(mSnapshot.SENTINEL_ROOT,
+                mDominators.getImmediateDominator(mSnapshot.findReference(5)));
         assertDominates(5, 6);
+    }
+
+    public void testDoublyLinkedList() {
+        // Node 1 points to a doubly-linked list 2-3-4-5-6-7-8-9.
+        mSnapshot = new SnapshotBuilder(9)
+                .addReferences(1, 2)
+                .addReferences(2, 3, 9)
+                .addReferences(3, 2, 4)
+                .addReferences(4, 3, 5)
+                .addReferences(5, 4, 6)
+                .addReferences(6, 5, 7)
+                .addReferences(7, 6, 8)
+                .addReferences(8, 7, 9)
+                .addReferences(9, 2, 8)
+                .addRoot(1)
+                .getSnapshot();
+
+        mDominators = mSnapshot.computeDominators();
+
+        assertEquals(45, mSnapshot.findReference(1).getRetainedSize(1));
+        assertEquals(44, mSnapshot.findReference(2).getRetainedSize(1));
+        for (int i = 3; i <= 9; i++) {
+            assertEquals(i, mSnapshot.findReference(i).getRetainedSize(1));
+        }
     }
 
     public void testSampleHprof() throws Exception {
         File file = new File(ClassLoader.getSystemResource("dialer.android-hprof").getFile());
         Snapshot snapshot = (new HprofParser(new MemoryMappedFileBuffer(file))).parse();
-        Map<Instance, Instance> dominators = snapshot.computeDominatorMap();
+        mDominators = mSnapshot.computeDominators();
 
         // TODO: Double-check this data
-        assertEquals(29598, dominators.size());
+        assertEquals(29597, mDominators.getReachableInstances().size());
 
         // An object reachable via two GC roots, a JNI global and a Thread.
         Instance instance = snapshot.findReference(0xB0EDFFA0);
-        assertEquals(Snapshot.SENTINEL_ROOT, dominators.get(instance));
+        assertEquals(Snapshot.SENTINEL_ROOT, mDominators.getImmediateDominator(instance));
 
-        snapshot.computeRetainedSizes();
+        int appIndex = snapshot.getHeapIndex(snapshot.getHeap("app"));
+        int zygoteIndex = snapshot.getHeapIndex(snapshot.getHeap("zygote"));
+
         // The largest object in our sample hprof belongs to the zygote
         ClassObj htmlParser = snapshot.findClass("android.text.Html$HtmlParser");
-        assertEquals(116468, htmlParser.getRetainedSize(snapshot.getHeap("zygote")));
-        assertEquals(0, htmlParser.getRetainedSize(snapshot.getHeap("app")));
+        assertEquals(116468, htmlParser.getRetainedSize(zygoteIndex));
+        assertEquals(0, htmlParser.getRetainedSize(appIndex));
 
         // One of the bigger objects in the app heap
         ClassObj activityThread = snapshot.findClass("android.app.ActivityThread");
-        assertEquals(237, activityThread.getRetainedSize(snapshot.getHeap("zygote")));
-        assertEquals(576, activityThread.getRetainedSize(snapshot.getHeap("app")));
+        assertEquals(237, activityThread.getRetainedSize(zygoteIndex));
+        assertEquals(576, activityThread.getRetainedSize(appIndex));
     }
 
     /**
@@ -116,6 +145,6 @@ public class DominatorsTest extends TestCase {
      */
     private void assertDominates(int nodeA, int nodeB) {
         assertEquals(mSnapshot.findReference(nodeA),
-                mDominators.get(mSnapshot.findReference(nodeB)));
+                mDominators.getImmediateDominator(mSnapshot.findReference(nodeB)));
     }
 }
