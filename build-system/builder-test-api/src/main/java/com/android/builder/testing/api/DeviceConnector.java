@@ -104,4 +104,7 @@ public abstract class DeviceConnector implements IShellEnabledDevice {
     public abstract int getHeight();
 
     public abstract int getWidth();
+
+    @NonNull
+    public abstract IDevice getDevice();
 }
