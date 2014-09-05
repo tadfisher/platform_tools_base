@@ -27,6 +27,9 @@ import com.google.android.gms.plus.Plus;
 <#if includeWallet>
 import com.google.android.gms.wallet.Wallet;
 </#if>
+<#if includeCloudSave>
+import com.google.android.gms.cloudsave.CloudSaveManager;
+</#if>
 
 public class ${activityClass} extends Activity implements
         GoogleApiClient.ConnectionCallbacks,
@@ -90,6 +93,9 @@ public class ${activityClass} extends Activity implements
                     <#if includeWallet>
                     .addApi(Wallet.API)
                     </#if>
+                    <#if includeCloudSave>
+                    .addApi(CloudSaveManager.API)
+                    </#if>
                     <#if includeDrive>
                     .addScope(Drive.SCOPE_FILE)
                     </#if>
@@ -98,6 +104,9 @@ public class ${activityClass} extends Activity implements
                     </#if>
                     <#if includePlus>
                     .addScope(Plus.SCOPE_PLUS_LOGIN)
+                    </#if>
+                    <#if includeCloudSave>
+                    .addScope(CloudSaveManager.SCOPE_CLOUD_SAVE)
                     </#if>
                     // Optionally, add additional APIs and scopes if required.
                     .addConnectionCallbacks(this)
