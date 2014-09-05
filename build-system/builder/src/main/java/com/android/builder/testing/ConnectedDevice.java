@@ -26,6 +26,7 @@ import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.SyncException;
 import com.android.ddmlib.TimeoutException;
+import com.android.ide.common.deployment.SplitUtils;
 import com.android.utils.ILogger;
 import com.google.common.collect.Lists;
 
@@ -173,7 +174,7 @@ public class ConnectedDevice extends DeviceConnector {
 
     @Override
     public int getDensity() {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return Integer.parseInt(iDevice.getProperty(IDevice.PROP_DEVICE_DENSITY));
     }
 
     @Override
@@ -184,5 +185,16 @@ public class ConnectedDevice extends DeviceConnector {
     @Override
     public int getWidth() {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    @NonNull
+    public SplitUtils.PropGetter getPropGetter() {
+        return new SplitUtils.PropGetter() {
+            @Override
+            public String getProp(String propName) {
+                return iDevice.getProperty(propName);
+            }
+        };
     }
 }
