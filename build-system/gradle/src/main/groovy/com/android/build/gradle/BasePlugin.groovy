@@ -1854,7 +1854,7 @@ public abstract class BasePlugin {
         testTask.conventionMapping.adbExec = {
             return getSdkInfo().getAdb()
         }
-        
+
         testTask.conventionMapping.reportsDir = {
             String rootLocation = extension.testOptions.reportDir != null ?
                 extension.testOptions.reportDir :

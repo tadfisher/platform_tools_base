@@ -120,7 +120,8 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
 
         // eventually, this will require a more open ended comparison.
         mSplitHandlingPolicy =
-                variantConfiguration.getMinSdkVersion() != null
+                basePlugin.getExtension().getGeneratePureSplits()
+                    && variantConfiguration.getMinSdkVersion() != null
                         && variantConfiguration.getMinSdkVersion().getApiString().equals("L")
                     ? SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY
                     : SplitHandlingPolicy.PRE_21_POLICY;
