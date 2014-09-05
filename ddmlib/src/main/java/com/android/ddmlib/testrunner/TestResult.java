@@ -31,7 +31,11 @@ public class TestResult {
         /** Test passed */
         PASSED,
         /** Test started but not ended */
-        INCOMPLETE
+        INCOMPLETE,
+        /** Test assumption failure */
+        ASSUMPTION_FAILURE,
+        /** Test ignored */
+        IGNORED,
     }
 
     private TestStatus mStatus;
