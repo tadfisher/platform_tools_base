@@ -173,7 +173,7 @@ public class ConnectedDevice extends DeviceConnector {
 
     @Override
     public int getDensity() {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return Integer.parseInt(iDevice.getProperty(IDevice.PROP_DEVICE_DENSITY));
     }
 
     @Override
@@ -184,5 +184,11 @@ public class ConnectedDevice extends DeviceConnector {
     @Override
     public int getWidth() {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    @NonNull
+    public IDevice getDevice() {
+        return iDevice;
     }
 }

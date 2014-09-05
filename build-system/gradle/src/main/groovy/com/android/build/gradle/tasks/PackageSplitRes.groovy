@@ -64,19 +64,7 @@ class PackageSplitRes extends BaseTask {
     @NonNull
     public synchronized  ImmutableList<APKOutput> getOutputFiles() {
         if (mOutputFiles == null) {
-            GsonBuilder gsonBuilder = new GsonBuilder();
-            gsonBuilder.registerTypeAdapter(APKOutput.SplitAPKOutput,
-                    new APKOutput.SplitAPKOutput.JsonDeserializer())
-            Gson gson = gsonBuilder.create()
-
-            ImmutableList.Builder<APKOutput> builder = ImmutableList.builder();
-
-            for (APKOutput vo : gson.fromJson(
-                    new FileReader(getOutputPackagedSplitResListFile()),
-                    APKOutput.SplitAPKOutput[].class)) {
-                builder.add(vo);
-            }
-            mOutputFiles = builder.build()
+            mOutputFiles = APKOutput.load(getOutputPackagedSplitResListFile());
         }
         return mOutputFiles;
     }
@@ -96,7 +84,6 @@ class PackageSplitRes extends BaseTask {
                 new FileReader(getInputSplitResListFile()), APKOutput.SplitAPKOutput[].class)
 
         for (APKOutput.SplitAPKOutput variantOutput : variantOutputs) {
-            println "in package " + variantOutput
             String apkName = "${project.archivesBaseName}-${outputBaseName}-${variantOutput.splitIdentifier}"
             apkName = apkName + (signingConfig == null
                     ? "-unsigned.apk"

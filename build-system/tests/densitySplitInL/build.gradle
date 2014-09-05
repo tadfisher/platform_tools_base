@@ -12,6 +12,7 @@ apply plugin: 'com.android.application'
 android {
   compileSdkVersion 'android-L'
   buildToolsVersion '21.0.0'
+  generatePureSplits true
 
   defaultConfig {
     versionCode 12
