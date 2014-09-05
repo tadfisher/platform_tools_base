@@ -1183,7 +1183,7 @@ public abstract class BasePlugin {
                 });
         def outputs = variantData.outputs;
         if (outputs.size() != 1) {
-            println("this is an error !")
+            logger.error(null, "A pure split configuration should have only one output")
             return;
         }
 
