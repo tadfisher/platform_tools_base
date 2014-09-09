@@ -782,6 +782,7 @@ public abstract class BasePlugin {
             @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData,
             @NonNull String manifestOurDir) {
         def processTestManifestTask;
+        VariantConfiguration config = variantData.variantConfiguration
         if (extension.getUseOldManifestMerger()) {
             processTestManifestTask = project.tasks.create(
                     "process${variantData.variantConfiguration.fullName.capitalize()}Manifest",
@@ -790,6 +791,13 @@ public abstract class BasePlugin {
             processTestManifestTask = project.tasks.create(
                     "process${variantData.variantConfiguration.fullName.capitalize()}Manifest",
                     ProcessTestManifest2)
+            processTestManifestTask.conventionMapping.testManifestFile = {
+                config.getMainManifest()
+            }
+            processTestManifestTask.conventionMapping.tmpDir = {
+                project.file(
+                        "$project.buildDir/${FD_INTERMEDIATES}/${manifestOurDir}/tmp")
+            }
         }
 
         // get single output for now.
@@ -799,8 +807,6 @@ public abstract class BasePlugin {
         processTestManifestTask.dependsOn variantData.prepareDependenciesTask
 
         processTestManifestTask.plugin = this
-
-        VariantConfiguration config = variantData.variantConfiguration
 
         processTestManifestTask.conventionMapping.testApplicationId = {
             config.applicationId
