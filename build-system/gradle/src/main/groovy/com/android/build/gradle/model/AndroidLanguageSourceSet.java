@@ -25,11 +25,12 @@ import org.gradle.language.base.internal.AbstractLanguageSourceSet;
 import javax.inject.Inject;
 
 /**
- * Implementation of LanguageSourceSet for Android's sources.
+ * Default implementation of the AndroidSourceDirectorySet.
  */
 public class AndroidLanguageSourceSet extends AbstractLanguageSourceSet implements LanguageSourceSet {
     @Inject
     public AndroidLanguageSourceSet(String name, FunctionalSourceSet parent, FileResolver fileResolver) {
         super(name, parent, "Android source", new DefaultSourceDirectorySet("source", fileResolver));
+
     }
 }

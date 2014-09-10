@@ -80,24 +80,28 @@ class NdkConfigurationAction implements Action<Project> {
         String moduleName = ndkExtension.getModuleName();
         ndkExtension.getSourceSets().all { AndroidSourceDirectorySet sourceSet ->
             // For Android's main source set, just configure the default FunctionalSourceSet.
-            String sourceSetName = (
-                    sourceSet.name.equals("main")
-                            ? moduleName
-                            : moduleName + sourceSet.name)
+            String sourceSetName = sourceSet.name
 
             sources.maybeCreate(sourceSetName).configure {
                 c(CSourceSet) {
                     source {
-                        setSrcDirs(sourceSet.srcDirs)
-                        include ndkExtension.getCFilePattern().getIncludes()
-                        exclude ndkExtension.getCFilePattern().getExcludes()
+                        if (srcDirs.isEmpty()) {
+                            srcDir "src/$sourceSetName/jni"
+                        }
+                        if (includes.isEmpty()) {
+                            include "**/*.c"
+                        }
                     }
                 }
                 cpp(CppSourceSet) {
                     source {
-                        setSrcDirs(sourceSet.srcDirs)
-                        include ndkExtension.getCppFilePattern().getIncludes()
-                        exclude ndkExtension.getCppFilePattern().getExcludes()
+                        if (srcDirs.isEmpty()) {
+                            srcDir "src/$sourceSetName/jni"
+                        }
+                        if (includes.isEmpty()) {
+                            include "**/*.cpp"
+                            include "**/*.cc"
+                        }
                     }
                 }
             }
@@ -114,8 +118,9 @@ class NdkConfigurationAction implements Action<Project> {
             }
 
             // TODO: Support flavorDimension.
-            sourceIfExist(binary, project.sources, "$ndkExtension.moduleName${flavor.name}")
-            sourceIfExist(binary, project.sources, "$ndkExtension.moduleName${buildType.name}")
+            sourceIfExist(binary, project.sources, "main")
+            sourceIfExist(binary, project.sources, "${flavor.name}")
+            sourceIfExist(binary, project.sources, "${buildType.name}")
 
             cCompiler.define "ANDROID"
             cppCompiler.define "ANDROID"
@@ -185,12 +190,13 @@ class NdkConfigurationAction implements Action<Project> {
             String sourceSetName) {
         FunctionalSourceSet sourceSet = projectSourceSet.findByName(sourceSetName)
         if (sourceSet != null) {
-            if (sourceSet.c != null) {
-                binary.source(sourceSet.c)
-            }
-            if (sourceSet.cpp != null) {
-                binary.source(sourceSet.cpp)
-            }
+            binary.source(sourceSet)
+//            if (sourceSet.c != null) {
+//                binary.source(sourceSet.c)
+//            }
+//            if (sourceSet.cpp != null) {
+//                binary.source(sourceSet.cpp)
+//            }
         }
     }
 
