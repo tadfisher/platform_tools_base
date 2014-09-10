@@ -32,6 +32,7 @@ import org.gradle.api.plugins.ExtensionContainer
 import org.gradle.configuration.project.ProjectConfigurationActionContainer
 import org.gradle.internal.reflect.Instantiator
 import org.gradle.language.base.ProjectSourceSet
+import org.gradle.language.base.internal.LanguageRegistry
 import org.gradle.model.Finalize
 import org.gradle.model.Model
 import org.gradle.model.Mutate
@@ -40,9 +41,9 @@ import org.gradle.nativeplatform.BuildTypeContainer
 import org.gradle.nativeplatform.NativeLibrarySpec
 import org.gradle.nativeplatform.StaticLibraryBinary
 import org.gradle.nativeplatform.internal.DefaultSharedLibraryBinarySpec
-import org.gradle.nativeplatform.toolchain.ToolChainRegistry
 import org.gradle.platform.base.ComponentSpecContainer
 import org.gradle.platform.base.PlatformContainer
+import org.gradle.platform.base.ToolChainRegistry
 
 import javax.inject.Inject
 
@@ -139,7 +140,8 @@ class NdkComponentModelPlugin implements Plugin<Project> {
                 ComponentSpecContainer specs,
                 NdkExtension extension,
                 NdkHandler ndkHandler,
-                Project project) {
+                Project project,
+                ProjectSourceSet sources) {
             NativeLibrarySpec library = specs.create(extension.getModuleName(), NativeLibrarySpec)
             NdkConfigurationAction.configureProperties(library, project, extension, ndkHandler)
         }
