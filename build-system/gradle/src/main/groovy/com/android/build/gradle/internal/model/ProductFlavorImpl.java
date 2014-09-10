@@ -43,6 +43,7 @@ class ProductFlavorImpl implements ProductFlavor, Serializable {
     private String name = null;
     private ApiVersion mMinSdkVersion = null;
     private ApiVersion mTargetSdkVersion = null;
+    private ApiVersion mMaxSdkVersion = null;
     private int mRenderscriptTargetApi = -1;
     private boolean mRenderscriptSupportMode = false;
     private boolean mRenderscriptNdkMode = false;
@@ -60,16 +61,20 @@ class ProductFlavorImpl implements ProductFlavor, Serializable {
     static ProductFlavorImpl cloneFlavor(
             @NonNull ProductFlavor productFlavor,
             @Nullable ApiVersion minSdkVersionOverride,
-            @Nullable ApiVersion targetSdkVersionOverride) {
+            @Nullable ApiVersion targetSdkVersionOverride,
+            @Nullable ApiVersion maxSdkVersionOverride) {
         ProductFlavorImpl clonedFlavor = new ProductFlavorImpl();
         clonedFlavor.name = productFlavor.getName();
 
-        clonedFlavor.mMinSdkVersion = minSdkVersionOverride != null ?
-                minSdkVersionOverride :
-                ApiVersionImpl.clone(productFlavor.getMinSdkVersion());
-        clonedFlavor.mTargetSdkVersion = targetSdkVersionOverride != null ?
-                targetSdkVersionOverride :
-                ApiVersionImpl.clone(productFlavor.getTargetSdkVersion());
+        clonedFlavor.mMinSdkVersion = minSdkVersionOverride != null
+                ? minSdkVersionOverride
+                : ApiVersionImpl.clone(productFlavor.getMinSdkVersion());
+        clonedFlavor.mTargetSdkVersion = targetSdkVersionOverride != null
+                ? targetSdkVersionOverride
+                : ApiVersionImpl.clone(productFlavor.getTargetSdkVersion());
+        clonedFlavor.mMaxSdkVersion = maxSdkVersionOverride != null
+                ? maxSdkVersionOverride
+                : ApiVersionImpl.clone(productFlavor.getMaxSdkVersion());
         clonedFlavor.mRenderscriptTargetApi = productFlavor.getRenderscriptTargetApi();
         clonedFlavor.mRenderscriptSupportMode = productFlavor.getRenderscriptSupportMode();
         clonedFlavor.mRenderscriptNdkMode = productFlavor.getRenderscriptNdkMode();
@@ -130,6 +135,10 @@ class ProductFlavorImpl implements ProductFlavor, Serializable {
     public ApiVersion getTargetSdkVersion() {
         return mTargetSdkVersion;
     }
+
+    @Override
+    @Nullable
+    public ApiVersion getMaxSdkVersion() { return mMaxSdkVersion; }
 
     @Override
     public int getRenderscriptTargetApi() {

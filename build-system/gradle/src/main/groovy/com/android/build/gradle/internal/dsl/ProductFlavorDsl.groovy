@@ -106,6 +106,30 @@ class ProductFlavorDsl extends DefaultProductFlavor {
         return this;
     }
 
+    @NonNull
+    public ProductFlavor setMaxSdkVersion(int targetSdkVersion) {
+        setMaxSdkVersion(new DefaultApiVersion(targetSdkVersion));
+        return this;
+    }
+
+    @NonNull
+    public ProductFlavor maxSdkVersion(int targetSdkVersion) {
+        setMaxSdkVersion(targetSdkVersion);
+        return this;
+    }
+
+    @NonNull
+    public ProductFlavor setMaxSdkVersion(String targetSdkVersion) {
+        setMaxSdkVersion(getApiVersion(targetSdkVersion))
+        return this;
+    }
+
+    @NonNull
+    public ProductFlavor maxSdkVersion(String targetSdkVersion) {
+        setMaxSdkVersion(targetSdkVersion);
+        return this;
+    }
+
     @Nullable
     private static ApiVersion getApiVersion(@Nullable String value) {
         if (value != null && !value.isEmpty()) {

@@ -208,6 +208,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                 ProductFlavorImpl.cloneFlavor(
                         variantData.variantConfiguration.mergedFlavor,
                         sdkVersionOverride,
+                        sdkVersionOverride,
                         sdkVersionOverride),
                 mainArtifact,
                 extraAndroidArtifacts,
