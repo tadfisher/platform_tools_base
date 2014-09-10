@@ -393,6 +393,7 @@ public class AndroidBuilder {
             String versionName,
             @Nullable String minSdkVersion,
             @Nullable String targetSdkVersion,
+            @Nullable String maxSdkVersion,
             @NonNull String outManifestLocation,
             ManifestMerger2.MergeType mergeType,
             Map<String, String> placeHolders) {
@@ -410,7 +411,8 @@ public class AndroidBuilder {
             }
 
             setInjectableValues(manifestMergerInvoker,
-                    packageOverride, versionCode, versionName, minSdkVersion, targetSdkVersion);
+                    packageOverride, versionCode, versionName,
+                    minSdkVersion, targetSdkVersion, maxSdkVersion);
 
             MergingReport mergingReport = manifestMergerInvoker.merge();
             mLogger.info("Merging result:" + mergingReport.getResult());
@@ -452,7 +454,8 @@ public class AndroidBuilder {
             int versionCode,
             String versionName,
             @Nullable String minSdkVersion,
-            @Nullable String targetSdkVersion) {
+            @Nullable String targetSdkVersion,
+            @Nullable String maxSdkVersion) {
 
         if (!Strings.isNullOrEmpty(packageOverride)) {
             invoker.setOverride(SystemProperty.PACKAGE, packageOverride);
@@ -469,6 +472,9 @@ public class AndroidBuilder {
         }
         if (!Strings.isNullOrEmpty(targetSdkVersion)) {
             invoker.setOverride(SystemProperty.TARGET_SDK_VERSION, targetSdkVersion);
+        }
+        if (!Strings.isNullOrEmpty(maxSdkVersion)) {
+            invoker.setOverride(SystemProperty.MAX_SDK_VERSION, maxSdkVersion);
         }
     }
 
