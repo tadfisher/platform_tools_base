@@ -1307,6 +1307,7 @@ public class ApiDetector extends ResourceXmlDetector
         types.add(VariableDefinitionEntry.class);
         types.add(VariableReference.class);
         types.add(Try.class);
+        types.add(TypeReference.class);
         return types;
     }
 
@@ -1645,21 +1646,20 @@ public class ApiDetector extends ResourceXmlDetector
                     // Unexpected: ECJ parser internals have changed; can't detect try block
                 }
                 if (isTryWithResources) {
-                    int minSdk = getMinSdk(mContext);
-                    int api = 19;  // minSdk for try with resources
-                    if (api > minSdk && api > getLocalMinSdk(node)) {
-                        Location location = mContext.getLocation(node);
-                        String message = String.format("Try-with-resources requires "
-                                + "API level %1$d (current min is %2$d)", api, minSdk);
-                        LintDriver driver = mContext.getDriver();
-                        if (!driver.isSuppressed(mContext, UNSUPPORTED, node)) {
-                            mContext.report(UNSUPPORTED, location, message, null);
-                        }
-                    }
+                    checkJava7APILevel(node, "Try-with-resources");
                 }
             }
 
             return super.visitTry(node);
+        }
+
+        @Override
+        public boolean visitTypeReference(TypeReference node) {
+            if (node.getTypeName().equals("ReflectiveOperationException")) {
+                checkJava7APILevel(node, "ReflectiveOperationException");
+            }
+
+            return super.visitTypeReference(node);
         }
 
         @Override
@@ -1668,6 +1668,20 @@ public class ApiDetector extends ResourceXmlDetector
                 mCurrentMethod = null;
             }
             super.endVisit(node);
+        }
+
+        private void checkJava7APILevel(lombok.ast.Node node, String feature) {
+            int minSdk = getMinSdk(mContext);
+            int api = 19;  // minSdk for try with resources
+            if (api > minSdk && api > getLocalMinSdk(node)) {
+                Location location = mContext.getLocation(node);
+                String message = String.format(feature + " requires "
+                        + "API level %1$d (current min is %2$d)", api, minSdk);
+                LintDriver driver = mContext.getDriver();
+                if (!driver.isSuppressed(mContext, UNSUPPORTED, node)) {
+                    mContext.report(UNSUPPORTED, location, message, null);
+                }
+            }
         }
 
         /**
