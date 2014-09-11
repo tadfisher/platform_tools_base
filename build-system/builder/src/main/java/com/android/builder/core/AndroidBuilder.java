@@ -1061,6 +1061,15 @@ public class AndroidBuilder {
             command.add(ignoreAssets);
         }
 
+        if (options.getFailOnMissingConfigEntry()) {
+            if (buildToolInfo.getRevision().getMajor() > 20) {
+                command.add("--error-on-missing-config-entry");
+            } else {
+                throw new IllegalStateException("aaptOtions:failOnMissingConfigEntry cannot be used"
+                        + " with a SDK release prior to version 21");
+            }
+        }
+
         // never compress apks.
         command.add("-0");
         command.add("apk");
