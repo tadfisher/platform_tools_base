@@ -53,7 +53,7 @@ import com.android.build.gradle.internal.tasks.DependencyReportTask
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestLibraryTask
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask
-import com.android.build.gradle.internal.tasks.InstallTask
+import com.android.build.gradle.internal.tasks.InstallApkTask
 import com.android.build.gradle.internal.tasks.OutputFileTask
 import com.android.build.gradle.internal.tasks.PrepareDependenciesTask
 import com.android.build.gradle.internal.tasks.PrepareLibraryTask
@@ -1732,36 +1732,30 @@ public abstract class BasePlugin {
             @NonNull String taskName,
             @NonNull String description,
             @NonNull Class<? extends DeviceProviderInstrumentTestTask> taskClass,
-            @NonNull TestVariantData variantData,
+            @NonNull TestVariantData testVariantData,
             @NonNull BaseVariantData<? extends BaseVariantOutputData> testedVariantData,
             @NonNull DeviceProvider deviceProvider,
             @NonNull String subFolder) {
 
-        // get single output for now
-        BaseVariantOutputData variantOutputData = variantData.outputs.get(0)
-        BaseVariantOutputData testedVariantOutputData = testedVariantData.outputs.get(0)
+        // get single output for now for the test.
+        BaseVariantOutputData testVariantOutputData = testVariantData.outputs.get(0)
 
         def testTask = project.tasks.create(taskName, taskClass)
         testTask.description = description
         testTask.group = JavaBasePlugin.VERIFICATION_GROUP
-        testTask.dependsOn testedVariantOutputData.assembleTask, variantOutputData.assembleTask
+        testTask.dependsOn testVariantOutputData.assembleTask, testedVariantData.assembleVariantTask
 
         testTask.plugin = this
-        testTask.variant = variantData
-        testTask.flavorName = variantData.variantConfiguration.flavorName.capitalize()
+        testTask.testVariantData = testVariantData
+        testTask.flavorName = testVariantData.variantConfiguration.flavorName.capitalize()
         testTask.deviceProvider = deviceProvider
-
-        testTask.conventionMapping.testApp = { variantOutputData.outputFile }
-        if (testedVariantData.variantConfiguration.type != VariantConfiguration.Type.LIBRARY) {
-            testTask.conventionMapping.testedApp = { testedVariantOutputData.outputFile }
-        }
 
         testTask.conventionMapping.resultsDir = {
             String rootLocation = extension.testOptions.resultsDir != null ?
                 extension.testOptions.resultsDir :
                 "$project.buildDir/${FD_OUTPUTS}/$FD_ANDROID_RESULTS"
 
-            String flavorFolder = variantData.variantConfiguration.flavorName
+            String flavorFolder = testVariantData.variantConfiguration.flavorName
             if (!flavorFolder.isEmpty()) {
                 flavorFolder = "$FD_FLAVORS/" + flavorFolder
             }
@@ -1773,7 +1767,7 @@ public abstract class BasePlugin {
                 extension.testOptions.reportDir :
                 "$project.buildDir/${FD_OUTPUTS}/$FD_REPORTS/$FD_ANDROID_TESTS"
 
-            String flavorFolder = variantData.variantConfiguration.flavorName
+            String flavorFolder = testVariantData.variantConfiguration.flavorName
             if (!flavorFolder.isEmpty()) {
                 flavorFolder = "$FD_FLAVORS/" + flavorFolder
             }
@@ -1783,7 +1777,7 @@ public abstract class BasePlugin {
         testTask.conventionMapping.coverageDir = {
             String rootLocation = "$project.buildDir/${FD_OUTPUTS}/code-coverage"
 
-            String flavorFolder = variantData.variantConfiguration.flavorName
+            String flavorFolder = testVariantData.variantConfiguration.flavorName
             if (!flavorFolder.isEmpty()) {
                 flavorFolder = "$FD_FLAVORS/" + flavorFolder
             }
@@ -2068,7 +2062,7 @@ public abstract class BasePlugin {
                 }
 
                 // Add a task to install the application package
-                def installTask = project.tasks.create("install${outputName.capitalize()}", InstallTask)
+                def installTask = project.tasks.create("install${outputName.capitalize()}", InstallApkTask)
                 installTask.description = "Installs the " + variantData.description
                 installTask.group = INSTALL_GROUP
                 installTask.dependsOn appTask

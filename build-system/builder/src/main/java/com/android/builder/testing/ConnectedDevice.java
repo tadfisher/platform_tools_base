@@ -116,6 +116,12 @@ public class ConnectedDevice extends DeviceConnector {
         }
     }
 
+    @NonNull
+    @Override
+    public String getSerialNumber() {
+        return iDevice.getSerialNumber();
+    }
+
     @Override
     public int getApiLevel() {
         String sdkVersion = iDevice.getProperty(IDevice.PROP_BUILD_API_LEVEL);
@@ -173,7 +179,7 @@ public class ConnectedDevice extends DeviceConnector {
 
     @Override
     public int getDensity() {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return Integer.parseInt(iDevice.getProperty(IDevice.PROP_DEVICE_DENSITY));
     }
 
     @Override
