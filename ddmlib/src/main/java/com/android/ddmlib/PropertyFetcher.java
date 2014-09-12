@@ -20,11 +20,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.SettableFuture;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -92,7 +92,16 @@ class PropertyFetcher {
     private CacheState mCacheState = CacheState.UNPOPULATED;
     private final Map<String, SettableFuture<String>> mPendingRequests =
             Maps.newHashMapWithExpectedSize(4);
-    private final ExecutorService mThreadPool = Executors.newCachedThreadPool();
+    private final ExecutorService mThreadPool = Executors.newCachedThreadPool(new ThreadFactory() {
+        @Override
+        public Thread newThread(Runnable r) {
+            // set any threads created by the thread pool to a daemon thread, so it does not
+            // keep JVM from shutting down when main thread exists
+            Thread t = new Thread(r);
+            t.setDaemon(true);
+            return t;
+        }
+    });
 
     public PropertyFetcher(IDevice device) {
         mDevice = device;
