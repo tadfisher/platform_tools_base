@@ -29,7 +29,7 @@ import java.io.File;
 /**
  * Base output data about a variant.
  */
-public abstract class BaseVariantOutputData {
+public abstract class BaseVariantOutputData implements FilteredOutput {
 
     private static final String UNIVERSAL = "universal";
 
@@ -56,19 +56,19 @@ public abstract class BaseVariantOutputData {
         this.variantData = variantData;
     }
 
+    @Override
     @Nullable
     public String getDensityFilter() {
         return densityFilter;
     }
 
+    @Override
     @Nullable
     public String getAbiFilter() {
         return abiFilter;
     }
 
     public abstract void setOutputFile(@NonNull File file);
-    @NonNull
-    public abstract File getOutputFile();
 
     @NonNull
     public String getFullName() {

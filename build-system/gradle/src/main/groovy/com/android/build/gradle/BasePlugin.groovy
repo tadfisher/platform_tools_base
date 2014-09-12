@@ -1738,6 +1738,7 @@ public abstract class BasePlugin {
             @NonNull String subFolder) {
 
         // get single output for now
+        // FIXME
         BaseVariantOutputData variantOutputData = variantData.outputs.get(0)
         BaseVariantOutputData testedVariantOutputData = testedVariantData.outputs.get(0)
 
@@ -1751,7 +1752,6 @@ public abstract class BasePlugin {
         testTask.flavorName = variantData.variantConfiguration.flavorName.capitalize()
         testTask.deviceProvider = deviceProvider
 
-        testTask.conventionMapping.testApp = { variantOutputData.outputFile }
         if (testedVariantData.variantConfiguration.type != VariantConfiguration.Type.LIBRARY) {
             testTask.conventionMapping.testedApp = { testedVariantOutputData.outputFile }
         }

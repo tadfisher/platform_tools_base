@@ -29,7 +29,6 @@ import com.android.utils.ILogger;
 
 import java.io.File;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Basic {@link TestRunner} running tests on all devices.
@@ -124,7 +123,7 @@ public class SimpleTestRunner implements TestRunner {
                 return false;
             }
         }
-
+/*
         Set<String> appAbis = testData.getSupportedAbis();
         if (appAbis != null && !appAbis.isEmpty()) {
             List<String> deviceAbis = device.getAbis();
@@ -144,7 +143,7 @@ public class SimpleTestRunner implements TestRunner {
             if (!compatibleAbi) {
                 return false;
             }
-        }
+        }*/
 
         return true;
     }

@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package com.android.build.gradle.internal.tasks
+
+import com.android.build.gradle.internal.test.TestDataImpl
 import com.android.build.gradle.internal.test.report.ReportType
 import com.android.build.gradle.internal.test.report.TestReport
 import com.android.build.gradle.internal.variant.BaseVariantData
@@ -29,7 +31,6 @@ import org.gradle.logging.ConsoleRenderer
  */
 public class DeviceProviderInstrumentTestTask extends BaseTask implements AndroidTestTask {
 
-    File testApp
     File testedApp
 
     File reportsDir
@@ -65,7 +66,7 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
         boolean success = false;
         try {
             success = testRunner.runTests(project.name, flavor,
-                    testApk, testedApk, variant.variantConfiguration,
+                    testApk, testedApk, new TestDataImpl(variant),
                     deviceProvider.devices,
                     deviceProvider.getMaxThreads(),
                     deviceProvider.getTimeout(),
