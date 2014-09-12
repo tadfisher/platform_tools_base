@@ -39,6 +39,7 @@ public interface IDevice extends IShellEnabledDevice {
     public static final String PROP_DEVICE_CPU_ABI = "ro.product.cpu.abi";
     public static final String PROP_DEVICE_CPU_ABI2 = "ro.product.cpu.abi2";
     public static final String PROP_BUILD_CHARACTERISTICS = "ro.build.characteristics";
+    public static final String PROP_DEVICE_DENSITY = "ro.sf.lcd_density";
 
     public static final String PROP_DEBUGGABLE = "ro.debuggable";
 
@@ -175,7 +176,8 @@ public interface IDevice extends IShellEnabledDevice {
      * @param name the name of the value to return.
      * @return the value or <code>null</code> if the property value was not immediately available
      */
-    public @Nullable String getProperty(@NonNull String name);
+    @Nullable
+    public String getProperty(@NonNull String name);
 
     /**
      * Returns <code>true></code> if properties have been cached
