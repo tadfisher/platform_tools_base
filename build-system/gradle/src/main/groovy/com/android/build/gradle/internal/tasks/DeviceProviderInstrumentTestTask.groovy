@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 package com.android.build.gradle.internal.tasks
+
+import com.android.build.gradle.internal.test.TestDataImpl
 import com.android.build.gradle.internal.test.report.ReportType
 import com.android.build.gradle.internal.test.report.TestReport
 import com.android.build.gradle.internal.variant.BaseVariantData
+import com.android.build.gradle.internal.variant.BaseVariantOutputData
 import com.android.build.gradle.internal.variant.TestVariantData
 import com.android.builder.testing.SimpleTestRunner
 import com.android.builder.testing.TestRunner
@@ -24,13 +27,11 @@ import com.android.builder.testing.api.DeviceProvider
 import org.gradle.api.GradleException
 import org.gradle.api.tasks.TaskAction
 import org.gradle.logging.ConsoleRenderer
+
 /**
  * Run instrumentation tests for a given variant
  */
 public class DeviceProviderInstrumentTestTask extends BaseTask implements AndroidTestTask {
-
-    File testApp
-    File testedApp
 
     File reportsDir
     File resultsDir
@@ -39,14 +40,14 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
     String flavorName
 
     DeviceProvider deviceProvider
-    BaseVariantData variant
+    TestVariantData testVariantData
+    BaseVariantData<? extends BaseVariantOutputData> testedVariantData
 
     boolean ignoreFailures
     boolean testFailed
 
     @TaskAction
     protected void runTests() {
-        assert variant instanceof TestVariantData
 
         File resultsOutDir = getResultsDir()
         emptyFolder(resultsOutDir)
@@ -54,8 +55,10 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
         File coverageOutDir = getCoverageDir()
         emptyFolder(coverageOutDir)
 
-        File testApk = getTestApp()
-        File testedApk = getTestedApp()
+        if (testVariantData.outputs.size() > 1) {
+            throw new RuntimeException("Multi-output in test variant not yet supported")
+        }
+        File testApk = testVariantData.outputs.get(0).getOutputFile()
 
         String flavor = getFlavorName()
 
@@ -65,7 +68,7 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
         boolean success = false;
         try {
             success = testRunner.runTests(project.name, flavor,
-                    testApk, testedApk, variant.variantConfiguration,
+                    testApk, new TestDataImpl(testVariantData),
                     deviceProvider.devices,
                     deviceProvider.getMaxThreads(),
                     deviceProvider.getTimeout(),

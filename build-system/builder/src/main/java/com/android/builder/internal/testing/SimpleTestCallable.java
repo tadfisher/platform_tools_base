@@ -69,7 +69,7 @@ public class SimpleTestCallable implements Callable<Boolean> {
             @NonNull  String flavorName,
             @NonNull  File testApk,
             @Nullable File testedApk,
-            @NonNull  TestData testData,
+            @NonNull TestData testData,
             @NonNull  File resultsDir,
             @NonNull  File coverageDir,
                       int timeout,
