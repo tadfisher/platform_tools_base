@@ -445,8 +445,6 @@ final class DeviceMonitor {
     private void queryNewDeviceForInfo(Device device) {
         // TODO: do this in a separate thread.
         try {
-            queryProperties(device);
-
             queryNewDeviceForMountingPoint(device, IDevice.MNT_EXTERNAL_STORAGE);
             queryNewDeviceForMountingPoint(device, IDevice.MNT_DATA);
             queryNewDeviceForMountingPoint(device, IDevice.MNT_ROOT);
@@ -478,22 +476,7 @@ final class DeviceMonitor {
             Log.w("DeviceMonitor", String.format(
                     "IO Error getting info for device %s",
                     device.getSerialNumber()));
-        } catch (InterruptedException e) {
-            Log.w("DeviceMonitor", String.format(
-                    "Interrupted getting info for device %s",
-                    device.getSerialNumber()));
-        } catch (ExecutionException e) {
-            Log.w("DeviceMonitor", String.format(
-                    "ExecutionException getting info for device %s",
-                    device.getSerialNumber()));
         }
-    }
-
-    private void queryProperties(Device device) throws InterruptedException, ExecutionException {
-        // first attempt to populate the list of properties by querying arbitrary prop
-        // TODO: consider removing this call and just let properties be loaded on demand
-        Future<String> prop = device.getSystemProperty("ro.build.id");
-        prop.get();
     }
 
     private void queryNewDeviceForMountingPoint(final Device device, final String name)
