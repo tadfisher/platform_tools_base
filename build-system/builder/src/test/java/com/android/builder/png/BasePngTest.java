@@ -122,6 +122,23 @@ public abstract class BasePngTest extends TestCase {
         return chunks;
     }
 
+    /**
+     * Returns the SDK folder as built from the Android source tree.
+     * @return the SDK
+     */
+    @NonNull
+    protected File getSdkDir() {
+        String androidHome = System.getenv("ANDROID_HOME");
+        if (androidHome != null) {
+            File f = new File(androidHome);
+            if (f.isDirectory()) {
+                return f;
+            }
+        }
+
+        throw new IllegalStateException("SDK not defined with ANDROID_HOME");
+    }
+
 
     @NonNull
     protected static File getFile(@NonNull String name) {
@@ -130,7 +147,8 @@ public abstract class BasePngTest extends TestCase {
 
     @NonNull
     protected static File getPngFolder() {
-        File folder = TestUtils.getRoot("png");
+        File folder = new File("/Users/jedo/src/aosp/tools/base/build-system/builder/src/test/resources/testData/png");
+        //File folder = TestUtils.getRoot("png");
         assertTrue(folder.isDirectory());
         return folder;
     }

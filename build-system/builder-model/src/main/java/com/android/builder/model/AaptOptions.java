@@ -37,5 +37,5 @@ public interface AaptOptions {
      */
     boolean getFailOnMissingConfigEntry();
 
-    boolean getUseAaptPngCruncher();
+    boolean getUseQueuedAaptPngCruncher();
 }

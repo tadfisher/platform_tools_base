@@ -21,7 +21,7 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration
 /**
- * Class containing a BuildType and associated data (Sourceset for instance).
+ * Class containing a BuildType and associated data (Sourceset for INSTANCE).
  */
 class BuildTypeData implements ConfigurationProvider {
 
