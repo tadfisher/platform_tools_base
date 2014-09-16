@@ -361,7 +361,7 @@ public class ModelBuilder implements ToolingModelBuilder {
      * Safely queries a project for a given plugin class.
      * @param project the project to query
      * @param pluginClass the plugin class.
-     * @return the plugin instance or null if it is not applied.
+     * @return the plugin INSTANCE or null if it is not applied.
      */
     private static <T> T getPlugin(@NonNull Project project, @NonNull Class<T> pluginClass) {
         try {

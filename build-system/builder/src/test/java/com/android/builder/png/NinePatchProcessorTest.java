@@ -31,6 +31,8 @@ import java.util.zip.DataFormatException;
 
 public class NinePatchProcessorTest extends BasePngTest {
 
+    static long execTime = 0L;
+
     public static Test suite() {
         TestSuite suite = new TestSuite();
         suite.setName("NinePatchProcessor");
@@ -58,7 +60,11 @@ public class NinePatchProcessorTest extends BasePngTest {
 
     @Override
     protected void runTest() throws Throwable {
+        long startTime = System.currentTimeMillis();
         File outFile = crunch(mFile);
+        execTime += (System.currentTimeMillis() - startTime);
+        System.out.println("Java cumulative time is " + execTime);
+
         File crunched = new File(mFile.getParent(), mFile.getName() + ".crunched");
 
         Map<String, Chunk> testedChunks = compareChunks(crunched, outFile);

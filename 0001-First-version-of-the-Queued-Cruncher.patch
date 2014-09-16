@@ -1,0 +1,1135 @@
+From fe05c28ea32ef104d10b3ca0499262c0515fa551 Mon Sep 17 00:00:00 2001
+From: Jerome Dochez <jedo@google.com>
+Date: Tue, 16 Sep 2014 10:17:06 -0700
+Subject: [PATCH] First version of the Queued Cruncher
+
+Change-Id: Ie370d13a6484924b01e713ef06dc6c648886f40d
+---
+ .../android/builder/internal/JavaPngCruncher.java  |   5 +
+ .../java/com/android/builder/png/AaptProcess.java  | 146 ++++++++++++++
+ .../com/android/builder/png/QueuedCruncher.java    | 115 +++++++++++
+ .../com/android/builder/tasks/BooleanLatch.java    |  47 +++++
+ .../main/java/com/android/builder/tasks/Job.java   |  45 +++++
+ .../java/com/android/builder/tasks/JobContext.java |  44 +++++
+ .../android/builder/tasks/QueueThreadContext.java  |  32 +++
+ .../main/java/com/android/builder/tasks/Task.java  |  34 ++++
+ .../java/com/android/builder/tasks/WorkQueue.java  | 215 +++++++++++++++++++++
+ .../java/com/android/builder/png/BasePngTest.java  |   2 +-
+ .../builder/png/NinePatchAaptProcessorTest.java    | 163 ++++++++++++++++
+ .../builder/png/NinePatchAsyncAaptProcessTest.java |  71 +++++++
+ .../builder/png/NinePatchProcessorTest.java        |   6 +
+ .../build/gradle/internal/BuildTypeData.groovy     |   2 +-
+ .../gradle/internal/model/ModelBuilder.groovy      |   2 +-
+ .../android/ide/common/internal/AaptCruncher.java  |   5 +
+ .../android/ide/common/internal/PngCruncher.java   |   2 +
+ .../ide/common/res2/MergedResourceWriter.java      |   7 +
+ 18 files changed, 940 insertions(+), 3 deletions(-)
+ create mode 100644 build-system/builder/src/main/java/com/android/builder/png/AaptProcess.java
+ create mode 100644 build-system/builder/src/main/java/com/android/builder/png/QueuedCruncher.java
+ create mode 100644 build-system/builder/src/main/java/com/android/builder/tasks/BooleanLatch.java
+ create mode 100644 build-system/builder/src/main/java/com/android/builder/tasks/Job.java
+ create mode 100644 build-system/builder/src/main/java/com/android/builder/tasks/JobContext.java
+ create mode 100644 build-system/builder/src/main/java/com/android/builder/tasks/QueueThreadContext.java
+ create mode 100644 build-system/builder/src/main/java/com/android/builder/tasks/Task.java
+ create mode 100644 build-system/builder/src/main/java/com/android/builder/tasks/WorkQueue.java
+ create mode 100644 build-system/builder/src/test/java/com/android/builder/png/NinePatchAaptProcessorTest.java
+ create mode 100644 build-system/builder/src/test/java/com/android/builder/png/NinePatchAsyncAaptProcessTest.java
+
+diff --git a/build-system/builder/src/main/java/com/android/builder/internal/JavaPngCruncher.java b/build-system/builder/src/main/java/com/android/builder/internal/JavaPngCruncher.java
+index d4dba8b..ff617d8 100644
+--- a/build-system/builder/src/main/java/com/android/builder/internal/JavaPngCruncher.java
++++ b/build-system/builder/src/main/java/com/android/builder/internal/JavaPngCruncher.java
+@@ -40,4 +40,9 @@ public class JavaPngCruncher implements PngCruncher {
+             throw new IOException(e);
+         }
+     }
++
++    @Override
++    public void end() throws InterruptedException {
++        // nothing to do, it's all synchronous.
++    }
+ }
+diff --git a/build-system/builder/src/main/java/com/android/builder/png/AaptProcess.java b/build-system/builder/src/main/java/com/android/builder/png/AaptProcess.java
+new file mode 100644
+index 0000000..4cd1178
+--- /dev/null
++++ b/build-system/builder/src/main/java/com/android/builder/png/AaptProcess.java
+@@ -0,0 +1,146 @@
++/*
++ * Copyright (C) 2014 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.builder.png;
++
++import com.android.annotations.NonNull;
++import com.android.annotations.Nullable;
++import com.android.builder.tasks.BooleanLatch;
++import com.android.builder.tasks.Job;
++import com.android.utils.GrabProcessOutput;
++
++import java.io.File;
++import java.io.IOException;
++import java.io.OutputStreamWriter;
++import java.util.concurrent.atomic.AtomicReference;
++
++/**
++ * interface to the aapt long running process.
++ */
++public class AaptProcess {
++
++    private final Process mProcess;
++
++    private final ProcessOutputFacade mProcessOutputFacade = new ProcessOutputFacade();
++
++    private AaptProcess(Process process) throws InterruptedException {
++        mProcess = process;
++        GrabProcessOutput.grabProcessOutput(process, GrabProcessOutput.Wait.ASYNC,
++                        mProcessOutputFacade);
++    }
++
++    public void crunch(File in, File out, Job<AaptProcess> job) throws IOException {
++        NotifierProcessOutput notifier = new NotifierProcessOutput(job, mProcessOutputFacade);
++        mProcessOutputFacade.setNotifier(notifier);
++        OutputStreamWriter osWriter = new OutputStreamWriter(mProcess.getOutputStream());
++        osWriter.write("s ");
++        osWriter.write(in.getAbsolutePath());
++        osWriter.write(" ");
++        osWriter.write(out.getAbsolutePath());
++        osWriter.write("\n");
++        osWriter.flush();
++    }
++
++    public void shutdown() throws IOException, InterruptedException {
++        mProcess.getOutputStream().write("quit\n".getBytes());
++        mProcess.getOutputStream().flush();
++        mProcess.waitFor();
++    }
++
++    public static class Builder {
++        private final String mAaptLocation;
++        public Builder(@NonNull String aaptPath) {
++            mAaptLocation = aaptPath;
++        }
++
++        public AaptProcess start() throws IOException, InterruptedException {
++            String[] command = new String[] {
++                    mAaptLocation,
++                    "m",
++            };
++
++            System.out.println("Trying to start " + command[0]);
++            Process process = new ProcessBuilder(command).start();
++            System.out.println("Started " + process);
++            return new AaptProcess(process);
++        }
++    }
++
++    private class ProcessOutputFacade implements GrabProcessOutput.IProcessOutput {
++        @Nullable NotifierProcessOutput notifier = null;
++
++        synchronized void setNotifier(@NonNull NotifierProcessOutput notifierProcessOutput) {
++            if (notifier != null) {
++                throw new RuntimeException("Notifier already set, threading issue");
++            }
++            notifier = notifierProcessOutput;
++        }
++
++        synchronized void reset() {
++            notifier = null;
++        }
++
++        @Nullable
++        synchronized NotifierProcessOutput getNotifier() {
++            return notifier;
++        }
++
++        @Override
++        public synchronized void out(@Nullable String line) {
++            System.out.println("AAPT (" + mProcess.hashCode() + "):" + line);
++            NotifierProcessOutput delegate = getNotifier();
++            if (delegate != null) {
++                delegate.out(line);
++            }
++        }
++
++        @Override
++        public synchronized void err(@Nullable String line) {
++            System.err.println("AAPT (" + mProcess.hashCode() + "):" + line);
++            NotifierProcessOutput delegate = getNotifier();
++            if (delegate != null) {
++                delegate.err(line);
++            }
++        }
++    }
++
++    private static class NotifierProcessOutput implements GrabProcessOutput.IProcessOutput {
++
++        private final Job<AaptProcess> mJob;
++        private final ProcessOutputFacade mOwner;
++
++        NotifierProcessOutput(Job<AaptProcess> job, ProcessOutputFacade owner) {
++            mOwner = owner;
++            mJob = job;
++        }
++
++        @Override
++        public void out(@Nullable String line) {
++            System.out.println(line);
++            if (line != null && line.equalsIgnoreCase("Done")) {
++                mJob.finished();
++                mOwner.reset();
++            }
++        }
++
++        @Override
++        public void err(@Nullable String line) {
++            System.err.println(line);
++            //mOwner.reset();
++            //mJob.finished();
++        }
++    }
++}
+diff --git a/build-system/builder/src/main/java/com/android/builder/png/QueuedCruncher.java b/build-system/builder/src/main/java/com/android/builder/png/QueuedCruncher.java
+new file mode 100644
+index 0000000..f832d4a
+--- /dev/null
++++ b/build-system/builder/src/main/java/com/android/builder/png/QueuedCruncher.java
+@@ -0,0 +1,115 @@
++/*
++ * Copyright (C) 2014 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.builder.png;
++
++import com.android.annotations.NonNull;
++import com.android.builder.tasks.Job;
++import com.android.builder.tasks.JobContext;
++import com.android.builder.tasks.QueueThreadContext;
++import com.android.builder.tasks.Task;
++import com.android.builder.tasks.WorkQueue;
++import com.android.ide.common.internal.LoggedErrorException;
++import com.android.ide.common.internal.PngCruncher;
++import com.google.common.collect.ImmutableList;
++
++import java.io.File;
++import java.io.IOException;
++import java.util.HashMap;
++import java.util.Map;
++
++/**
++ * implementation of {@link com.android.ide.common.internal.PngCruncher} that queues request and
++ * use a pool or aapt server processes to serve those.
++ */
++public class QueuedCruncher implements PngCruncher {
++
++
++    private static QueuedCruncher INSTANCE = null;
++    private static final Object LOCK = new Object();
++
++    public static QueuedCruncher newCruncher(@NonNull String aaptLocation) {
++        synchronized (LOCK) {
++            if (INSTANCE == null) {
++                INSTANCE = new QueuedCruncher(aaptLocation);
++            }
++        }
++        return INSTANCE;
++    }
++
++    private QueuedCruncher(@NonNull String aaptLocation) {
++        //mAaptLocation = aaptLocation;
++    }
++
++    @NonNull private final String mAaptLocation = "/Users/jedo/oss/adt/sdk/build-tools/android-L/aapt";
++
++    private final QueueThreadContext<AaptProcess> mQueueThreadContext = new QueueThreadContext<AaptProcess>() {
++
++        // move this to a TLS.
++        Map<String, AaptProcess> mAaptProcesses = new HashMap<String, AaptProcess>();
++
++        @Override
++        public void threadCreated(Thread t) throws IOException {
++            try {
++                mAaptProcesses.put(t.getName(),
++                        new AaptProcess.Builder(mAaptLocation).start());
++            } catch (InterruptedException e) {
++                e.printStackTrace();
++            }
++        }
++
++        @Override
++        public void runTask(Job<AaptProcess> job) throws Exception {
++            job.runTask(
++                    new JobContext<AaptProcess>(mAaptProcesses.get(Thread.currentThread().getName())));
++        }
++
++        @Override
++        public void threadShutdown(Thread t) throws IOException, InterruptedException {
++            mAaptProcesses.get(Thread.currentThread().getName()).shutdown();
++        }
++    };
++
++
++    // one thread, no growth.
++    private final WorkQueue<AaptProcess> mCrunchingRequests = new WorkQueue<AaptProcess>(mQueueThreadContext, "png-cruncher", 1, 1);
++    private final ImmutableList.Builder<Job<AaptProcess>> mOutstandingJobs = new ImmutableList.Builder<Job<AaptProcess>>();
++
++    @Override
++    public void crunchPng(@NonNull final File from, @NonNull final File to)
++            throws InterruptedException, LoggedErrorException, IOException {
++        Job<AaptProcess> aaptProcessJob = new Job<AaptProcess>(new Task<AaptProcess>() {
++            @Override
++            public void run(Job<AaptProcess> job, JobContext<AaptProcess> context) throws IOException {
++                context.getPayload().crunch(from, to, job);
++            }
++        });
++        mOutstandingJobs.add(aaptProcessJob);
++        mCrunchingRequests.push(aaptProcessJob);
++    }
++
++    public void waitForAll() throws InterruptedException {
++        for (Job<AaptProcess> aaptProcessJob : mOutstandingJobs.build()) {
++            aaptProcessJob.await();
++        }
++    }
++
++    @Override
++    public void end() throws InterruptedException {
++        waitForAll();
++        mCrunchingRequests.shutdown();
++    }
++}
+diff --git a/build-system/builder/src/main/java/com/android/builder/tasks/BooleanLatch.java b/build-system/builder/src/main/java/com/android/builder/tasks/BooleanLatch.java
+new file mode 100644
+index 0000000..6386126
+--- /dev/null
++++ b/build-system/builder/src/main/java/com/android/builder/tasks/BooleanLatch.java
+@@ -0,0 +1,47 @@
++/*
++ * Copyright (C) 2014 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.builder.tasks;
++
++import java.util.concurrent.locks.AbstractQueuedSynchronizer;
++
++/**
++ * Created by jedo on 9/15/14.
++ */
++public class BooleanLatch {
++
++    private static class Sync extends AbstractQueuedSynchronizer {
++        boolean isSignalled() { return getState() != 0; }
++
++        @Override
++        protected int tryAcquireShared(int ignore) {
++            return isSignalled() ? 1 : -1;
++        }
++
++        @Override
++        protected boolean tryReleaseShared(int ignore) {
++            setState(1);
++            return true;
++        }
++    }
++
++    private final Sync sync = new Sync();
++    public boolean isSignalled() { return sync.isSignalled(); }
++    public void signal()         { sync.releaseShared(1); }
++    public void await() throws InterruptedException {
++        sync.acquireSharedInterruptibly(1);
++    }
++}
+\ No newline at end of file
+diff --git a/build-system/builder/src/main/java/com/android/builder/tasks/Job.java b/build-system/builder/src/main/java/com/android/builder/tasks/Job.java
+new file mode 100644
+index 0000000..2ac0707
+--- /dev/null
++++ b/build-system/builder/src/main/java/com/android/builder/tasks/Job.java
+@@ -0,0 +1,45 @@
++/*
++ * Copyright (C) 2014 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.builder.tasks;
++
++import java.io.IOException;
++
++/**
++ * Created by jedo on 9/15/14.
++ */
++public class Job<T> {
++
++    private final Task<T> mTask;
++    private final BooleanLatch mBooleanLatch;
++
++    public Job(Task<T> task) {
++        mTask = task;
++        mBooleanLatch = new BooleanLatch();
++    }
++
++    public void runTask(JobContext<T> jobContext) throws IOException {
++        mTask.run(this, jobContext);
++    }
++
++    public void finished() {
++        mBooleanLatch.signal();
++    }
++
++    public void await() throws InterruptedException {
++        mBooleanLatch.await();
++    }
++}
+diff --git a/build-system/builder/src/main/java/com/android/builder/tasks/JobContext.java b/build-system/builder/src/main/java/com/android/builder/tasks/JobContext.java
+new file mode 100644
+index 0000000..af1e980
+--- /dev/null
++++ b/build-system/builder/src/main/java/com/android/builder/tasks/JobContext.java
+@@ -0,0 +1,44 @@
++/*
++ * Copyright (C) 2014 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.builder.tasks;
++
++import java.util.Map;
++
++/**
++ * Contains contextual (and usually mutable) job data.
++ */
++public class JobContext<T> {
++
++    private final T payload;
++    private final long creationTime = System.currentTimeMillis();
++
++    public JobContext(T payload) {
++        this.payload = payload;
++    }
++
++    public T getPayload() {
++        return payload;
++    }
++
++    /**
++     * Returns time spent processing this job so far.
++     * @return the real time spent.
++     */
++    public long elapsed() {
++        return System.currentTimeMillis() - creationTime;
++    }
++}
+\ No newline at end of file
+diff --git a/build-system/builder/src/main/java/com/android/builder/tasks/QueueThreadContext.java b/build-system/builder/src/main/java/com/android/builder/tasks/QueueThreadContext.java
+new file mode 100644
+index 0000000..19e4e85
+--- /dev/null
++++ b/build-system/builder/src/main/java/com/android/builder/tasks/QueueThreadContext.java
+@@ -0,0 +1,32 @@
++/*
++ * Copyright (C) 2014 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.builder.tasks;
++
++import java.io.IOException;
++
++/**
++ * Created by jedo on 9/15/14.
++ */
++public interface QueueThreadContext<T> {
++
++
++    public void threadCreated(Thread t) throws IOException;
++
++    public void runTask(Job<T> job) throws Exception;
++
++    public void threadShutdown(Thread t) throws IOException, InterruptedException;
++}
+diff --git a/build-system/builder/src/main/java/com/android/builder/tasks/Task.java b/build-system/builder/src/main/java/com/android/builder/tasks/Task.java
+new file mode 100644
+index 0000000..8817598
+--- /dev/null
++++ b/build-system/builder/src/main/java/com/android/builder/tasks/Task.java
+@@ -0,0 +1,34 @@
++/*
++ * Copyright (C) 2014 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.builder.tasks;
++
++import java.io.IOException;
++
++/**
++ * Task that can be created asynchronously.
++ */
++public interface Task<T> {
++    /**
++     * Executes the task with the context object to retrieve
++     * and store inter-tasks information.
++     *
++     * @param context the task contextual object
++     * @throws java.io.IOException an exception occured while processing
++     * the task.
++     */
++    void run(Job<T> job, JobContext<T> context) throws IOException;
++}
+diff --git a/build-system/builder/src/main/java/com/android/builder/tasks/WorkQueue.java b/build-system/builder/src/main/java/com/android/builder/tasks/WorkQueue.java
+new file mode 100644
+index 0000000..0676fae
+--- /dev/null
++++ b/build-system/builder/src/main/java/com/android/builder/tasks/WorkQueue.java
+@@ -0,0 +1,215 @@
++/*
++ * Copyright (C) 2014 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.builder.tasks;
++
++/**
++ * Created by jedo on 9/15/14.
++ */
++
++import java.io.IOException;
++import java.util.ArrayList;
++import java.util.List;
++import java.util.concurrent.LinkedBlockingQueue;
++import java.util.concurrent.atomic.AtomicInteger;
++import java.util.logging.Level;
++import java.util.logging.Logger;
++
++/**
++ * A work queue that accepts jobs and treat them in order.
++ *
++ * @author jedo@google.com (Jerome Dochez)
++ */
++public class WorkQueue<T> implements Runnable {
++
++    private static final float RATIO = 0.9f;
++
++    // queue name as human would understand.
++    private final String name;
++
++    // the user throttling has already happened before so I am using a potentially
++    // infinite linked list of request.
++    private final LinkedBlockingQueue<QueueTask<T>> pendingJobs = new LinkedBlockingQueue<QueueTask<T>>();
++
++    // List of working threads pumping from this queue.
++    private final List<Thread> workThreads = new ArrayList<Thread>();
++
++    private final float mGrowthTriggerRation;
++    private final int mMWorkforceIncrement;
++    private final AtomicInteger mThreadId = new AtomicInteger(0);
++    private final QueueThreadContext<T> mQueueThreadContext;
++    private final static int MAX_WORKFORCE_SIZE = 10;
++
++
++    /**
++     * Private queue structure to store queue items.
++     */
++    private static class QueueTask<T> {
++
++        enum ActionType { Death, Normal }
++        final ActionType actionType;
++        final Job<T> job;
++
++        private QueueTask(ActionType actionType, Job<T> job) {
++            this.actionType = actionType;
++            this.job = job;
++        }
++    }
++
++    /**
++     * Creates a new queue, with a number of dedicated threads to process
++     * the queue's jobs.
++     *
++     * @param queueName a meaningful descriptive name.
++     * @param workforce the number of dedicated threads for this queue.
++     */
++    public WorkQueue(
++            QueueThreadContext<T> queueThreadContext,
++            String queueName,
++            int workforce,
++            int growthTriggerRation) {
++
++        this.name = queueName;
++        this.mGrowthTriggerRation = growthTriggerRation;
++        this.mMWorkforceIncrement = workforce;
++        this.mQueueThreadContext = queueThreadContext;
++        addWorkforce();
++    }
++
++    public void push(Job<T> job) throws InterruptedException {
++        _push(new QueueTask<T>(QueueTask.ActionType.Normal, job));
++    }
++
++    private void _push(QueueTask<T> task) throws InterruptedException {
++        // at this point, I am not trying to limit the number of pending jobs.
++        // eventually we would want to put some limit to the size of the pending jobs
++        // queue so it does not grow out of control.
++        pendingJobs.put(task);
++
++        if (pendingJobs.size() / workThreads.size() > mGrowthTriggerRation) {
++            addWorkforce();
++        }
++    }
++
++    private void addWorkforce() {
++        System.out.println("Incrementing workforce from " + workThreads.size());
++        if (workThreads.size() >= MAX_WORKFORCE_SIZE) {
++            System.out.println("Refused to allocate more threads.");
++            return;
++        }
++        for (int i=0;i< mMWorkforceIncrement;i++) {
++            Thread t = new Thread(this, name + "_" + mThreadId.incrementAndGet());
++            t.setDaemon(true);
++            workThreads.add(t);
++            t.start();
++        }
++    }
++
++    private void reduceWorkforce() throws InterruptedException {
++        System.out.println("Decrementing workforce from " + workThreads.size());
++        // push a the right number of kiss of death tasks to shutdown threads.
++        for (int i = 0; i < mMWorkforceIncrement; i++) {
++           _push(new QueueTask<T>(QueueTask.ActionType.Death, null));
++        }
++    }
++
++    /**
++     * Shutdowns the working queue and wait until all pending requests have
++     * been processed. This needs to be reviewed as jobs can still be added
++     * to the queue once the shutdown process has started....
++     * @throws InterruptedException if the shutdown sequence is interrupted
++     */
++    public void shutdown() throws InterruptedException {
++
++        // push as many death pill as necessary
++        for (Thread t : workThreads) {
++            _push(new QueueTask<T>(QueueTask.ActionType.Death, null));
++        }
++        // we could use a latch.
++        for (Thread t : workThreads) {
++            t.join();
++        }
++    }
++
++    /**
++     * Return a human readable queue name, mainly used for identification
++     * purposes.
++     *
++     * @return a unique meaningful descriptive name
++     */
++    public String getName() {
++        return name;
++    }
++
++    /**
++     * Returns the number of jobs waiting to be scheduled.
++     *
++     * @return the size of the queue.
++     */
++    public int size() {
++        return pendingJobs.size();
++    }
++
++
++    /**
++     * each thread in the workThreads will run this single infinite processing loop until a
++     * death action is received.
++     */
++    @Override
++    public void run() {
++        // this
++        try {
++            try {
++                mQueueThreadContext.threadCreated(Thread.currentThread());
++            } catch (IOException e) {
++                e.printStackTrace();
++            }
++            while(true) {
++                final QueueTask<T> queueTask = pendingJobs.take();
++                if (queueTask.actionType== QueueTask.ActionType.Death) {
++                    // we are done.
++                    return;
++                }
++                final Job<T> job = queueTask.job;
++                if (job == null) {
++                    // this clearly should not happen.
++                    Logger.getAnonymousLogger().severe("I got a null pending job out of the priority queue");
++                    return;
++                }
++                try {
++                    mQueueThreadContext.runTask(job);
++                } catch (Exception e) {
++                    Logger.getAnonymousLogger().log(Level.WARNING, "Exception while processing task ", e);
++                }
++                // wait for the job completion.
++                job.await();
++                //if (pendingJobs.size() / workThreads.size() < mGrowthTriggerRation * RATIO) {
++                //    reduceWorkforce();
++                //}
++            }
++        } catch (InterruptedException e) {
++            Logger.getAnonymousLogger().log(Level.SEVERE, "Interrupted ", e);
++        } finally {
++            try {
++                mQueueThreadContext.threadShutdown(Thread.currentThread());
++            } catch (IOException e) {
++                e.printStackTrace();
++            } catch (InterruptedException e) {
++                e.printStackTrace();
++            }
++        }
++    }
++}
+diff --git a/build-system/builder/src/test/java/com/android/builder/png/BasePngTest.java b/build-system/builder/src/test/java/com/android/builder/png/BasePngTest.java
+index 968a410..f86cf33 100644
+--- a/build-system/builder/src/test/java/com/android/builder/png/BasePngTest.java
++++ b/build-system/builder/src/test/java/com/android/builder/png/BasePngTest.java
+@@ -130,7 +130,7 @@ public abstract class BasePngTest extends TestCase {
+ 
+     @NonNull
+     protected static File getPngFolder() {
+-        File folder = TestUtils.getRoot("png");
++        File folder = new File("/Users/jedo/src/aosp/tools/base/build-system/builder/src/test/resources/testData/png");
+         assertTrue(folder.isDirectory());
+         return folder;
+     }
+diff --git a/build-system/builder/src/test/java/com/android/builder/png/NinePatchAaptProcessorTest.java b/build-system/builder/src/test/java/com/android/builder/png/NinePatchAaptProcessorTest.java
+new file mode 100644
+index 0000000..74c8c39
+--- /dev/null
++++ b/build-system/builder/src/test/java/com/android/builder/png/NinePatchAaptProcessorTest.java
+@@ -0,0 +1,163 @@
++/*
++ * Copyright (C) 2014 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.builder.png;
++
++import com.android.SdkConstants;
++import com.android.annotations.NonNull;
++import com.android.ide.common.internal.AaptCruncher;
++import com.android.ide.common.internal.CommandLineRunner;
++import com.android.ide.common.internal.LoggedErrorException;
++import com.android.ide.common.internal.PngCruncher;
++import com.android.utils.ILogger;
++import com.android.utils.StdLogger;
++
++import junit.framework.AssertionFailedError;
++import junit.framework.Test;
++import junit.framework.TestSuite;
++
++import java.io.File;
++import java.io.FileFilter;
++import java.io.IOException;
++import java.util.Map;
++import java.util.zip.DataFormatException;
++
++/**
++ * Created by jedo on 9/18/14.
++ */
++public class NinePatchAaptProcessorTest extends BasePngTest {
++
++    static long execTime = 0L;
++
++    public static Test suite() {
++        TestSuite suite = new TestSuite();
++        suite.setName("NinePatchAaptProcessor");
++
++        NinePatchAaptProcessorTest test = null;
++        //for (File file : getNinePatches()) {
++            File file = getNinePatches()[0];
++            String testName = "process_aapt_" + file.getName();
++
++            test = (NinePatchAaptProcessorTest) TestSuite.createTest(
++                    NinePatchAaptProcessorTest.class, testName);
++
++            test.setFile(file);
++
++            suite.addTest(test);
++        //}
++        if (test != null) {
++            test.setIsFinal(true);
++        }
++
++        return suite;
++    }
++
++    @NonNull
++    private File mFile;
++
++    private boolean mIsFinal = false;
++
++    protected void setFile(@NonNull File file) {
++        mFile = file;
++    }
++
++    protected void setIsFinal(boolean isFinal) {
++        mIsFinal = isFinal;
++    }
++
++    protected PngCruncher getCruncher() {
++        ILogger logger = new StdLogger(StdLogger.Level.VERBOSE);
++        CommandLineRunner commandLineRunner = new CommandLineRunner(logger);
++        String aaptLocation = "/Users/jedo/oss/adt/sdk/build-tools/android-L/aapt";
++        return new AaptCruncher(aaptLocation, commandLineRunner);
++    }
++
++    public void tearSuiteDown() {
++        System.out.println("tearing down final -> " +  execTime);
++    }
++
++    @NonNull
++    protected File crunchFile(@NonNull File file) throws IOException, NinePatchException {
++        File outFile = File.createTempFile("pngWriterTest", ".png");
++        outFile.deleteOnExit();
++        PngCruncher aaptCruncher = getCruncher();
++        try {
++            aaptCruncher.crunchPng(file, outFile);
++        } catch (InterruptedException e) {
++            e.printStackTrace();
++        } catch (LoggedErrorException e) {
++            e.printStackTrace();
++        }
++        if (mIsFinal) {
++            tearSuiteDown();
++        }
++        return outFile;
++    }
++
++    @Override
++    protected void runTest() throws Throwable {
++        long startTime = System.currentTimeMillis();
++        File outFile = crunchFile(mFile);
++        execTime += (System.currentTimeMillis() - startTime);
++        System.out.println("AAPT cumulative time is " + execTime);
++        File crunched = new File(mFile.getParent(), mFile.getName() + ".crunched");
++
++        Map<String, Chunk> testedChunks = compareChunks(crunched, outFile);
++
++        try {
++            compareImageContent(crunched, outFile, false);
++        } catch (AssertionFailedError e) {
++            throw new RuntimeException("Failed with " + testedChunks.get("IHDR"), e);
++        }
++    }
++
++    private static Map<String, Chunk> compareChunks(@NonNull File original, @NonNull File tested) throws
++            IOException, DataFormatException {
++        Map<String, Chunk> originalChunks = readChunks(original);
++        Map<String, Chunk> testedChunks = readChunks(tested);
++
++        compareChunk(originalChunks, testedChunks, "IHDR");
++        compareChunk(originalChunks, testedChunks, "npLb");
++        compareChunk(originalChunks, testedChunks, "npTc");
++
++        return testedChunks;
++    }
++
++    private static void compareChunk(
++            @NonNull Map<String, Chunk> originalChunks,
++            @NonNull Map<String, Chunk> testedChunks,
++            @NonNull String chunkType) {
++        assertEquals(originalChunks.get(chunkType), testedChunks.get(chunkType));
++    }
++
++    @NonNull
++    protected static File[] getNinePatches() {
++        File pngFolder = getPngFolder();
++        File ninePatchFolder = new File(pngFolder, "ninepatch");
++
++        File[] files = ninePatchFolder.listFiles(new FileFilter() {
++            @Override
++            public boolean accept(File file) {
++                return file.getPath().endsWith(SdkConstants.DOT_9PNG);
++            }
++        });
++        if (files != null) {
++            return files;
++        }
++
++        return new File[0];
++    }
++}
+diff --git a/build-system/builder/src/test/java/com/android/builder/png/NinePatchAsyncAaptProcessTest.java b/build-system/builder/src/test/java/com/android/builder/png/NinePatchAsyncAaptProcessTest.java
+new file mode 100644
+index 0000000..52500ed
+--- /dev/null
++++ b/build-system/builder/src/test/java/com/android/builder/png/NinePatchAsyncAaptProcessTest.java
+@@ -0,0 +1,71 @@
++/*
++ * Copyright (C) 2014 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.builder.png;
++
++import com.android.ide.common.internal.AaptCruncher;
++import com.android.ide.common.internal.PngCruncher;
++
++import junit.framework.Test;
++import junit.framework.TestSuite;
++
++import java.io.File;
++
++/**
++ * Created by jedo on 9/18/14.
++ */
++public class NinePatchAsyncAaptProcessTest extends NinePatchAaptProcessorTest {
++
++    public static Test suite() {
++        TestSuite suite = new TestSuite();
++        suite.setName("NinePatchAaptProcessor");
++
++        NinePatchAaptProcessorTest test = null;
++        // for (File file : getNinePatches()) {
++        File file = getNinePatches()[0];
++            String testName = "process_aapt_" + file.getName();
++
++            test = (NinePatchAsyncAaptProcessTest) TestSuite.createTest(
++                    NinePatchAsyncAaptProcessTest.class, testName);
++
++            test.setFile(file);
++
++            suite.addTest(test);
++        //}
++        if (test != null) {
++            test.setIsFinal(true);
++        }
++
++        return suite;
++    }
++
++    @Override
++    public void tearSuiteDown() {
++        try {
++            getCruncher().end();
++        } catch (InterruptedException e) {
++            e.printStackTrace();
++        }
++        super.tearSuiteDown();
++        System.out.println("done with async...");
++    }
++
++    @Override
++    protected PngCruncher getCruncher() {
++        String aaptLocation = "/Users/jedo/oss/adt/sdk/build-tools/android-L/aapt";
++        return QueuedCruncher.newCruncher(aaptLocation);
++    }
++}
+diff --git a/build-system/builder/src/test/java/com/android/builder/png/NinePatchProcessorTest.java b/build-system/builder/src/test/java/com/android/builder/png/NinePatchProcessorTest.java
+index f9b3daa..f37f54f 100644
+--- a/build-system/builder/src/test/java/com/android/builder/png/NinePatchProcessorTest.java
++++ b/build-system/builder/src/test/java/com/android/builder/png/NinePatchProcessorTest.java
+@@ -31,6 +31,8 @@ import java.util.zip.DataFormatException;
+ 
+ public class NinePatchProcessorTest extends BasePngTest {
+ 
++    static long execTime = 0L;
++
+     public static Test suite() {
+         TestSuite suite = new TestSuite();
+         suite.setName("NinePatchProcessor");
+@@ -58,7 +60,11 @@ public class NinePatchProcessorTest extends BasePngTest {
+ 
+     @Override
+     protected void runTest() throws Throwable {
++        long startTime = System.currentTimeMillis();
+         File outFile = crunch(mFile);
++        execTime += (System.currentTimeMillis() - startTime);
++        System.out.println("Java cumulative time is " + execTime);
++
+         File crunched = new File(mFile.getParent(), mFile.getName() + ".crunched");
+ 
+         Map<String, Chunk> testedChunks = compareChunks(crunched, outFile);
+diff --git a/build-system/gradle/src/main/groovy/com/android/build/gradle/internal/BuildTypeData.groovy b/build-system/gradle/src/main/groovy/com/android/build/gradle/internal/BuildTypeData.groovy
+index 6a6b239..8cf33c3 100644
+--- a/build-system/gradle/src/main/groovy/com/android/build/gradle/internal/BuildTypeData.groovy
++++ b/build-system/gradle/src/main/groovy/com/android/build/gradle/internal/BuildTypeData.groovy
+@@ -21,7 +21,7 @@ import org.gradle.api.Project
+ import org.gradle.api.Task
+ import org.gradle.api.artifacts.Configuration
+ /**
+- * Class containing a BuildType and associated data (Sourceset for instance).
++ * Class containing a BuildType and associated data (Sourceset for INSTANCE).
+  */
+ class BuildTypeData implements ConfigurationProvider {
+ 
+diff --git a/build-system/gradle/src/main/groovy/com/android/build/gradle/internal/model/ModelBuilder.groovy b/build-system/gradle/src/main/groovy/com/android/build/gradle/internal/model/ModelBuilder.groovy
+index fba708d..8c5500d 100644
+--- a/build-system/gradle/src/main/groovy/com/android/build/gradle/internal/model/ModelBuilder.groovy
++++ b/build-system/gradle/src/main/groovy/com/android/build/gradle/internal/model/ModelBuilder.groovy
+@@ -361,7 +361,7 @@ public class ModelBuilder implements ToolingModelBuilder {
+      * Safely queries a project for a given plugin class.
+      * @param project the project to query
+      * @param pluginClass the plugin class.
+-     * @return the plugin instance or null if it is not applied.
++     * @return the plugin INSTANCE or null if it is not applied.
+      */
+     private static <T> T getPlugin(@NonNull Project project, @NonNull Class<T> pluginClass) {
+         try {
+diff --git a/sdk-common/src/main/java/com/android/ide/common/internal/AaptCruncher.java b/sdk-common/src/main/java/com/android/ide/common/internal/AaptCruncher.java
+index c413136..cf322fe 100644
+--- a/sdk-common/src/main/java/com/android/ide/common/internal/AaptCruncher.java
++++ b/sdk-common/src/main/java/com/android/ide/common/internal/AaptCruncher.java
+@@ -57,4 +57,9 @@ public class AaptCruncher implements PngCruncher {
+ 
+         mCommandLineRunner.runCmdLine(command, null);
+     }
++
++    @Override
++    public void end() throws InterruptedException {
++        // nothing to do, it's all synchronous.
++    }
+ }
+diff --git a/sdk-common/src/main/java/com/android/ide/common/internal/PngCruncher.java b/sdk-common/src/main/java/com/android/ide/common/internal/PngCruncher.java
+index 9d31296..5b7e02e 100644
+--- a/sdk-common/src/main/java/com/android/ide/common/internal/PngCruncher.java
++++ b/sdk-common/src/main/java/com/android/ide/common/internal/PngCruncher.java
+@@ -39,4 +39,6 @@ public interface PngCruncher {
+      */
+     void crunchPng(@NonNull File from, @NonNull File to)
+             throws InterruptedException, LoggedErrorException, IOException;
++
++    void end() throws InterruptedException;
+ }
+diff --git a/sdk-common/src/main/java/com/android/ide/common/res2/MergedResourceWriter.java b/sdk-common/src/main/java/com/android/ide/common/res2/MergedResourceWriter.java
+index 8225063..5f4f154 100644
+--- a/sdk-common/src/main/java/com/android/ide/common/res2/MergedResourceWriter.java
++++ b/sdk-common/src/main/java/com/android/ide/common/res2/MergedResourceWriter.java
+@@ -111,6 +111,13 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
+     @Override
+     public void end() throws ConsumerException {
+         super.end();
++        try {
++            if (mCruncher != null) {
++                mCruncher.end();
++            }
++        } catch (InterruptedException e) {
++            throw new ConsumerException(e);
++        }
+ 
+         mValuesResMap = null;
+         mQualifierWithDeletedValues = null;
+-- 
+1.9.3
+
