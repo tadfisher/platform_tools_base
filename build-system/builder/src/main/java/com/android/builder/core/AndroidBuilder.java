@@ -785,6 +785,7 @@ public class AndroidBuilder {
                 Invoker invoker = ManifestMerger2.newMerger(
                         testManifestFile, mLogger, ManifestMerger2.MergeType.APPLICATION)
                         .setOverride(SystemProperty.PACKAGE, testApplicationId)
+                        .setPlaceHolderValue("instrumentationRunner", instrumentationRunner)
                         .addLibraryManifests(generatedTestManifest);
                 if (minSdkVersion != null) {
                     invoker.setOverride(SystemProperty.MIN_SDK_VERSION, minSdkVersion);
