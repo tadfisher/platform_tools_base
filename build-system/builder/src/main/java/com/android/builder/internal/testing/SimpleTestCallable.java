@@ -27,6 +27,7 @@ import com.android.ddmlib.NullOutputReceiver;
 import com.android.ddmlib.testrunner.ITestRunListener;
 import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
 import com.android.ddmlib.testrunner.TestIdentifier;
+import com.android.ide.common.deployment.SplitUtils;
 import com.android.utils.ILogger;
 
 import java.io.BufferedReader;

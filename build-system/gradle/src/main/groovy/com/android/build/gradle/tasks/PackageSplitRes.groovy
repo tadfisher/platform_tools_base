@@ -36,7 +36,7 @@ import org.gradle.api.tasks.TaskAction
  */
 class PackageSplitRes extends BaseTask {
 
-    ImmutableList<ApkOutput> mOutputFiles;
+    ImmutableList<ApkOutput> outputFiles;
 
     @Input
     File inputDirectory
@@ -61,22 +61,10 @@ class PackageSplitRes extends BaseTask {
 
     @NonNull
     public synchronized  ImmutableList<ApkOutput> getOutputFiles() {
-        if (mOutputFiles == null) {
-            GsonBuilder gsonBuilder = new GsonBuilder();
-            gsonBuilder.registerTypeAdapter(ApkOutput.SplitApkOutput,
-                    new ApkOutput.SplitApkOutput.JsonDeserializer())
-            Gson gson = gsonBuilder.create()
-
-            ImmutableList.Builder<ApkOutput> builder = ImmutableList.builder();
-
-            for (ApkOutput vo : gson.fromJson(
-                    new FileReader(getOutputPackagedSplitResListFile()),
-                    ApkOutput.SplitApkOutput[].class)) {
-                builder.add(vo);
-            }
-            mOutputFiles = builder.build()
+        if (outputFiles == null) {
+            outputFiles = ApkOutput.load(getOutputPackagedSplitResListFile());
         }
-        return mOutputFiles;
+        return outputFiles;
     }
 
     @TaskAction
