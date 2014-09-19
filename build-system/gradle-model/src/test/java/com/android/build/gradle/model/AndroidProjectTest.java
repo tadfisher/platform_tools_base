@@ -173,8 +173,10 @@ public class AndroidProjectTest extends TestCase {
         if (projectData == null) {
             // Configure the connector and create the connection
             GradleConnector connector = GradleConnector.newConnector();
+//            ((DefaultGradleConnector) connector).embedded(true);
 
             File projectDir = new File(getTestDir(testFolder), projectName);
+//            File projectDir = new File("/Users/jedo/src/aosp/tools/base/build-system/tests/regular", projectName);
             connector.forProjectDirectory(projectDir);
 
             ProjectConnection connection = connector.connect();
