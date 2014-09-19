@@ -16,7 +16,6 @@
 
 package com.android.builder.internal.testing;
 
-import static com.android.sdklib.BuildToolInfo.PathId.ZIP_ALIGN;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -27,6 +26,7 @@ import com.android.ddmlib.NullOutputReceiver;
 import com.android.ddmlib.testrunner.ITestRunListener;
 import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
 import com.android.ddmlib.testrunner.TestIdentifier;
+import com.android.ide.common.deployment.SplitUtils;
 import com.android.utils.ILogger;
 
 import java.io.BufferedReader;
@@ -34,10 +34,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PipedInputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -130,7 +128,10 @@ public class SimpleTestCallable implements Callable<Boolean> {
                     args.add("-r");
                     args.add(testedApk.getAbsolutePath());
                     // for now, do a simple java exec adb
-                    for (File split : splitApks) {
+                    SplitUtils splitUtils = new SplitUtils();
+
+                    List<File> filteredAPKs = splitUtils.filter(device, splitApks);
+                    for (File split : filteredAPKs) {
                         args.add(split.getAbsolutePath());
                     }
                     ProcessBuilder processBuilder = new ProcessBuilder(args);
