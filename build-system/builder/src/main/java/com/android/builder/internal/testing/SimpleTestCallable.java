@@ -26,6 +26,7 @@ import com.android.ddmlib.testrunner.ITestRunListener;
 import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
 import com.android.ddmlib.testrunner.TestIdentifier;
 import com.android.ddmlib.testrunner.TestRunResult;
+import com.android.ide.common.deployment.SplitUtils;
 import com.android.utils.ILogger;
 
 import java.io.BufferedReader;
@@ -129,7 +130,10 @@ public class SimpleTestCallable implements Callable<Boolean> {
                     args.add("-r");
                     args.add(testedApk.getAbsolutePath());
                     // for now, do a simple java exec adb
-                    for (File split : splitApks) {
+                    SplitUtils splitUtils = new SplitUtils();
+
+                    List<File> filteredAPKs = splitUtils.filter(device, splitApks);
+                    for (File split : filteredAPKs) {
                         args.add(split.getAbsolutePath());
                     }
                     ProcessBuilder processBuilder = new ProcessBuilder(args);
