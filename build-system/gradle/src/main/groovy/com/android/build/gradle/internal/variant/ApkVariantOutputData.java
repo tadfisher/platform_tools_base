@@ -67,8 +67,12 @@ public class ApkVariantOutputData extends BaseVariantOutputData {
     @Override
     public ImmutableList<ApkOutput> getOutputFiles() {
         ImmutableList.Builder<ApkOutput> outputs = ImmutableList.builder();
-        if (packageSplitResourcesTask != null) {
-            outputs.addAll(packageSplitResourcesTask.getOutputFiles());
+        if (splitZipAlign != null) {
+            outputs.addAll(splitZipAlign.getOutputFiles());
+        } else {
+            if (packageSplitResourcesTask != null) {
+                outputs.addAll(packageSplitResourcesTask.getOutputFiles());
+            }
         }
         outputs.add(new ApkOutput.MainApkOutput(getOutputFile()));
         return outputs.build();
