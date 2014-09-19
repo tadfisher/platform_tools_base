@@ -21,6 +21,22 @@ android {
     buildConfigField "String", "FOO", "\"bar\""
   }
 
+  productFlavors {
+      pre21 {
+
+      }
+
+      at21andAbove {
+          compileSdkVersion 'android-L'
+          buildToolsVersion '21.0.0'
+
+          minSdkVersion 'L'
+          targetSdkVersion 'L'
+          generatePureSplits true
+
+      }
+  }
+
   splits {
     density {
       enable true
