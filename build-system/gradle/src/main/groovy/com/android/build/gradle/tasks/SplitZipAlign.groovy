@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.annotations.NonNull
 import com.android.build.gradle.api.ApkOutput
 import com.android.build.gradle.internal.tasks.OutputFileTask
 import com.google.common.collect.ImmutableCollection
@@ -49,12 +50,22 @@ class SplitZipAlign extends DefaultTask implements OutputFileTask{
     @InputFile
     File zipAlignExe
 
+    ImmutableList<ApkOutput> mOutputFiles;
+
+    @NonNull
+    public synchronized  ImmutableList<ApkOutput> getOutputFiles() {
+        if (mOutputFiles == null) {
+            mOutputFiles = APKOutput.load(getAlignedFileList())
+        }
+        return mOutputFiles;
+    }
+
     @TaskAction
     void splitZipAlign() {
 
         ImmutableList<ApkOutput.SplitApkOutput> splitVariantOutputs = ApkOutput.load(getPackagedSplitResListFile());
 
-        ImmutableCollection.Builder<ApkOutput> tmpOutputs =
+        ImmutableList.Builder<ApkOutput> tmpOutputs =
                 ImmutableList.builder();
         for (ApkOutput.SplitApkOutput splitVariantOutput : splitVariantOutputs) {
             File out = new File(getOutputFile(),
