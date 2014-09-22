@@ -12,4 +12,5 @@
             to="${escapeXmlAttribute(srcOut)}/${activityClass}.java" />
 
     <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.java" />
+
 </recipe>
