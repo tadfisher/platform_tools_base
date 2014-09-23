@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -122,6 +123,20 @@ public class Queries {
         }
 
         return result;
+    }
+
+    @NonNull
+    public static Collection<ClassObj> commonClasses(@NonNull Snapshot first,
+            @NonNull Snapshot second) {
+        List<ClassObj> classes = new ArrayList<ClassObj>();
+        for (Heap heap : first.getHeaps()) {
+            for (ClassObj clazz : heap.getClasses()) {
+                if (second.findClass(clazz.getClassName()) != null) {
+                    classes.add(clazz);
+                }
+            }
+        }
+        return classes;
     }
 
     /*
