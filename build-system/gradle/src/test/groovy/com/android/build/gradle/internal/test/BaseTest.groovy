@@ -149,9 +149,8 @@ public abstract class BaseTest extends TestCase {
         File buildGradle = new File(project, "build.gradle");
         assertTrue("Missing file: " + buildGradle, buildGradle.isFile());
 
-        AndroidProjectConnector handler = new AndroidProjectConnector(sdkDir, ndkDir);
-
-        handler.runGradleTasks(project, gradleVersion, arguments, tasks)
+        AndroidProjectConnector connector = new AndroidProjectConnector(sdkDir, ndkDir);
+        connector.runGradleTasks(project, gradleVersion, arguments, tasks)
 
         return project;
     }
