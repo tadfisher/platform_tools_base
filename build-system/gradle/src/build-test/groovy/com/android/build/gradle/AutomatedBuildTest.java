@@ -50,6 +50,7 @@ public class AutomatedBuildTest extends BuildTest {
             "dependencyChecker",
             "emptySplit",
             "filteredOutBuildType",
+            "filteredOutVariants",
             "flavored",
             "flavorlib",
             "flavoredlib",
@@ -64,13 +65,13 @@ public class AutomatedBuildTest extends BuildTest {
             "migrated",
             "multiproject",
             "multires",
+            "ndkJniLib",
+            "ndkJniLib2",
+            "ndkLibPrebuilts",
+            "ndkPrebuilts",
             "ndkSanAngeles",
             "ndkSanAngeles2",
             "ndkStandaloneSo",
-            "ndkJniLib",
-            "ndkJniLib2",
-            "ndkPrebuilts",
-            "ndkLibPrebuilts",
             "ndkVariants",
             "noPreDex",
             "overlay1",
@@ -83,10 +84,10 @@ public class AutomatedBuildTest extends BuildTest {
             "renderscriptMultiSrc",
             "rsSupportMode",
             "sameNamedLibs",
-            "tictactoe",
-            /*"autorepo"*/
+            "tictactoe"
     };
 
+    // these tests are excluded on mac/win
     private static final List<String> ndkPluginTests = ImmutableList.of(
             "ndkJniLib2",
             "ndkSanAngeles2",
@@ -148,9 +149,10 @@ public class AutomatedBuildTest extends BuildTest {
     @Override
     protected void runTest() throws Throwable {
         if (testType == TestType.BUILD) {
-            buildProject(projectName, gradleVersion);
+            buildProject(FOLDER_TEST_REGULAR, projectName, gradleVersion);
         } else if (testType == TestType.REPORT) {
-            runTasksOn(projectName, gradleVersion, "androidDependencies", "signingReport");
+            runTasksOn(FOLDER_TEST_REGULAR, projectName, gradleVersion,
+                    "androidDependencies", "signingReport");
         }
     }
 }
