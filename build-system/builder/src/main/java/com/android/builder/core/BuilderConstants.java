@@ -27,6 +27,11 @@ public class BuilderConstants {
     public static final String EXT_LIB_ARCHIVE = "aar";
 
     /**
+     * The name of ComponentSpec created with android component model plugin.
+     */
+    public static final String COMPONENT = "android";
+
+    /**
      * The name of the default config.
      */
     public static final String MAIN = "main";
