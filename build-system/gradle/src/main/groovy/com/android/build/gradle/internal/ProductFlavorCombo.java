@@ -34,7 +34,7 @@ public class ProductFlavorCombo {
     private List<GroupableProductFlavor> flavorList;
 
     /**
-     * Create a ProductFlavorGroup.
+     * Create a ProductFlavorCombo.
      * @param flavors Lists of ProductFlavor.
      */
     public ProductFlavorCombo(GroupableProductFlavor... flavors) {
@@ -70,7 +70,7 @@ public class ProductFlavorCombo {
      * Creates a list containing all combinations of ProductFlavors of the given dimensions.
      * @param flavorDimensions The dimensions each product flavor can belong to.
      * @param productFlavors An iterable of all ProductFlavors in the project..
-     * @return A list of ProductFlavorGroup representing all combinations of ProductFlavors.
+     * @return A list of ProductFlavorCombo representing all combinations of ProductFlavors.
      */
     public static List<ProductFlavorCombo> createGroupList(
             @Nullable List<String> flavorDimensions,
