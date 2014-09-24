@@ -415,6 +415,66 @@ public class VariantManager {
     }
 
     /**
+     * Create a TestVariantData for the specified testedVariantData.
+     */
+    public TestVariantData createTestVariantData(
+            BaseVariantData testedVariantData,
+            SigningConfig signingOverride) {
+        BuildTypeData testData = buildTypes.get(extension.getTestBuildType());
+
+        ProductFlavorData<ProductFlavorDsl> defaultConfigData = basePlugin.getDefaultConfigData();
+        ProductFlavorDsl defaultConfig = defaultConfigData.getProductFlavor();
+
+        GradleVariantConfiguration testedConfig = testedVariantData.getVariantConfiguration();
+        List<? extends GroupableProductFlavor> productFlavorList = testedConfig.getProductFlavors();
+
+        // handle test variant
+        GradleVariantConfiguration testVariantConfig = new GradleVariantConfiguration(
+                defaultConfig,
+                defaultConfigData.getTestSourceSet(),
+                testData.getBuildType(),
+                null,
+                VariantConfiguration.Type.TEST,
+                testedVariantData.getVariantConfiguration(),
+                signingOverride);
+
+        /// add the container of dependencies
+        // the order of the libraries is important. In descending order:
+        // flavors, defaultConfig. No build type for tests
+        List<ConfigurationProvider> testVariantProviders = Lists
+                .newArrayListWithExpectedSize(1 + productFlavorList.size());
+
+        for (GroupableProductFlavor productFlavor : productFlavorList) {
+            ProductFlavorData<GroupableProductFlavorDsl> data = productFlavors
+                    .get(productFlavor.getName());
+
+            String dimensionName = productFlavor.getFlavorDimension();
+            if (dimensionName == null) {
+                dimensionName = "";
+            }
+            testVariantConfig.addProductFlavor(
+                    data.getProductFlavor(),
+                    data.getTestSourceSet(),
+                    dimensionName);
+            testVariantProviders.add(data.getTestProvider());
+        }
+
+        // now add the default config
+        testVariantProviders.add(basePlugin.getDefaultConfigData().getTestProvider());
+
+        // create the internal storage for this variant.
+        TestVariantData testVariantData = new TestVariantData(
+                basePlugin, testVariantConfig, (TestedVariantData) testedVariantData);
+        // link the testVariant to the tested variant in the other direction
+        ((TestedVariantData) testedVariantData).setTestVariantData(testVariantData);
+
+        if (testedConfig.getType() == VariantConfiguration.Type.LIBRARY) {
+            testVariantProviders.add(testedVariantData.getVariantDependency());
+        }
+        return testVariantData;
+    }
+
+    /**
      * Creates VariantData for non-flavored build. This means assembleDebug, assembleRelease, and
      * other assemble<Type> are directly building the <type> build instead of all build of the given
      * <type>.
@@ -557,50 +617,8 @@ public class VariantManager {
         }
 
         if (testedVariantData != null) {
-            GradleVariantConfiguration testedConfig = testedVariantData.getVariantConfiguration();
-
-            // handle test variant
-            GradleVariantConfiguration testVariantConfig = new GradleVariantConfiguration(
-                    defaultConfig,
-                    defaultConfigData.getTestSourceSet(),
-                    testData.getBuildType(),
-                    null,
-                    VariantConfiguration.Type.TEST,
-                    testedVariantData.getVariantConfiguration(),
-                    signingOverride);
-
-            /// add the container of dependencies
-            // the order of the libraries is important. In descending order:
-            // flavors, defaultConfig. No build type for tests
-            List<ConfigurationProvider> testVariantProviders = Lists.newArrayListWithExpectedSize(1 + productFlavorList.size());
-
-            for (GroupableProductFlavor productFlavor : productFlavorList) {
-                ProductFlavorData<GroupableProductFlavorDsl> data = productFlavors.get(productFlavor.getName());
-
-                String dimensionName = productFlavor.getFlavorDimension();
-                if (dimensionName == null) {
-                    dimensionName = "";
-                }
-                testVariantConfig.addProductFlavor(
-                        data.getProductFlavor(),
-                        data.getTestSourceSet(),
-                        dimensionName);
-                testVariantProviders.add(data.getTestProvider());
-            }
-
-            // now add the default config
-            testVariantProviders.add(basePlugin.getDefaultConfigData().getTestProvider());
-
-            // create the internal storage for this variant.
-            TestVariantData testVariantData = new TestVariantData(
-                    basePlugin, testVariantConfig, (TestedVariantData) testedVariantData);
-            // link the testVariant to the tested variant in the other direction
-            ((TestedVariantData) testedVariantData).setTestVariantData(testVariantData);
-
-            if (testedConfig.getType() == VariantConfiguration.Type.LIBRARY) {
-                testVariantProviders.add(testedVariantData.getVariantDependency());
-            }
-
+            TestVariantData testVariantData =
+                    createTestVariantData(testedVariantData, signingOverride);
             variantDataList.add(testVariantData);
         }
     }
