@@ -16,10 +16,18 @@
 
 package com.android.build.gradle.model;
 
+import com.android.builder.core.DefaultBuildType;
+import com.android.builder.core.DefaultProductFlavor;
+
 import org.gradle.platform.base.BinarySpec;
+
+import java.util.List;
 
 /**
  * Binary interface for Android.
  */
 public interface AndroidBinary extends BinarySpec {
+    DefaultBuildType getBuildType();
+
+    List<DefaultProductFlavor> getProductFlavors();
 }
