@@ -9,9 +9,15 @@ sourceSets {
     }
     buildTest {
         groovy.srcDir file('src/build-test/groovy')
-        groovy.srcDir file('src/integ-test/groovy')
         resources.srcDir file('src/build-test/resources')
-        resources.srcDir file('src/integ-test/resources')
+
+        // Run integTest only on Linux.  integTest contains NDK plugin tests, which does not work
+        // on other platforms.
+        if (System.getProperty("os.name").equals("Linux")) {
+            // TODO: Remove the condition check when Gradle is fixed in 2.2.
+            groovy.srcDir file('src/integ-test/groovy')
+            resources.srcDir file('src/integ-test/resources')
+        }
     }
     deviceTest {
         groovy.srcDir file('src/device-test/groovy')
