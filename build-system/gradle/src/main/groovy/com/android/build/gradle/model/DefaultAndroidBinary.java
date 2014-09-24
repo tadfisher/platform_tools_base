@@ -16,16 +16,45 @@
 
 package com.android.build.gradle.model;
 
+import com.android.build.gradle.api.GroupableProductFlavor;
 import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.builder.core.DefaultBuildType;
+import com.android.builder.core.DefaultProductFlavor;
+import com.android.builder.model.BuildType;
+import com.android.builder.model.ProductFlavor;
 
 import org.gradle.platform.base.binary.BaseBinarySpec;
+
+import java.util.List;
 
 /**
  * Binary for Android.
  */
 public class DefaultAndroidBinary extends BaseBinarySpec implements AndroidBinary {
 
+    private BuildType buildType;
+
+    private List<? extends GroupableProductFlavor> productFlavors;
+
     private BaseVariantData variantData;
+
+    @Override
+    public BuildType getBuildType() {
+        return buildType;
+    }
+
+    public void setBuildType(BuildType buildType) {
+        this.buildType = buildType;
+    }
+
+    @Override
+    public List<? extends GroupableProductFlavor> getProductFlavors() {
+        return productFlavors;
+    }
+
+    public void setProductFlavors(List<? extends GroupableProductFlavor> productFlavors) {
+        this.productFlavors = productFlavors;
+    }
 
     public BaseVariantData getVariantData() {
         return variantData;
