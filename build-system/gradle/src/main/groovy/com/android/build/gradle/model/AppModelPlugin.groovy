@@ -26,9 +26,7 @@ import com.android.build.gradle.internal.BuildTypeData
 import com.android.build.gradle.internal.ProductFlavorData
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.dsl.BuildTypeDsl
-import com.android.build.gradle.internal.dsl.BuildTypeFactory
 import com.android.build.gradle.internal.dsl.GroupableProductFlavorDsl
-import com.android.build.gradle.internal.dsl.GroupableProductFlavorFactory
 import com.android.build.gradle.internal.dsl.SigningConfigDsl
 import com.android.build.gradle.internal.dsl.SigningConfigFactory
 import com.android.build.gradle.internal.tasks.DependencyReportTask
@@ -65,8 +63,6 @@ import org.gradle.model.RuleSource
 import org.gradle.model.collection.CollectionBuilder
 import org.gradle.platform.base.BinaryContainer
 import org.gradle.platform.base.BinarySpec
-import org.gradle.platform.base.BinaryType
-import org.gradle.platform.base.BinaryTypeBuilder
 import org.gradle.platform.base.ComponentSpecContainer
 import org.gradle.platform.base.ComponentType
 import org.gradle.platform.base.ComponentTypeBuilder
@@ -76,7 +72,6 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 import javax.inject.Inject
 
 import static com.android.builder.core.BuilderConstants.DEBUG
-import static com.android.builder.core.BuilderConstants.RELEASE
 
 public class AppModelPlugin extends BasePlugin implements Plugin<Project> {
     @Inject
@@ -105,7 +100,9 @@ public class AppModelPlugin extends BasePlugin implements Plugin<Project> {
      */
     @Override
     protected void doApply() {
-        // Add this plugin as an extension so that it can be accesed in model rules for now.
+        project.plugins.apply(AndroidComponentModelPlugin)
+
+        // Add this plugin as an extension so that it can be accessed in model rules for now.
         // Eventually, we can refactor so that BasePlugin is not used extensively through our
         // codebase.
         project.extensions.add("androidPlugin", this);
@@ -166,40 +163,6 @@ public class AppModelPlugin extends BasePlugin implements Plugin<Project> {
             return extension
         }
 
-        @Model("android.buildTypes")
-        NamedDomainObjectContainer<DefaultBuildType> buildTypes(ServiceRegistry serviceRegistry,
-                BasePlugin plugin) {
-            Instantiator instantiator = serviceRegistry.get(Instantiator.class);
-            Project project = plugin.getProject()
-            def buildTypeContainer = project.container(DefaultBuildType,
-                new BuildTypeFactory(instantiator,  project, project.getLogger()))
-
-            // create default Objects, signingConfig first as its used by the BuildTypes.
-            buildTypeContainer.create(DEBUG)
-            buildTypeContainer.create(RELEASE)
-
-            buildTypeContainer.whenObjectRemoved {
-                throw new UnsupportedOperationException("Removing build types is not supported.")
-            }
-            return buildTypeContainer
-        }
-
-        @Model("android.productFlavors")
-        NamedDomainObjectContainer<GroupableProductFlavorDsl> productFlavors(
-                ServiceRegistry serviceRegistry,
-                BasePlugin plugin) {
-            Instantiator instantiator = serviceRegistry.get(Instantiator.class);
-            Project project = plugin.getProject()
-            def productFlavorContainer = project.container(GroupableProductFlavorDsl,
-                new GroupableProductFlavorFactory(instantiator, project, project.getLogger()))
-
-            productFlavorContainer.whenObjectRemoved {
-                throw new UnsupportedOperationException("Removing product flavors is not supported.")
-            }
-
-            return productFlavorContainer
-        }
-
         @Model("android.signingConfig")
         NamedDomainObjectContainer<SigningConfig> signingConfig(ServiceRegistry serviceRegistry,
                 BasePlugin plugin) {
@@ -254,27 +217,6 @@ public class AppModelPlugin extends BasePlugin implements Plugin<Project> {
             }
         }
 
-        @BinaryType
-        void defineBinaryType(BinaryTypeBuilder<AndroidBinary> builder) {
-            builder.defaultImplementation(DefaultAndroidBinary)
-        }
-
-        // TODO: Convert to @ComponentBinaries when it is implemented.
-        @Mutate
-        void createBinaries(BinaryContainer binaries, ComponentSpecContainer specContainer) {
-            AndroidComponentSpec componentSpec = specContainer.withType(AndroidComponentSpec)[0]
-            DefaultAndroidComponentSpec spec = (DefaultAndroidComponentSpec) componentSpec
-
-            VariantManager variantManager = spec.getVariantManager()
-            variantManager.createBaseVariantData(spec.getSigningOverride())
-
-            for (BaseVariantData variantData : variantManager.getVariantDataList()) {
-                binaries.create("${variantData.getName()}Binary", AndroidBinary ) { binary ->
-                    ((DefaultAndroidBinary) binary).setVariantData(variantData);
-                }
-            }
-        }
-
         @Mutate
         void createAndroidTasks(
                 TaskContainer tasks,
@@ -312,6 +254,8 @@ public class AppModelPlugin extends BasePlugin implements Plugin<Project> {
                 }
             }
 
+            plugin.createLintCompileTask();
+
             // Create tasks for each binaries.
             if (!variantManager.productFlavors.isEmpty()) {
                 // there'll be more than one test app, so we need a top level assembleTest
@@ -322,7 +266,12 @@ public class AppModelPlugin extends BasePlugin implements Plugin<Project> {
             }
 
             binaries.withType(AndroidBinary) { DefaultAndroidBinary binary ->
-                variantManager.createTasksForVariantData(tasks, binary.getVariantData())
+                BaseVariantData variantData = variantManager.createBaseVariantData(
+                        plugin.signingOverride,
+                        binary.buildType,
+                        binary.productFlavors
+                )
+                variantManager.createTasksForVariantData(tasks, variantData)
             }
 
             // create the lint tasks.

@@ -17,15 +17,41 @@
 package com.android.build.gradle.model;
 
 import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.builder.core.DefaultBuildType;
+import com.android.builder.core.DefaultProductFlavor;
 
 import org.gradle.platform.base.binary.BaseBinarySpec;
+
+import java.util.List;
 
 /**
  * Binary for Android.
  */
 public class DefaultAndroidBinary extends BaseBinarySpec implements AndroidBinary {
 
+    private DefaultBuildType buildType;
+
+    private List<DefaultProductFlavor> productFlavors;
+
     private BaseVariantData variantData;
+
+    @Override
+    public DefaultBuildType getBuildType() {
+        return buildType;
+    }
+
+    public void setBuildType(DefaultBuildType buildType) {
+        this.buildType = buildType;
+    }
+
+    @Override
+    public List<DefaultProductFlavor> getProductFlavors() {
+        return productFlavors;
+    }
+
+    public void setProductFlavors(List<DefaultProductFlavor> productFlavors) {
+        this.productFlavors = productFlavors;
+    }
 
     public BaseVariantData getVariantData() {
         return variantData;
