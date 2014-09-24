@@ -71,6 +71,7 @@ public class ProductFlavorGroup {
 
     /**
      * Creates a list containing all combinations of ProductFlavors of the given dimensions.
+     *
      * @param flavorDimensions The dimensions each product flavor can belong to.
      * @param productFlavors An iterable of all ProductFlavors in the project..
      * @return A list of ProductFlavorGroup representing all combinations of ProductFlavors.
@@ -80,7 +81,8 @@ public class ProductFlavorGroup {
             Iterable<? extends GroupableProductFlavor> productFlavors) {
 
         List <ProductFlavorGroup> result = Lists.newArrayList();
-        if (flavorDimensions == null || flavorDimensions.size() <= 0) {
+
+        if (flavorDimensions == null || flavorDimensions.size() <= 1) {
             for (GroupableProductFlavor flavor : productFlavors) {
                 result.add(new ProductFlavorGroup(flavor));
             }
