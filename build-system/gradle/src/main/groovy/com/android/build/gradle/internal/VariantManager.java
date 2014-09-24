@@ -47,6 +47,9 @@ import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
+import com.android.build.gradle.model.AndroidComponentModelPlugin;
+import com.android.builder.core.DefaultBuildType;
+import com.android.builder.core.DefaultProductFlavor;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.SigningConfig;
@@ -176,11 +179,17 @@ public class VariantManager {
         productFlavors.put(productFlavor.getName(), productFlavorData);
     }
 
+    /**
+     * Return a list of all created VariantData.
+     */
     @NonNull
     public List<BaseVariantData<? extends BaseVariantOutputData>> getVariantDataList() {
         return variantDataList;
     }
 
+    /**
+     * Create tasks for the specified variantData.
+     */
     public void createTasksForVariantData(TaskContainer tasks, BaseVariantData variantData) {
         if (variantData.getVariantConfiguration().getType() == GradleVariantConfiguration.Type.TEST) {
             ProductFlavorData defaultConfigData = basePlugin.getDefaultConfigData();
@@ -202,7 +211,7 @@ public class VariantManager {
 
             basePlugin.resolveDependencies(variantDep);
             testVariantConfig.setDependencies(variantDep);
-            basePlugin.createTestApkTasks((TestVariantData)variantData);
+            basePlugin.createTestApkTasks((TestVariantData) variantData);
         } else {
             if (productFlavors.isEmpty()) {
                 variantFactory.createTasks(
@@ -546,7 +555,6 @@ public class VariantManager {
                 if (buildTypeData == testData) {
                     testedVariantData = variantData;
                 }
-
             }
         }
 
