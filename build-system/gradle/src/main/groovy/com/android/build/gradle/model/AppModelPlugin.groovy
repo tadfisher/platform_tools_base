@@ -59,6 +59,7 @@ import org.gradle.language.base.ProjectSourceSet
 import org.gradle.language.base.internal.LanguageRegistration
 import org.gradle.language.base.internal.LanguageRegistry
 import org.gradle.language.base.internal.SourceTransformTaskConfig
+import org.gradle.model.Finalize
 import org.gradle.model.Model
 import org.gradle.model.Mutate
 import org.gradle.model.RuleSource
@@ -67,6 +68,7 @@ import org.gradle.platform.base.BinaryContainer
 import org.gradle.platform.base.BinarySpec
 import org.gradle.platform.base.BinaryType
 import org.gradle.platform.base.BinaryTypeBuilder
+import org.gradle.platform.base.ComponentBinaries
 import org.gradle.platform.base.ComponentSpecContainer
 import org.gradle.platform.base.ComponentType
 import org.gradle.platform.base.ComponentTypeBuilder
@@ -76,7 +78,6 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 import javax.inject.Inject
 
 import static com.android.builder.core.BuilderConstants.DEBUG
-import static com.android.builder.core.BuilderConstants.RELEASE
 
 public class AppModelPlugin extends BasePlugin implements Plugin<Project> {
     @Inject
@@ -105,7 +106,9 @@ public class AppModelPlugin extends BasePlugin implements Plugin<Project> {
      */
     @Override
     protected void doApply() {
-        // Add this plugin as an extension so that it can be accesed in model rules for now.
+        project.plugins.apply(AndroidComponentModelPlugin)
+
+        // Add this plugin as an extension so that it can be accessed in model rules for now.
         // Eventually, we can refactor so that BasePlugin is not used extensively through our
         // codebase.
         project.extensions.add("androidPlugin", this);
@@ -164,40 +167,6 @@ public class AppModelPlugin extends BasePlugin implements Plugin<Project> {
             extension.setNdkExtension(ndkPlugin.getNdkExtension())
 
             return extension
-        }
-
-        @Model("android.buildTypes")
-        NamedDomainObjectContainer<DefaultBuildType> buildTypes(ServiceRegistry serviceRegistry,
-                BasePlugin plugin) {
-            Instantiator instantiator = serviceRegistry.get(Instantiator.class);
-            Project project = plugin.getProject()
-            def buildTypeContainer = project.container(DefaultBuildType,
-                new BuildTypeFactory(instantiator,  project, project.getLogger()))
-
-            // create default Objects, signingConfig first as its used by the BuildTypes.
-            buildTypeContainer.create(DEBUG)
-            buildTypeContainer.create(RELEASE)
-
-            buildTypeContainer.whenObjectRemoved {
-                throw new UnsupportedOperationException("Removing build types is not supported.")
-            }
-            return buildTypeContainer
-        }
-
-        @Model("android.productFlavors")
-        NamedDomainObjectContainer<GroupableProductFlavorDsl> productFlavors(
-                ServiceRegistry serviceRegistry,
-                BasePlugin plugin) {
-            Instantiator instantiator = serviceRegistry.get(Instantiator.class);
-            Project project = plugin.getProject()
-            def productFlavorContainer = project.container(GroupableProductFlavorDsl,
-                new GroupableProductFlavorFactory(instantiator, project, project.getLogger()))
-
-            productFlavorContainer.whenObjectRemoved {
-                throw new UnsupportedOperationException("Removing product flavors is not supported.")
-            }
-
-            return productFlavorContainer
         }
 
         @Model("android.signingConfig")
