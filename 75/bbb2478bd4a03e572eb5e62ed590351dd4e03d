@@ -1,0 +1,7 @@
+Code-Review+2: Xavier Ducrohet <xav@android.com>
+Verified+1: Raymond Chiu <chiur@google.com>
+Submitted-by: Raymond Chiu <chiur@google.com>
+Submitted-at: Thu, 25 Sep 2014 00:34:26 +0000
+Reviewed-on: https://android-review.googlesource.com/105901
+Project: platform/tools/base
+Branch: refs/heads/gradle-dev
