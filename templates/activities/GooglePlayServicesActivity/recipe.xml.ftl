@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <recipe>
-    <dependency mavenUrl="com.google.android.gms:play-services:4.2.42" />
+    <dependency mavenUrl="com.google.android.gms:play-services:5.2.08" />
 
     <merge from="AndroidManifest.xml.ftl"
             to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />
@@ -12,4 +12,5 @@
             to="${escapeXmlAttribute(srcOut)}/${activityClass}.java" />
 
     <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.java" />
+
 </recipe>
