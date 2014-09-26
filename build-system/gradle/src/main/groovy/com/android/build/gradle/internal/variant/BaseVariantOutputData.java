@@ -25,6 +25,7 @@ import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.PackageSplitRes;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.google.common.collect.ImmutableList;
+import com.android.build.gradle.tasks.ShrinkResources;
 
 import org.gradle.api.Task;
 
@@ -38,7 +39,7 @@ public abstract class BaseVariantOutputData implements SplitOutput {
     private static final String UNIVERSAL = "universal";
 
     @NonNull
-    protected final BaseVariantData<?> variantData;
+    public final BaseVariantData<?> variantData;
 
     @Nullable
     private final String densityFilter;
@@ -75,6 +76,7 @@ public abstract class BaseVariantOutputData implements SplitOutput {
 
     public abstract void setOutputFile(@NonNull File file);
 
+    @Override
     @NonNull
     public abstract File getOutputFile();
 
