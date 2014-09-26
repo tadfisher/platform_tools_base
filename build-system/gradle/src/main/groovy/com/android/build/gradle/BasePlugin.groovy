@@ -92,6 +92,7 @@ import com.android.build.gradle.tasks.ProcessManifest
 import com.android.build.gradle.tasks.ProcessTestManifest
 import com.android.build.gradle.tasks.ProcessTestManifest2
 import com.android.build.gradle.tasks.RenderscriptCompile
+import com.android.build.gradle.tasks.ShrinkResources
 import com.android.build.gradle.tasks.SplitZipAlign
 import com.android.build.gradle.tasks.ZipAlign
 import com.android.builder.core.AndroidBuilder
@@ -1180,6 +1181,10 @@ public abstract class BasePlugin {
                         project.file(
                                 "$project.buildDir/${FD_INTERMEDIATES}/proguard/${config.dirName}/aapt_rules.txt")
                     }
+                } else if (config.buildType.shrinkResources) {
+                    // This warning is temporary; we'll eventually make shrinking enabled by default
+                    // so users typically will only opt out of it, we won't have shrink=true, proguard=false
+                    logger.warning("WARNING: To shrink resources you must also enable ProGuard")
                 }
             }
 
@@ -2057,9 +2062,22 @@ public abstract class BasePlugin {
 
             packageApp.plugin = this
 
-            packageApp.conventionMapping.resourceFile = {
-                variantOutputData.processResourcesTask.packageOutputFile
+            if (runProguard && variantOutputData.shrinkResourcesTask != null) {
+                // When shrinking resources, rather than having the packaging task
+                // directly map to the packageOutputFile of ProcessAndroidResources,
+                // we insert the ShrinkResources task into the chain, such that its
+                // input is the ProcessAndroidResources packageOutputFile, and its
+                // output is what the PackageApplication task reads.
+                packageApp.dependsOn variantOutputData.shrinkResourcesTask
+                packageApp.conventionMapping.resourceFile = {
+                    variantOutputData.shrinkResourcesTask.compressedResources
+                }
+            } else {
+                packageApp.conventionMapping.resourceFile = {
+                    variantOutputData.processResourcesTask.packageOutputFile
+                }
             }
+
             packageApp.conventionMapping.dexFolder = { dexTask.outputFolder }
             packageApp.conventionMapping.packagedJars =
                     { androidBuilder.getPackagedJars(config) }
@@ -2483,6 +2501,32 @@ public abstract class BasePlugin {
         // if they don't so create them.
         proguardTask.doFirst {
             proguardOut.mkdirs()
+        }
+
+        // Create resource shrinking task
+        VariantConfiguration config = variantData.variantConfiguration
+        if (config.buildType.shrinkResources) {
+            def shrinkTask = project.tasks.create(
+                    "shrinkResources${variantData.variantConfiguration.fullName.capitalize()}",
+                    ShrinkResources)
+            variantOutputData.shrinkResourcesTask = shrinkTask
+            shrinkTask.plugin = this
+            shrinkTask.variantOutputData = variantOutputData
+            shrinkTask.classesJar = outFile
+            shrinkTask.proguardMapFile = variantData.mappingFile
+
+            String outputBaseName = variantOutputData.baseName
+            shrinkTask.conventionMapping.compressedResources = {
+                project.file(
+                        "$project.buildDir/${FD_INTERMEDIATES}/res/resources-${outputBaseName}-compressed.ap_")
+            }
+
+            shrinkTask.conventionMapping.uncompressedResources = {
+                variantOutputData.processResourcesTask.packageOutputFile
+            }
+
+            shrinkTask.dependsOn proguardTask, variantOutputData.manifestProcessorTask,
+                    variantOutputData.processResourcesTask
         }
 
         return outFile
