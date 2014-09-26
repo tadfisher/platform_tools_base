@@ -26,6 +26,7 @@ android {
         proguard {
             runProguard true
             proguardFile getDefaultProguardFile('proguard-android.txt')
+            shrinkResources true
         }
     }
 
