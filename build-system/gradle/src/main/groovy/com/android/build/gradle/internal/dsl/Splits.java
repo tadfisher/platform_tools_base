@@ -59,6 +59,13 @@ public class Splits {
     }
 
     /**
+     * Returns true if this splits configuration is empty
+     */
+    public boolean isEnabled() {
+        return density.isEnable() || abi.isEnable();
+    }
+
+    /**
      * Returns the list of Density filters used for multi-apk.
      *
      * null value is allowed, indicating the need to generate an apk with all densities.
