@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.dsl
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable
 import com.android.annotations.VisibleForTesting
+import com.android.build.gradle.tasks.ShrinkResources
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.DefaultBuildType
@@ -182,7 +183,13 @@ public class BuildTypeDsl extends DefaultBuildType implements Serializable {
 
     @Override
     public boolean isRunProguard() {
-        return !useJack && super.isRunProguard();
+        return !useJack && super.isRunProguard()
+    }
+
+    boolean shrinkResources = false // opt-in for now until we've validated it in the field
+
+    void shrinkResources(boolean flag) {
+        this.shrinkResources = flag
     }
 
     // ---------------
