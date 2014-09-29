@@ -28,10 +28,14 @@ public class NdkExtensionConventionAction implements Action<ProjectInternal> {
 
     private static final String DEFAULT_STL = "system";
 
+    private NdkExtension extension;
+
+    public NdkExtensionConventionAction(NdkExtension extension) {
+        this.extension = extension;
+    }
+
     @Override
     public void execute(ProjectInternal project) {
-        NdkExtension extension = project.getPlugins().getPlugin(NdkPlugin.class).getNdkExtension();
-
         if (extension.getModuleName() == null || extension.getModuleName().isEmpty()) {
             throw new InvalidUserDataException("moduleName must be set for Android NDK plugin.");
         }
