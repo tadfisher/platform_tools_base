@@ -68,8 +68,8 @@ public class SplitOutputMatcher {
 
         // find a matching output.
         for (SplitOutput output : outputs) {
-            String densityFilter = output.getDensityFilter();
-            String abiFilter = output.getAbiFilter();
+            String densityFilter = output.getFilter(SplitOutput.DENSITY);
+            String abiFilter = output.getFilter(SplitOutput.ABI);
 
             if (densityFilter != null && !densityFilter.equals(densityValue)) {
                 continue;
@@ -93,7 +93,7 @@ public class SplitOutputMatcher {
             }
         });
 
-        if (match.getDensityFilter() == null && variantAbiFilters != null) {
+        if (match.getFilter(SplitOutput.DENSITY) == null && variantAbiFilters != null) {
             // if we have a match that has no abi filter, and we have variant-level filters, then
             // we need to make sure that the variant filters are compatible with the device abis.
             boolean foundMatch = false;
