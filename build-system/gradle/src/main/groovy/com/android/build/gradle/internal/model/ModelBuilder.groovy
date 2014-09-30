@@ -17,9 +17,12 @@
 package com.android.build.gradle.internal.model
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable
+import com.android.build.FilterData
+import com.android.build.SplitOutput
 import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.BasePlugin
 import com.android.build.gradle.LibraryPlugin
+import com.android.build.gradle.api.ApkOutput
 import com.android.build.gradle.internal.BuildTypeData
 import com.android.build.gradle.internal.ProductFlavorData
 import com.android.build.gradle.internal.dsl.LintOptionsImpl
@@ -43,6 +46,7 @@ import com.android.builder.model.SourceProvider
 import com.android.builder.model.SourceProviderContainer
 import com.android.sdklib.AndroidVersion
 import com.android.sdklib.IAndroidTarget
+import com.google.common.collect.ImmutableList
 import com.google.common.collect.Lists
 import org.gradle.api.Project
 import org.gradle.api.plugins.UnknownPluginException
@@ -256,16 +260,28 @@ public class ModelBuilder implements ToolingModelBuilder {
                     ((ApkVariantOutputData) variantOutputData).versionCode :
                     vC.mergedFlavor.versionCode
 
-            AndroidArtifactOutput output = new AndroidArtifactOutputImpl(
+            ImmutableList<ApkOutput.SplitApkOutput> splitApks = variantOutputData.outputSplitFiles;
+            // add the main APK.
+            outputs.add(new AndroidArtifactOutputImpl(
+                    variantOutputData.outputType,
                     variantOutputData.outputFile,
                     variantOutputData.assembleTask.name,
                     variantOutputData.manifestProcessorTask.manifestOutputFile,
                     versionCode,
-                    variantOutputData.densityFilter,
-                    variantOutputData.abiFilter
-            );
+                    variantOutputData.filters));
 
-            outputs.add(output)
+            // add split APKs if any.
+            for (ApkOutput.SplitApkOutput splitApk : splitApks) {
+                AndroidArtifactOutput output = new AndroidArtifactOutputImpl(
+                        splitApk.getType(),
+                        splitApk.outputFile,
+                        variantOutputData.assembleTask.name,
+                        variantOutputData.manifestProcessorTask.manifestOutputFile,
+                        versionCode,
+                        splitApk.getFilters(),
+                );
+                outputs.add(output)
+            }
         }
 
         return new AndroidArtifactImpl(
