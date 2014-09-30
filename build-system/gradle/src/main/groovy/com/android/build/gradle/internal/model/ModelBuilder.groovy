@@ -20,6 +20,7 @@ import com.android.annotations.Nullable
 import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.BasePlugin
 import com.android.build.gradle.LibraryPlugin
+import com.android.build.gradle.api.SplitApkOutput
 import com.android.build.gradle.internal.BuildTypeData
 import com.android.build.gradle.internal.ProductFlavorData
 import com.android.build.gradle.internal.dsl.LintOptionsImpl
@@ -258,16 +259,26 @@ public class ModelBuilder implements ToolingModelBuilder {
 
             int intVersionCode = versionCode != null ? versionCode.intValue() : 1;
 
-            AndroidArtifactOutput output = new AndroidArtifactOutputImpl(
+            // add the main APK.
+            outputs.add(new AndroidArtifactOutputImpl(
+                    variantOutputData.outputType,
                     variantOutputData.outputFile,
                     variantOutputData.assembleTask.name,
                     variantOutputData.manifestProcessorTask.manifestOutputFile,
                     intVersionCode,
-                    variantOutputData.densityFilter,
-                    variantOutputData.abiFilter
-            );
+                    variantOutputData.filters));
 
-            outputs.add(output)
+            // add split APKs if any.
+            for (SplitApkOutput splitApk : variantOutputData.outputSplitFiles) {
+                outputs.add(new AndroidArtifactOutputImpl(
+                        splitApk.type,
+                        splitApk.outputFile,
+                        variantOutputData.assembleTask.name,
+                        variantOutputData.manifestProcessorTask.manifestOutputFile,
+                        intVersionCode,
+                        splitApk.filters,
+                ));
+            }
         }
 
         return new AndroidArtifactImpl(

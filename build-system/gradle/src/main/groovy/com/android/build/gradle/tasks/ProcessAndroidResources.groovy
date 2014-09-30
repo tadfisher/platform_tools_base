@@ -15,7 +15,8 @@
  */
 package com.android.build.gradle.tasks
 
-import com.android.build.gradle.api.ApkOutput
+import com.android.build.SplitOutput
+import com.android.build.gradle.api.SplitApkOutput
 import com.android.build.gradle.internal.dependency.SymbolFileProviderImpl
 import com.android.build.gradle.internal.dsl.AaptOptionsImpl
 import com.android.build.gradle.internal.tasks.IncrementalTask
@@ -118,14 +119,14 @@ public class ProcessAndroidResources extends IncrementalTask {
             String resOutputBaseName = resOutBaseNameFile.getName();
             final Pattern pattern = Pattern.compile("${resOutputBaseName}_([h|x|d|p|i|m]*)(.*)")
 
-            List<ApkOutput> variantOutputList = new ArrayList<ApkOutput>();
+            List<SplitApkOutput> variantOutputList = new ArrayList<SplitApkOutput>();
             for (File f : resOutBaseDirectory.listFiles()) {
 
                 Matcher matcher = pattern.matcher(f.getName());
                 if (matcher.matches()) {
-                    ApkOutput variantOutput = new ApkOutput.SplitApkOutput(
-                            ApkOutput.OutputType.SPLIT,
-                            ApkOutput.SplitType.DENSITY,
+                    SplitApkOutput variantOutput = new SplitApkOutput(
+                            SplitOutput.OutputType.SPLIT,
+                            SplitOutput.FilterType.DENSITY,
                             matcher.group(1),
                             matcher.group(2),
                             f)

@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.test;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.SplitOutput;
-import com.android.build.gradle.api.ApkOutput;
+import com.android.build.gradle.api.SplitApkOutput;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
@@ -122,10 +122,9 @@ public class TestDataImpl implements TestData {
         BaseVariantData<?> testedVariantData2 = (BaseVariantData) testedVariantData;
 
         ArrayList<File> splits = new ArrayList<File>();
-        for (ApkOutput apkOutput : testedVariantData2.getOutputs().get(0).getOutputFiles()) {
-            if (apkOutput.getType() == ApkOutput.OutputType.SPLIT) {
-                splits.add(apkOutput.getOutputFile());
-            }
+        for (SplitApkOutput apkOutput :
+                testedVariantData2.getOutputs().get(0).getOutputSplitFiles()) {
+            splits.add(apkOutput.getOutputFile());
         }
         return splits.isEmpty() ? null : splits.toArray(new File[splits.size()]);
     }
