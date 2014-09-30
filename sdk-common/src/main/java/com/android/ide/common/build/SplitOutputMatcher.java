@@ -18,7 +18,7 @@ package com.android.ide.common.build;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.SplitOutput;
+import com.android.build.OutputFile;
 import com.android.resources.Density;
 import com.google.common.collect.Lists;
 
@@ -49,8 +49,8 @@ public class SplitOutputMatcher {
      * @return the output to use or null if none are compatible.
      */
     @Nullable
-    public static SplitOutput computeBestOutput(
-            @NonNull List<? extends SplitOutput> outputs,
+    public static OutputFile computeBestOutput(
+            @NonNull List<? extends OutputFile> outputs,
             @Nullable Set<String> variantAbiFilters,
             int deviceDensity,
             @NonNull List<String> deviceAbis) {
@@ -64,12 +64,12 @@ public class SplitOutputMatcher {
         }
 
         // gather all compatible matches.
-        List<SplitOutput> matches = Lists.newArrayListWithExpectedSize(outputs.size());
+        List<OutputFile> matches = Lists.newArrayListWithExpectedSize(outputs.size());
 
         // find a matching output.
-        for (SplitOutput output : outputs) {
-            String densityFilter = output.getDensityFilter();
-            String abiFilter = output.getAbiFilter();
+        for (OutputFile output : outputs) {
+            String densityFilter = output.getFilter(OutputFile.DENSITY);
+            String abiFilter = output.getFilter(OutputFile.ABI);
 
             if (densityFilter != null && !densityFilter.equals(densityValue)) {
                 continue;
@@ -86,14 +86,14 @@ public class SplitOutputMatcher {
             return null;
         }
 
-        SplitOutput match = Collections.max(matches, new Comparator<SplitOutput>() {
+        OutputFile match = Collections.max(matches, new Comparator<OutputFile>() {
             @Override
-            public int compare(SplitOutput splitOutput, SplitOutput splitOutput2) {
+            public int compare(OutputFile splitOutput, OutputFile splitOutput2) {
                 return splitOutput.getVersionCode() - splitOutput2.getVersionCode();
             }
         });
 
-        if (match.getDensityFilter() == null && variantAbiFilters != null) {
+        if (match.getFilter(OutputFile.DENSITY) == null && variantAbiFilters != null) {
             // if we have a match that has no abi filter, and we have variant-level filters, then
             // we need to make sure that the variant filters are compatible with the device abis.
             boolean foundMatch = false;

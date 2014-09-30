@@ -18,7 +18,8 @@ package com.android.build.gradle.internal.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.api.ApkOutput;
+import com.android.build.OutputFile;
+import com.android.build.gradle.api.ApkOutputFile;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
@@ -54,8 +55,18 @@ public abstract class BaseVariantOutputImpl implements BaseVariantOutput {
 
     @NonNull
     @Override
-    public ImmutableList<ApkOutput> getOutputFiles() {
-        return getVariantOutputData().getOutputFiles();
+    public OutputFile getMainOutput() {
+        return getVariantOutputData().getMainOutput();
+    }
+
+    @NonNull
+    @Override
+    public ImmutableList<OutputFile> getOutputs() {
+        ImmutableList.Builder<OutputFile> outputFileBuilder = ImmutableList.builder();
+        for (ApkOutputFile apkOutputFile : getVariantOutputData().getOutputs()) {
+            outputFileBuilder.add(apkOutputFile);
+        }
+        return outputFileBuilder.build();
     }
 
     @NonNull
@@ -74,18 +85,6 @@ public abstract class BaseVariantOutputImpl implements BaseVariantOutput {
     @Override
     public Task getAssemble() {
         return getVariantOutputData().assembleTask;
-    }
-
-    @Nullable
-    @Override
-    public String getDensityFilter() {
-        return getVariantOutputData().getDensityFilter();
-    }
-
-    @Nullable
-    @Override
-    public String getAbiFilter() {
-        return getVariantOutputData().getAbiFilter();
     }
 
     @NonNull
