@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.build.SplitOutput
 import com.android.build.gradle.api.ApkOutput
 import com.android.build.gradle.internal.tasks.OutputFileTask
 import com.google.common.collect.ImmutableCollection
@@ -67,8 +68,8 @@ class SplitZipAlign extends DefaultTask implements OutputFileTask{
             }
 
             tmpOutputs.add(new ApkOutput.SplitApkOutput(
-                    ApkOutput.OutputType.SPLIT,
-                    ApkOutput.SplitType.DENSITY,
+                    SplitOutput.OutputType.SPLIT,
+                    SplitOutput.FilterType.DENSITY,
                     splitVariantOutput.splitIdentifier,
                     splitVariantOutput.splitSuffix,
                     out))

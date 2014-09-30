@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.tasks
 
+import com.android.build.SplitOutput
 import com.android.build.gradle.api.ApkOutput
 import com.android.build.gradle.internal.dependency.SymbolFileProviderImpl
 import com.android.build.gradle.internal.dsl.AaptOptionsImpl
@@ -124,8 +125,8 @@ public class ProcessAndroidResources extends IncrementalTask {
                 Matcher matcher = pattern.matcher(f.getName());
                 if (matcher.matches()) {
                     ApkOutput variantOutput = new ApkOutput.SplitApkOutput(
-                            ApkOutput.OutputType.SPLIT,
-                            ApkOutput.SplitType.DENSITY,
+                            SplitOutput.OutputType.SPLIT,
+                            SplitOutput.FilterType.DENSITY,
                             matcher.group(1),
                             matcher.group(2),
                             f)
