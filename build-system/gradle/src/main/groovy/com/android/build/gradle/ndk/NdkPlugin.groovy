@@ -15,9 +15,7 @@
  */
 package com.android.build.gradle.ndk
 
-import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.BasePlugin
-import com.android.build.gradle.LibraryPlugin
 import com.android.build.gradle.api.AndroidSourceDirectorySet
 import com.android.build.gradle.internal.api.DefaultAndroidSourceDirectorySet
 import com.android.build.gradle.ndk.internal.ForwardNdkConfigurationAction
@@ -30,7 +28,6 @@ import org.gradle.api.Action
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.specs.Spec
 import org.gradle.configuration.project.ProjectConfigurationActionContainer
@@ -46,7 +43,7 @@ import javax.inject.Inject
  */
 class NdkPlugin implements Plugin<Project> {
 
-    protected Project project
+    private Project project
 
     private NdkExtension extension
 
@@ -54,7 +51,7 @@ class NdkPlugin implements Plugin<Project> {
 
     private ProjectConfigurationActionContainer configurationActions
 
-    protected Instantiator instantiator
+    private Instantiator instantiator
 
     @Inject
     public NdkPlugin(
@@ -83,7 +80,7 @@ class NdkPlugin implements Plugin<Project> {
         if (project.extensions.findByName("android") == null) {
             project.extensions.add("android", extension)
         }
-        ndkHandler = new NdkHandler(project, extension)
+        ndkHandler = new NdkHandler(project.rootDir, extension)
 
         project.apply plugin: 'c'
         project.apply plugin: 'cpp'
