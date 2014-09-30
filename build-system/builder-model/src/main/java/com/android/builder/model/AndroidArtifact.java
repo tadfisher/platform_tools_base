@@ -34,7 +34,7 @@ import java.util.Set;
 public interface AndroidArtifact extends BaseArtifact {
 
     @NonNull
-    Collection<AndroidArtifactOutput> getOutputs();
+    Collection<AndroidArtifactOutputFile> getOutputs();
 
     /**
      * Returns whether the output file is signed. This is always false for the main artifact

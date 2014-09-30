@@ -18,15 +18,18 @@ package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.AndroidArtifactOutput;
+import com.android.build.FilterData;
+import com.android.builder.model.AndroidArtifactOutputFile;
+import com.google.common.collect.ImmutableList;
 
 import java.io.File;
 import java.io.Serializable;
+import java.util.Collection;
 
 /**
- * Implementation of AndroidArtifactOutput that is serializable
+ * Implementation of AndroidArtifactOutputFile that is serializable
  */
-public class AndroidArtifactOutputImpl implements AndroidArtifactOutput, Serializable {
+public class AndroidArtifactOutputFileImpl implements AndroidArtifactOutputFile, Serializable {
     private static final long serialVersionUID = 1L;
 
     @NonNull
@@ -36,24 +39,30 @@ public class AndroidArtifactOutputImpl implements AndroidArtifactOutput, Seriali
     @NonNull
     private final String assembleTaskName;
     private final int versionCode;
-    @Nullable
-    private final String densityFilter;
-    @Nullable
-    private final String abiFilter;
+    private final OutputType outputType;
+    @NonNull
+    private final Collection<FilterData> filters;
+    @NonNull
+    private final Collection<String> filterTypes;
 
-    AndroidArtifactOutputImpl(
+    AndroidArtifactOutputFileImpl(
+            @NonNull OutputType outputType,
             @NonNull File outputFile,
             @NonNull String assembleTaskName,
             @NonNull File generatedManifest,
             int versionCode,
-            @Nullable String densityFilter,
-            @Nullable String abiFilter) {
+            @NonNull Collection<FilterData> filters) {
+        this.outputType = outputType;
         this.outputFile = outputFile;
         this.generatedManifest = generatedManifest;
         this.assembleTaskName = assembleTaskName;
         this.versionCode = versionCode;
-        this.densityFilter = densityFilter;
-        this.abiFilter = abiFilter;
+        this.filters = filters;
+        ImmutableList.Builder<String> splitTypeBuilder = ImmutableList.builder();
+        for (FilterData filter : filters) {
+            splitTypeBuilder.add(filter.getFilterType());
+        }
+        filterTypes = splitTypeBuilder.build();
     }
 
     @NonNull
@@ -79,15 +88,32 @@ public class AndroidArtifactOutputImpl implements AndroidArtifactOutput, Seriali
         return versionCode;
     }
 
-    @Nullable
+    @NonNull
     @Override
-    public String getDensityFilter() {
-        return densityFilter;
+    public String getOutputType() {
+        return outputType.name();
+    }
+
+    @NonNull
+    @Override
+    public Collection<String> getFilterTypes() {
+        return filterTypes;
     }
 
     @Nullable
     @Override
-    public String getAbiFilter() {
-        return abiFilter;
+    public String getFilter(String filterType) {
+        for (FilterData filter : filters) {
+            if (filter.getFilterType().equals(filterType)) {
+                return filter.getIdentifier();
+            }
+        }
+        return null;
+    }
+
+    @NonNull
+    @Override
+    public Collection<FilterData> getFilters() {
+        return filters;
     }
 }

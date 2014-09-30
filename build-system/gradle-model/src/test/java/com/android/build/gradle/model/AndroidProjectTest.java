@@ -23,9 +23,11 @@ import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.FilterData;
+import com.android.build.OutputFile;
 import com.android.builder.internal.StringHelper;
 import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidArtifactOutput;
+import com.android.builder.model.AndroidArtifactOutputFile;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ApiVersion;
@@ -47,12 +49,14 @@ import com.android.prefs.AndroidLocation;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import junit.framework.TestCase;
 
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
 import org.gradle.tooling.UnknownModelException;
+import org.gradle.tooling.internal.consumer.DefaultGradleConnector;
 import org.gradle.tooling.model.GradleProject;
 
 import java.io.File;
@@ -168,6 +172,7 @@ public class AndroidProjectTest extends TestCase {
         if (projectData == null) {
             // Configure the connector and create the connection
             GradleConnector connector = GradleConnector.newConnector();
+            ((DefaultGradleConnector) connector).embedded(true);
 
             File projectDir = new File(getTestDir(testFolder), projectName);
             connector.forProjectDirectory(projectDir);
@@ -384,10 +389,10 @@ public class AndroidProjectTest extends TestCase {
         assertEquals("Debug sourceGenTask", "generateDebugSources", debugMainInfo.getSourceGenTaskName());
         assertEquals("Debug compileTask", "compileDebugSources", debugMainInfo.getCompileTaskName());
 
-        Collection<AndroidArtifactOutput> debugMainOutputs = debugMainInfo.getOutputs();
+        Collection<AndroidArtifactOutputFile> debugMainOutputs = debugMainInfo.getOutputs();
         assertNotNull("Debug main output null-check", debugMainOutputs);
         assertEquals("Debug main output size", 1, debugMainOutputs.size());
-        AndroidArtifactOutput debugMainOutput = debugMainOutputs.iterator().next();
+        AndroidArtifactOutputFile debugMainOutput = debugMainOutputs.iterator().next();
         assertNotNull(debugMainOutput);
         assertNotNull(debugMainOutput.getOutputFile());
         assertNotNull(debugMainOutput.getAssembleTaskName());
@@ -411,10 +416,10 @@ public class AndroidProjectTest extends TestCase {
         // size 2 = rs output + resValue output
         assertEquals(2, generatedResFolders.size());
 
-        Collection<AndroidArtifactOutput> debugTestOutputs = debugTestInfo.getOutputs();
+        Collection<AndroidArtifactOutputFile> debugTestOutputs = debugTestInfo.getOutputs();
         assertNotNull("Debug test output null-check", debugTestOutputs);
         assertEquals("Debug test output size", 1, debugTestOutputs.size());
-        AndroidArtifactOutput debugTestOutput = debugTestOutputs.iterator().next();
+        AndroidArtifactOutputFile debugTestOutput = debugTestOutputs.iterator().next();
         assertNotNull(debugTestOutput);
         assertNotNull(debugTestOutput.getOutputFile());
         assertNotNull(debugTestOutput.getAssembleTaskName());
@@ -484,10 +489,10 @@ public class AndroidProjectTest extends TestCase {
         assertEquals("Release sourceGenTask", "generateReleaseSources", relMainInfo.getSourceGenTaskName());
         assertEquals("Release javaCompileTask", "compileReleaseSources", relMainInfo.getCompileTaskName());
 
-        Collection<AndroidArtifactOutput> relMainOutputs = relMainInfo.getOutputs();
+        Collection<AndroidArtifactOutputFile> relMainOutputs = relMainInfo.getOutputs();
         assertNotNull("Rel Main output null-check", relMainOutputs);
         assertEquals("Rel Main output size", 1, relMainOutputs.size());
-        AndroidArtifactOutput relMainOutput = relMainOutputs.iterator().next();
+        AndroidArtifactOutputFile relMainOutput = relMainOutputs.iterator().next();
         assertNotNull(relMainOutput);
         assertNotNull(relMainOutput.getOutputFile());
         assertNotNull(relMainOutput.getAssembleTaskName());
@@ -550,7 +555,7 @@ public class AndroidProjectTest extends TestCase {
         assertNotNull("Debug main info null-check", debugMainArficat);
 
         // get the outputs.
-        Collection<AndroidArtifactOutput> debugOutputs = debugMainArficat.getOutputs();
+        Collection<AndroidArtifactOutputFile> debugOutputs = debugMainArficat.getOutputs();
         assertNotNull(debugOutputs);
         assertEquals(5, debugOutputs.size());
 
@@ -562,14 +567,55 @@ public class AndroidProjectTest extends TestCase {
         expected.put("xhdpi", 412);
         expected.put("xxhdpi", 512);
 
-        for (AndroidArtifactOutput output : debugOutputs) {
-            String densityFilter = output.getDensityFilter();
+        for (AndroidArtifactOutputFile output : debugOutputs) {
+            String densityFilter = output.getFilter(OutputFile.DENSITY);
             Integer value = expected.get(densityFilter);
             // this checks we're not getting an unexpected output.
-            assertNotNull("Check Valid output: " + (densityFilter == null ? "universal" : densityFilter),
+            assertNotNull("Check Valid output: " + (densityFilter == null ? "universal"
+                            : densityFilter),
                     value);
 
             assertEquals(value.intValue(), output.getVersionCode());
+            expected.remove(densityFilter);
+}
+
+        // this checks we didn't miss any expected output.
+        assertTrue(expected.isEmpty());
+    }
+
+    public void testDensityPureSplitOutputs() throws Exception {
+        // Load the custom model for the project
+        ProjectData projectData = getModelForProject(FOLDER_TEST_REGULAR, "densitySplitInL");
+
+        AndroidProject model = projectData.model;
+
+        Collection<Variant> variants = model.getVariants();
+        assertEquals("Variant Count", 2 , variants.size());
+
+        // get the main artifact of the debug artifact
+        Variant debugVariant = getVariant(variants, DEBUG);
+        assertNotNull("debug Variant null-check", debugVariant);
+        AndroidArtifact debugMainArtifact = debugVariant.getMainArtifact();
+        assertNotNull("Debug main info null-check", debugMainArtifact);
+
+        // get the outputs.
+        Collection<AndroidArtifactOutputFile> debugOutputs = debugMainArtifact.getOutputs();
+        assertNotNull(debugOutputs);
+        assertEquals(5, debugOutputs.size());
+
+        // build a set of expected outputs
+        Set<String> expected = Sets.newHashSetWithExpectedSize(5);
+        expected.add(null);
+        expected.add("mdpi");
+        expected.add("hdpi");
+        expected.add("xhdpi");
+        expected.add("xxhdpi");
+
+        for (AndroidArtifactOutputFile output : debugOutputs) {
+            String densityFilter = output.getFilter(OutputFile.DENSITY);
+
+            // with pure splits, all split have the same version code.
+            assertEquals(12, output.getVersionCode());
             expected.remove(densityFilter);
         }
 
@@ -593,7 +639,7 @@ public class AndroidProjectTest extends TestCase {
         assertNotNull("Debug main info null-check", debugMainArficat);
 
         // get the outputs.
-        Collection<AndroidArtifactOutput> debugOutputs = debugMainArficat.getOutputs();
+        Collection<AndroidArtifactOutputFile> debugOutputs = debugMainArficat.getOutputs();
         assertNotNull(debugOutputs);
         assertEquals(3, debugOutputs.size());
 
@@ -603,14 +649,18 @@ public class AndroidProjectTest extends TestCase {
         expected.put("mips", 2000123);
         expected.put("x86", 3000123);
 
-        for (AndroidArtifactOutput output : debugOutputs) {
-            String abiFilter = output.getAbiFilter();
-            Integer value = expected.get(abiFilter);
-            // this checks we're not getting an unexpected output.
-            assertNotNull("Check Valid output: " + abiFilter, value);
+        for (AndroidArtifactOutputFile output : debugOutputs) {
+            for (FilterData filterData : output.getFilters()) {
+                if (filterData.getFilterType().equals(OutputFile.ABI)) {
+                    String abiFilter = filterData.getIdentifier();
+                    Integer value = expected.get(abiFilter);
+                    // this checks we're not getting an unexpected output.
+                    assertNotNull("Check Valid output: " + abiFilter, value);
 
-            assertEquals(value.intValue(), output.getVersionCode());
-            expected.remove(abiFilter);
+                    assertEquals(value.intValue(), output.getVersionCode());
+                    expected.remove(abiFilter);
+                }
+            }
         }
 
         // this checks we didn't miss any expected output.
@@ -679,7 +729,7 @@ public class AndroidProjectTest extends TestCase {
                     "Null-check on mainArtifactInfo for " + variant.getDisplayName(),
                     mainInfo);
 
-            AndroidArtifactOutput output = mainInfo.getOutputs().iterator().next();
+            AndroidArtifactOutputFile output = mainInfo.getOutputs().iterator().next();
 
             assertEquals("Output file for " + variant.getName(),
                     new File(buildDir, variant.getName() + ".apk"),
@@ -1232,7 +1282,7 @@ public class AndroidProjectTest extends TestCase {
         AndroidArtifact debugMainInfo = debugVariant.getMainArtifact();
         assertNotNull("Debug main info null-check", debugMainInfo);
 
-        Collection<AndroidArtifactOutput> debugMainOutputs = debugMainInfo.getOutputs();
+        Collection<AndroidArtifactOutputFile> debugMainOutputs = debugMainInfo.getOutputs();
         assertNotNull("Debug main output null-check", debugMainOutputs);
 
         // release variant
@@ -1242,7 +1292,7 @@ public class AndroidProjectTest extends TestCase {
         AndroidArtifact relMainInfo = releaseVariant.getMainArtifact();
         assertNotNull("Release main info null-check", relMainInfo);
 
-        Collection<AndroidArtifactOutput> relMainOutputs = relMainInfo.getOutputs();
+        Collection<AndroidArtifactOutputFile> relMainOutputs = relMainInfo.getOutputs();
         assertNotNull("Rel Main output null-check", relMainOutputs);
 
         File debugFile = debugMainOutputs.iterator().next().getOutputFile();
@@ -1643,10 +1693,10 @@ public class AndroidProjectTest extends TestCase {
             Collection<File> sourceFolders = artifact.getGeneratedSourceFolders();
             assertEquals("Gen src Folder count", 4, sourceFolders.size());
 
-            Collection<AndroidArtifactOutput> outputs = artifact.getOutputs();
+            Collection<AndroidArtifactOutputFile> outputs = artifact.getOutputs();
             assertNotNull(outputs);
             assertEquals(1, outputs.size());
-            AndroidArtifactOutput output = outputs.iterator().next();
+            AndroidArtifactOutputFile output = outputs.iterator().next();
 
             assertEquals(variantName + " output", apk, output.getOutputFile());
             File manifest = output.getGeneratedManifest();

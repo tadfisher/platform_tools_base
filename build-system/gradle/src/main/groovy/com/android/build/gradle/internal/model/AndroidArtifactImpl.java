@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.model;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidArtifactOutput;
+import com.android.builder.model.AndroidArtifactOutputFile;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.SourceProvider;
 
@@ -36,7 +36,7 @@ public class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArti
     private static final long serialVersionUID = 1L;
 
     @NonNull
-    private final Collection<AndroidArtifactOutput> outputs;
+    private final Collection<AndroidArtifactOutputFile> outputs;
     private final boolean isSigned;
     @Nullable
     private final String signingConfigName;
@@ -53,7 +53,7 @@ public class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArti
 
     AndroidArtifactImpl(
             @NonNull String name,
-            @NonNull Collection<AndroidArtifactOutput> outputs,
+            @NonNull Collection<AndroidArtifactOutputFile> outputs,
             @NonNull String assembleTaskName,
             boolean isSigned,
             @Nullable String signingConfigName,
@@ -82,7 +82,7 @@ public class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArti
 
     @NonNull
     @Override
-    public Collection<AndroidArtifactOutput> getOutputs() {
+    public Collection<AndroidArtifactOutputFile> getOutputs() {
         return outputs;
     }
 

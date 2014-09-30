@@ -17,9 +17,11 @@
 package com.android.build.gradle.internal.model
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable
+import com.android.build.OutputFile
 import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.BasePlugin
 import com.android.build.gradle.LibraryPlugin
+import com.android.build.gradle.api.ApkOutputFile
 import com.android.build.gradle.internal.BuildTypeData
 import com.android.build.gradle.internal.ProductFlavorData
 import com.android.build.gradle.internal.dsl.LintOptionsImpl
@@ -32,7 +34,7 @@ import com.android.build.gradle.internal.variant.TestVariantData
 import com.android.builder.core.DefaultProductFlavor
 import com.android.builder.core.VariantConfiguration
 import com.android.builder.model.AndroidArtifact
-import com.android.builder.model.AndroidArtifactOutput
+import com.android.builder.model.AndroidArtifactOutputFile
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.ApiVersion
 import com.android.builder.model.ArtifactMetaData
@@ -46,6 +48,7 @@ import com.android.sdklib.IAndroidTarget
 import com.google.common.collect.Lists
 import org.gradle.api.Project
 import org.gradle.api.plugins.UnknownPluginException
+import org.gradle.api.reporting.Report
 import org.gradle.tooling.provider.model.ToolingModelBuilder
 
 import java.util.jar.Attributes
@@ -249,7 +252,7 @@ public class ModelBuilder implements ToolingModelBuilder {
 
         // get the outputs
         List<? extends BaseVariantOutputData> variantOutputs = variantData.outputs
-        List<AndroidArtifactOutput> outputs = Lists.newArrayListWithCapacity(variantOutputs.size())
+        List<AndroidArtifactOutputFile> outputs = Lists.newArrayListWithCapacity(variantOutputs.size())
 
         for (BaseVariantOutputData variantOutputData : variantOutputs) {
             Integer versionCode = (variantOutputData instanceof ApkVariantOutputData) ?
@@ -258,16 +261,28 @@ public class ModelBuilder implements ToolingModelBuilder {
 
             int intVersionCode = versionCode != null ? versionCode.intValue() : 1;
 
-            AndroidArtifactOutput output = new AndroidArtifactOutputImpl(
+            // add the main APK.
+            outputs.add(new AndroidArtifactOutputFileImpl(
+                    variantOutputData.getType(),
                     variantOutputData.outputFile,
                     variantOutputData.assembleTask.name,
                     variantOutputData.manifestProcessorTask.manifestOutputFile,
                     intVersionCode,
-                    variantOutputData.densityFilter,
-                    variantOutputData.abiFilter
-            );
+                    variantOutputData.filters));
 
-            outputs.add(output)
+            // add split APKs if any.
+            for (ApkOutputFile splitApk : variantOutputData.outputs) {
+                if (splitApk.getType() == OutputFile.SPLIT) {
+                    outputs.add(new AndroidArtifactOutputFileImpl(
+                            splitApk.getType(),
+                            splitApk.outputFile,
+                            variantOutputData.assembleTask.name,
+                            variantOutputData.manifestProcessorTask.manifestOutputFile,
+                            intVersionCode,
+                            splitApk.filters,
+                    ));
+                }
+            }
         }
 
         return new AndroidArtifactImpl(

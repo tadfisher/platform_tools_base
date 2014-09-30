@@ -17,14 +17,14 @@
 package com.android.builder.model;
 
 import com.android.annotations.NonNull;
-import com.android.build.SplitOutput;
+import com.android.build.OutputFile;
 
 import java.io.File;
 
 /**
  * The Actual output for a {@link AndroidArtifact}
  */
-public interface AndroidArtifactOutput extends SplitOutput {
+public interface AndroidArtifactOutputFile extends OutputFile {
 
     /**
      * Returns the name of the task used to generate this artifact output.
