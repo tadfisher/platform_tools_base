@@ -1346,6 +1346,11 @@ public final class SdkConstants {
     public static final String GRADLE_PLUGIN_MINIMUM_VERSION = "0.12.0";
     public static final String GRADLE_PLUGIN_LATEST_VERSION = "0.13.+";
     public static final String GRADLE_PLUGIN_RECOMMENDED_VERSION = "0.13.0";
+    /**
+     * The version of Gradle model embedded inside Studio. This constant must be updated for *every* drop of the model. It is used
+     * to invalidate the Gradle model cache, and the cache should be invalidated even for compatible changes (e.g. method added).
+     */
+    public static final String GRADLE_PLUGIN_EMBEDDED_IN_STUDIO_VERSION = "0.14.0.20140929";
     public static final String MIN_BUILD_TOOLS_VERSION = "19.1.0";
     public static final String SUPPORT_LIB_ARTIFACT = "com.android.support:support-v4";
     public static final String APPCOMPAT_LIB_ARTIFACT = "com.android.support:appcompat-v7";
