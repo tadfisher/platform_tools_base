@@ -17,6 +17,8 @@
 package com.android.build.gradle.api;
 
 import com.android.annotations.NonNull;
+import com.android.build.SplitData;
+import com.android.build.SplitOutput;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
@@ -30,6 +32,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.lang.reflect.Type;
+import java.util.Collection;
 
 /**
  * Represents a resource output from a variant configuration.
@@ -39,34 +42,19 @@ import java.lang.reflect.Type;
  */
 public abstract class ApkOutput {
 
-    /**
-     * Type of package file, either the main APK or a pure split APK file containing resources for
-     * a particular split dimension.
-     */
-    public enum OutputType {
-        MAIN, SPLIT
-    }
-
-    /**
-     * Split dimension type
-     */
-    public enum SplitType {
-        DENSITY, ABI, LANGUAGE
-    }
-
     @NonNull
-    protected final OutputType outputType;
+    protected final SplitOutput.OutputType outputType;
 
     @NonNull
     protected final File outputFile;
 
-    protected ApkOutput(@NonNull OutputType outputType, @NonNull File outputFile) {
+    protected ApkOutput(@NonNull SplitOutput.OutputType outputType, @NonNull File outputFile) {
         this.outputFile = outputFile;
         this.outputType = outputType;
     }
 
     @NonNull
-    public OutputType getType() {
+    public SplitOutput.OutputType getType() {
         return outputType;
     }
 
@@ -75,25 +63,29 @@ public abstract class ApkOutput {
         return outputFile;
     }
 
+    public Collection<SplitData> getFilters() {
+        return ImmutableList.of();
+    }
+
     public static final class SplitApkOutput extends ApkOutput {
-        @NonNull private final SplitType splitType;
+        @NonNull private final SplitOutput.FilterType filterType;
         @NonNull private final String splitIdentifier;
         @NonNull private final String splitSuffix;
 
-        public SplitApkOutput(@NonNull OutputType outputType,
-                @NonNull SplitType splitType,
+        public SplitApkOutput(@NonNull SplitOutput.OutputType outputType,
+                @NonNull SplitOutput.FilterType filterType,
                 @NonNull String splitIdentifier,
                 @NonNull String splitSuffix,
                 @NonNull File outputFile) {
             super(outputType, outputFile);
-            this.splitType = splitType;
+            this.filterType = filterType;
             this.splitIdentifier = splitIdentifier;
             this.splitSuffix = splitSuffix;
         }
 
         /**
          * String identifying the split within its dimension. For instance, for a
-         * {@link ApkOutput.SplitType#DENSITY}, a split identifier
+         * {@link com.android.build.SplitOutput.FilterType#DENSITY}, a split identifier
          * can be "xxhdpi".
          *
          * @return the split identifier (bounded by its split type).
@@ -113,15 +105,27 @@ public abstract class ApkOutput {
             return splitSuffix;
         }
 
+        @NonNull
+        public Collection<SplitData> getFilters() {
+            return  ImmutableList.<SplitData>builder()
+                .add(new SplitData(SplitOutput.FilterType.DENSITY, getSplitIdentifier()))
+                .build();
+        }
+
         @Override
         public String toString() {
             return Objects.toStringHelper(this)
                     .add("OutputType", outputType)
-                    .add("SplitType", splitType)
+                    .add("FilterType", filterType)
                     .add("SplitIdentifier", splitIdentifier)
                     .add("SplitSuffix", splitSuffix)
                     .add("File", outputFile.getAbsolutePath())
                     .toString();
+        }
+
+        @NonNull
+        public SplitOutput.FilterType getFilterType() {
+            return filterType;
         }
 
         /**
@@ -134,8 +138,10 @@ public abstract class ApkOutput {
                     JsonDeserializationContext jsonDeserializationContext)
                     throws JsonParseException {
                 return new SplitApkOutput(
-                        OutputType.valueOf(((JsonObject) jsonElement).get("outputType").getAsString()),
-                        SplitType.valueOf(((JsonObject) jsonElement).get("splitType").getAsString()),
+                        SplitOutput.OutputType.valueOf(
+                                ((JsonObject) jsonElement).get("outputType").getAsString()),
+                        SplitOutput.FilterType.valueOf(
+                                ((JsonObject) jsonElement).get("filterType").getAsString()),
                         ((JsonObject) jsonElement).get("splitIdentifier").getAsString(),
                         ((JsonObject) jsonElement).get("splitSuffix").getAsString(),
                         new File(((JsonObject) jsonElement).getAsJsonObject(
@@ -147,7 +153,7 @@ public abstract class ApkOutput {
     public static final class MainApkOutput extends ApkOutput {
 
         public MainApkOutput(File outputFile) {
-            super(OutputType.MAIN, outputFile);
+            super(SplitOutput.OutputType.MAIN, outputFile);
         }
 
         @Override

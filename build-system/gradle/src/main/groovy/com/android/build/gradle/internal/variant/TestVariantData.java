@@ -16,11 +16,15 @@
 package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
+import com.android.build.SplitData;
+import com.android.build.SplitOutput;
 import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.builder.core.VariantConfiguration;
+import com.android.utils.Pair;
 import com.google.common.collect.Lists;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -41,7 +45,8 @@ public class TestVariantData extends ApkVariantData {
         this.testedVariantData = testedVariantData;
 
         // create default output
-        createOutput(null, null);
+        createOutput(SplitOutput.OutputType.MAIN,
+                Collections.<SplitData>emptyList());
     }
 
     @NonNull

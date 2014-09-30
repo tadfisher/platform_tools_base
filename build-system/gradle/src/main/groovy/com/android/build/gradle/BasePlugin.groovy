@@ -1146,7 +1146,7 @@ public abstract class BasePlugin {
                         });
                 processResources.splits = filters;
                 processResources.conventionMapping.splitInfoOutputFile = {
-                    project.file("$project.buildDir/${FD_INTERMEDIATES}/res/splitInfoList.json")
+                    project.file("$project.buildDir/${FD_INTERMEDIATES}/res/split${outputName}InfoList.json")
                 }
             }
 

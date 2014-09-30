@@ -18,8 +18,10 @@ package com.android.ide.common.build;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.SplitData;
 import com.android.build.SplitOutput;
 import com.android.resources.Density;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -27,6 +29,8 @@ import junit.framework.TestCase;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -67,6 +71,8 @@ public class SplitOutputMatcherTest extends TestCase {
             this.versionCode = versionCode;
         }
 
+
+
         @Nullable
         @Override
         public String getDensityFilter() {
@@ -77,6 +83,48 @@ public class SplitOutputMatcherTest extends TestCase {
         @Override
         public String getAbiFilter() {
             return abiFilter;
+        }
+
+        @Override
+        public OutputType getOutputType() {
+            return OutputType.FULL_SPLIT;
+        }
+
+        @NonNull
+        @Override
+        public Collection<FilterType> getFilterTypes() {
+            ImmutableList.Builder<FilterType> splitTypeBuilder = ImmutableList.builder();
+            if (densityFilter != null) {
+                splitTypeBuilder.add(FilterType.DENSITY);
+            }
+            if (abiFilter != null) {
+                splitTypeBuilder.add(FilterType.ABI);
+            }
+            return splitTypeBuilder.build();
+        }
+
+        @Nullable
+        @Override
+        public String getFilter(FilterType filterType) {
+            if (densityFilter != null && filterType == FilterType.DENSITY) {
+                return densityFilter;
+            } else if (abiFilter != null && filterType == FilterType.ABI) {
+                return abiFilter;
+            }
+            return null;
+        }
+
+        @NonNull
+        @Override
+        public Collection<SplitData> getFilters() {
+            ImmutableList.Builder<SplitData> filters = ImmutableList.builder();
+            if (densityFilter != null) {
+                filters.add(new SplitData(FilterType.DENSITY, densityFilter));
+            }
+            if (abiFilter != null) {
+                filters.add(new SplitData(FilterType.ABI, abiFilter));
+            }
+            return filters.build();
         }
 
         @NonNull

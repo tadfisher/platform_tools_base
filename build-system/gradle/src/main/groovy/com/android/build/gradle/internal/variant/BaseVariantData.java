@@ -18,6 +18,8 @@ package com.android.build.gradle.internal.variant;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.android.build.SplitData;
+import com.android.build.SplitOutput;
 import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.StringHelper;
@@ -35,6 +37,7 @@ import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.model.SourceProvider;
+import com.android.utils.Pair;
 import com.google.common.collect.Lists;
 
 import org.gradle.api.Task;
@@ -121,7 +124,7 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
         // eventually, this will require a more open ended comparison.
         mSplitHandlingPolicy =
                 variantConfiguration.getMinSdkVersion() != null
-                        && variantConfiguration.getMinSdkVersion().getApiString().equals("L")
+                        && variantConfiguration.getMinSdkVersion().getApiLevel() == 21
                     ? SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY
                     : SplitHandlingPolicy.PRE_21_POLICY;
 
@@ -134,11 +137,14 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
     }
 
     @NonNull
-    protected abstract T doCreateOutput(@Nullable String densityFilter, @Nullable String abiFilter);
+    protected abstract T doCreateOutput(
+            SplitOutput.OutputType outputType,
+            Collection<SplitData> filters);
 
     @NonNull
-    public T createOutput(@Nullable String densityFilter, @Nullable String abiFilter) {
-        T data = doCreateOutput(densityFilter, abiFilter);
+    public T createOutput(SplitOutput.OutputType outputType,
+            Collection<SplitData> filters) {
+        T data = doCreateOutput(outputType, filters);
 
         // if it's the first time we add an output, mark previous output as part of a multi-output
         // setup.

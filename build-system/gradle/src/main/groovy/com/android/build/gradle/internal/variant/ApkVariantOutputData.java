@@ -18,13 +18,16 @@ package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.SplitData;
 import com.android.build.gradle.api.ApkOutput;
 import com.android.build.gradle.tasks.PackageApplication;
 import com.android.build.gradle.tasks.SplitZipAlign;
 import com.android.build.gradle.tasks.ZipAlign;
+import com.android.utils.Pair;
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;
+import java.util.Collection;
 
 /**
  * Base output data for a variant that generates an APK file.
@@ -38,10 +41,10 @@ public class ApkVariantOutputData extends BaseVariantOutputData {
     private int versionCodeOverride = -1;
 
     public ApkVariantOutputData(
-            @Nullable String densityFilter,
-            @Nullable String abiFilter,
+            OutputType outputType,
+            @NonNull Collection<SplitData> filters,
             @NonNull BaseVariantData variantData) {
-        super(densityFilter, abiFilter, variantData);
+        super(outputType, filters, variantData);
     }
 
     @Override

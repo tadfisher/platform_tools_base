@@ -17,6 +17,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.annotations.NonNull
+import com.android.build.SplitOutput
 import com.android.build.gradle.api.ApkOutput
 import com.android.build.gradle.internal.dsl.SigningConfigDsl
 import com.android.build.gradle.internal.tasks.BaseTask
@@ -69,10 +70,12 @@ class PackageSplitRes extends BaseTask {
 
             ImmutableList.Builder<ApkOutput> builder = ImmutableList.builder();
 
-            for (ApkOutput vo : gson.fromJson(
-                    new FileReader(getOutputPackagedSplitResListFile()),
-                    ApkOutput.SplitApkOutput[].class)) {
-                builder.add(vo);
+            if (getOutputPackagedSplitResListFile().exists()) {
+                for (ApkOutput vo : gson.fromJson(
+                        new FileReader(getOutputPackagedSplitResListFile()),
+                        ApkOutput.SplitApkOutput[].class)) {
+                    builder.add(vo);
+                }
             }
             mOutputFiles = builder.build()
         }
@@ -103,8 +106,8 @@ class PackageSplitRes extends BaseTask {
             File outFile = new File(outputDirectory, apkName);
             getBuilder().signApk(variantOutput.getOutputFile(), signingConfig, outFile)
             tmpOutputs.add(new ApkOutput.SplitApkOutput(
-                    ApkOutput.OutputType.SPLIT,
-                    ApkOutput.SplitType.DENSITY,
+                    SplitOutput.OutputType.SPLIT,
+                    SplitOutput.FilterType.DENSITY,
                     variantOutput.splitIdentifier,
                     variantOutput.splitSuffix,
                     outFile))
