@@ -17,7 +17,6 @@
 
 package com.android.build.gradle.model
 
-import com.android.build.gradle.BasePlugin
 import com.android.build.gradle.api.AndroidSourceDirectorySet
 import com.android.build.gradle.internal.api.DefaultAndroidSourceDirectorySet
 import com.android.build.gradle.ndk.NdkExtension
@@ -28,18 +27,21 @@ import com.android.build.gradle.ndk.internal.ToolchainConfigurationAction
 import com.android.builder.core.VariantConfiguration
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.internal.project.ProjectIdentifier
 import org.gradle.api.plugins.ExtensionContainer
-import org.gradle.api.specs.Spec
-import org.gradle.api.tasks.TaskContainer
 import org.gradle.configuration.project.ProjectConfigurationActionContainer
 import org.gradle.internal.reflect.Instantiator
+import org.gradle.language.base.ProjectSourceSet
 import org.gradle.model.Finalize
 import org.gradle.model.Model
 import org.gradle.model.Mutate
 import org.gradle.model.RuleSource
+import org.gradle.nativeplatform.BuildTypeContainer
+import org.gradle.nativeplatform.NativeLibrarySpec
 import org.gradle.nativeplatform.StaticLibraryBinary
 import org.gradle.nativeplatform.internal.DefaultSharedLibraryBinarySpec
-import org.gradle.platform.base.BinaryContainer
+import org.gradle.nativeplatform.toolchain.ToolChainRegistry
+import org.gradle.platform.base.ComponentSpecContainer
 import org.gradle.platform.base.PlatformContainer
 
 import javax.inject.Inject
@@ -83,11 +85,7 @@ class NdkComponentModelPlugin implements Plugin<Project> {
             instantiator.newInstance(DefaultAndroidSourceDirectorySet, name, project)
         }
         extension = instantiator.newInstance(NdkExtension, sourceSetContainers)
-
         project.extensions.add("android_ndk", extension)
-
-        ndkHandler = new NdkHandler(project, extension)
-        project.extensions.add("ndk_handler", ndkHandler)
 
         project.apply plugin: 'c'
         project.apply plugin: 'cpp'
@@ -97,15 +95,21 @@ class NdkComponentModelPlugin implements Plugin<Project> {
             // TODO: Determine how to hide these task from task list.
             it.buildable = false
         }
-
     }
 
     @RuleSource
     static class Rules {
         @Model("android.ndk")
         NdkExtension createAndroidNdk(ExtensionContainer extensions) {
-            println "Create NDK Model: " + extensions.getByType(NdkExtension)
             return extensions.getByType(NdkExtension)
+        }
+
+        @Model
+        NdkHandler ndkHandler(ProjectIdentifier projectId, NdkExtension extension) {
+            while (projectId.parentIdentifier != null) {
+                projectId = projectId.parentIdentifier
+            }
+            return new NdkHandler(projectId.projectDir, extension)
         }
 
         @Model
@@ -113,12 +117,46 @@ class NdkComponentModelPlugin implements Plugin<Project> {
             return extensions.getByType(Project)
         }
 
+        @Finalize
+        void setDefaultNdkExtensionValue(NdkExtension extension) {
+            NdkExtensionConventionAction.setExtensionDefault(extension)
+        }
+
+        @Mutate createAndroidPlatforms(PlatformContainer platforms, NdkHandler ndkHandler) {
+            // Create android platforms.
+            ToolchainConfigurationAction.configurePlatforms(platforms, ndkHandler)
+        }
+
+        @Mutate createToolchains(
+                ToolChainRegistry toolchains,
+                NdkExtension ndkExtension,
+                NdkHandler ndkHandler) {
+            // Create toolchain for each ABI.
+            ToolchainConfigurationAction.configureToolchain(
+                    toolchains,
+                    ndkExtension.getToolchain(),
+                    ndkExtension.getToolchainVersion(),
+                    ndkHandler)
+        }
+
         @Mutate
-        void closeNdkExtension(PlatformContainer platforms, NdkExtension extension, Project project) {
-            NdkHandler ndkHandler = new NdkHandler(project, extension)
-            new NdkExtensionConventionAction(extension).execute(project)
-            new ToolchainConfigurationAction(ndkHandler, extension).execute(project)
-            new NdkConfigurationAction(ndkHandler, extension).execute(project)
+        void createNativeBuildTypes(BuildTypeContainer buildTypes) {
+            NdkConfigurationAction.createBuildTypes(buildTypes)
+        }
+
+        @Mutate
+        void createNativeLibrary(
+                ComponentSpecContainer specs,
+                NdkExtension extension,
+                NdkHandler ndkHandler,
+                Project project) {
+            NativeLibrarySpec library = specs.create(extension.getModuleName(), NativeLibrarySpec)
+            NdkConfigurationAction.configureProperties(library, project, extension, ndkHandler)
+        }
+
+        @Mutate
+        void configureNativeSourceSet(ProjectSourceSet sources, NdkExtension extension) {
+            NdkConfigurationAction.configureSources(sources, extension)
         }
     }
 
