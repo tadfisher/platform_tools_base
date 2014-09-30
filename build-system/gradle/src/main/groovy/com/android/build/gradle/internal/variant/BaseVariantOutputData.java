@@ -18,8 +18,9 @@ package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.FilterData;
 import com.android.build.SplitOutput;
-import com.android.build.gradle.api.ApkOutput;
+import com.android.build.gradle.api.SplitApkOutput;
 import com.android.build.gradle.internal.StringHelper;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.PackageSplitRes;
@@ -29,6 +30,7 @@ import com.google.common.collect.ImmutableList;
 import org.gradle.api.Task;
 
 import java.io.File;
+import java.util.Collection;
 
 /**
  * Base output data about a variant.
@@ -40,10 +42,11 @@ public abstract class BaseVariantOutputData implements SplitOutput {
     @NonNull
     protected final BaseVariantData<?> variantData;
 
-    @Nullable
-    private final String densityFilter;
-    @Nullable
-    private final String abiFilter;
+    @NonNull
+    private final Collection<FilterData> filters;
+
+    @NonNull
+    private final OutputType outputType;
 
     private boolean multiOutput = false;
 
@@ -53,32 +56,54 @@ public abstract class BaseVariantOutputData implements SplitOutput {
     public Task assembleTask;
 
     public BaseVariantOutputData(
-            @Nullable String densityFilter,
-            @Nullable String abiFilter,
+            @NonNull OutputType outputType,
+            @NonNull Collection<FilterData> filters,
             @NonNull BaseVariantData<?> variantData) {
-        this.densityFilter = densityFilter;
-        this.abiFilter = abiFilter;
+        assert filters != null;
+        this.outputType = outputType;
+        this.filters = filters;
         this.variantData = variantData;
     }
 
-    @Override
     @Nullable
-    public String getDensityFilter() {
-        return densityFilter;
+    @Override
+    public String getFilter(String filterType) {
+        for (FilterData filter : filters) {
+            if (filter.getFilterType().equals(filterType)) {
+                return filter.getIdentifier();
+            }
+        }
+        return null;
     }
 
     @Override
-    @Nullable
-    public String getAbiFilter() {
-        return abiFilter;
+    public OutputType getOutputType() {
+        return outputType;
+    }
+
+    @NonNull
+    @Override
+    public Collection<String> getFilterTypes() {
+        ImmutableList.Builder<String> splitTypes = ImmutableList.builder();
+        for (FilterData filter : filters) {
+            splitTypes.add(filter.getFilterType());
+        }
+        return splitTypes.build();
+    }
+
+    @NonNull
+    @Override
+    public Collection<FilterData> getFilters() {
+        return filters;
     }
 
     public abstract void setOutputFile(@NonNull File file);
 
     @NonNull
+    @Override
     public abstract File getOutputFile();
 
-    public abstract ImmutableList<ApkOutput> getOutputFiles();
+    public abstract ImmutableList<SplitApkOutput> getOutputSplitFiles();
 
     @NonNull
     public String getFullName() {
@@ -101,20 +126,23 @@ public abstract class BaseVariantOutputData implements SplitOutput {
         if (!multiOutput) {
             return variantData.getVariantConfiguration().getDirName();
         }
-        return variantData.getVariantConfiguration().computeDirNameWithSplits(densityFilter,
-                abiFilter);
+        return variantData.getVariantConfiguration().computeDirNameWithSplits(
+                getFilter(SplitOutput.DENSITY),
+                getFilter(SplitOutput.ABI));
     }
 
     @NonNull
     private String getFilterName() {
-        if (densityFilter == null && abiFilter == null) {
+        if (filters.isEmpty()) {
             return UNIVERSAL;
         }
 
         StringBuilder sb = new StringBuilder();
+        String densityFilter = getFilter(SplitOutput.DENSITY);
         if (densityFilter != null) {
             sb.append(densityFilter);
         }
+        String abiFilter = getFilter(SplitOutput.ABI);
         if (abiFilter != null) {
             if (sb.length() > 0) {
                 sb.append(StringHelper.capitalize(abiFilter));

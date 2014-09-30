@@ -16,7 +16,8 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.gradle.api.ApkOutput
+import com.android.build.SplitOutput
+import com.android.build.gradle.api.SplitApkOutput
 import com.android.build.gradle.internal.tasks.OutputFileTask
 import com.google.common.collect.ImmutableCollection
 import com.google.common.collect.ImmutableList
@@ -52,11 +53,11 @@ class SplitZipAlign extends DefaultTask implements OutputFileTask{
     @TaskAction
     void splitZipAlign() {
 
-        ImmutableList<ApkOutput.SplitApkOutput> splitVariantOutputs = ApkOutput.load(getPackagedSplitResListFile());
+        ImmutableList<SplitApkOutput> splitVariantOutputs = SplitApkOutput.load(getPackagedSplitResListFile());
 
-        ImmutableCollection.Builder<ApkOutput> tmpOutputs =
+        ImmutableCollection.Builder<SplitApkOutput> tmpOutputs =
                 ImmutableList.builder();
-        for (ApkOutput.SplitApkOutput splitVariantOutput : splitVariantOutputs) {
+        for (SplitApkOutput splitVariantOutput : splitVariantOutputs) {
             File out = new File(getOutputFile(),
                     "${project.archivesBaseName}_${outputBaseName}_${splitVariantOutput.splitIdentifier}.apk")
             project.exec {
@@ -66,9 +67,9 @@ class SplitZipAlign extends DefaultTask implements OutputFileTask{
                 args out
             }
 
-            tmpOutputs.add(new ApkOutput.SplitApkOutput(
-                    ApkOutput.OutputType.SPLIT,
-                    ApkOutput.SplitType.DENSITY,
+            tmpOutputs.add(new SplitApkOutput(
+                    SplitOutput.OutputType.SPLIT,
+                    SplitOutput.FilterType.DENSITY,
                     splitVariantOutput.splitIdentifier,
                     splitVariantOutput.splitSuffix,
                     out))

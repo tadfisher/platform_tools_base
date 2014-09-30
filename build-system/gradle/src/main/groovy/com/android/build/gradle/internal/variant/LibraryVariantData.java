@@ -17,8 +17,14 @@ package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.FilterData;
+import com.android.build.FilterDataImpl;
+import com.android.build.SplitOutput;
 import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * Data about a variant that produce a Library bundle (.aar)
@@ -34,15 +40,16 @@ public class LibraryVariantData extends BaseVariantData<LibVariantOutputData> im
         super(basePlugin, config);
 
         // create default output
-        createOutput(null, null);
+        createOutput(SplitOutput.OutputType.MAIN,
+                Collections.<FilterData>emptyList());
     }
 
     @NonNull
     @Override
     protected LibVariantOutputData doCreateOutput(
-            @Nullable String densityFilter,
-            @Nullable String abiFilter) {
-        return new LibVariantOutputData(densityFilter, abiFilter, this);
+            SplitOutput.OutputType splitOutput,
+            Collection<FilterData> filters) {
+        return new LibVariantOutputData(splitOutput, filters, this);
     }
 
     @Override
