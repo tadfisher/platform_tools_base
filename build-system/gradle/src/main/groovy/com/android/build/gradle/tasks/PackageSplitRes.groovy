@@ -17,6 +17,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.annotations.NonNull
+import com.android.build.SplitOutput
 import com.android.build.gradle.api.ApkOutput
 import com.android.build.gradle.internal.dsl.SigningConfigDsl
 import com.android.build.gradle.internal.tasks.BaseTask
@@ -62,17 +63,29 @@ class PackageSplitRes extends BaseTask {
     @NonNull
     public synchronized  ImmutableList<ApkOutput> getOutputFiles() {
         if (mOutputFiles == null) {
-            GsonBuilder gsonBuilder = new GsonBuilder();
-            gsonBuilder.registerTypeAdapter(ApkOutput.SplitApkOutput,
-                    new ApkOutput.SplitApkOutput.JsonDeserializer())
-            Gson gson = gsonBuilder.create()
 
             ImmutableList.Builder<ApkOutput> builder = ImmutableList.builder();
 
-            for (ApkOutput vo : gson.fromJson(
-                    new FileReader(getOutputPackagedSplitResListFile()),
-                    ApkOutput.SplitApkOutput[].class)) {
-                builder.add(vo);
+            if (getOutputPackagedSplitResListFile().exists()) {
+                GsonBuilder gsonBuilder = new GsonBuilder();
+                gsonBuilder.registerTypeAdapter(ApkOutput.SplitApkOutput,
+                        new ApkOutput.SplitApkOutput.JsonDeserializer())
+                Gson gson = gsonBuilder.create()
+                for (ApkOutput vo : gson.fromJson(
+                        new FileReader(getOutputPackagedSplitResListFile()),
+                        ApkOutput.SplitApkOutput[].class)) {
+                    builder.add(vo);
+                }
+            } else {
+                // the project has not been built yet so we extrapolate what the package step result
+                // might look like. So far, we only handle density splits, eventually we will need
+                // to disambiguate.
+                for (String split : splits) {
+                    ApkOutput apkOutput = new ApkOutput.SplitApkOutput(SplitOutput.OutputType.SPLIT,
+                            SplitOutput.FilterType.DENSITY, split, "",
+                            new File(getOutputPackagedSplitResListFile().getParent(), split))
+                    builder.add(apkOutput)
+                }
             }
             mOutputFiles = builder.build()
         }
@@ -103,8 +116,8 @@ class PackageSplitRes extends BaseTask {
             File outFile = new File(outputDirectory, apkName);
             getBuilder().signApk(variantOutput.getOutputFile(), signingConfig, outFile)
             tmpOutputs.add(new ApkOutput.SplitApkOutput(
-                    ApkOutput.OutputType.SPLIT,
-                    ApkOutput.SplitType.DENSITY,
+                    SplitOutput.OutputType.SPLIT,
+                    SplitOutput.FilterType.DENSITY,
                     variantOutput.splitIdentifier,
                     variantOutput.splitSuffix,
                     outFile))

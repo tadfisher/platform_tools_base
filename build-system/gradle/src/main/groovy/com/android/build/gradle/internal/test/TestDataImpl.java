@@ -123,7 +123,7 @@ public class TestDataImpl implements TestData {
 
         ArrayList<File> splits = new ArrayList<File>();
         for (ApkOutput apkOutput : testedVariantData2.getOutputs().get(0).getOutputFiles()) {
-            if (apkOutput.getType() == ApkOutput.OutputType.SPLIT) {
+            if (apkOutput.getType() == SplitOutput.OutputType.SPLIT) {
                 splits.add(apkOutput.getOutputFile());
             }
         }
