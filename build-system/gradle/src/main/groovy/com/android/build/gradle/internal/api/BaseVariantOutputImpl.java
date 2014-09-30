@@ -54,8 +54,8 @@ public abstract class BaseVariantOutputImpl implements BaseVariantOutput {
 
     @NonNull
     @Override
-    public ImmutableList<ApkOutput> getOutputFiles() {
-        return getVariantOutputData().getOutputFiles();
+    public ImmutableList<ApkOutput.SplitApkOutput> getOutputSplitFiles() {
+        return getVariantOutputData().getOutputSplitFiles();
     }
 
     @NonNull
@@ -74,18 +74,6 @@ public abstract class BaseVariantOutputImpl implements BaseVariantOutput {
     @Override
     public Task getAssemble() {
         return getVariantOutputData().assembleTask;
-    }
-
-    @Nullable
-    @Override
-    public String getDensityFilter() {
-        return getVariantOutputData().getDensityFilter();
-    }
-
-    @Nullable
-    @Override
-    public String getAbiFilter() {
-        return getVariantOutputData().getAbiFilter();
     }
 
     @NonNull

@@ -18,6 +18,7 @@ package com.android.build.gradle.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.SplitOutput;
 import com.android.build.gradle.tasks.PackageApplication;
 import com.android.build.gradle.tasks.ZipAlign;
 
@@ -72,4 +73,6 @@ public interface ApkVariantOutput extends BaseVariantOutput {
      * @return the version code.
      */
     int getVersionCode();
+
+    String getFilter(SplitOutput.FilterType filterType);
 }

@@ -18,10 +18,13 @@ package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.FilterData;
 import com.android.builder.model.AndroidArtifactOutput;
+import com.google.common.collect.ImmutableList;
 
 import java.io.File;
 import java.io.Serializable;
+import java.util.Collection;
 
 /**
  * Implementation of AndroidArtifactOutput that is serializable
@@ -36,24 +39,23 @@ public class AndroidArtifactOutputImpl implements AndroidArtifactOutput, Seriali
     @NonNull
     private final String assembleTaskName;
     private final int versionCode;
-    @Nullable
-    private final String densityFilter;
-    @Nullable
-    private final String abiFilter;
+    private final OutputType outputType;
+    @NonNull
+    private final Collection<FilterData> filters;
 
     AndroidArtifactOutputImpl(
+            @NonNull OutputType outputType,
             @NonNull File outputFile,
             @NonNull String assembleTaskName,
             @NonNull File generatedManifest,
             int versionCode,
-            @Nullable String densityFilter,
-            @Nullable String abiFilter) {
+            @NonNull Collection<FilterData> filters) {
+        this.outputType = outputType;
         this.outputFile = outputFile;
         this.generatedManifest = generatedManifest;
         this.assembleTaskName = assembleTaskName;
         this.versionCode = versionCode;
-        this.densityFilter = densityFilter;
-        this.abiFilter = abiFilter;
+        this.filters = filters;
     }
 
     @NonNull
@@ -79,15 +81,35 @@ public class AndroidArtifactOutputImpl implements AndroidArtifactOutput, Seriali
         return versionCode;
     }
 
-    @Nullable
     @Override
-    public String getDensityFilter() {
-        return densityFilter;
+    public OutputType getOutputType() {
+        return outputType;
+    }
+
+    @NonNull
+    @Override
+    public Collection<FilterType> getFilterTypes() {
+        ImmutableList.Builder<FilterType> splitTypeBuilder = ImmutableList.builder();
+        for (FilterData filter : filters) {
+            splitTypeBuilder.add(filter.getFilterType());
+        }
+        return splitTypeBuilder.build();
     }
 
     @Nullable
     @Override
-    public String getAbiFilter() {
-        return abiFilter;
+    public String getFilter(FilterType filterType) {
+        for (FilterData filter : filters) {
+            if (filter.getFilterType() == filterType) {
+                return filter.getIdentifier();
+            }
+        }
+        return null;
+    }
+
+    @NonNull
+    @Override
+    public Collection<FilterData> getFilters() {
+        return filters;
     }
 }

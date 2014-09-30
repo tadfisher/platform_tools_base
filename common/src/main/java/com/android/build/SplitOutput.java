@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 
 import java.io.File;
+import java.util.Collection;
 
 /**
  * An output with an associated set of filters.
@@ -30,6 +31,21 @@ public interface SplitOutput {
      * An object representing the lack of filter.
      */
     public static final String NO_FILTER = null;
+
+    /**
+     * Type of package file, either the main APK or a pure split APK file containing resources for
+     * a particular split dimension.
+     */
+    public enum OutputType {
+        MAIN, FULL_SPLIT, SPLIT
+    }
+
+    /**
+     * Split dimension type
+     */
+    public enum FilterType {
+        DENSITY, ABI, LANGUAGE
+    }
 
     /**
      * Returns the output file for this artifact's output.
@@ -44,18 +60,29 @@ public interface SplitOutput {
     File getOutputFile();
 
     /**
-     * The density filter if applicable.
-     * @return the density filter or null if not applicable.
+     * Returns the output type of the referenced APK.
      */
-    @Nullable
-    String getDensityFilter();
+    OutputType getOutputType();
 
     /**
-     * The ABI filter if applicable.
-     * @return the ABI filter or null if not applicable.
+     * Returns the split dimensions the referenced APK was created with.
+     */
+    @NonNull
+    public Collection<FilterType> getFilterTypes();
+
+    /**
+     * Returns all the split information used to create the APK.
+     */
+    @NonNull
+    public Collection<FilterData> getFilters();
+
+    /**
+     * Returns the split identifier (like "hdpi" for a density split) given the split dimension.
+     * @param filterType the split dimension used to create the APK.
+     * @return the split identifier or null if there was not split of that dimension.
      */
     @Nullable
-    String getAbiFilter();
+    public String getFilter(FilterType filterType);
 
     /**
      * The output versionCode.

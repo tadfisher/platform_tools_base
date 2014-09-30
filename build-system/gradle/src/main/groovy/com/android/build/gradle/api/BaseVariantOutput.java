@@ -44,7 +44,7 @@ public interface BaseVariantOutput {
     void setOutputFile(@NonNull File outputFile);
 
     @NonNull
-    ImmutableList<ApkOutput> getOutputFiles();
+    ImmutableList<ApkOutput.SplitApkOutput> getOutputSplitFiles();
 
     /**
      * Returns the Android Resources processing task.
@@ -63,18 +63,6 @@ public interface BaseVariantOutput {
      */
     @Nullable
     Task getAssemble();
-
-    /**
-     * Returns the density filter for this output. Can be null.
-     */
-    @Nullable
-    String getDensityFilter();
-
-    /**
-     * Returns the abi filter for this output. Can be null.
-     */
-    @Nullable
-    String getAbiFilter();
 
     /**
      * Returns the name of the variant. Guaranteed to be unique.
