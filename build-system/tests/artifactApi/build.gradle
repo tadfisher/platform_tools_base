@@ -60,7 +60,7 @@ dependencies {
 
 android {
     compileSdkVersion 19
-    buildToolsVersion '19.1.0'
+    buildToolsVersion '21.0.0'
 
     flavorDimensions  "pricing", "releaseType"
 
