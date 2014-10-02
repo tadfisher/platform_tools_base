@@ -22,6 +22,7 @@ import com.android.resources.ResourceType;
 import com.android.util.Pair;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -105,5 +106,9 @@ public final class StyleResourceValue extends ResourceValue implements IStyleRes
             names.add(item.getFirst());
         }
         return names;
+    }
+
+    public Collection<ResourceValue> getValues() {
+        return mItems.values();
     }
 }
