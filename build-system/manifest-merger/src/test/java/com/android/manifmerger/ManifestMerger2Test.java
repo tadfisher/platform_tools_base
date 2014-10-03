@@ -272,8 +272,9 @@ public class ManifestMerger2Test extends ManifestMergerTest {
             String messageRecord = indexOfSuggestions != -1
                     ? record.getMessage().substring(0, indexOfSuggestions)
                     : record.getMessage();
-            if (messageRecord.replaceAll("\t", "    ").equals(message)
-                    && record.getSeverity() == Record.Severity.valueOf(severity)) {
+            Pattern pattern = Pattern.compile(message);
+            Matcher matcher = pattern.matcher(messageRecord.replaceAll("\t", "    "));
+            if (matcher.matches() && record.getSeverity() == Record.Severity.valueOf(severity)) {
                 records.remove(record);
                 return true;
             }
