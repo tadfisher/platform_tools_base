@@ -56,6 +56,12 @@ public class SessionParams extends RenderParams {
     private final int mSimulatedPlatformVersion;
 
     /**
+     * A flexible map to pass additional flags to LayoutLib. LayoutLib will ignore flags that it
+     * doesn't recognize.
+     */
+    private Map<String, Object> mFlags;
+
+    /**
      *
      * @param layoutDescription the {@link ILayoutPullParser} letting the LayoutLib Bridge visit the
      * layout file.
@@ -124,6 +130,9 @@ public class SessionParams extends RenderParams {
                     params.mAdapterBindingMap);
         }
         mExtendedViewInfoMode = params.mExtendedViewInfoMode;
+        if (params.mFlags != null) {
+            mFlags = new HashMap<String, Object>(params.mFlags);
+        }
     }
 
     public ILayoutPullParser getLayoutDescription() {
@@ -168,5 +177,16 @@ public class SessionParams extends RenderParams {
 
     public int getSimulatedPlatformVersion() {
         return mSimulatedPlatformVersion;
+    }
+
+    public void setFlag(String key, Object value) {
+        if (mFlags == null) {
+            mFlags = new HashMap<String, Object>();
+        }
+        mFlags.put(key, value);
+    }
+
+    public Object getFlag(String key) {
+        return mFlags == null ? null : mFlags.get(key);
     }
 }

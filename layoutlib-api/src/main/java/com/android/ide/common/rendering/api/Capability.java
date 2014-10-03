@@ -18,7 +18,6 @@ package com.android.ide.common.rendering.api;
 
 /**
  * Enum describing the layout bridge capabilities.
- *
  */
 public enum Capability {
     /** Ability to render at full size, as required by the layout, and unbound by the screen */
@@ -78,4 +77,8 @@ public enum Capability {
      * Ability to simulate older Platform Versions.
      */
    SIMULATE_PLATFORM,
+    /**
+     * Ability to render preferences.
+     */
+    PREFERENCES_RENDERING,
 }
