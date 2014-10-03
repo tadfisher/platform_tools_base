@@ -30,9 +30,10 @@ import java.util.Map;
  * Entry point of the Layout Library. Extensions of this class provide a method to compute
  * and render a layout.
  */
+@SuppressWarnings({"MethodMayBeStatic", "UnusedDeclaration"})
 public abstract class Bridge {
 
-    public static final int API_CURRENT = 12;
+    public static final int API_CURRENT = 13;
 
     /**
      * Returns the API level of the layout library.
@@ -47,6 +48,7 @@ public abstract class Bridge {
      * Returns the revision of the library inside a given (layoutlib) API level.
      * The true revision number of the library is {@link #getApiLevel()}.{@link #getRevision()}
      */
+    @SuppressWarnings("JavaDoc")  // javadoc pointing to itself.
     public int getRevision() {
         return 0;
     }
