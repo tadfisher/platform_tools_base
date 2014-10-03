@@ -76,4 +76,8 @@ public class Features {
      * Ability to simulate older Platform Versions.
      */
     public static final int SIMULATE_PLATFORM = 13;
+    /**
+     * Ability to render preferences.
+     */
+    public static final int PREFERENCES_RENDERING = 14;
 }
