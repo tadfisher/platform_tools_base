@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.ProductFlavor;
+import com.android.builder.model.SigningConfig;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.Serializable;
@@ -172,6 +173,12 @@ class ProductFlavorImpl extends BaseConfigImpl implements ProductFlavor, Seriali
     @Override
     public Collection<String> getResourceConfigurations() {
         return mResourceConfigurations;
+    }
+
+    @Nullable
+    @Override
+    public SigningConfig getSigningConfig() {
+        return null;
     }
 
     @Override

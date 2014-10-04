@@ -26,11 +26,12 @@ import com.android.builder.dependency.DependencyContainer;
 import com.android.builder.dependency.JarDependency;
 import com.android.builder.dependency.LibraryDependency;
 import com.android.builder.internal.MergedNdkConfig;
+import com.android.builder.internal.NdkConfig;
 import com.android.builder.internal.StringHelper;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.BaseConfig;
+import com.android.builder.model.BuildType;
 import com.android.builder.model.ClassField;
-import com.android.builder.internal.NdkConfig;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SourceProvider;
@@ -54,7 +55,7 @@ import java.util.Set;
 /**
  * A Variant configuration.
  */
-public class VariantConfiguration {
+public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, F extends ProductFlavor> {
 
     // per variant, as is caches some manifest data specific to this variant.
     private final ManifestParser sManifestParser = new DefaultManifestParser();
@@ -82,18 +83,18 @@ public class VariantConfiguration {
     private String mDirName;
 
     @NonNull
-    private final DefaultProductFlavor mDefaultConfig;
+    private final D mDefaultConfig;
     @NonNull
     private final SourceProvider mDefaultSourceProvider;
 
     @NonNull
-    private final DefaultBuildType mBuildType;
+    private final T mBuildType;
     /** SourceProvider for the BuildType. Can be null */
     @Nullable
     private final SourceProvider mBuildTypeSourceProvider;
 
     private final List<String> mFlavorDimensionNames = Lists.newArrayList();
-    private final List<DefaultProductFlavor> mFlavorConfigs = Lists.newArrayList();
+    private final List<F> mFlavorConfigs = Lists.newArrayList();
     private final List<SourceProvider> mFlavorSourceProviders = Lists.newArrayList();
 
     /** Variant specific source provider, may be null */
@@ -112,7 +113,8 @@ public class VariantConfiguration {
      * for the library can use the library as if it was a normal dependency. */
     private LibraryDependency mOutput;
 
-    private DefaultProductFlavor mMergedFlavor;
+    @NonNull
+    private ProductFlavor mMergedFlavor;
     private final MergedNdkConfig mMergedNdkConfig = new MergedNdkConfig();
 
     private final Set<JarDependency> mJars = Sets.newHashSet();
@@ -156,9 +158,9 @@ public class VariantConfiguration {
      * @param buildTypeSourceProvider the source provider for the build type. Required.
      */
     public VariantConfiguration(
-            @NonNull DefaultProductFlavor defaultConfig,
+            @NonNull D defaultConfig,
             @NonNull SourceProvider defaultSourceProvider,
-            @NonNull DefaultBuildType buildType,
+            @NonNull T buildType,
             @Nullable SourceProvider buildTypeSourceProvider,
             @Nullable SigningConfig signingConfigOverride) {
         this(
@@ -178,9 +180,9 @@ public class VariantConfiguration {
      * @param signingConfigOverride an optional Signing override to be used for signing.
      */
     public VariantConfiguration(
-            @NonNull DefaultProductFlavor defaultConfig,
+            @NonNull D defaultConfig,
             @NonNull SourceProvider defaultSourceProvider,
-            @NonNull DefaultBuildType buildType,
+            @NonNull T buildType,
             @Nullable SourceProvider buildTypeSourceProvider,
             @NonNull Type type,
             @Nullable SigningConfig signingConfigOverride) {
@@ -202,9 +204,9 @@ public class VariantConfiguration {
      * @param signingConfigOverride an optional Signing override to be used for signing.
      */
     public VariantConfiguration(
-            @NonNull DefaultProductFlavor defaultConfig,
+            @NonNull D defaultConfig,
             @NonNull SourceProvider defaultSourceProvider,
-            @NonNull DefaultBuildType buildType,
+            @NonNull T buildType,
             @Nullable SourceProvider buildTypeSourceProvider,
             @NonNull Type type,
             @Nullable VariantConfiguration testedConfig,
@@ -218,7 +220,7 @@ public class VariantConfiguration {
         mSigningConfigOverride = signingConfigOverride;
         checkState(mType != Type.TEST || mTestedConfig != null);
 
-        mMergedFlavor = mDefaultConfig.clone();
+        mMergedFlavor = DefaultProductFlavor.clone(mDefaultConfig);
         computeNdkConfig();
     }
 
@@ -289,7 +291,7 @@ public class VariantConfiguration {
             } else {
                 StringBuilder sb = new StringBuilder();
                 boolean first = true;
-                for (DefaultProductFlavor flavor : mFlavorConfigs) {
+                for (F flavor : mFlavorConfigs) {
                     sb.append(first ? flavor.getName() : StringHelper.capitalize(flavor.getName()));
                     first = false;
                 }
@@ -372,7 +374,7 @@ public class VariantConfiguration {
             }
 
             if (!mFlavorConfigs.isEmpty()) {
-                for (DefaultProductFlavor flavor : mFlavorConfigs) {
+                for (F flavor : mFlavorConfigs) {
                     sb.append(flavor.getName());
                 }
 
@@ -405,7 +407,7 @@ public class VariantConfiguration {
         }
 
         if (!mFlavorConfigs.isEmpty()) {
-            for (DefaultProductFlavor flavor : mFlavorConfigs) {
+            for (F flavor : mFlavorConfigs) {
                 sb.append(flavor.getName());
             }
 
@@ -470,7 +472,7 @@ public class VariantConfiguration {
      */
     @NonNull
     public VariantConfiguration addProductFlavor(
-            @NonNull DefaultProductFlavor productFlavor,
+            @NonNull F productFlavor,
             @NonNull SourceProvider sourceProvider,
             @NonNull String dimensionName) {
 
@@ -478,7 +480,7 @@ public class VariantConfiguration {
         mFlavorSourceProviders.add(sourceProvider);
         mFlavorDimensionNames.add(dimensionName);
 
-        mMergedFlavor = productFlavor.mergeOver(mMergedFlavor);
+        mMergedFlavor = DefaultProductFlavor.mergeFlavors(mMergedFlavor, productFlavor);
         computeNdkConfig();
 
         return this;
@@ -699,7 +701,7 @@ public class VariantConfiguration {
     }
 
     @NonNull
-    public DefaultProductFlavor getDefaultConfig() {
+    public D getDefaultConfig() {
         return mDefaultConfig;
     }
 
@@ -709,12 +711,12 @@ public class VariantConfiguration {
     }
 
     @NonNull
-    public DefaultProductFlavor getMergedFlavor() {
+    public ProductFlavor getMergedFlavor() {
         return mMergedFlavor;
     }
 
     @NonNull
-    public DefaultBuildType getBuildType() {
+    public T getBuildType() {
         return mBuildType;
     }
 
@@ -730,8 +732,11 @@ public class VariantConfiguration {
         return !mFlavorConfigs.isEmpty();
     }
 
+    /**
+     * Returns the product flavors.
+     */
     @NonNull
-    public List<DefaultProductFlavor> getFlavorConfigs() {
+    public List<F> getProductFlavors() {
         return mFlavorConfigs;
     }
 
@@ -1536,7 +1541,7 @@ public class VariantConfiguration {
             }
         }
 
-        for (DefaultProductFlavor flavor : mFlavorConfigs) {
+        for (F flavor : mFlavorConfigs) {
             list = flavor.getBuildConfigFields().values();
             if (!list.isEmpty()) {
                 fullList.add("Fields from product flavor: " + flavor.getName());
@@ -1588,7 +1593,7 @@ public class VariantConfiguration {
             }
         }
 
-        for (DefaultProductFlavor flavor : mFlavorConfigs) {
+        for (F flavor : mFlavorConfigs) {
             list = flavor.getResValues().values();
             if (!list.isEmpty()) {
                 fullList.add("Values from product flavor: " + flavor.getName());
@@ -1652,7 +1657,7 @@ public class VariantConfiguration {
         fullList.addAll(mDefaultConfig.getProguardFiles());
         fullList.addAll(mBuildType.getProguardFiles());
 
-        for (DefaultProductFlavor flavor : mFlavorConfigs) {
+        for (F flavor : mFlavorConfigs) {
             fullList.addAll(flavor.getProguardFiles());
         }
 
@@ -1677,7 +1682,7 @@ public class VariantConfiguration {
         fullList.addAll(mDefaultConfig.getConsumerProguardFiles());
         fullList.addAll(mBuildType.getConsumerProguardFiles());
 
-        for (DefaultProductFlavor flavor : mFlavorConfigs) {
+        for (F flavor : mFlavorConfigs) {
             fullList.addAll(flavor.getConsumerProguardFiles());
         }
 

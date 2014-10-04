@@ -301,104 +301,133 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
     }
 
     /**
-     * Merges the flavor on top of a base platform and returns a new object with the result.
+     * Merges two flavors on top of one another and returns a new object with the result.
+     *
+     * The behavior is that if a value is present in the overlay, then it is used, otherwise
+     * we use the value from the base.
+     *
      * @param base the flavor to merge on top of
-     * @return a new merged product flavor
+     * @param overlay the flavor to apply on top of the base.
+     *
+     * @return a new ProductFlavor that represents the merge.
      */
     @NonNull
-    DefaultProductFlavor mergeOver(@NonNull DefaultProductFlavor base) {
+    static ProductFlavor mergeFlavors(@NonNull ProductFlavor base, @NonNull ProductFlavor overlay) {
         DefaultProductFlavor flavor = new DefaultProductFlavor("");
 
         flavor.mMinSdkVersion =
-                mMinSdkVersion != null ? mMinSdkVersion : base.mMinSdkVersion;
+                overlay.getMinSdkVersion() != null ?
+                        overlay.getMinSdkVersion() :
+                        base.getMinSdkVersion();
+
         flavor.mTargetSdkVersion =
-                mTargetSdkVersion != null ? mTargetSdkVersion : base.mTargetSdkVersion;
+                overlay.getTargetSdkVersion() != null ?
+                        overlay.getTargetSdkVersion() :
+                        base.getTargetSdkVersion();
         flavor.mMaxSdkVersion =
-                mMaxSdkVersion != null ? mMaxSdkVersion : base.mMaxSdkVersion;
-        flavor.mRenderscriptTargetApi = chooseInt(mRenderscriptTargetApi,
-                base.mRenderscriptTargetApi);
-        flavor.mRenderscriptSupportMode = chooseBoolean(mRenderscriptSupportMode,
-                base.mRenderscriptSupportMode);
-        flavor.mRenderscriptNdkMode = chooseBoolean(mRenderscriptNdkMode,
-                base.mRenderscriptNdkMode);
+                overlay.getMaxSdkVersion() != null ?
+                        overlay.getMaxSdkVersion() :
+                        base.getMaxSdkVersion();
+        flavor.mRenderscriptTargetApi = chooseInt(
+                overlay.getRenderscriptTargetApi(),
+                base.getRenderscriptTargetApi());
+        flavor.mRenderscriptSupportMode = chooseBoolean(
+                overlay.getRenderscriptSupportMode(),
+                base.getRenderscriptSupportMode());
+        flavor.mRenderscriptNdkMode = chooseBoolean(
+                overlay.getRenderscriptNdkMode(),
+                base.getRenderscriptNdkMode());
 
-        flavor.mVersionCode = chooseInt(mVersionCode, base.mVersionCode);
-        flavor.mVersionName = chooseString(mVersionName, base.mVersionName);
+        flavor.mVersionCode = chooseInt(overlay.getVersionCode(), base.getVersionCode());
+        flavor.mVersionName = chooseString(overlay.getVersionName(), base.getVersionName());
 
-        flavor.mApplicationId = chooseString(mApplicationId, base.mApplicationId);
+        flavor.mApplicationId = chooseString(overlay.getApplicationId(), base.getApplicationId());
 
-        flavor.mTestApplicationId = chooseString(mTestApplicationId, base.mTestApplicationId);
-        flavor.mTestInstrumentationRunner = chooseString(mTestInstrumentationRunner,
-                base.mTestInstrumentationRunner);
+        flavor.mTestApplicationId = chooseString(
+                overlay.getTestApplicationId(),
+                base.getTestApplicationId());
+        flavor.mTestInstrumentationRunner = chooseString(
+                overlay.getTestInstrumentationRunner(),
+                base.getTestInstrumentationRunner());
 
-        flavor.mTestHandleProfiling = chooseBoolean(mTestHandleProfiling,
-                base.mTestHandleProfiling);
+        flavor.mTestHandleProfiling = chooseBoolean(
+                overlay.getTestHandleProfiling(),
+                base.getTestHandleProfiling());
 
-        flavor.mTestFunctionalTest = chooseBoolean(mTestFunctionalTest,
-                base.mTestFunctionalTest);
+        flavor.mTestFunctionalTest = chooseBoolean(
+                overlay.getTestFunctionalTest(),
+                base.getTestFunctionalTest());
 
         flavor.mSigningConfig =
-                mSigningConfig != null ? mSigningConfig : base.mSigningConfig;
+                overlay.getSigningConfig() != null ?
+                        overlay.getSigningConfig() :
+                        base.getSigningConfig();
 
         flavor.addResourceConfigurations(base.getResourceConfigurations());
-        flavor.addResourceConfigurations(getResourceConfigurations());
+        flavor.addResourceConfigurations(overlay.getResourceConfigurations());
 
         flavor.addManifestPlaceHolders(base.getManifestPlaceholders());
-        flavor.addManifestPlaceHolders(getManifestPlaceholders());
+        flavor.addManifestPlaceHolders(overlay.getManifestPlaceholders());
 
         flavor.addResValues(base.getResValues());
-        flavor.addResValues(getResValues());
+        flavor.addResValues(overlay.getResValues());
 
         flavor.addBuildConfigFields(base.getBuildConfigFields());
-        flavor.addBuildConfigFields(getBuildConfigFields());
+        flavor.addBuildConfigFields(overlay.getBuildConfigFields());
 
         return flavor;
     }
 
     /**
-     * Clones the productFlavor.
+     * Clone a given product flavor.
+     *
+     * @param productFlavor the flavor to clone.
+     *
+     * @return a new instance that is a clone of the flavor.
      */
-    @Override
     @NonNull
-    public DefaultProductFlavor clone() {
-        DefaultProductFlavor flavor = new DefaultProductFlavor(getName());
-        flavor._initWith(this);
+    public static ProductFlavor clone(@NonNull ProductFlavor productFlavor) {
+        DefaultProductFlavor flavor = new DefaultProductFlavor(productFlavor.getName());
+        flavor._initWith(productFlavor);
 
-        flavor.mMinSdkVersion = mMinSdkVersion;
-        flavor.mTargetSdkVersion =mTargetSdkVersion;
-        flavor.mMaxSdkVersion = mMaxSdkVersion;
-        flavor.mRenderscriptTargetApi = mRenderscriptTargetApi;
-        flavor.mRenderscriptSupportMode = mRenderscriptSupportMode;
-        flavor.mRenderscriptNdkMode = mRenderscriptNdkMode;
+        flavor.mMinSdkVersion = productFlavor.getMinSdkVersion();
+        flavor.mTargetSdkVersion = productFlavor.getTargetSdkVersion();
+        flavor.mMaxSdkVersion = productFlavor.getMaxSdkVersion();
+        flavor.mRenderscriptTargetApi = productFlavor.getRenderscriptTargetApi();
+        flavor.mRenderscriptSupportMode = productFlavor.getRenderscriptSupportMode();
+        flavor.mRenderscriptNdkMode = productFlavor.getRenderscriptNdkMode();
 
-        flavor.mVersionCode = mVersionCode;
-        flavor.mVersionName = mVersionName;
+        flavor.mVersionCode = productFlavor.getVersionCode();
+        flavor.mVersionName = productFlavor.getVersionName();
 
-        flavor.mApplicationId = mApplicationId;
+        flavor.mApplicationId = productFlavor.getApplicationId();
 
-        flavor.mTestApplicationId = mTestApplicationId;
-        flavor.mTestInstrumentationRunner = mTestInstrumentationRunner;
-        flavor.mTestHandleProfiling = mTestHandleProfiling;
-        flavor.mTestFunctionalTest = mTestFunctionalTest;
+        flavor.mTestApplicationId = productFlavor.getTestApplicationId();
+        flavor.mTestInstrumentationRunner = productFlavor.getTestInstrumentationRunner();
+        flavor.mTestHandleProfiling = productFlavor.getTestHandleProfiling();
+        flavor.mTestFunctionalTest = productFlavor.getTestFunctionalTest();
 
-        flavor.mSigningConfig = mSigningConfig;
+        flavor.mSigningConfig = productFlavor.getSigningConfig();
 
-        flavor.addResourceConfigurations(getResourceConfigurations());
-        flavor.addManifestPlaceHolders(getManifestPlaceholders());
+        flavor.addResourceConfigurations(productFlavor.getResourceConfigurations());
+        flavor.addManifestPlaceHolders(productFlavor.getManifestPlaceholders());
+
+        flavor.addResValues(productFlavor.getResValues());
+        flavor.addBuildConfigFields(productFlavor.getBuildConfigFields());
 
         return flavor;
     }
 
-    private int chooseInt(int overlay, int base) {
+    private static int chooseInt(int overlay, int base) {
         return overlay != -1 ? overlay : base;
     }
 
     @Nullable
-    private String chooseString(String overlay, String base) {
+    private static String chooseString(String overlay, String base) {
         return overlay != null ? overlay : base;
     }
 
-    private Boolean chooseBoolean(Boolean overlay, Boolean base) {
+    private static Boolean chooseBoolean(Boolean overlay, Boolean base) {
         return overlay != null ? overlay : base;
     }
 

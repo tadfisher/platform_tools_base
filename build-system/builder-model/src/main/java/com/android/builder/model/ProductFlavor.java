@@ -161,4 +161,9 @@ public interface ProductFlavor extends BaseConfig {
     @NonNull
     Collection<String> getResourceConfigurations();
 
+    /**
+     * Returns the associated signing config or null if none are set on the build type.
+     */
+    @Nullable
+    SigningConfig getSigningConfig();
 }

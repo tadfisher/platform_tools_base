@@ -20,14 +20,14 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
+import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.MergeAssets;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.NdkCompile;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
-import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.RenderscriptCompile;
-import com.android.builder.core.DefaultBuildType;
 import com.android.builder.core.DefaultProductFlavor;
+import com.android.builder.model.BuildType;
 import com.android.builder.model.SourceProvider;
 
 import org.gradle.api.Task;
@@ -94,7 +94,7 @@ public interface BaseVariant {
      * Returns the {@link com.android.builder.core.DefaultBuildType} for this build variant.
      */
     @NonNull
-    DefaultBuildType getBuildType();
+    BuildType getBuildType();
 
     /**
      * Returns a {@link com.android.builder.core.DefaultProductFlavor} that represents the merging

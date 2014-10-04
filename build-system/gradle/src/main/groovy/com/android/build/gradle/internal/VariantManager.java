@@ -29,10 +29,12 @@ import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
+import com.android.build.gradle.internal.api.ReadOnlyBuildType;
 import com.android.build.gradle.internal.api.TestVariantImpl;
 import com.android.build.gradle.internal.api.TestedVariant;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BuildTypeDsl;
+import com.android.build.gradle.internal.api.GroupableProductFlavor;
 import com.android.build.gradle.internal.dsl.GroupableProductFlavorDsl;
 import com.android.build.gradle.internal.dsl.SigningConfigDsl;
 import com.android.build.gradle.internal.dsl.Splits;
@@ -44,6 +46,7 @@ import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.builder.core.DefaultProductFlavor;
 import com.android.builder.core.VariantConfiguration;
+import com.android.builder.model.BuildType;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
 import com.google.common.collect.ArrayListMultimap;
@@ -84,6 +87,18 @@ public class VariantManager {
 
     private final List<BaseVariantData<? extends BaseVariantOutputData>> variantDataList = Lists.newArrayList();
 
+    /**
+     * Map of read-only build-types. This maps the normal buildtype to the readonly version.
+     * This is used in the variant APIs.
+     */
+    private final Map<BuildType, BuildType> readOnlyBuildTypes = Maps.newIdentityHashMap();
+
+    /**
+     * Map of read-only build-types. This maps the normal buildtype to the readonly version.
+     * This is used in the variant APIs.
+     */
+    private final Map<GroupableProductFlavor, GroupableProductFlavor> readOnlyFlavors = Maps.newIdentityHashMap();
+
     public VariantManager(
             @NonNull Project project,
             @NonNull BasePlugin basePlugin,
@@ -98,6 +113,16 @@ public class VariantManager {
     @NonNull
     public Map<String, BuildTypeData> getBuildTypes() {
         return buildTypes;
+    }
+
+    @NonNull
+    public BuildType getReadOnlyBuildType(@NonNull BuildType buildType) {
+        BuildType roBuildType = readOnlyBuildTypes.get(buildType);
+        if (roBuildType == null) {
+            readOnlyBuildTypes.put(buildType, roBuildType = new ReadOnlyBuildType(buildType));
+        }
+
+        return roBuildType;
     }
 
     @NonNull
