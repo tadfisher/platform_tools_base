@@ -26,6 +26,7 @@ import org.gradle.api.tasks.TaskAction
  */
 public class RenderscriptCompile extends NdkTask {
 
+
     // ----- PUBLIC TASK API -----
 
     @OutputDirectory
