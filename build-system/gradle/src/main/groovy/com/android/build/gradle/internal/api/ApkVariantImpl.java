@@ -39,8 +39,9 @@ import java.util.Collection;
  */
 public abstract class ApkVariantImpl extends BaseVariantImpl implements ApkVariant {
 
-    protected ApkVariantImpl(@NonNull BasePlugin plugin) {
-        super(plugin);
+    protected ApkVariantImpl(@NonNull BasePlugin plugin,
+            @NonNull ImmutableObjectProvider immutableObjectProvider) {
+        super(plugin, immutableObjectProvider);
     }
 
     @NonNull
