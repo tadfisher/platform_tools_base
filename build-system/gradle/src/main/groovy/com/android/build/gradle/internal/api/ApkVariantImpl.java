@@ -39,8 +39,9 @@ import java.util.Collection;
  */
 public abstract class ApkVariantImpl extends BaseVariantImpl implements ApkVariant {
 
-    protected ApkVariantImpl(@NonNull BasePlugin plugin) {
-        super(plugin);
+    protected ApkVariantImpl(@NonNull BasePlugin plugin,
+            @NonNull ReadOnlyObjectProvider immutableObjectProvider) {
+        super(plugin, immutableObjectProvider);
     }
 
     @NonNull
@@ -69,7 +70,8 @@ public abstract class ApkVariantImpl extends BaseVariantImpl implements ApkVaria
 
     @Override
     public SigningConfig getSigningConfig() {
-        return getApkVariantData().getVariantConfiguration().getSigningConfig();
+        return immutableObjectProvider.getSigningConfig(
+                getApkVariantData().getVariantConfiguration().getSigningConfig());
     }
 
     @Override
