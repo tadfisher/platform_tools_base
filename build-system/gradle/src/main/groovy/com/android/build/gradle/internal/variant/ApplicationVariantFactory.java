@@ -24,6 +24,7 @@ import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.api.ApkVariantImpl;
 import com.android.build.gradle.internal.api.ApkVariantOutputImpl;
 import com.android.build.gradle.internal.api.ApplicationVariantImpl;
+import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.builder.core.VariantConfiguration;
 import com.google.common.collect.Lists;
 
@@ -51,7 +52,7 @@ public class ApplicationVariantFactory implements VariantFactory<ApplicationVari
     @Override
     @NonNull
     public ApplicationVariantData createVariantData(
-            @NonNull VariantConfiguration variantConfiguration,
+            @NonNull GradleVariantConfiguration variantConfiguration,
             @NonNull Set<String> densities,
             @NonNull Set<String> abis,
             @NonNull Set<String> compatibleScreens) {

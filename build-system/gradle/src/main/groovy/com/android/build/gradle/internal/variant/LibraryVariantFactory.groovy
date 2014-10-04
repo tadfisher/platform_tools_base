@@ -24,6 +24,7 @@ import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.internal.api.LibraryVariantImpl
 import com.android.build.gradle.internal.api.LibraryVariantOutputImpl
+import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.coverage.JacocoInstrumentTask
 import com.android.build.gradle.internal.coverage.JacocoPlugin
 import com.android.build.gradle.internal.tasks.MergeFileTask
@@ -72,7 +73,7 @@ public class LibraryVariantFactory implements VariantFactory<LibraryVariantData>
     @Override
     @NonNull
     public LibraryVariantData createVariantData(
-            @NonNull VariantConfiguration variantConfiguration,
+            @NonNull GradleVariantConfiguration variantConfiguration,
             @NonNull Set<String> densities,
             @NonNull Set<String> abis,
             @NonNull Set<String> compatibleScreens) {
@@ -118,7 +119,7 @@ public class LibraryVariantFactory implements VariantFactory<LibraryVariantData>
             @NonNull BaseVariantData<?> variantData,
             @Nullable Task assembleTask) {
         LibraryVariantData libVariantData = variantData as LibraryVariantData
-        VariantConfiguration variantConfig = variantData.variantConfiguration
+        GradleVariantConfiguration variantConfig = variantData.variantConfiguration
         DefaultBuildType buildType = variantConfig.buildType
 
         String fullName = variantConfig.fullName
@@ -402,7 +403,7 @@ public class LibraryVariantFactory implements VariantFactory<LibraryVariantData>
 
     public Task createExtractAnnotations(
             String fullName, Project project, BaseVariantData variantData) {
-        VariantConfiguration config = variantData.variantConfiguration
+        GradleVariantConfiguration config = variantData.variantConfiguration
         String dirName = config.dirName
 
         ExtractAnnotations task = project.tasks.create(
