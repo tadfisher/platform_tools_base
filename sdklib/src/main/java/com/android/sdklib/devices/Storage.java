@@ -75,10 +75,10 @@ public class Storage {
 
     public enum Unit{
         B("B", 1),
-        KiB("KiB", 1024),
-        MiB("MiB", 1024 * 1024),
-        GiB("GiB", 1024 * 1024 * 1024),
-        TiB("TiB", 1024l * 1024l * 1024l * 1024l);
+        KiB("KB", 1024),
+        MiB("MB", 1024 * 1024),
+        GiB("GB", 1024 * 1024 * 1024),
+        TiB("TB", 1024l * 1024l * 1024l * 1024l);
 
         @NonNull
         private String mValue;
