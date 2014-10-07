@@ -16,6 +16,7 @@
 package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.FD_BUILD_TOOLS;
+import static com.android.SdkConstants.GRADLE_PLUGIN_RECOMMENDED_VERSION;
 import static com.android.ide.common.repository.GradleCoordinate.COMPARE_PLUS_HIGHER;
 import static com.android.tools.lint.checks.ManifestDetector.TARGET_NEWER;
 import static com.android.tools.lint.detector.api.LintUtils.findSubstring;
@@ -703,7 +704,12 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         Issue issue = DEPENDENCY;
         if ("com.android.tools.build".equals(dependency.getGroupId()) &&
                 "gradle".equals(dependency.getArtifactId())) {
-            version = getNewerRevision(dependency, 0, 13, 0);
+            FullRevision v = FullRevision.parseRevision(GRADLE_PLUGIN_RECOMMENDED_VERSION);
+            try {
+                version = getNewerRevision(dependency, v.getMajor(), v.getMinor(), v.getMicro());
+            } catch (NumberFormatException e) {
+                context.log(e, null);
+            }
         } else if ("com.google.guava".equals(dependency.getGroupId()) &&
                 "guava".equals(dependency.getArtifactId())) {
             version = getNewerRevision(dependency, 18, 0, 0);
@@ -896,7 +902,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         if (GradleCoordinate.COMPARE_PLUS_HIGHER.compare(dependency, latestPlugin) < 0) {
             String message = "You must use a newer version of the Android Gradle plugin. The "
                     + "minimum supported version is " + SdkConstants.GRADLE_PLUGIN_MINIMUM_VERSION +
-                    " and the recommended version is " + SdkConstants.GRADLE_PLUGIN_RECOMMENDED_VERSION;
+                    " and the recommended version is " + GRADLE_PLUGIN_RECOMMENDED_VERSION;
             report(context, cookie, GRADLE_PLUGIN_COMPATIBILITY, message);
             return true;
         }
