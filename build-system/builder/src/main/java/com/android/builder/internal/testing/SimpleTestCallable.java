@@ -220,13 +220,19 @@ public class SimpleTestCallable implements Callable<Boolean> {
             if (isInstalled) {
                 // Get the coverage if needed.
                 if (success && testData.isTestCoverageEnabled()) {
-                    device.executeShellCommand(
-                            "run-as " + testData.getTestedApplicationId() + " chmod 644 " + coverageFile,
+                    String temporaryCoverageCopy = "/data/local/tmp/"
+                            + testData.getTestedApplicationId() + "." + FILE_COVERAGE_EC;
+
+                    device.executeShellCommand("run-as " + testData.getTestedApplicationId()
+                                    + " cat " + coverageFile + " > " + temporaryCoverageCopy,
                             new NullOutputReceiver(),
                             30, TimeUnit.SECONDS);
                     device.pullFile(
-                            coverageFile,
+                            temporaryCoverageCopy,
                             new File(coverageDir, FILE_COVERAGE_EC).getPath());
+                    device.executeShellCommand("rm " + temporaryCoverageCopy,
+                            new NullOutputReceiver(),
+                            30, TimeUnit.SECONDS);
                 }
 
                 // uninstall the apps
