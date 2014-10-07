@@ -1921,96 +1921,104 @@ public abstract class BasePlugin {
         }
         dexTask.dexOptions = extension.dexOptions
 
+        Copy agentTask = null
+        File jacocoAgentJar = null
+        if (runInstrumentation) {
+            JacocoInstrumentTask jacocoTask = project.tasks.create(
+                    "instrument${config.fullName.capitalize()}", JacocoInstrumentTask)
+            jacocoTask.dependsOn variantData.javaCompileTask
+            jacocoTask.conventionMapping.jacocoClasspath =
+                    { project.configurations[JacocoPlugin.ANT_CONFIGURATION_NAME] }
+            jacocoTask.conventionMapping.inputDir = { variantData.javaCompileTask.destinationDir }
+            jacocoTask.conventionMapping.outputDir = {
+                project.file(
+                        "${project.buildDir}/${FD_INTERMEDIATES}/coverage-instrumented-classes/${config.dirName}")
+            }
+            variantData.jacocoInstrumentTask = jacocoTask
+
+            dexTask.dependsOn jacocoTask
+
+            agentTask = getJacocoAgentTask()
+            jacocoAgentJar = new File(agentTask.destinationDir, FILE_JACOCO_AGENT)
+        }
+
+        File proguardOutFile = null
         if (runProguard) {
             // first proguard task.
-            BaseVariantData<? extends BaseVariantOutputData> testedVariantData = variantData instanceof TestVariantData ? variantData.testedVariantData : null as BaseVariantData
-            File outFile = createProguardTasks(variantData, testedVariantData)
+            BaseVariantData<? extends BaseVariantOutputData> testedVariantData = variantData instanceof TestVariantData ?
+                    variantData.testedVariantData : null as BaseVariantData
+
+            proguardOutFile = createProguardTasks(variantData, testedVariantData, jacocoAgentJar)
 
             // then dexing task
             dexTask.dependsOn variantData.obfuscationTask
             dexTask.conventionMapping.inputFiles = { project.files(outFile).files }
             dexTask.conventionMapping.libraries = { Collections.emptyList() }
+        }
 
+        // if required, pre-dexing task.
+        PreDex preDexTask = null;
+        boolean runPreDex = extension.dexOptions.preDexLibraries
+        if (runPreDex) {
+            def preDexTaskName = "preDex${variantData.variantConfiguration.fullName.capitalize()}"
+            preDexTask = project.tasks.create(preDexTaskName, PreDex)
+
+            preDexTask.dependsOn variantData.variantDependency.packageConfiguration.buildDependencies
+            preDexTask.plugin = this
+            preDexTask.dexOptions = extension.dexOptions
+
+            preDexTask.conventionMapping.inputFiles = {
+                Set<File> set = androidBuilder.getPackagedJars(config)
+                if (agentTask != null) {
+                    set.add(new File(agentTask.destinationDir, FILE_JACOCO_AGENT))
+                }
+
+                return set
+            }
+            preDexTask.conventionMapping.outputFolder = {
+                project.file(
+                        "${project.buildDir}/${FD_INTERMEDIATES}/pre-dexed/${variantData.variantConfiguration.dirName}")
+            }
+
+            if (agentTask != null) {
+                preDexTask.dependsOn agentTask
+            }
+        }
+
+        // then dexing task
+        dexTask.dependsOn variantData.javaCompileTask
+
+        if (runPreDex) {
+            dexTask.dependsOn preDexTask
         } else {
-            JacocoInstrumentTask jacocoTask = null
-            Copy agentTask = null
-            if (runInstrumentation) {
-                jacocoTask = project.tasks.create(
-                        "instrument${config.fullName.capitalize()}", JacocoInstrumentTask)
-                jacocoTask.dependsOn variantData.javaCompileTask
-                jacocoTask.conventionMapping.jacocoClasspath = { project.configurations[JacocoPlugin.ANT_CONFIGURATION_NAME] }
-                jacocoTask.conventionMapping.inputDir = { variantData.javaCompileTask.destinationDir }
-                jacocoTask.conventionMapping.outputDir = {
-                    project.file("${project.buildDir}/${FD_INTERMEDIATES}/coverage-instrumented-classes/${config.dirName}")
-                }
+            dexTask.dependsOn variantData.variantDependency.packageConfiguration.buildDependencies
+        }
 
-                dexTask.dependsOn jacocoTask
-
-                agentTask = getJacocoAgentTask()
+        dexTask.conventionMapping.inputFiles = {
+            if (proguardOutFile != null) {
+                return project.files(proguardOutFile).files
+            } else if (agentTask != null) {
+                return project.files(variantData.jacocoInstrumentTask.getOutputDir()).files
             }
 
-            // if required, pre-dexing task.
-            PreDex preDexTask = null;
-            boolean runPreDex = extension.dexOptions.preDexLibraries
-            if (runPreDex) {
-                def preDexTaskName = "preDex${variantData.variantConfiguration.fullName.capitalize()}"
-                preDexTask = project.tasks.create(preDexTaskName, PreDex)
-
-                preDexTask.dependsOn variantData.variantDependency.packageConfiguration.buildDependencies
-                preDexTask.plugin = this
-                preDexTask.dexOptions = extension.dexOptions
-
-                preDexTask.conventionMapping.inputFiles = {
-                    Set<File> set = androidBuilder.getPackagedJars(config)
-                    if (jacocoTask != null) {
-                        set.add(new File(agentTask.destinationDir, FILE_JACOCO_AGENT))
-                    }
-
-                    return set
-                }
-                preDexTask.conventionMapping.outputFolder = {
-                    project.file(
-                            "${project.buildDir}/${FD_INTERMEDIATES}/pre-dexed/${variantData.variantConfiguration.dirName}")
-                }
-
+            variantData.javaCompileTask.outputs.files.files
+        }
+        if (runPreDex) {
+            dexTask.conventionMapping.libraries = {
+                return project.fileTree(preDexTask.outputFolder).files
+            }
+        } else {
+            dexTask.conventionMapping.libraries = {
+                Set<File> set = androidBuilder.getPackagedJars(config)
                 if (agentTask != null) {
-                    preDexTask.dependsOn agentTask
+                    set.add(project.file("$project.buildDir/${FD_INTERMEDIATES}/jacoco/jacocoagent.jar"))
                 }
+
+                return set
             }
 
-            // then dexing task
-            dexTask.dependsOn variantData.javaCompileTask
-
-            if (runPreDex) {
-                dexTask.dependsOn preDexTask
-            } else {
-                dexTask.dependsOn variantData.variantDependency.packageConfiguration.buildDependencies
-            }
-
-            dexTask.conventionMapping.inputFiles = {
-                if (jacocoTask != null) {
-                    return project.files(jacocoTask.getOutputDir()).files
-                }
-
-                variantData.javaCompileTask.outputs.files.files
-            }
-            if (runPreDex) {
-                dexTask.conventionMapping.libraries = {
-                    return project.fileTree(preDexTask.outputFolder).files
-                }
-            } else {
-                dexTask.conventionMapping.libraries = {
-                    Set<File> set = androidBuilder.getPackagedJars(config)
-                    if (jacocoTask != null) {
-                        set.add(project.file("$project.buildDir/${FD_INTERMEDIATES}/jacoco/jacocoagent.jar"))
-                    }
-
-                    return set
-                }
-
-                if (agentTask != null) {
-                    dexTask.dependsOn agentTask
-                }
+            if (agentTask != null) {
+                dexTask.dependsOn agentTask
             }
         }
 
@@ -2330,7 +2338,8 @@ public abstract class BasePlugin {
     @NonNull
     public File createProguardTasks(
             final @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData,
-            final @Nullable BaseVariantData<? extends BaseVariantOutputData> testedVariantData) {
+            final @Nullable BaseVariantData<? extends BaseVariantOutputData> testedVariantData,
+            final @Nullable File coverageAgent) {
         final VariantConfiguration variantConfig = variantData.variantConfiguration
 
         // use single output for now.
@@ -2388,6 +2397,8 @@ public abstract class BasePlugin {
         proguardTask.configuration(configFiles)
 
         // --- InJars / LibraryJars ---
+        String classesDir = (variantData.jacocoInstrumentTask) ?
+                variantData.jacocoInstrumentTask.outputDir : variantData.javaCompileTask.destinationDir
 
         if (variantData instanceof LibraryVariantData) {
             String packageName = variantConfig.getPackageFromManifest()
@@ -2405,11 +2416,11 @@ public abstract class BasePlugin {
                 exclude += (', !' + packageName + "/Manifest\$*.class")
                 exclude += (', !' + packageName + "/BuildConfig.class")
             }
-            proguardTask.injars(variantData.javaCompileTask.destinationDir, filter: exclude)
+            proguardTask.injars(classesDir, filter: exclude)
 
             // include R files and such for compilation
             String include = exclude.replace('!', '')
-            proguardTask.libraryjars(variantData.javaCompileTask.destinationDir, filter: include)
+            proguardTask.libraryjars(classesDir, filter: include)
 
             // injar: the local dependencies
             Closure inJars = {
@@ -2433,7 +2444,7 @@ public abstract class BasePlugin {
             proguardTask.keeppackagenames()
         } else {
             // injar: the compilation output
-            proguardTask.injars(variantData.javaCompileTask.destinationDir)
+            proguardTask.injars(classesDir)
 
             // injar: the packaged dependencies
             Closure inJars = {
@@ -2458,7 +2469,13 @@ public abstract class BasePlugin {
             }
         }
 
+        // Add Jacoco runtime
+        if (coverageAgent != null) {
+            proguardTask.libraryjars(coverageAgent)
+        }
+
         if (testedVariantData != null) {
+            // TODO: Can test code be instrumented for coverage?
             // input the tested app as library
             proguardTask.libraryjars(testedVariantData.javaCompileTask.destinationDir)
             // including its dependencies
