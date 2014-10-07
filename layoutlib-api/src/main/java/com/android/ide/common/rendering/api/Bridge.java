@@ -23,7 +23,9 @@ import com.android.ide.common.rendering.api.Result.Status;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -54,12 +56,25 @@ public abstract class Bridge {
     }
 
     /**
-     * Returns an {@link EnumSet} of the supported {@link Capability}.
+     * Returns an {@link EnumSet} of the supported {@link Capability}. The IDE always knows what
+     * every capability means.
+     *
      * @return an {@link EnumSet} with the supported capabilities.
      *
+     * @see #getFeatures()
      */
     public EnumSet<Capability> getCapabilities() {
         return EnumSet.noneOf(Capability.class);
+    }
+
+    /**
+     * Returns a List of supported features. Features are extra capabilities that that the IDE may
+     * not know about.
+     *
+     * @see #getCapabilities()
+     */
+    public List<String> getFeatures() {
+        return Collections.emptyList();
     }
 
     /**
