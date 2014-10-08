@@ -22,6 +22,7 @@ import com.android.resources.ResourceType;
 import com.android.util.Pair;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +34,8 @@ import java.util.Map;
 public final class StyleResourceValue extends ResourceValue implements IStyleResourceValue {
 
     private String mParentStyle = null;
-    private Map<Pair<String, Boolean>, ResourceValue> mItems = new HashMap<Pair<String, Boolean>, ResourceValue>();
+    private final Map<Pair<String, Boolean>, ItemResourceValue> mItems
+            = new HashMap<Pair<String, Boolean>, ItemResourceValue>();
 
     public StyleResourceValue(ResourceType type, String name, boolean isFramework) {
         super(type, name, isFramework);
@@ -57,34 +59,55 @@ public final class StyleResourceValue extends ResourceValue implements IStyleRes
      * Finds a value in the list by name
      * @param name the name of the resource
      *
-     * @deprecated use {@link #findValue(String, boolean)}
+     * @deprecated use {@link #findItem(String, boolean)}
      */
     @Deprecated
     public ResourceValue findValue(String name) {
-        return mItems.get(Pair.of(name, isFramework()));
+        return findItem(name, isFramework());
     }
 
     /**
      * Finds a value in the list by name
      * @param name the name of the resource
+     *
+     * @deprecated use {@link #findItem(String, boolean)}
      */
+    @Deprecated
     public ResourceValue findValue(String name, boolean isFrameworkAttr) {
+        return findItem(name, isFrameworkAttr);
+    }
+
+    /**
+     * Finds a value in the list of items by name.
+     * @param name the name of the resource
+     * @param isFrameworkAttr is it in the framework namespace
+     */
+    public ItemResourceValue findItem(String name, boolean isFrameworkAttr) {
         return mItems.get(Pair.of(name, isFrameworkAttr));
     }
 
+    /**
+     * @deprecated use {@link #addValue(ItemResourceValue)}
+     */
+    @Deprecated
     public void addValue(ResourceValue value, boolean isFrameworkAttr) {
-        mItems.put(Pair.of(value.getName(), isFrameworkAttr), value);
+        addValue(ItemResourceValue.fromResourceValue(value, isFrameworkAttr));
+    }
+
+    public void addValue(ItemResourceValue value) {
+        mItems.put(value.getAttribute(), value);
     }
 
     @Override
     public void replaceWith(ResourceValue value) {
-        assert value instanceof StyleResourceValue;
+        assert value instanceof StyleResourceValue :
+                value.getClass() + " is not StyleResourceValue";
         super.replaceWith(value);
 
         //noinspection ConstantConditions
         if (value instanceof StyleResourceValue) {
             mItems.clear();
-            mItems.putAll(((StyleResourceValue)value).mItems);
+            mItems.putAll(((StyleResourceValue) value).mItems);
         }
     }
 
@@ -105,5 +128,13 @@ public final class StyleResourceValue extends ResourceValue implements IStyleRes
             names.add(item.getFirst());
         }
         return names;
+    }
+
+    /**
+     * Returns a list of all values defined in this Style. This doesn't return the values
+     * inherited from the parent.
+     */
+    public Collection<ItemResourceValue> getValues() {
+        return mItems.values();
     }
 }
