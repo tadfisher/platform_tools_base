@@ -527,7 +527,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             checkFileCollectionSourceSet(providers,
                     SourceProvider.class.getMethod("getRenderscriptDirectories"), "rs");
             checkFileCollectionSourceSet(providers,
-                    SourceProvider.class.getMethod("getJniDirectories"), "jni");
+                    SourceProvider.class.getMethod("getCDirectories"), "jni");
             checkFileCollectionSourceSet(providers,
                     SourceProvider.class.getMethod("getResDirectories"), "res");
             checkFileCollectionSourceSet(providers,
@@ -1410,7 +1410,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         List<File> sourceList = Lists.newArrayListWithExpectedSize(providers.size());
 
         for (SourceProvider provider : providers) {
-            sourceList.addAll(provider.getJniDirectories());
+            sourceList.addAll(provider.getCDirectories());
         }
 
         return sourceList;

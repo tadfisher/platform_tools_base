@@ -311,7 +311,13 @@ public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider
 
     @Override
     @NonNull
-    public Set<File> getJniDirectories() {
+    public Set<File> getCDirectories() {
+        return getJni().getSrcDirs();
+    }
+
+    @Override
+    @NonNull
+    public Set<File> getCppDirectories() {
         return getJni().getSrcDirs();
     }
 
