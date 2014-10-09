@@ -38,7 +38,7 @@ public class VariantFilterImpl implements VariantFilter {
 
     private ProductFlavor defaultConfig;
     private BuildType buildType;
-    private List<GroupableProductFlavor> flavors;
+    private List<? extends GroupableProductFlavor> flavors;
 
     public VariantFilterImpl(@NonNull ReadOnlyObjectProvider readOnlyObjectProvider) {
         this.readOnlyObjectProvider = readOnlyObjectProvider;
@@ -47,7 +47,7 @@ public class VariantFilterImpl implements VariantFilter {
     public void reset(
             @NonNull ProductFlavor defaultConfig,
             @NonNull BuildType buildType,
-            @Nullable List<GroupableProductFlavor> flavors) {
+            @Nullable List<? extends GroupableProductFlavor> flavors) {
         ignore = false;
         this.defaultConfig = defaultConfig;
         this.buildType = buildType;
