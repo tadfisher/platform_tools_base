@@ -28,7 +28,6 @@ import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.api.BaseVariant;
-import com.android.build.gradle.api.GroupableProductFlavor;
 import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.api.TestVariantImpl;
@@ -49,8 +48,8 @@ import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.model.SigningConfig;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
+import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -229,14 +228,14 @@ public class VariantManager {
                 // assembleTask for this flavor(dimension), created on demand if needed.
                 if (variantConfig.getProductFlavors().size() > 1) {
                     String name = StringHelper.capitalize(variantConfig.getFlavorName());
-                    assembleTask = project.getTasks().findByName("assemble" + name);
+                    assembleTask = tasks.findByName("assemble" + name);
                     if (assembleTask == null) {
                         assembleTask = project.getTasks().create("assemble" + name);
                         assembleTask.setDescription(
                                 "Assembles all builds for flavor combination: " + name);
                         assembleTask.setGroup("Build");
 
-                        project.getTasks().getByName("assemble").dependsOn(assembleTask);
+                        tasks.getByName("assemble").dependsOn(assembleTask);
                     }
                 }
                 // flavor combo
@@ -257,7 +256,7 @@ public class VariantManager {
         }
 
         if (variantDataList.isEmpty()) {
-            createBaseVariantData(signingOverride);
+            populateVariantDataList(signingOverride);
         }
 
         for (BaseVariantData variantData : variantDataList) {
@@ -279,7 +278,7 @@ public class VariantManager {
      *
      * @param signingOverride a signing override. Generally driven through the IDE.
      */
-    public void createBaseVariantData(@Nullable SigningConfig signingOverride) {
+    public void populateVariantDataList(@Nullable SigningConfig signingOverride) {
         // Add a compile lint task
         basePlugin.createLintCompileTask();
 
@@ -294,78 +293,24 @@ public class VariantManager {
         if (productFlavors.isEmpty()) {
             createVariantDataForDefaultBuild(densities, abis, signingOverride);
         } else {
-            // check whether we have multi flavor builds
             List<String> flavorDimensionList = extension.getFlavorDimensionList();
-            if (flavorDimensionList == null || flavorDimensionList.size() < 2) {
-                for (ProductFlavorData productFlavorData : productFlavors.values()) {
-                    createVariantDataForFlavoredBuild(densities, abis, signingOverride, productFlavorData);
-                }
-            } else {
-                // need to group the flavor per dimension.
-                // First a map of dimension -> list(ProductFlavor)
-                ArrayListMultimap<String, ProductFlavorData<GroupableProductFlavorDsl>> map = ArrayListMultimap.create();
-                for (ProductFlavorData<GroupableProductFlavorDsl> productFlavorData : productFlavors.values()) {
 
-                    GroupableProductFlavorDsl flavor = productFlavorData.getProductFlavor();
-                    String flavorDimension = flavor.getFlavorDimension();
+            Iterable<GroupableProductFlavorDsl> flavorDsl =
+                    Iterables.transform(productFlavors.values(), new Function<ProductFlavorData<GroupableProductFlavorDsl>, GroupableProductFlavorDsl>() {
+                        @Override
+                        public GroupableProductFlavorDsl apply(
+                                ProductFlavorData<GroupableProductFlavorDsl> data) {
+                            return data.getProductFlavor();
+                        }
+                    });
 
-                    if (flavorDimension == null) {
-                        throw new RuntimeException(String.format(
-                                "Flavor '%1$s' has no flavor dimension.", flavor.getName()));
-                    }
-                    if (!flavorDimensionList.contains(flavorDimension)) {
-                        throw new RuntimeException(String.format(
-                                "Flavor '%1$s' has unknown dimension '%2$s'.",
-                                flavor.getName(), flavor.getFlavorDimension()));
-                    }
+            List<ProductFlavorGroup> flavorGroupList = ProductFlavorGroup.createGroupList(
+                    flavorDimensionList,
+                    flavorDsl);
 
-                    map.put(flavorDimension, productFlavorData);
-                }
-
-                // now we use the flavor dimensions to generate an ordered array of flavor to use
-                ProductFlavorData[] array = new ProductFlavorData[flavorDimensionList.size()];
-                createVariantDataForMultiFlavoredBuilds(array, 0, map, densities, abis, signingOverride);
+            for (ProductFlavorGroup flavorGroup : flavorGroupList) {
+                createVariantDataForFlavoredBuild(densities, abis, signingOverride, flavorGroup.getFlavorList());
             }
-        }
-    }
-
-    /**
-     * Creates the tasks for multi-flavor builds.
-     *
-     * This recursively fills the array of ProductFlavorData (in the order defined
-     * in extension.flavorDimensionList), creating all possible combination.
-     *  @param datas the arrays to fill
-     * @param index the current index to fill
-     * @param map the map of dimension -> list(ProductFlavor)
-     * @param densities the list of density-specific apk to generate. null means universal apk.
-     * @param abis the list of abi-specific apk to generate. null means universal apk.
-     * @param signingOverride a signing override. Generally driven through the IDE.
-     */
-    private void createVariantDataForMultiFlavoredBuilds(
-            @NonNull ProductFlavorData[] datas,
-            int index,
-            @NonNull ListMultimap<String, ? extends ProductFlavorData> map,
-            @NonNull Set<String> densities,
-            @NonNull Set<String> abis,
-            @Nullable SigningConfig signingOverride) {
-        if (index == datas.length) {
-            createVariantDataForFlavoredBuild(densities, abis, signingOverride, datas);
-            return;
-        }
-
-        // fill the array at the current index.
-        // get the dimension name that matches the index we are filling.
-        String dimension = extension.getFlavorDimensionList().get(index);
-
-        // from our map, get all the possible flavors in that dimension.
-        List<? extends ProductFlavorData> flavorList = map.get(dimension);
-
-        // loop on all the flavors to add them to the current index and recursively fill the next
-        // indices.
-        for (ProductFlavorData flavor : flavorList) {
-            datas[index] = flavor;
-            createVariantDataForMultiFlavoredBuilds(datas, index + 1, map,
-                    densities, abis, signingOverride);
         }
     }
 
@@ -469,13 +414,13 @@ public class VariantManager {
      * @param densities the list of density-specific apk to generate. null means universal apk.
      * @param abis the list of abi-specific apk to generate. null means universal apk.
      * @param signingOverride a signing override. Generally driven through the IDE.
-     * @param flavorDataList the flavor(s) to build.
+     * @param productFlavorList the flavor(s) to build.
      */
     private void createVariantDataForFlavoredBuild(
             @NonNull Set<String> densities,
             @NonNull Set<String> abis,
             @Nullable SigningConfig signingOverride,
-            @NonNull ProductFlavorData<GroupableProductFlavorDsl>... flavorDataList) {
+            @NonNull List<GroupableProductFlavorDsl> productFlavorList) {
 
         BuildTypeData testData = buildTypes.get(extension.getTestBuildType());
         if (testData == null) {
@@ -489,23 +434,16 @@ public class VariantManager {
         ProductFlavorDsl defaultConfig = defaultConfigData.getProductFlavor();
         DefaultAndroidSourceSet defaultConfigSourceSet = defaultConfigData.getSourceSet();
 
-        final List<ConfigurationProvider> variantProviders = Lists.newArrayListWithCapacity(flavorDataList.length + 2);
+        final List<ConfigurationProvider> variantProviders = Lists.newArrayListWithCapacity(productFlavorList.size() + 2);
 
         Closure<Void> variantFilterClosure = basePlugin.getExtension().getVariantFilter();
         @SuppressWarnings("VariableNotUsedInsideIf")
-        final List<GroupableProductFlavor> productFlavorList = (variantFilterClosure != null) ?
-                Lists.<GroupableProductFlavor>newArrayListWithCapacity(flavorDataList.length) :
-                null;
 
         Set<String> compatibleScreens = basePlugin.getExtension().getSplits().getDensity().getCompatibleScreens();
 
         for (BuildTypeData buildTypeData : buildTypes.values()) {
             boolean ignore = false;
             if (variantFilterClosure != null) {
-                productFlavorList.clear();
-                for (ProductFlavorData<GroupableProductFlavorDsl> data : flavorDataList) {
-                    productFlavorList.add(data.getProductFlavor());
-                }
                 variantFilter.reset(defaultConfig, buildTypeData.getBuildType(), productFlavorList);
                 variantFilterClosure.call(variantFilter);
                 ignore = variantFilter.isIgnore();
@@ -526,8 +464,8 @@ public class VariantManager {
                         variantFactory.getVariantConfigurationType(),
                         signingOverride);
 
-                for (ProductFlavorData<GroupableProductFlavorDsl> data : flavorDataList) {
-                    GroupableProductFlavorDsl productFlavor = data.getProductFlavor();
+                for (GroupableProductFlavorDsl productFlavor : productFlavorList) {
+                    ProductFlavorData<GroupableProductFlavorDsl> data = productFlavors.get(productFlavor.getName());
 
                     String dimensionName = productFlavor.getFlavorDimension();
                     if (dimensionName == null) {
@@ -557,7 +495,7 @@ public class VariantManager {
                 // TODO: hmm this won't work
                 //variantProviders.add(new ConfigurationProviderImpl(project, variantSourceSet))
 
-                if (flavorDataList.length > 1) {
+                if (productFlavorList.size() > 1) {
                     DefaultAndroidSourceSet multiFlavorSourceSet = (DefaultAndroidSourceSet) sourceSetsContainer.maybeCreate(variantConfig.getFlavorName());
                     variantConfig.setMultiFlavorSourceProvider(multiFlavorSourceSet);
                     // TODO: hmm this won't work
@@ -598,10 +536,10 @@ public class VariantManager {
             /// add the container of dependencies
             // the order of the libraries is important. In descending order:
             // flavors, defaultConfig. No build type for tests
-            List<ConfigurationProvider> testVariantProviders = Lists.newArrayListWithExpectedSize(1 + flavorDataList.length);
+            List<ConfigurationProvider> testVariantProviders = Lists.newArrayListWithExpectedSize(1 + productFlavorList.size());
 
-            for (ProductFlavorData<GroupableProductFlavorDsl> data : flavorDataList) {
-                GroupableProductFlavorDsl productFlavor = data.getProductFlavor();
+            for (GroupableProductFlavorDsl productFlavor : productFlavorList) {
+                ProductFlavorData<GroupableProductFlavorDsl> data = productFlavors.get(productFlavor.getName());
 
                 String dimensionName = productFlavor.getFlavorDimension();
                 if (dimensionName == null) {
