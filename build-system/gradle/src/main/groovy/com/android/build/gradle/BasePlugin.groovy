@@ -557,7 +557,7 @@ public abstract class BasePlugin {
 
     public List<BaseVariantData<? extends BaseVariantOutputData>> getVariantDataList() {
         if (variantManager.getVariantDataList().isEmpty()) {
-            variantManager.createBaseVariantData(getSigningOverride())
+            variantManager.populateVariantDataList(getSigningOverride())
         }
         return variantManager.getVariantDataList();
     }
