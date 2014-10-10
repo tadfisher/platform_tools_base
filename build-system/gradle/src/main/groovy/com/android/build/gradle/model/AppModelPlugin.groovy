@@ -35,6 +35,8 @@ import com.android.build.gradle.internal.tasks.SigningReportTask
 import com.android.build.gradle.internal.variant.ApplicationVariantFactory
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantFactory
+import com.android.build.gradle.model.NdkComponentModelPlugin
+import com.android.build.gradle.ndk.NdkExtension
 import com.android.build.gradle.ndk.NdkPlugin
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.DefaultBuildType
@@ -109,11 +111,7 @@ public class AppModelPlugin extends BasePlugin implements Plugin<Project> {
 
         configureProject()
 
-        if (project.plugins.hasPlugin(NdkPlugin.class)) {
-            throw new BadPluginException(
-                    "Cannot apply Android native plugin before the Android plugin.")
-        }
-        project.apply plugin: NdkPlugin
+        project.plugins.apply(NdkComponentModelPlugin)
 
         // Setup Android's FunctionalSourceSet.
         project.getExtensions().getByType(LanguageRegistry.class).add(new AndroidSource());
@@ -147,6 +145,7 @@ public class AppModelPlugin extends BasePlugin implements Plugin<Project> {
                 NamedDomainObjectContainer<DefaultBuildType> buildTypeContainer,
                 NamedDomainObjectContainer<GroupableProductFlavorDsl> productFlavorContainer,
                 NamedDomainObjectContainer<SigningConfig> signingConfigContainer,
+                NdkExtension ndkExtension,
                 BasePlugin plugin) {
             Instantiator instantiator = serviceRegistry.get(Instantiator.class);
             Project project = plugin.getProject()
@@ -156,9 +155,7 @@ public class AppModelPlugin extends BasePlugin implements Plugin<Project> {
                     buildTypeContainer, productFlavorContainer, signingConfigContainer, false)
             plugin.setBaseExtension(extension)
 
-            def ndkPlugin = project.plugins.getPlugin(NdkPlugin)
-
-            extension.setNdkExtension(ndkPlugin.getNdkExtension())
+            extension.setNdkExtension(ndkExtension)
 
             return extension
         }
