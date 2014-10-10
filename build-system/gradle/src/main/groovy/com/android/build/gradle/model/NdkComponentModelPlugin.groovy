@@ -18,6 +18,8 @@
 package com.android.build.gradle.model
 
 import com.android.build.gradle.api.AndroidSourceDirectorySet
+import com.android.build.gradle.api.GroupableProductFlavor
+import com.android.build.gradle.internal.ProductFlavorGroup
 import com.android.build.gradle.internal.api.DefaultAndroidSourceDirectorySet
 import com.android.build.gradle.ndk.NdkExtension
 import com.android.build.gradle.ndk.internal.NdkConfigurationAction
@@ -25,11 +27,15 @@ import com.android.build.gradle.ndk.internal.NdkExtensionConventionAction
 import com.android.build.gradle.ndk.internal.NdkHandler
 import com.android.build.gradle.ndk.internal.ToolchainConfigurationAction
 import com.android.builder.core.VariantConfiguration
+import com.android.builder.model.BuildType
+import com.android.builder.model.ProductFlavor
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.internal.project.ProjectIdentifier
 import org.gradle.api.invocation.Gradle
 import org.gradle.api.plugins.ExtensionContainer
+import org.gradle.api.tasks.TaskContainer
 import org.gradle.configuration.project.ProjectConfigurationActionContainer
 import org.gradle.internal.reflect.Instantiator
 import org.gradle.language.base.ProjectSourceSet
@@ -39,9 +45,17 @@ import org.gradle.model.Model
 import org.gradle.model.Mutate
 import org.gradle.model.RuleSource
 import org.gradle.nativeplatform.BuildTypeContainer
+import org.gradle.nativeplatform.NativeBinary
+import org.gradle.nativeplatform.NativeBinarySpec
+import org.gradle.nativeplatform.NativeLibrary
+import org.gradle.nativeplatform.NativeLibraryBinarySpec
 import org.gradle.nativeplatform.NativeLibrarySpec
+import org.gradle.nativeplatform.SharedLibraryBinary
+import org.gradle.nativeplatform.SharedLibraryBinarySpec
 import org.gradle.nativeplatform.StaticLibraryBinary
 import org.gradle.nativeplatform.internal.DefaultSharedLibraryBinarySpec
+import org.gradle.nativeplatform.internal.DefaultStaticLibraryBinarySpec
+import org.gradle.platform.base.BinaryContainer
 import org.gradle.platform.base.ComponentSpecContainer
 import org.gradle.platform.base.PlatformContainer
 import org.gradle.platform.base.ToolChainRegistry
@@ -70,8 +84,9 @@ class NdkComponentModelPlugin implements Plugin<Project> {
     }
 
     void apply(Project project) {
+        project.plugins.apply(AndroidComponentModelPlugin)
+
         this.project = project
-        project.extensions.add("projectModel", project)
 
         def sourceSetContainers = project.container(AndroidSourceDirectorySet) { name ->
             instantiator.newInstance(DefaultAndroidSourceDirectorySet, name, project)
@@ -104,22 +119,19 @@ class NdkComponentModelPlugin implements Plugin<Project> {
             return new NdkHandler(projectId.projectDir, extension)
         }
 
-        @Model
-        Project projectModel(ExtensionContainer extensions) {
-            return extensions.getByType(Project)
-        }
-
         @Finalize
         void setDefaultNdkExtensionValue(NdkExtension extension) {
             NdkExtensionConventionAction.setExtensionDefault(extension)
         }
 
-        @Mutate createAndroidPlatforms(PlatformContainer platforms, NdkHandler ndkHandler) {
+        @Mutate
+        void createAndroidPlatforms(PlatformContainer platforms, NdkHandler ndkHandler) {
             // Create android platforms.
             ToolchainConfigurationAction.configurePlatforms(platforms, ndkHandler)
         }
 
-        @Mutate createToolchains(
+        @Mutate
+        void createToolchains(
                 ToolChainRegistry toolchains,
                 NdkExtension ndkExtension,
                 NdkHandler ndkHandler) {
@@ -143,13 +155,83 @@ class NdkComponentModelPlugin implements Plugin<Project> {
                 NdkHandler ndkHandler,
                 Project project,
                 ProjectSourceSet sources) {
-            NativeLibrarySpec library = specs.create(extension.getModuleName(), NativeLibrarySpec)
-            NdkConfigurationAction.configureProperties(library, project, extension, ndkHandler)
+            if (extension.moduleName != null) {
+                NativeLibrarySpec library =
+                        specs.create(extension.moduleName, NativeLibrarySpec)
+                NdkConfigurationAction.configureProperties(library, project, extension, ndkHandler)
+            }
+        }
+
+        @Mutate
+        void attachNativeBinaryToAndroid(
+                BinaryContainer binaries,
+                ComponentSpecContainer specs,
+                NdkExtension extension) {
+            if (extension.moduleName != null) {
+                NativeLibrarySpec library =
+                        specs.withType(NativeLibrarySpec).getByName(extension.moduleName);
+                binaries.withType(DefaultAndroidBinary) { binary ->
+                    def nativeBinaries = getNativeBinaries(library, binary.buildType, binary.productFlavors)
+                    binary.getNativeBinaries().addAll(nativeBinaries)
+                }
+            }
+        }
+
+        /**
+         * Remove unintended tasks created by Gradle native plugin from task list.
+         *
+         * Gradle native plugins creates static library tasks automatically.  This method removes them
+         * to avoid cluttering the task list.
+         */
+        @Mutate
+        void hideNativeTasks(TaskContainer tasks, BinaryContainer binaries) {
+            // Gradle do not support a way to remove created tasks.  The best workaround is to clear the
+            // group of the task and have another task depends on it.  Therefore, we have to create
+            // a dummy task to depend on all the tasks that we do not want to show up on the task
+            // list. The dummy task dependsOn itself, effectively making it non-executable and
+            // invisible unless the --all option is use.
+            Task nonExecutableTask = tasks.create("nonExecutableTask")
+            nonExecutableTask.dependsOn nonExecutableTask
+            nonExecutableTask.description =
+                    "Dummy task to hide other unwanted tasks in the task list."
+
+            binaries.withType(NativeLibraryBinarySpec) { binary ->
+                Task buildTask = binary.getBuildTask()
+                nonExecutableTask.dependsOn buildTask
+                buildTask.group = null
+            }
         }
 
         @Mutate
         void configureNativeSourceSet(ProjectSourceSet sources, NdkExtension extension) {
             NdkConfigurationAction.configureSources(sources, extension)
+        }
+
+        @Finalize
+        void attachNativeTasksToAssembleTasks(BinaryContainer binaries) {
+            binaries.withType(DefaultAndroidBinary) { binary ->
+                if (binary.targetAbi.isEmpty())  {
+                    binary.builtBy(binary.nativeBinaries)
+                } else {
+                    binary.nativeBinaries.each { nativeBinary ->
+                        if (binary.targetAbi.contains(nativeBinary.targetPlatform.name)) {
+                            binary.builtBy(nativeBinary)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private static Collection<SharedLibraryBinarySpec> getNativeBinaries(
+            NativeLibrarySpec library,
+            BuildType buildType,
+            List<? extends GroupableProductFlavor> productFlavors) {
+        ProductFlavorGroup flavorGroup = new ProductFlavorGroup(productFlavors);
+        library.binaries.withType(SharedLibraryBinarySpec).matching { binary ->
+            (binary.buildType.name.equals(buildType.name)
+                    && ((productFlavors.isEmpty() && binary.flavor.name.equals("default"))
+                        || binary.flavor.name.equals(flavorGroup.name)))
         }
     }
 
