@@ -46,15 +46,15 @@ public class Hardware {
     private EnumSet<Abi> mAbis = EnumSet.noneOf(Abi.class);
     private EnumSet<UiMode> mUiModes = EnumSet.noneOf(UiMode.class);
     private PowerType mPluggedIn;
-    private File mSkinFile;
+    private String mSkinPath;
 
-    public void setSkinFile(File skinFile) {
-      mSkinFile = skinFile;
+    public void setSkinPath(String skinPath) {
+      mSkinPath = skinPath;
     }
 
     @Nullable
-    public File getSkinFile() {
-        return mSkinFile;
+    public String getSkinPath() {
+        return mSkinPath;
     }
 
     @NonNull
@@ -269,7 +269,7 @@ public class Hardware {
         hw.mAbis = mAbis.clone();
         hw.mUiModes = mUiModes.clone();
         hw.mPluggedIn = mPluggedIn;
-        hw.mSkinFile = mSkinFile;
+        hw.mSkinPath = mSkinPath;
         return hw;
     }
 
@@ -298,8 +298,8 @@ public class Hardware {
                 && mAbis.equals(hw.getSupportedAbis())
                 && mUiModes.equals(hw.getSupportedUiModes())
                 && mPluggedIn == hw.getChargeType()
-                && ((mSkinFile != null && mSkinFile.equals(hw.getSkinFile()))
-                    || (mSkinFile == null && hw.getSkinFile() == null));
+                && ((mSkinPath != null && mSkinPath.equals(hw.getSkinPath()))
+                    || (mSkinPath == null && hw.getSkinPath() == null));
     }
 
     @Override
@@ -329,8 +329,8 @@ public class Hardware {
         hash = 31 * hash + mButtons.ordinal();
         hash = 31 * hash + mInternalStorage.hashCode();
         hash = 31 * hash + mRemovableStorage.hashCode();
-        if (mSkinFile != null) {
-            hash = 31 * hash + mSkinFile.hashCode();
+        if (mSkinPath != null) {
+            hash = 31 * hash + mSkinPath.hashCode();
         }
 
         for (Character c : mCpu.toCharArray()) {
@@ -392,7 +392,7 @@ public class Hardware {
         sb.append(", mPluggedIn=");
         sb.append(mPluggedIn);
         sb.append(", mSkinPath=");
-        sb.append(mSkinFile);
+        sb.append(mSkinPath);
         sb.append(">");
         return sb.toString();
     }
