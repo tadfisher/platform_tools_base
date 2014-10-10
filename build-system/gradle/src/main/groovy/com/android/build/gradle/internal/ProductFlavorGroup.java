@@ -48,6 +48,10 @@ public class ProductFlavorGroup {
         flavorList = builder.build();
     }
 
+    public ProductFlavorGroup(List<GroupableProductFlavor> flavors) {
+        flavorList = ImmutableList.copyOf(flavors);
+    }
+
     public String getName() {
         if (name == null) {
             boolean first = true;
