@@ -59,6 +59,11 @@ public class NdkExtensionConventionAction implements Action<Project> {
     }
 
     public static void setExtensionDefault(NdkExtension extension) {
+        if (extension.getCompileSdkVersion() == null) {
+            // FIXME: Do not hard code.
+            extension.setCompileSdkVersion(19);
+        }
+
         if (extension.getToolchain() == null) {
             extension.setToolchain(DEFAULT_TOOLCHAIN);
         }

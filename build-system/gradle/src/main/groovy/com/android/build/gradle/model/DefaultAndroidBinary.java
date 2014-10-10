@@ -18,11 +18,10 @@ package com.android.build.gradle.model;
 
 import com.android.build.gradle.api.GroupableProductFlavor;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.builder.core.DefaultBuildType;
-import com.android.builder.core.DefaultProductFlavor;
 import com.android.builder.model.BuildType;
-import com.android.builder.model.ProductFlavor;
+import com.google.common.collect.Lists;
 
+import org.gradle.nativeplatform.NativeLibraryBinarySpec;
 import org.gradle.platform.base.binary.BaseBinarySpec;
 
 import java.util.List;
@@ -37,6 +36,10 @@ public class DefaultAndroidBinary extends BaseBinarySpec implements AndroidBinar
     private List<? extends GroupableProductFlavor> productFlavors;
 
     private BaseVariantData variantData;
+
+    private List<NativeLibraryBinarySpec> nativeBinaries = Lists.newArrayList();
+
+    private List<String> targetAbi = Lists.newArrayList();
 
     @Override
     public BuildType getBuildType() {
@@ -64,4 +67,11 @@ public class DefaultAndroidBinary extends BaseBinarySpec implements AndroidBinar
         this.variantData = variantData;
     }
 
+    public List<? extends NativeLibraryBinarySpec> getNativeBinaries() {
+        return nativeBinaries;
+    }
+
+    public List<String> getTargetAbi() {
+        return targetAbi;
+    }
 }

@@ -114,10 +114,6 @@ class NdkConfigurationAction implements Action<Project> {
         library.targetPlatform(abiList.toArray(new String[abiList.size()]))
 
         library.binaries.withType(DefaultSharedLibraryBinarySpec) { DefaultSharedLibraryBinarySpec binary ->
-            if (binary.targetPlatform.name.equals("current")) {
-                return
-            }
-
             // TODO: Support flavorDimension.
             sourceIfExist(binary, project.sources, "main")
             sourceIfExist(binary, project.sources, "${flavor.name}")
