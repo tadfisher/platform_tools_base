@@ -50,6 +50,8 @@ import javax.xml.parsers.SAXParserFactory;
 import javax.xml.validation.Schema;
 
 public class DeviceParser {
+    private static final String SEPARATOR = Character.toString(File.separatorChar);
+    private static final String CANONICAL_SEPARATOR = "/";
 
     private static class DeviceHandler extends DefaultHandler {
         private static final String sSpaceRegex = "[\\s]+";
@@ -340,7 +342,9 @@ public class DeviceParser {
                 mBuilder.addBootProp(mBootProp[0], mBootProp[1]);
                 mBootProp = null;
             } else if (DeviceSchema.NODE_SKIN.equals(localName)) {
-                mHardware.setSkinFile(new File(getString(mStringAccumulator)));
+                String path =
+                        getString(mStringAccumulator).replaceAll(CANONICAL_SEPARATOR, SEPARATOR);
+                mHardware.setSkinPath(new File(path));
             }
         }
 

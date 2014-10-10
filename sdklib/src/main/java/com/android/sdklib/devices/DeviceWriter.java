@@ -43,6 +43,8 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 public class DeviceWriter {
+    private static final String SEPARATOR = Character.toString(File.separatorChar);
+    private static final String CANONICAL_SEPARATOR = "/";
 
     public static final String LOCAL_NS = "d";
     public static final String PREFIX = LOCAL_NS + ":";
@@ -235,9 +237,11 @@ public class DeviceWriter {
 
         addElement(doc, hardware, DeviceSchema.NODE_POWER_TYPE, hw.getChargeType().toString());
 
-        File skinFile = hw.getSkinFile();
-        if (skinFile != null) {
-            addElement(doc, hardware, DeviceSchema.NODE_SKIN, hw.getSkinFile().getAbsolutePath());
+        File skinPath = hw.getSkinPath();
+        if (skinPath != null) {
+            String canonicalPath =
+                    skinPath.getPath().replaceAll(SEPARATOR, CANONICAL_SEPARATOR);
+            addElement(doc, hardware, DeviceSchema.NODE_SKIN, canonicalPath);
         }
 
         return hardware;
