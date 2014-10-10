@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 public class Hardware {
@@ -48,7 +49,7 @@ public class Hardware {
     private PowerType mPluggedIn;
     private File mSkinFile;
 
-    public void setSkinFile(File skinFile) {
+    public void setSkinFile(@Nullable File skinFile) {
       mSkinFile = skinFile;
     }
 
@@ -298,8 +299,7 @@ public class Hardware {
                 && mAbis.equals(hw.getSupportedAbis())
                 && mUiModes.equals(hw.getSupportedUiModes())
                 && mPluggedIn == hw.getChargeType()
-                && ((mSkinFile != null && mSkinFile.equals(hw.getSkinFile()))
-                    || (mSkinFile == null && hw.getSkinFile() == null));
+                && Objects.equals(mSkinFile, hw.getSkinFile());
     }
 
     @Override
@@ -391,7 +391,7 @@ public class Hardware {
         sb.append(mUiModes);
         sb.append(", mPluggedIn=");
         sb.append(mPluggedIn);
-        sb.append(", mSkinPath=");
+        sb.append(", mSkinFile=");
         sb.append(mSkinFile);
         sb.append(">");
         return sb.toString();
