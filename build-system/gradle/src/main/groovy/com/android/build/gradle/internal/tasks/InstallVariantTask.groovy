@@ -25,6 +25,7 @@ import com.android.builder.testing.api.DeviceConnector
 import com.android.builder.testing.api.DeviceProvider
 import com.android.ddmlib.IDevice
 import com.android.ide.common.build.SplitOutputMatcher
+import org.gradle.api.GradleException
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.TaskAction
 
@@ -51,7 +52,8 @@ public class InstallVariantTask extends BaseTask {
 
         String serial = System.getenv("ANDROID_SERIAL");
 
-        int foundDevice = 0;
+        int successfulInstallCount = 0;
+
         for (DeviceConnector device : deviceProvider.getDevices()) {
             if (serial != null && !serial.equals(device.getSerialNumber())) {
                 continue;
@@ -76,14 +78,27 @@ public class InstallVariantTask extends BaseTask {
                                 "Installing '${output.baseName}' on '${device.getName()}'.");
                         File apkFile = output.getOutputFile();
                         device.installPackage(apkFile, getTimeOut(), plugin.logger)
-                        foundDevice++
+                        successfulInstallCount++
                     }
+                } else {
+                    System.out.println(
+                            "Skipping device '${device.getName()}' for '${projectName}:${variantName}': Device does not support .");
                 }
+            } else {
+                System.out.println(
+                        "Skipping device '${device.getName()}' for '${projectName}:${variantName}': Device not authorized.");
+
             }
         }
 
-        if (foundDevice == 0) {
-            System.out.println("Found no authorized devices")
+        if (successfulInstallCount == 0) {
+            if (serial != null) {
+                throw new GradleException("Failed to find device with serial '${serial}'. Unset ANDROID_SERIAL to search for any device.")
+            } else {
+                throw new GradleException("Failed to install on any devices.")
+            }
+        } else {
+            System.out.println("Installed on {successfulInstallCount} device(s)");
         }
     }
 }
