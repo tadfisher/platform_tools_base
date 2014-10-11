@@ -17,6 +17,8 @@
 package com.android.builder.dependency;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.builder.model.MavenCoordinates;
 
 import java.io.File;
 
@@ -30,17 +32,29 @@ public class JarDependency {
     private boolean mPackaged;
     private final boolean mProguarded;
 
-    public JarDependency(@NonNull File jarFile, boolean compiled, boolean packaged,
-                         boolean proguarded) {
+    @Nullable
+    private final MavenCoordinates resolvedCoordinates;
+
+    public JarDependency(
+            @NonNull File jarFile,
+            boolean compiled,
+            boolean packaged,
+            boolean proguarded,
+            @Nullable MavenCoordinates resolvedCoordinates) {
         mJarFile = jarFile;
         mCompiled = compiled;
         mPackaged = packaged;
         mProguarded = proguarded;
+        this.resolvedCoordinates = resolvedCoordinates;
     }
 
 
-    public JarDependency(@NonNull File jarFile, boolean compiled, boolean packaged) {
-        this(jarFile, compiled, packaged, true);
+    public JarDependency(
+            @NonNull File jarFile,
+            boolean compiled,
+            boolean packaged,
+            @Nullable MavenCoordinates resolvedCoordinates) {
+        this(jarFile, compiled, packaged, true, resolvedCoordinates);
     }
 
     @NonNull
@@ -62,6 +76,11 @@ public class JarDependency {
 
     public boolean isProguarded() {
         return mProguarded;
+    }
+
+    @Nullable
+    public MavenCoordinates getResolvedCoordinates() {
+        return resolvedCoordinates;
     }
 
     @Override

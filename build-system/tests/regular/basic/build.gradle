@@ -9,7 +9,9 @@ buildscript {
         if (System.env.CUSTOM_REPO != null) {
             maven { url System.env.CUSTOM_REPO }
         } else {
+            maven { url '/Volumes/Sources/ext/studio-1.0-dev/out/repo/' }
             mavenCentral()
+           
         }
     }
     dependencies {
@@ -25,6 +27,7 @@ repositories {
 dependencies {
     compile 'com.android.support:support-v4:13.0.0'
     debugCompile 'com.android.support:support-v13:13.0.0'
+    releaseCompile 'com.android.support:support-v13:20.0.0'
 
     compile 'com.google.android.gms:play-services:3.1.36'
 }
