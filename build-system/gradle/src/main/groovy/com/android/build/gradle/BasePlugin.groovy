@@ -80,6 +80,7 @@ import com.android.build.gradle.tasks.CompatibleScreensManifest
 import com.android.build.gradle.tasks.Dex
 import com.android.build.gradle.tasks.GenerateBuildConfig
 import com.android.build.gradle.tasks.GenerateResValues
+import com.android.build.gradle.tasks.JackTask
 import com.android.build.gradle.tasks.Lint
 import com.android.build.gradle.tasks.MergeAssets
 import com.android.build.gradle.tasks.MergeManifests
@@ -530,7 +531,7 @@ public abstract class BasePlugin {
         return sdkHandler.getSdkInfo()
     }
 
-    public List<String> getBootClasspath() {
+    public List<File> getBootClasspath() {
         ensureTargetSetup()
 
         return androidBuilder.getBootClasspath()
@@ -1398,7 +1399,7 @@ public abstract class BasePlugin {
         // setup the boot classpath just before the task actually runs since this will
         // force the sdk to be parsed.
         compileTask.doFirst {
-            compileTask.options.bootClasspath = androidBuilder.getBootClasspath().join(File.pathSeparator)
+            compileTask.options.bootClasspath = androidBuilder.getBootClasspathAsStrings().join(File.pathSeparator)
         }
     }
     public void createGenerateMicroApkDataTask(
@@ -1589,12 +1590,15 @@ public abstract class BasePlugin {
             }
 
             // wire the main lint task dependency.
-            lint.dependsOn baseVariantData.javaCompileTask, lintCompile
+            lint.dependsOn lintCompile
+            optionalDependsOn(lint, baseVariantData.javaCompileTask, baseVariantData.jackTask)
 
             String variantName = baseVariantData.variantConfiguration.fullName
             def capitalizedVariantName = variantName.capitalize()
             Lint variantLintCheck = project.tasks.create("lint" + capitalizedVariantName, Lint)
-            variantLintCheck.dependsOn baseVariantData.javaCompileTask, lintCompile
+            variantLintCheck.dependsOn lintCompile
+            optionalDependsOn(variantLintCheck, baseVariantData.javaCompileTask, baseVariantData.jackTask)
+
             // Note that we don't do "lint.dependsOn lintCheck"; the "lint" target will
             // on its own run through all variants (and compare results), it doesn't delegate
             // to the individual tasks (since it needs to coordinate data collection and
@@ -2015,6 +2019,64 @@ public abstract class BasePlugin {
         }
     }
 
+    public void createJackTask(
+            @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData,
+            @Nullable BaseVariantData<? extends BaseVariantOutputData> testedVariantData) {
+        JackTask compileTask = project.tasks.create(
+                "compile${variantData.variantConfiguration.fullName.capitalize()}Java",
+                JackTask)
+        variantData.jackTask = compileTask
+        variantData.jackTask.dependsOn variantData.sourceGenTask
+        variantData.compileTask.dependsOn variantData.jackTask
+
+        compileTask.plugin = this
+
+        compileTask.source = variantData.getJavaSources()
+
+        VariantConfiguration config = variantData.variantConfiguration
+
+        // if the tested variant is an app, add its classpath. For the libraries,
+        // it's done automatically since the classpath includes the library output as a normal
+        // dependency.
+        if (testedVariantData instanceof ApplicationVariantData) {
+            compileTask.conventionMapping.classpath =  {
+                project.files(androidBuilder.getCompileClasspath(config)) + testedVariantData.javaCompileTask.classpath + testedVariantData.javaCompileTask.outputs.files
+            }
+        } else {
+            compileTask.conventionMapping.classpath =  {
+                project.files(androidBuilder.getCompileClasspath(config))
+            }
+        }
+
+        // TODO - dependency information for the compile classpath is being lost.
+        // Add a temporary approximation
+        compileTask.dependsOn variantData.variantDependency.compileConfiguration.buildDependencies
+
+        compileTask.conventionMapping.destinationDir = {
+            project.file("$project.buildDir/${FD_INTERMEDIATES}/jack-out/${variantData.variantConfiguration.dirName}")
+        }
+
+        compileTask.conventionMapping.tempFolder = {
+            project.file("$project.buildDir/${FD_INTERMEDIATES}/tmp/jack/${variantData.variantConfiguration.dirName}")
+        }
+
+        // set source/target compatibility
+        compileTask.conventionMapping.sourceCompatibility = {
+            extension.compileOptions.sourceCompatibility.toString()
+        }
+        compileTask.conventionMapping.targetCompatibility = {
+            extension.compileOptions.targetCompatibility.toString()
+        }
+
+        //compileTask.options.encoding = extension.compileOptions.encoding
+
+        // setup the boot classpath just before the task actually runs since this will
+        // force the sdk to be parsed.
+        compileTask.conventionMapping.bootClasspath = {
+            getBootClasspath()
+        }
+    }
+
     /**
      * Creates the final packaging task, and optionally the zipalign task (if the variant is signed)
      * @param variantData
@@ -2053,8 +2115,10 @@ public abstract class BasePlugin {
                     create("package${outputName.capitalize()}",
                             PackageApplication)
             variantOutputData.packageApplicationTask = packageApp
-            packageApp.dependsOn variantOutputData.processResourcesTask, variantData.dexTask,
-                    variantData.processJavaResourcesTask
+            packageApp.dependsOn variantOutputData.processResourcesTask, variantData.processJavaResourcesTask
+
+            optionalDependsOn(packageApp, variantData.dexTask, variantData.jackTask)
+
             if (variantOutputData.packageSplitResourcesTask != null) {
                 packageApp.dependsOn variantOutputData.packageSplitResourcesTask
             }
@@ -2469,7 +2533,7 @@ public abstract class BasePlugin {
         // libraryJars: the runtime jars. Do this in doFirst since the boot classpath isn't
         // available until the SDK is loaded in the prebuild task
         proguardTask.doFirst {
-            for (String runtimeJar : androidBuilder.getBootClasspath()) {
+            for (String runtimeJar : androidBuilder.getBootClasspathAsStrings()) {
                 proguardTask.libraryjars(runtimeJar)
             }
         }
@@ -3104,5 +3168,13 @@ public abstract class BasePlugin {
 
     private static String createWarning(String projectName, String message) {
         return "WARNING [Project: $projectName] $message"
+    }
+
+    private static void optionalDependsOn(@NonNull Task main, Task... dependencies) {
+        for (Task dependency : dependencies) {
+            if (dependency != null) {
+                main.dependsOn dependency
+            }
+        }
     }
 }

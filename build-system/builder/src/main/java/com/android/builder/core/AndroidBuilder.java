@@ -248,7 +248,39 @@ public class AndroidBuilder {
      * Helper method to get the boot classpath to be used during compilation.
      */
     @NonNull
-    public List<String> getBootClasspath() {
+    public List<File> getBootClasspath() {
+        checkState(mTargetInfo != null,
+                "Cannot call getBootClasspath() before setTargetInfo() is called.");
+
+        List<File> classpath = Lists.newArrayList();
+
+        IAndroidTarget target = mTargetInfo.getTarget();
+
+        for (String p : target.getBootClasspath()) {
+            classpath.add(new File(p));
+        }
+
+        // add optional libraries if any
+        IAndroidTarget.IOptionalLibrary[] libs = target.getOptionalLibraries();
+        if (libs != null) {
+            for (IAndroidTarget.IOptionalLibrary lib : libs) {
+                classpath.add(new File(lib.getJarPath()));
+            }
+        }
+
+        // add annotations.jar if needed.
+        if (target.getVersion().getApiLevel() <= 15) {
+            classpath.add(mSdkInfo.getAnnotationsJar());
+        }
+
+        return classpath;
+    }
+
+    /**
+     * Helper method to get the boot classpath to be used during compilation.
+     */
+    @NonNull
+    public List<String> getBootClasspathAsStrings() {
         checkState(mTargetInfo != null,
                 "Cannot call getBootClasspath() before setTargetInfo() is called.");
 
