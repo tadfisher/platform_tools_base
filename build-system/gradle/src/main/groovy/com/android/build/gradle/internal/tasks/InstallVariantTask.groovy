@@ -25,9 +25,11 @@ import com.android.builder.testing.api.DeviceConnector
 import com.android.builder.testing.api.DeviceProvider
 import com.android.ddmlib.IDevice
 import com.android.ide.common.build.SplitOutputMatcher
+import com.google.common.base.Joiner
 import org.gradle.api.GradleException
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.TaskExecutionException
 
 /**
  * Task installing an app variant. It looks at connected device and install the best matching
@@ -40,11 +42,17 @@ public class InstallVariantTask extends BaseTask {
     int timeOut = 0
 
     BaseVariantData<? extends BaseVariantOutputData> variantData
+    InstallVariantTask() {
+        this.getOutputs().upToDateWhen {
+            logger.debug("Install task is always run.");
+            false;
+        }
+    }
 
     @TaskAction
     void install() {
         DeviceProvider deviceProvider = new ConnectedDeviceProvider(getAdbExe())
-        deviceProvider.init();
+        deviceProvider.init()
 
         VariantConfiguration variantConfig = variantData.variantConfiguration
         String variantName = variantConfig.fullName
@@ -71,22 +79,21 @@ public class InstallVariantTask extends BaseTask {
                             device.getDensity(), device.getAbis())
 
                     if (output == null) {
-                        System.out.println(
-                                "Skipping device '${device.getName()}' for '${projectName}:${variantName}': No matching output file.");
+                        project.logger.lifecycle(
+                                "Skipping device '${device.getName()}' for '${projectName}:${variantName}': " +
+                                "Could not find build of variant which supports density ${device.getDensity()} " +
+                                "and an ABI in " + Joiner.on(", ").join(device.getAbis()));
                     } else {
-                        System.out.println(
+                        project.logger.lifecycle(
                                 "Installing '${output.baseName}' on '${device.getName()}'.");
                         File apkFile = output.getOutputFile();
                         device.installPackage(apkFile, getTimeOut(), plugin.logger)
                         successfulInstallCount++
                     }
-                } else {
-                    System.out.println(
-                            "Skipping device '${device.getName()}' for '${projectName}:${variantName}': Device does not support .");
-                }
+                } // When InstallUtils.checkDeviceApiLevel returns false, it logs the reason.
             } else {
-                System.out.println(
-                        "Skipping device '${device.getName()}' for '${projectName}:${variantName}': Device not authorized.");
+                project.logger.lifecycle(
+                        "Skipping device '${device.getName()}' for '${projectName}:${variantName}': Device not authorized, see http://developer.android.com/tools/help/adb.html#Enabling.");
 
             }
         }
@@ -98,7 +105,7 @@ public class InstallVariantTask extends BaseTask {
                 throw new GradleException("Failed to install on any devices.")
             }
         } else {
-            System.out.println("Installed on {successfulInstallCount} device(s)");
+            project.logger.quiet("Installed on ${successfulInstallCount} ${successfulInstallCount==1?'device':'devices'}.");
         }
     }
 }
