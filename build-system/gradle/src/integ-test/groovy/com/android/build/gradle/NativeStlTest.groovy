@@ -67,24 +67,25 @@ public class NativeStlTest {
     public void setup() {
         new HelloWorldJniApp().writeSources(fixture.getSourceDir())
         fixture.getBuildFile() << """
-apply plugin: 'com.android.application'
+apply plugin: 'com.android.model.application'
 
-android {
-    compileSdkVersion 19
-    buildToolsVersion rootProject.ext.buildToolsVersion
-    useNewNativePlugin true
-    ndk {
-        moduleName "hello-jni"
-        }
+model {
+    android {
+        compileSdkVersion 19
+        buildToolsVersion rootProject.ext.buildToolsVersion
     }
+    android.ndk {
+        moduleName "hello-jni"
+    }
+}
 """
     }
 
     @Test
     public void buildAppWithStl() {
         fixture.getBuildFile() << """
-android {
-    ndk {
+model {
+    android.ndk {
         stl "$stl"
     }
 }
