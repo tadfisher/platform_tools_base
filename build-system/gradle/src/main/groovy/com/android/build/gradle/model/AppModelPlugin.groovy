@@ -21,7 +21,6 @@ import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.BasePlugin
 import com.android.build.gradle.api.AndroidSourceDirectorySet
 import com.android.build.gradle.api.AndroidSourceSet
-import com.android.build.gradle.internal.BadPluginException
 import com.android.build.gradle.internal.BuildTypeData
 import com.android.build.gradle.internal.ProductFlavorData
 import com.android.build.gradle.internal.VariantManager
@@ -35,9 +34,7 @@ import com.android.build.gradle.internal.tasks.SigningReportTask
 import com.android.build.gradle.internal.variant.ApplicationVariantFactory
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantFactory
-import com.android.build.gradle.model.NdkComponentModelPlugin
 import com.android.build.gradle.ndk.NdkExtension
-import com.android.build.gradle.ndk.NdkPlugin
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.DefaultBuildType
 import com.android.builder.model.SigningConfig
@@ -62,12 +59,9 @@ import org.gradle.language.base.internal.SourceTransformTaskConfig
 import org.gradle.model.Model
 import org.gradle.model.Mutate
 import org.gradle.model.RuleSource
-import org.gradle.model.collection.CollectionBuilder
 import org.gradle.platform.base.BinaryContainer
 import org.gradle.platform.base.BinarySpec
 import org.gradle.platform.base.ComponentSpecContainer
-import org.gradle.platform.base.ComponentType
-import org.gradle.platform.base.ComponentTypeBuilder
 import org.gradle.platform.base.TransformationFileType
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 
@@ -157,6 +151,9 @@ public class AppModelPlugin extends BasePlugin implements Plugin<Project> {
 
             extension.setNdkExtension(ndkExtension)
 
+            // Android component model always use new plugin.
+            extension.useNewNativePlugin = true
+
             return extension
         }
 
@@ -172,6 +169,10 @@ public class AppModelPlugin extends BasePlugin implements Plugin<Project> {
                 throw new UnsupportedOperationException("Removing signingConfigs is not supported.")
             }
             return signingConfigContainer
+        }
+
+        @Mutate
+        void closeProjectSourceSet(ProjectSourceSet sources) {
         }
 
         @Mutate
@@ -303,6 +304,10 @@ public class AppModelPlugin extends BasePlugin implements Plugin<Project> {
                                 : (name.equals(BuilderConstants.ANDROID_TEST)
                                         ? plugin.testSourceSet
                                         : findAndroidSourceSet(variantManager, name)))
+
+                if (androidSource == null) {
+                    continue;
+                }
 
                 convertSourceSet(androidSource.getResources(), source.findByName("resource")?.getSource())
                 convertSourceSet(androidSource.getJava(), source.findByName("java")?.getSource())
