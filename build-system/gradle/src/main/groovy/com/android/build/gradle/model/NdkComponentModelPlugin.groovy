@@ -17,6 +17,7 @@
 
 package com.android.build.gradle.model
 
+import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.AndroidSourceDirectorySet
 import com.android.build.gradle.api.GroupableProductFlavor
 import com.android.build.gradle.internal.ProductFlavorGroup
@@ -28,33 +29,25 @@ import com.android.build.gradle.ndk.internal.NdkHandler
 import com.android.build.gradle.ndk.internal.ToolchainConfigurationAction
 import com.android.builder.core.VariantConfiguration
 import com.android.builder.model.BuildType
-import com.android.builder.model.ProductFlavor
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.internal.project.ProjectIdentifier
-import org.gradle.api.invocation.Gradle
 import org.gradle.api.plugins.ExtensionContainer
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.configuration.project.ProjectConfigurationActionContainer
 import org.gradle.internal.reflect.Instantiator
 import org.gradle.language.base.ProjectSourceSet
-import org.gradle.language.base.internal.LanguageRegistry
 import org.gradle.model.Finalize
 import org.gradle.model.Model
 import org.gradle.model.Mutate
 import org.gradle.model.RuleSource
 import org.gradle.nativeplatform.BuildTypeContainer
-import org.gradle.nativeplatform.NativeBinary
-import org.gradle.nativeplatform.NativeBinarySpec
-import org.gradle.nativeplatform.NativeLibrary
 import org.gradle.nativeplatform.NativeLibraryBinarySpec
 import org.gradle.nativeplatform.NativeLibrarySpec
-import org.gradle.nativeplatform.SharedLibraryBinary
 import org.gradle.nativeplatform.SharedLibraryBinarySpec
 import org.gradle.nativeplatform.StaticLibraryBinary
 import org.gradle.nativeplatform.internal.DefaultSharedLibraryBinarySpec
-import org.gradle.nativeplatform.internal.DefaultStaticLibraryBinarySpec
 import org.gradle.platform.base.BinaryContainer
 import org.gradle.platform.base.ComponentSpecContainer
 import org.gradle.platform.base.PlatformContainer
@@ -121,6 +114,10 @@ class NdkComponentModelPlugin implements Plugin<Project> {
 
         @Finalize
         void setDefaultNdkExtensionValue(NdkExtension extension) {
+            if (extension.getCompileSdkVersion() == null) {
+                // FIXME: Retrieve compileSdkVersion from BaseExtension instead of hardcoding.
+                extension.setCompileSdkVersion(19);
+            }
             NdkExtensionConventionAction.setExtensionDefault(extension)
         }
 

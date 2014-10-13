@@ -87,7 +87,8 @@ public class AutomatedBuildTest extends BuildTest {
 
     // these tests are excluded on mac/win
     private static final List<String> sNdkPluginTests = ImmutableList.of(
-            "ndkJniLib2",
+            // Disabled until library component plugin is implemented.
+            //"ndkJniLib2",
             "ndkSanAngeles2",
             "ndkStandaloneSo",
             "ndkStl",
