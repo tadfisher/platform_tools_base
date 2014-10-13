@@ -98,7 +98,7 @@ public class InstallVariantTask extends BaseTask {
                 throw new GradleException("Failed to install on any devices.")
             }
         } else {
-            System.out.println("Installed on {successfulInstallCount} device(s)");
+            System.out.println("Installed on ${successfulInstallCount} ${successfulInstallCount==1?'device':'devices'}");
         }
     }
 }
