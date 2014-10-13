@@ -59,6 +59,7 @@ import org.gradle.language.base.ProjectSourceSet
 import org.gradle.language.base.internal.LanguageRegistration
 import org.gradle.language.base.internal.LanguageRegistry
 import org.gradle.language.base.internal.SourceTransformTaskConfig
+import org.gradle.model.Finalize
 import org.gradle.model.Model
 import org.gradle.model.Mutate
 import org.gradle.model.RuleSource
@@ -157,6 +158,9 @@ public class AppModelPlugin extends BasePlugin implements Plugin<Project> {
 
             extension.setNdkExtension(ndkExtension)
 
+            // Android component model always use new plugin.
+            extension.useNewNativePlugin = true
+
             return extension
         }
 
@@ -172,6 +176,10 @@ public class AppModelPlugin extends BasePlugin implements Plugin<Project> {
                 throw new UnsupportedOperationException("Removing signingConfigs is not supported.")
             }
             return signingConfigContainer
+        }
+
+        @Finalize
+        void closeProjectSourceSet(ProjectSourceSet sources) {
         }
 
         @Mutate
@@ -303,6 +311,10 @@ public class AppModelPlugin extends BasePlugin implements Plugin<Project> {
                                 : (name.equals(BuilderConstants.ANDROID_TEST)
                                         ? plugin.testSourceSet
                                         : findAndroidSourceSet(variantManager, name)))
+
+                if (androidSource == null) {
+                    continue;
+                }
 
                 convertSourceSet(androidSource.getResources(), source.findByName("resource")?.getSource())
                 convertSourceSet(androidSource.getJava(), source.findByName("java")?.getSource())

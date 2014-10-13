@@ -74,6 +74,7 @@ import com.android.build.gradle.internal.variant.LibraryVariantData
 import com.android.build.gradle.internal.variant.TestVariantData
 import com.android.build.gradle.internal.variant.TestedVariantData
 import com.android.build.gradle.internal.variant.VariantFactory
+import com.android.build.gradle.model.NdkComponentModelPlugin
 import com.android.build.gradle.ndk.NdkPlugin
 import com.android.build.gradle.tasks.AidlCompile
 import com.android.build.gradle.tasks.CompatibleScreensManifest
@@ -2077,7 +2078,7 @@ public abstract class BasePlugin {
 
             // Add dependencies on NDK tasks if NDK plugin is applied.
             if (extension.getUseNewNativePlugin()) {
-                NdkPlugin ndkPlugin = project.plugins.getPlugin(NdkPlugin.class)
+                NdkComponentModelPlugin ndkPlugin = project.plugins.getPlugin(NdkComponentModelPlugin.class)
                 packageApp.dependsOn ndkPlugin.getBinaries(config)
             } else {
                 packageApp.dependsOn variantData.ndkCompileTask
@@ -2103,7 +2104,7 @@ public abstract class BasePlugin {
                 // for now only the project's compilation output.
                 Set<File> set = Sets.newHashSet()
                 if (extension.getUseNewNativePlugin()) {
-                    NdkPlugin ndkPlugin = project.plugins.getPlugin(NdkPlugin.class)
+                    NdkComponentModelPlugin ndkPlugin = project.plugins.getPlugin(NdkComponentModelPlugin.class)
                     set.addAll(ndkPlugin.getOutputDirectories(config))
                 } else {
                     set.addAll(variantData.ndkCompileTask.soFolder)
