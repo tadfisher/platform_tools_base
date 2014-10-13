@@ -16,27 +16,19 @@
 
 package com.android.build.gradle.model
 
-import com.android.build.gradle.AppExtension
-import com.android.build.gradle.internal.ProductFlavorData
 import com.android.build.gradle.internal.ProductFlavorGroup
-import com.android.build.gradle.internal.dsl.BuildTypeDsl
 import com.android.build.gradle.internal.dsl.BuildTypeFactory
 import com.android.build.gradle.internal.dsl.GroupableProductFlavorDsl
 import com.android.build.gradle.internal.dsl.GroupableProductFlavorFactory
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.DefaultBuildType
 import com.android.builder.model.BuildType
-import com.android.builder.model.ProductFlavor
-import com.google.common.collect.ArrayListMultimap
-import com.google.common.collect.ListMultimap
-import com.google.common.collect.Lists
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.ExtensionContainer
 import org.gradle.internal.reflect.Instantiator
 import org.gradle.internal.service.ServiceRegistry
-import org.gradle.language.base.ProjectSourceSet
 import org.gradle.model.Model
 import org.gradle.model.Mutate
 import org.gradle.model.RuleSource
@@ -125,6 +117,7 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
                 NamedDomainObjectContainer<GroupableProductFlavorDsl> productFlavors) {
             // TODO: Create custom product flavor container to manually configure flavor dimensions.
             List<String> flavorDimensionList = productFlavors*.flavorDimension.unique();
+            flavorDimensionList.removeAll([null])
 
             List<ProductFlavorGroup> flavorGroups =
                     ProductFlavorGroup.createGroupList(flavorDimensionList, productFlavors)

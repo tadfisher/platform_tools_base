@@ -38,16 +38,18 @@ class NdkPluginIntegrationTest {
     static public void setup() {
         new HelloWorldJniApp(true /* useCppSource */).writeSources(fixture.getSourceDir())
         fixture.getBuildFile() << """
-apply plugin: 'com.android.application'
+apply plugin: 'com.android.model.application'
 
-android {
-    compileSdkVersion 19
-    buildToolsVersion rootProject.ext.buildToolsVersion
-    useNewNativePlugin true
-    ndk {
+model {
+    android {
+        compileSdkVersion 19
+        buildToolsVersion rootProject.ext.buildToolsVersion
+    }
+    android.ndk {
+        compileSdkVersion 19
         moduleName "hello-jni"
     }
-    buildTypes {
+    android.buildTypes {
         debug {
             jniDebugBuild true
         }

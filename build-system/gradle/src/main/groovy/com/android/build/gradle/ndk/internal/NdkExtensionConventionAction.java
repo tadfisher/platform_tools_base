@@ -6,13 +6,11 @@ import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.LibraryPlugin;
 import com.android.build.gradle.api.AndroidSourceDirectorySet;
 import com.android.build.gradle.ndk.NdkExtension;
-import com.android.build.gradle.ndk.NdkPlugin;
 import com.android.builder.core.BuilderConstants;
 
 import org.gradle.api.Action;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
-import org.gradle.api.internal.project.ProjectInternal;
 
 /**
  * Action to setup default values for NdkExtension.
@@ -59,11 +57,6 @@ public class NdkExtensionConventionAction implements Action<Project> {
     }
 
     public static void setExtensionDefault(NdkExtension extension) {
-        if (extension.getCompileSdkVersion() == null) {
-            // FIXME: Do not hard code.
-            extension.setCompileSdkVersion(19);
-        }
-
         if (extension.getToolchain() == null) {
             extension.setToolchain(DEFAULT_TOOLCHAIN);
         }
