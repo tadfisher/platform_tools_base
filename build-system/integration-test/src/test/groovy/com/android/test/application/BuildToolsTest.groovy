@@ -16,8 +16,8 @@
 
 package com.android.build.gradle
 
-import com.android.build.gradle.internal.test.fixture.GradleProjectTestRule
-import com.android.build.gradle.internal.test.fixture.app.HelloWorldApp
+import com.android.test.common.fixture.GradleTestProject
+import com.android.test.common.fixture.app.HelloWorldApp
 import com.google.common.collect.Sets
 import org.junit.Before
 import org.junit.Rule
@@ -43,7 +43,7 @@ class BuildToolsTest {
     ]
 
     @Rule
-    public GradleProjectTestRule fixture = new GradleProjectTestRule();
+    public GradleTestProject fixture = new GradleTestProject();
 
     @Before
     public void setup() {
