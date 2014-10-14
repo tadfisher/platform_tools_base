@@ -1,6 +1,6 @@
 local.properties
 .idea
-gradle/build
+integration-test/build
 .gradle
 lint-results
 tests/regular/*/build
