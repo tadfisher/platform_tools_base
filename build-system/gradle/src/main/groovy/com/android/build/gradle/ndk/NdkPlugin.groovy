@@ -181,9 +181,10 @@ class NdkPlugin implements Plugin<Project> {
         nonExecutableTask.description =
                 "Dummy task to hide other unwanted tasks in the task list."
 
-        project.libraries.getByName(ndkExtension.getModuleName()) {
+        def library = project.libraries.findByName(ndkExtension.getModuleName())
+        if (library != null) {
             Iterable<Task> lifecycleTasks =
-                    binaries.withType(DefaultStaticLibraryBinarySpec)*.getBuildTask()
+                    library.binaries.withType(DefaultStaticLibraryBinarySpec)*.getBuildTask()
             nonExecutableTask.dependsOn lifecycleTasks
             lifecycleTasks*.group = null
             lifecycleTasks*.enabled = false
