@@ -41,7 +41,7 @@ import org.gradle.platform.base.ComponentSpecContainer
 /**
  * Configure settings used by the native binaries.
  */
-class NdkConfigurationAction implements Action<Project> {
+class NdkConfigurationAction {
 
     NdkExtension ndkExtension
 
@@ -52,72 +52,54 @@ class NdkConfigurationAction implements Action<Project> {
         this.ndkHandler = ndkHandler
     }
 
-    public void execute(Project project) {
-        createBuildTypes(
-            project.modelRegistry.get(ModelPath.path("buildTypes"), ModelType.of(BuildTypeContainer)));
-
-        NativeLibrarySpec library = createNativeLibrary(
-            project.modelRegistry.get(ModelPath.path("componentSpecs"), ModelType.of(ComponentSpecContainer)),
-            ndkExtension);
-
-        configureProperties(
-                library,
-                project, ndkExtension, ndkHandler)
-
-        configureSources(project.sources, ndkExtension)
-    }
-
     public static void createBuildTypes(BuildTypeContainer buildTypes) {
         buildTypes.maybeCreate(BuilderConstants.DEBUG)
         buildTypes.maybeCreate(BuilderConstants.RELEASE)
     }
 
-    public static NativeLibrarySpec createNativeLibrary(ComponentSpecContainer specs, NdkExtension extension) {
-        NativeLibrarySpec library = specs.create(extension.getModuleName(), NativeLibrarySpec)
-    }
-
-    public static void configureSources(ProjectSourceSet sources, NdkExtension ndkExtension) {
-        String moduleName = ndkExtension.getModuleName();
-        ndkExtension.getSourceSets().all { AndroidSourceDirectorySet sourceSet ->
-            // For Android's main source set, just configure the default FunctionalSourceSet.
-            String sourceSetName = sourceSet.name
-
-            sources.maybeCreate(sourceSetName).configure {
-                c(CSourceSet) {
-                    source {
-                        if (srcDirs.isEmpty()) {
-                            srcDir "src/$sourceSetName/jni"
-                        }
-                        if (includes.isEmpty()) {
-                            include ndkExtension.getCFilePattern().getIncludes()
-                            exclude ndkExtension.getCFilePattern().getExcludes()
-                        }
+    public static void configureSources(ProjectSourceSet sources, String sourceSetName, NdkExtension ndkExtension) {
+        sources.maybeCreate(sourceSetName).configure {
+            c(CSourceSet) {
+                source {
+                    if (srcDirs.isEmpty()) {
+                        srcDir "src/$sourceSetName/jni"
+                    }
+                    if (includes.isEmpty()) {
+                        include ndkExtension.getCFilePattern().getIncludes()
+                        exclude ndkExtension.getCFilePattern().getExcludes()
                     }
                 }
-                cpp(CppSourceSet) {
-                    source {
-                        if (srcDirs.isEmpty()) {
-                            srcDir "src/$sourceSetName/jni"
-                        }
-                        if (includes.isEmpty()) {
-                            include ndkExtension.getCppFilePattern().getIncludes()
-                            exclude ndkExtension.getCppFilePattern().getExcludes()
-                        }
+            }
+            cpp(CppSourceSet) {
+                source {
+                    if (srcDirs.isEmpty()) {
+                        srcDir "src/$sourceSetName/jni"
+                    }
+                    if (includes.isEmpty()) {
+                        include ndkExtension.getCppFilePattern().getIncludes()
+                        exclude ndkExtension.getCppFilePattern().getExcludes()
                     }
                 }
             }
         }
     }
 
-    public static void configureProperties(NativeLibrarySpec library, Project project, NdkExtension ndkExtension, NdkHandler ndkHandler) {
+    public static void configureProperties(NativeLibrarySpec library, ProjectSourceSet sources, Project project, NdkExtension ndkExtension, NdkHandler ndkHandler) {
         Collection<String> abiList = ndkHandler.getSupportedAbis()
         library.targetPlatform(abiList.toArray(new String[abiList.size()]))
 
         library.binaries.withType(DefaultSharedLibraryBinarySpec) { DefaultSharedLibraryBinarySpec binary ->
             // TODO: Support flavorDimension.
-            sourceIfExist(binary, project.sources, "main")
-            sourceIfExist(binary, project.sources, "${flavor.name}")
-            sourceIfExist(binary, project.sources, "${buildType.name}")
+            sourceIfExist(binary, sources, "main")
+            sourceIfExist(binary, sources, binary.flavor.name)
+            sourceIfExist(binary, sources, binary.buildType.name)
+            sourceIfExist(binary, sources, binary.flavor.name + binary.buildType.name.capitalize())
+//            binary.source(sources.getByName("main"))
+//            if (flavor.name != "default") {
+//                binary.source(sources.getByName(binary.flavor.name))
+//                binary.source(sources.getByName(binary.buildType.name + binary.flavor.name.capitalize()))
+//            }
+//            binary.source(sources.getByName(binary.buildType.name))
 
             cCompiler.define "ANDROID"
             cppCompiler.define "ANDROID"

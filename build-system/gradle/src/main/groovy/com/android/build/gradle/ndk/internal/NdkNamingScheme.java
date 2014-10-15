@@ -20,6 +20,7 @@ import com.android.builder.model.AndroidProject;
 import com.google.common.base.Joiner;
 
 import org.gradle.nativeplatform.NativeBinary;
+import org.gradle.nativeplatform.NativeBinarySpec;
 
 import java.io.File;
 
@@ -27,11 +28,11 @@ import java.io.File;
  * Naming scheme for NdkPlugin's outputs.
  */
 public class NdkNamingScheme {
-    public static String getOutputDirectoryName(NativeBinary binary) {
+    public static String getOutputDirectoryName(NativeBinarySpec binary) {
         return Joiner.on(File.separator).join(
                 AndroidProject.FD_INTERMEDIATES,
                 "binaries",
-                binary.getDisplayName(),
+                binary.getName(),
                 binary.getBuildType().getName(),
                 binary.getFlavor().getName(),
                 "lib",
