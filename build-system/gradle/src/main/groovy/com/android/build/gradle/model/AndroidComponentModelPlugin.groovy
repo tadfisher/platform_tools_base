@@ -26,7 +26,6 @@ import com.android.builder.model.BuildType
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.plugins.ExtensionContainer
 import org.gradle.internal.reflect.Instantiator
 import org.gradle.internal.service.ServiceRegistry
 import org.gradle.model.Model
@@ -36,6 +35,8 @@ import org.gradle.model.collection.CollectionBuilder
 import org.gradle.platform.base.BinaryContainer
 import org.gradle.platform.base.BinaryType
 import org.gradle.platform.base.BinaryTypeBuilder
+import org.gradle.platform.base.ComponentBinaries
+import org.gradle.platform.base.ComponentSpecContainer
 import org.gradle.platform.base.ComponentType
 import org.gradle.platform.base.ComponentTypeBuilder
 
@@ -43,9 +44,13 @@ import org.gradle.platform.base.ComponentTypeBuilder
  * Plugin to set up infrastructure for other android plugins.
  */
 public class AndroidComponentModelPlugin implements Plugin<Project> {
+    // Remove this when our models no longer depends on Project.
+    static private Project project;
 
     @Override
     public void apply(Project project) {
+        AndroidComponentModelPlugin.project = project;
+
         // Add project as an extension so that it can be used in model rules until Gradle provides
         // methods to replace project.file and project.container.
         project.extensions.add("projectModel", project)
@@ -54,15 +59,9 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
     @RuleSource
     static class Rules {
 
-        @Model
-        Project projectModel(ExtensionContainer extensions) {
-            return extensions.getByType(Project)
-        }
-
         @Model("android.buildTypes")
         NamedDomainObjectContainer<DefaultBuildType> createBuildTypes(
-                ServiceRegistry serviceRegistry,
-                Project project) {
+                ServiceRegistry serviceRegistry) {
             Instantiator instantiator = serviceRegistry.get(Instantiator.class)
             def buildTypeContainer = project.container(DefaultBuildType,
                     new BuildTypeFactory(instantiator, project, project.getLogger()))
@@ -79,8 +78,7 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
 
         @Model("android.productFlavors")
         NamedDomainObjectContainer<GroupableProductFlavorDsl> createProductFlavors(
-                ServiceRegistry serviceRegistry,
-                Project project) {
+                ServiceRegistry serviceRegistry) {
             Instantiator instantiator = serviceRegistry.get(Instantiator.class)
             def productFlavorContainer = project.container(GroupableProductFlavorDsl,
                     new GroupableProductFlavorFactory(instantiator, project, project.getLogger()))
@@ -92,6 +90,16 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
 
             return productFlavorContainer
         }
+
+        @Model
+        List<ProductFlavorGroup> createProductFlavorGroup (NamedDomainObjectContainer<GroupableProductFlavorDsl> productFlavors) {
+            // TODO: Create custom product flavor container to manually configure flavor dimensions.
+            List<String> flavorDimensionList = productFlavors*.flavorDimension.unique();
+            flavorDimensionList.removeAll([null])
+
+            return  ProductFlavorGroup.createGroupList(flavorDimensionList, productFlavors);
+        }
+
 
         @ComponentType
         void defineComponentType(ComponentTypeBuilder<AndroidComponentSpec> builder) {
@@ -109,20 +117,12 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
             builder.defaultImplementation(DefaultAndroidBinary)
         }
 
-        // TODO: Convert to @ComponentBinaries when it is implemented.
         @Mutate
         void createBinaries(
                 BinaryContainer binaries,
                 NamedDomainObjectContainer<DefaultBuildType> buildTypes,
-                NamedDomainObjectContainer<GroupableProductFlavorDsl> productFlavors) {
-            // TODO: Create custom product flavor container to manually configure flavor dimensions.
-            List<String> flavorDimensionList = productFlavors*.flavorDimension.unique();
-            flavorDimensionList.removeAll([null])
-
-            List<ProductFlavorGroup> flavorGroups =
-                    ProductFlavorGroup.createGroupList(flavorDimensionList, productFlavors)
-
-            // Create a default ProductFlavorGroup with no flavor if productFlavors is empty.
+                List<ProductFlavorGroup> flavorGroups,
+                ComponentSpecContainer specs) {
             if (flavorGroups.isEmpty()) {
                 flavorGroups.add(new ProductFlavorGroup());
             }
@@ -139,6 +139,10 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
     }
 
     private static String getBinaryName(BuildType buildType, ProductFlavorGroup flavorGroup) {
-        return buildType.name + flavorGroup.name.capitalize()
+        if (flavorGroup.flavorList.isEmpty()) {
+            return  buildType.name
+        } else {
+            return  flavorGroup.name + buildType.name.capitalize()
+        }
     }
 }

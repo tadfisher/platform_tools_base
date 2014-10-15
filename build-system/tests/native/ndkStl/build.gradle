@@ -45,23 +45,23 @@ subprojects {
         android.ndk {
             moduleName "hello-jni"
         }
-    }
 
-    sources {
-        main {
-            res {
-                source {
-                    srcDir '../src/main/res'
+        sources {
+            main {
+                res {
+                    source {
+                        srcDir '../src/main/res'
+                    }
                 }
-            }
-            java {
-                source {
-                    srcDir '../src/main/java'
+                java {
+                    source {
+                        srcDir '../src/main/java'
+                    }
                 }
-            }
-            jni {
-                source {
-                    srcDir '../src/main/jni'
+                jni {
+                    source {
+                        srcDir '../src/main/jni'
+                    }
                 }
             }
         }

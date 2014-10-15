@@ -85,15 +85,5 @@ public class NdkExtensionConventionAction implements Action<Project> {
         } else {
             StlConfiguration.checkStl(extension.getStl());
         }
-
-        // Define default source set.  Currently do not support configuration of sourceSets for
-        // a BuildType or Flavor.
-        extension.getSourceSets().maybeCreate(BuilderConstants.MAIN);
-
-        for (AndroidSourceDirectorySet sourceSet : extension.getSourceSets()) {
-            if (sourceSet.getSrcDirs().isEmpty()) {
-                sourceSet.srcDir("src/" + sourceSet.getName() + "/jni");
-            }
-        }
     }
 }

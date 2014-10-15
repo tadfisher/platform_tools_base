@@ -34,7 +34,6 @@ import com.android.build.gradle.internal.tasks.SigningReportTask
 import com.android.build.gradle.internal.variant.ApplicationVariantFactory
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantFactory
-import com.android.build.gradle.ndk.NdkExtension
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.DefaultBuildType
 import com.android.builder.model.SigningConfig
@@ -140,7 +139,6 @@ public class AppModelPlugin extends BasePlugin implements Plugin<Project> {
                 NamedDomainObjectContainer<GroupableProductFlavorDsl> productFlavorContainer,
                 NamedDomainObjectContainer<SigningConfig> signingConfigContainer,
                 BasePlugin plugin) {
-            println "appextension"
             Instantiator instantiator = serviceRegistry.get(Instantiator.class);
             Project project = plugin.getProject()
 
