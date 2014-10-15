@@ -17,32 +17,33 @@
 
 package com.android.build.gradle.model
 
-import com.android.build.gradle.AppExtension
-import com.android.build.gradle.api.AndroidSourceDirectorySet
 import com.android.build.gradle.api.GroupableProductFlavor
 import com.android.build.gradle.internal.ProductFlavorGroup
-import com.android.build.gradle.internal.api.DefaultAndroidSourceDirectorySet
+import com.android.build.gradle.internal.dsl.GroupableProductFlavorDsl
 import com.android.build.gradle.ndk.NdkExtension
 import com.android.build.gradle.ndk.internal.NdkConfigurationAction
 import com.android.build.gradle.ndk.internal.NdkExtensionConventionAction
 import com.android.build.gradle.ndk.internal.NdkHandler
 import com.android.build.gradle.ndk.internal.ToolchainConfigurationAction
+import com.android.builder.core.DefaultBuildType
 import com.android.builder.core.VariantConfiguration
 import com.android.builder.model.BuildType
+import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.internal.project.ProjectIdentifier
-import org.gradle.api.plugins.ExtensionContainer
 import org.gradle.api.tasks.TaskContainer
-import org.gradle.configuration.project.ProjectConfigurationActionContainer
 import org.gradle.internal.reflect.Instantiator
+import org.gradle.internal.service.ServiceRegistry
 import org.gradle.language.base.ProjectSourceSet
 import org.gradle.model.Finalize
 import org.gradle.model.Model
 import org.gradle.model.Mutate
+import org.gradle.model.Path
 import org.gradle.model.RuleSource
 import org.gradle.nativeplatform.BuildTypeContainer
+import org.gradle.nativeplatform.FlavorContainer
 import org.gradle.nativeplatform.NativeLibraryBinarySpec
 import org.gradle.nativeplatform.NativeLibrarySpec
 import org.gradle.nativeplatform.SharedLibraryBinarySpec
@@ -53,46 +54,22 @@ import org.gradle.platform.base.ComponentSpecContainer
 import org.gradle.platform.base.PlatformContainer
 import org.gradle.platform.base.ToolChainRegistry
 
-import javax.inject.Inject
-
 /**
  * Plugin for Android NDK applications.
  */
 class NdkComponentModelPlugin implements Plugin<Project> {
-
-    protected Project project
-
-    private NdkExtension extension
-
-    private ProjectConfigurationActionContainer configurationActions
-
-    protected Instantiator instantiator
-
-    @Inject
-    public NdkComponentModelPlugin(
-            ProjectConfigurationActionContainer configurationActions,
-            Instantiator instantiator) {
-        this.configurationActions = configurationActions
-        this.instantiator = instantiator
-    }
+    private Project project
 
     void apply(Project project) {
-        project.plugins.apply(AndroidComponentModelPlugin)
-
         this.project = project
 
-        def sourceSetContainers = project.container(AndroidSourceDirectorySet) { name ->
-            instantiator.newInstance(DefaultAndroidSourceDirectorySet, name, project)
-        }
-        extension = instantiator.newInstance(NdkExtension, sourceSetContainers)
-        project.extensions.add("android_ndk", extension)
+        project.plugins.apply(AndroidComponentModelPlugin)
 
         project.apply plugin: 'c'
         project.apply plugin: 'cpp'
 
         // Remove static library tasks from assemble
         project.binaries.withType(StaticLibraryBinary) {
-            // TODO: Determine how to hide these task from task list.
             it.buildable = false
         }
     }
@@ -100,8 +77,9 @@ class NdkComponentModelPlugin implements Plugin<Project> {
     @RuleSource
     static class Rules {
         @Model("android.ndk")
-        NdkExtension createAndroidNdk(ExtensionContainer extensions) {
-            return extensions.getByType(NdkExtension)
+        NdkExtension createAndroidNdk(ServiceRegistry serviceRegistry) {
+            Instantiator instantiator = serviceRegistry.get(Instantiator.class)
+            return instantiator.newInstance(NdkExtension)
         }
 
         @Model
@@ -141,8 +119,21 @@ class NdkComponentModelPlugin implements Plugin<Project> {
         }
 
         @Mutate
-        void createNativeBuildTypes(BuildTypeContainer buildTypes) {
-            NdkConfigurationAction.createBuildTypes(buildTypes)
+        void createNativeBuildTypes(
+                BuildTypeContainer nativeBuildTypes,
+                NamedDomainObjectContainer<DefaultBuildType> androidBuildTypes) {
+            for (def buildType : androidBuildTypes) {
+                nativeBuildTypes.maybeCreate(buildType.name)
+            }
+        }
+
+        @Mutate
+        void createNativeFlavors(
+                FlavorContainer nativeFlavors,
+                List<ProductFlavorGroup> androidFlavorGroups) {
+            for (def group : androidFlavorGroups) {
+                nativeFlavors.maybeCreate(group.name)
+            }
         }
 
         @Mutate
@@ -150,12 +141,33 @@ class NdkComponentModelPlugin implements Plugin<Project> {
                 ComponentSpecContainer specs,
                 NdkExtension extension,
                 NdkHandler ndkHandler,
-                Project project,
-                ProjectSourceSet sources) {
+                ProjectSourceSet sources,
+                @Path("buildDir") File buildDir) {
             if (extension.moduleName != null) {
-                NativeLibrarySpec library =
-                        specs.create(extension.moduleName, NativeLibrarySpec)
-                NdkConfigurationAction.configureProperties(library, project, extension, ndkHandler)
+                specs.withType(DefaultAndroidComponentSpec) { androidSpec ->
+                    NativeLibrarySpec library =
+                            specs.create(extension.moduleName, NativeLibrarySpec)
+                    androidSpec.nativeLibrary = library
+                    NdkConfigurationAction.configureProperties(
+                            library, sources, buildDir, extension, ndkHandler)
+                }
+            }
+        }
+
+        @Mutate
+        void createAdditionalTasksForNatives(
+                TaskContainer tasks,
+                ComponentSpecContainer specs,
+                NdkExtension extension,
+                NdkHandler ndkHandler,
+                @Path("buildDir") File buildDir) {
+            specs.withType(DefaultAndroidComponentSpec) { androidSpec ->
+                if (androidSpec.nativeLibrary != null) {
+                    androidSpec.nativeLibrary.binaries.withType(DefaultSharedLibraryBinarySpec) { binary ->
+                        NdkConfigurationAction.createTasks(
+                                tasks, binary, buildDir, extension, ndkHandler)
+                    }
+                }
             }
         }
 
@@ -170,6 +182,53 @@ class NdkComponentModelPlugin implements Plugin<Project> {
                 binaries.withType(DefaultAndroidBinary) { binary ->
                     def nativeBinaries = getNativeBinaries(library, binary.buildType, binary.productFlavors)
                     binary.getNativeBinaries().addAll(nativeBinaries)
+                }
+            }
+        }
+
+        /**
+         * Create all source sets for each AndroidBinary.
+         */
+        @Mutate
+        void configureNativeSourceSet(
+                ProjectSourceSet sources,
+                NamedDomainObjectContainer<DefaultBuildType> buildTypes,
+                NamedDomainObjectContainer<GroupableProductFlavorDsl> flavors,
+                List<ProductFlavorGroup> flavorGroups,
+                NdkExtension ndkExtension) {
+            NdkConfigurationAction.configureSources(sources, "main", ndkExtension)
+            for (def buildType : buildTypes) {
+                NdkConfigurationAction.configureSources(sources, buildType.name, ndkExtension)
+            }
+            for (def group : flavorGroups) {
+                NdkConfigurationAction.configureSources(sources, group.name, ndkExtension)
+                if (!group.flavorList.isEmpty()) {
+                    for (def buildType : buildTypes) {
+                        NdkConfigurationAction.configureSources(
+                                sources, group.name + buildType.name.capitalize(), ndkExtension)
+                    }
+                }
+            }
+            if (flavorGroups.size() != flavors.size()) {
+                // If flavorGroups and flavors are the same size, there is at most 1 flavor
+                // dimension.  So we don't need to reconfigure the source sets for flavorGroups.
+                for (def flavor : flavors) {
+                    NdkConfigurationAction.configureSources(sources, flavor.name, ndkExtension)
+                }
+            }
+        }
+
+        @Finalize
+        void attachNativeTasksToAssembleTasks(BinaryContainer binaries) {
+            binaries.withType(DefaultAndroidBinary) { binary ->
+                if (binary.targetAbi.isEmpty())  {
+                    binary.builtBy(binary.nativeBinaries)
+                } else {
+                    binary.nativeBinaries.each { nativeBinary ->
+                        if (binary.targetAbi.contains(nativeBinary.targetPlatform.name)) {
+                            binary.builtBy(nativeBinary)
+                        }
+                    }
                 }
             }
         }
@@ -196,26 +255,6 @@ class NdkComponentModelPlugin implements Plugin<Project> {
                 Task buildTask = binary.getBuildTask()
                 nonExecutableTask.dependsOn buildTask
                 buildTask.group = null
-            }
-        }
-
-        @Mutate
-        void configureNativeSourceSet(ProjectSourceSet sources, NdkExtension extension) {
-            NdkConfigurationAction.configureSources(sources, extension)
-        }
-
-        @Finalize
-        void attachNativeTasksToAssembleTasks(BinaryContainer binaries) {
-            binaries.withType(DefaultAndroidBinary) { binary ->
-                if (binary.targetAbi.isEmpty())  {
-                    binary.builtBy(binary.nativeBinaries)
-                } else {
-                    binary.nativeBinaries.each { nativeBinary ->
-                        if (binary.targetAbi.contains(nativeBinary.targetPlatform.name)) {
-                            binary.builtBy(nativeBinary)
-                        }
-                    }
-                }
             }
         }
     }
