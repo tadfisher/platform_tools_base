@@ -29,6 +29,7 @@ import com.google.common.hash.HashCode
 import com.google.common.hash.HashFunction
 import com.google.common.hash.Hashing
 import com.google.common.io.Files
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
@@ -44,6 +45,12 @@ public class JillTask extends BaseTask {
     // ----- PUBLIC TASK API -----
 
     // ----- PRIVATE TASK API -----
+    @Input
+    String getBuildToolsVersion() {
+        plugin.ensureTargetSetup()
+        builder.targetInfo.buildTools.revision.toString()
+    }
+
     @SuppressWarnings("GroovyUnusedDeclaration")
     @InputFiles
     Collection<File> inputLibs

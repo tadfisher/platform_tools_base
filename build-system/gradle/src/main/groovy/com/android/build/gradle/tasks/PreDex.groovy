@@ -42,6 +42,11 @@ public class PreDex extends BaseTask {
     // ----- PUBLIC TASK API -----
 
     // ----- PRIVATE TASK API -----
+    @Input
+    String getBuildToolsVersion() {
+        plugin.ensureTargetSetup()
+        builder.targetInfo.buildTools.revision.toString()
+    }
 
     // this is used automatically by Gradle, even though nothing
     // in the class uses it.
@@ -67,7 +72,7 @@ public class PreDex extends BaseTask {
 
         boolean incremental = taskInputs.isIncremental()
         // if we are not in incremental mode, then outOfDate will contain
-        // all th files, but first we need to delete the previous output
+        // all the files, but first we need to delete the previous output
         if (!incremental) {
             emptyFolder(outFolder)
         }
