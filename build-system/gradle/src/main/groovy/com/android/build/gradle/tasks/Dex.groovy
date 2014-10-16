@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 package com.android.build.gradle.tasks
+
 import com.android.SdkConstants
 import com.android.build.gradle.internal.dsl.DexOptionsImpl
 import com.android.build.gradle.internal.tasks.BaseTask
@@ -40,6 +41,12 @@ public class Dex extends BaseTask {
     boolean enableIncremental = true
 
     // ----- PRIVATE TASK API -----
+
+    @Input
+    String getBuildToolsVersion() {
+        plugin.ensureTargetSetup()
+        builder.targetInfo.buildTools.revision.toString()
+    }
 
     @InputFiles
     Collection<File> inputFiles
