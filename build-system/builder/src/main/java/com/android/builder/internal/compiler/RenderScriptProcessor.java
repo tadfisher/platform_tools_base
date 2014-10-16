@@ -77,6 +77,9 @@ public class RenderScriptProcessor {
     public static final String RS_DEPS = "rsDeps";
 
     @NonNull
+    private final File mRsExe;
+
+    @NonNull
     private final List<File> mSourceFolders;
 
     @NonNull
@@ -112,6 +115,7 @@ public class RenderScriptProcessor {
     private final Map<String, File> mLibClCore = Maps.newHashMap();
 
     public RenderScriptProcessor(
+            @NonNull File rsExe,
             @NonNull List<File> sourceFolders,
             @NonNull List<File> importFolders,
             @NonNull File sourceOutputDir,
@@ -125,6 +129,7 @@ public class RenderScriptProcessor {
             boolean ndkMode,
             boolean supportMode,
             @Nullable Set<String> abiFilters) {
+        mRsExe = rsExe;
         mSourceFolders = sourceFolders;
         mImportFolders = importFolders;
         mSourceOutputDir = sourceOutputDir;
@@ -198,8 +203,7 @@ public class RenderScriptProcessor {
             @NonNull Map<String, String> env)
             throws IOException, InterruptedException, LoggedErrorException {
 
-        String renderscript = mBuildToolInfo.getPath(BuildToolInfo.PathId.LLVM_RS_CC);
-        if (renderscript == null || !new File(renderscript).isFile()) {
+        if (!mRsExe.isFile()) {
             throw new IllegalStateException(BuildToolInfo.PathId.LLVM_RS_CC + " is missing");
         }
 
@@ -213,7 +217,7 @@ public class RenderScriptProcessor {
         // compile all the files in a single pass
         ArrayList<String> command = Lists.newArrayListWithExpectedSize(26);
 
-        command.add(renderscript);
+        command.add(mRsExe.getAbsolutePath());
 
         // Due to a device side bug, let's not enable this at this time.
 //        if (mDebugBuild) {
@@ -325,6 +329,7 @@ public class RenderScriptProcessor {
 
         List<String> args = Lists.newArrayListWithExpectedSize(10);
 
+        // TODO: Should this be an input?
         args.add(mBuildToolInfo.getPath(BuildToolInfo.PathId.BCC_COMPAT));
 
         args.add("-O" + Integer.toString(mOptimLevel));

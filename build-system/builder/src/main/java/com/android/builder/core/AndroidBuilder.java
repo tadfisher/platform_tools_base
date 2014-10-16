@@ -986,6 +986,7 @@ public class AndroidBuilder {
      * @throws LoggedErrorException
      */
     public void processResources(
+            @NonNull  File aaptExe,
             @NonNull  File manifestFile,
             @NonNull  File resFolder,
             @Nullable File assetsDir,
@@ -1021,12 +1022,11 @@ public class AndroidBuilder {
         // launch aapt: create the command line
         ArrayList<String> command = Lists.newArrayList();
 
-        String aapt = buildToolInfo.getPath(BuildToolInfo.PathId.AAPT);
-        if (aapt == null || !new File(aapt).isFile()) {
+        if (!aaptExe.isFile()) {
             throw new IllegalStateException("aapt is missing");
         }
 
-        command.add(aapt);
+        command.add(aaptExe.getAbsolutePath());
         command.add("package");
 
         if (mVerboseExec) {
@@ -1224,24 +1224,22 @@ public class AndroidBuilder {
         }
     }
 
-    public void generateApkData(@NonNull File apkFile,
+    public void generateApkData(@NonNull File aaptExe,
+                                @NonNull File apkFile,
                                 @NonNull File outResFolder,
                                 @NonNull String mainPkgName,
                                 @NonNull String resName)
             throws InterruptedException, LoggedErrorException, IOException {
 
-        // need to run aapt to get apk information
-        BuildToolInfo buildToolInfo = mTargetInfo.getBuildTools();
-
         // launch aapt: create the command line
         ArrayList<String> command = Lists.newArrayList();
 
-        String aapt = buildToolInfo.getPath(BuildToolInfo.PathId.AAPT);
-        if (aapt == null || !new File(aapt).isFile()) {
+        // need to run aapt to get apk information
+        if (!aaptExe.isFile()) {
             throw new IllegalStateException("aapt is missing");
         }
 
-        command.add(aapt);
+        command.add(aaptExe.getAbsolutePath());
         command.add("dump");
         command.add("badging");
         command.add(apkFile.getPath());
@@ -1328,7 +1326,8 @@ public class AndroidBuilder {
      * @throws InterruptedException
      * @throws LoggedErrorException
      */
-    public void compileAllAidlFiles(@NonNull List<File> sourceFolders,
+    public void compileAllAidlFiles(@NonNull File aidlExe,
+                                    @NonNull List<File> sourceFolders,
                                     @NonNull File sourceOutputDir,
                                     @Nullable File parcelableOutputDir,
                                     @NonNull List<File> importFolders,
@@ -1341,10 +1340,8 @@ public class AndroidBuilder {
                 "Cannot call compileAllAidlFiles() before setTargetInfo() is called.");
 
         IAndroidTarget target = mTargetInfo.getTarget();
-        BuildToolInfo buildToolInfo = mTargetInfo.getBuildTools();
 
-        String aidl = buildToolInfo.getPath(BuildToolInfo.PathId.AIDL);
-        if (aidl == null || !new File(aidl).isFile()) {
+        if (!aidlExe.isFile()) {
             throw new IllegalStateException("aidl is missing");
         }
 
@@ -1354,7 +1351,7 @@ public class AndroidBuilder {
         fullImportList.addAll(importFolders);
 
         AidlProcessor processor = new AidlProcessor(
-                aidl,
+                aidlExe.getAbsolutePath(),
                 target.getPath(IAndroidTarget.ANDROID_AIDL),
                 fullImportList,
                 sourceOutputDir,
@@ -1380,7 +1377,8 @@ public class AndroidBuilder {
      * @throws InterruptedException
      * @throws LoggedErrorException
      */
-    public void compileAidlFile(@NonNull File sourceFolder,
+    public void compileAidlFile(@NonNull File aidlExe,
+                                @NonNull File sourceFolder,
                                 @NonNull File aidlFile,
                                 @NonNull File sourceOutputDir,
                                 @Nullable File parcelableOutputDir,
@@ -1394,15 +1392,13 @@ public class AndroidBuilder {
                 "Cannot call compileAidlFile() before setTargetInfo() is called.");
 
         IAndroidTarget target = mTargetInfo.getTarget();
-        BuildToolInfo buildToolInfo = mTargetInfo.getBuildTools();
 
-        String aidl = buildToolInfo.getPath(BuildToolInfo.PathId.AIDL);
-        if (aidl == null || !new File(aidl).isFile()) {
+        if (!aidlExe.isFile()) {
             throw new IllegalStateException("aidl is missing");
         }
 
         AidlProcessor processor = new AidlProcessor(
-                aidl,
+                aidlExe.getAbsolutePath(),
                 target.getPath(IAndroidTarget.ANDROID_AIDL),
                 importFolders,
                 sourceOutputDir,
@@ -1437,7 +1433,8 @@ public class AndroidBuilder {
      * @throws InterruptedException
      * @throws LoggedErrorException
      */
-    public void compileAllRenderscriptFiles(@NonNull List<File> sourceFolders,
+    public void compileAllRenderscriptFiles(@NonNull File rsExe,
+                                            @NonNull List<File> sourceFolders,
                                             @NonNull List<File> importFolders,
                                             @NonNull File sourceOutputDir,
                                             @NonNull File resOutputDir,
@@ -1459,12 +1456,12 @@ public class AndroidBuilder {
 
         BuildToolInfo buildToolInfo = mTargetInfo.getBuildTools();
 
-        String renderscript = buildToolInfo.getPath(BuildToolInfo.PathId.LLVM_RS_CC);
-        if (renderscript == null || !new File(renderscript).isFile()) {
+        if (!rsExe.isFile()) {
             throw new IllegalStateException("llvm-rs-cc is missing");
         }
 
         RenderScriptProcessor processor = new RenderScriptProcessor(
+                rsExe,
                 sourceFolders,
                 importFolders,
                 sourceOutputDir,
@@ -1535,6 +1532,7 @@ public class AndroidBuilder {
      * @throws LoggedErrorException
      */
     public void convertByteCode(
+            @NonNull File dxExe,
             @NonNull Iterable<File> inputs,
             @NonNull Iterable<File> preDexedLibraries,
             @NonNull File outDexFolder,
@@ -1549,17 +1547,14 @@ public class AndroidBuilder {
         checkState(mTargetInfo != null,
                 "Cannot call convertByteCode() before setTargetInfo() is called.");
 
-        BuildToolInfo buildToolInfo = mTargetInfo.getBuildTools();
-
         // launch dx: create the command line
         ArrayList<String> command = Lists.newArrayList();
 
-        String dx = buildToolInfo.getPath(BuildToolInfo.PathId.DX);
-        if (dx == null || !new File(dx).isFile()) {
+        if (!dxExe.isFile()) {
             throw new IllegalStateException("dx is missing");
         }
 
-        command.add(dx);
+        command.add(dxExe.getAbsolutePath());
 
         if (dexOptions.getJavaMaxHeapSize() != null) {
             command.add("-JXmx" + dexOptions.getJavaMaxHeapSize());
@@ -1636,6 +1631,7 @@ public class AndroidBuilder {
      * @throws LoggedErrorException
      */
     public void preDexLibrary(
+            @NonNull File dxExe,
             @NonNull File inputFile,
             @NonNull File outFile,
             @NonNull DexOptions dexOptions)
@@ -1645,15 +1641,15 @@ public class AndroidBuilder {
 
         BuildToolInfo buildToolInfo = mTargetInfo.getBuildTools();
 
-        PreDexCache.getCache().preDexLibrary(inputFile, outFile, dexOptions, buildToolInfo,
+        PreDexCache.getCache().preDexLibrary(dxExe, inputFile, outFile, dexOptions, buildToolInfo,
                 mVerboseExec, mCmdLineRunner);
     }
 
     public static void preDexLibrary(
+            @NonNull File dxExe,
             @NonNull File inputFile,
             @NonNull File outFile,
             @NonNull DexOptions dexOptions,
-            @NonNull BuildToolInfo buildToolInfo,
                      boolean verbose,
             @NonNull CommandLineRunner commandLineRunner)
             throws IOException, InterruptedException, LoggedErrorException {
@@ -1664,12 +1660,11 @@ public class AndroidBuilder {
         // launch dx: create the command line
         ArrayList<String> command = Lists.newArrayList();
 
-        String dx = buildToolInfo.getPath(BuildToolInfo.PathId.DX);
-        if (dx == null || !new File(dx).isFile()) {
+        if (!dxExe.isFile()) {
             throw new IllegalStateException("dx is missing");
         }
 
-        command.add(dx);
+        command.add(dxExe.getAbsolutePath());
 
         if (dexOptions.getJavaMaxHeapSize() != null) {
             command.add("-JXmx" + dexOptions.getJavaMaxHeapSize());

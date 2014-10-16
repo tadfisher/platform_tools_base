@@ -271,6 +271,7 @@ public class PreDexCache {
      * @throws InterruptedException
      */
     public void preDexLibrary(
+            @NonNull File dxExe,
             @NonNull File inputFile,
             @NonNull File outFile,
             @NonNull DexOptions dexOptions,
@@ -284,8 +285,8 @@ public class PreDexCache {
         if (pair.getSecond()) {
             try {
                 // haven't process this file yet so do it and record it.
-                AndroidBuilder.preDexLibrary(inputFile, outFile, dexOptions, buildToolInfo,
-                        verbose, commandLineRunner);
+                AndroidBuilder.preDexLibrary(dxExe, inputFile, outFile, dexOptions, verbose,
+                        commandLineRunner);
 
                 synchronized (this) {
                     mMisses++;

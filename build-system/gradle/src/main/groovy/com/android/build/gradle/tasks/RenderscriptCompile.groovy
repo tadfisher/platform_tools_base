@@ -17,7 +17,9 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.tasks.NdkTask
+import com.android.sdklib.BuildToolInfo
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
@@ -42,6 +44,12 @@ public class RenderscriptCompile extends NdkTask {
 
 
     // ----- PRIVATE TASK API -----
+
+    @InputFile
+    File getRsExe() {
+        plugin.ensureTargetSetup()
+        new File(builder.targetInfo.buildTools.getPath(BuildToolInfo.PathId.LLVM_RS_CC))
+    }
 
     @InputFiles
     List<File> sourceDirs
@@ -85,6 +93,7 @@ public class RenderscriptCompile extends NdkTask {
                 getImportDirs(), getSourceDirs())
 
         getBuilder().compileAllRenderscriptFiles(
+                getRsExe(),
                 getSourceDirs(),
                 importFolders,
                 sourceDestDir,

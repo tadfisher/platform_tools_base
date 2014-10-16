@@ -65,6 +65,7 @@ public class MergeResources extends IncrementalTask {
     }
 
     private PngCruncher getCruncher() {
+        // TODO: Shouldn't aapt be a proper task input here?
         return getUseQueuedAaptPngCruncher() ? QueuedCruncher.Builder.INSTANCE.newCruncher(
                 builder.getTargetInfo().buildTools.getPath(
                 BuildToolInfo.PathId.AAPT), builder.getLogger())

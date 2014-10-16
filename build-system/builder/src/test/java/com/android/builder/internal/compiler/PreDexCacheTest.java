@@ -152,12 +152,14 @@ public class PreDexCacheTest extends TestCase {
 
     private BuildToolInfo mBuildToolInfo;
 
+    private File mDxExe;
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
 
         mBuildToolInfo = getBuildToolInfo();
+        mDxExe = new File(mBuildToolInfo.getPath(BuildToolInfo.PathId.DX));
     }
 
     @Override
@@ -178,7 +180,7 @@ public class PreDexCacheTest extends TestCase {
         output.deleteOnExit();
 
         PreDexCache.getCache().preDexLibrary(
-                input, output,
+                mDxExe, input, output,
                 new FakeDexOptions(), mBuildToolInfo,
                 false /*verbose*/, new FakeCommandLineRunner(new StdLogger(StdLogger.Level.INFO)));
 
@@ -207,7 +209,7 @@ public class PreDexCacheTest extends TestCase {
                         outputFiles[ii] = output;
 
                         PreDexCache.getCache().preDexLibrary(
-                                input, output,
+                                mDxExe, input, output,
                                 dexOptions, mBuildToolInfo, false /*verbose*/, clr);
                     } catch (Exception ignored) {
 
@@ -259,7 +261,7 @@ public class PreDexCacheTest extends TestCase {
                         outputFiles[ii] = output;
 
                         PreDexCache.getCache().preDexLibrary(
-                                input, output,
+                                mDxExe, input, output,
                                 dexOptions, mBuildToolInfo, false /*verbose*/,
                                 ii == 0 ? clrWithError : clr);
                     } catch (Exception ignored) {
@@ -294,7 +296,7 @@ public class PreDexCacheTest extends TestCase {
         output.deleteOnExit();
 
         PreDexCache.getCache().preDexLibrary(
-                input, output,
+                mDxExe, input, output,
                 dexOptions, mBuildToolInfo, false /*verbose*/, clr);
 
         checkOutputFile(content, output);
@@ -312,7 +314,7 @@ public class PreDexCacheTest extends TestCase {
         output2.deleteOnExit();
 
         PreDexCache.getCache().preDexLibrary(
-                input, output2,
+                mDxExe, input, output2,
                 dexOptions, mBuildToolInfo, false /*verbose*/, clr);
 
         // check the output
