@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 import com.android.builder.core.AndroidBuilder
+import com.android.sdklib.BuildToolInfo
 import com.google.common.io.Files
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
@@ -30,6 +31,13 @@ import static com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK
  * Task to generate micro app data res file.
  */
 public class GenerateApkDataTask extends BaseTask {
+
+    @SuppressWarnings("GroovyUnusedDeclaration")
+    @InputFile
+    File getAaptExe() {
+        plugin.ensureTargetSetup()
+        new File(builder.targetInfo.buildTools.getPath(BuildToolInfo.PathId.AAPT))
+    }
 
     @InputFile
     File apkFile

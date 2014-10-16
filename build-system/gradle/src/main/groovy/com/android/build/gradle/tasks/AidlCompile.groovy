@@ -25,9 +25,12 @@ import com.android.builder.internal.incremental.DependencyData
 import com.android.builder.internal.incremental.DependencyDataStore
 import com.android.ide.common.internal.WaitableExecutor
 import com.android.ide.common.res2.FileStatus
+import com.android.sdklib.BuildToolInfo
 import com.google.common.collect.Lists
 import com.google.common.collect.Multimap
 import org.gradle.api.file.FileTree
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
@@ -51,6 +54,12 @@ public class AidlCompile extends IncrementalTask {
     File aidlParcelableDir
 
     // ----- PRIVATE TASK API -----
+    @SuppressWarnings("GroovyUnusedDeclaration")
+    @InputFile
+    File getAidlExe() {
+        plugin.ensureTargetSetup()
+        new File(builder.targetInfo.buildTools.getPath(BuildToolInfo.PathId.AIDL))
+    }
 
     List<File> sourceDirs
 

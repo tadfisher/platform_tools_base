@@ -17,10 +17,13 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.tasks.NdkTask
+import com.android.sdklib.BuildToolInfo
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
+
 /**
  * Task to compile Renderscript files. Supports incremental update.
  */
@@ -42,6 +45,19 @@ public class RenderscriptCompile extends NdkTask {
 
 
     // ----- PRIVATE TASK API -----
+    @SuppressWarnings("GroovyUnusedDeclaration")
+    @InputFiles
+    List<File> getRenderscriptTools() {
+        plugin.ensureTargetSetup()
+
+        [ new File(builder.targetInfo.buildTools.getPath(BuildToolInfo.PathId.LLVM_RS_CC)),
+          new File(builder.targetInfo.buildTools.getPath(BuildToolInfo.PathId.ANDROID_RS)),
+          new File(builder.targetInfo.buildTools.getPath(BuildToolInfo.PathId.ANDROID_RS_CLANG)),
+          new File(builder.targetInfo.buildTools.getPath(BuildToolInfo.PathId.BCC_COMPAT)),
+          new File(builder.targetInfo.buildTools.getPath(BuildToolInfo.PathId.LD_ARM)),
+          new File(builder.targetInfo.buildTools.getPath(BuildToolInfo.PathId.LD_MIPS)),
+          new File(builder.targetInfo.buildTools.getPath(BuildToolInfo.PathId.LD_X86)) ]
+    }
 
     @InputFiles
     List<File> sourceDirs

@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.tasks.BaseTask
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.DexOptions
 import com.android.ide.common.internal.WaitableExecutor
+import com.android.sdklib.BuildToolInfo
 import com.google.common.base.Charsets
 import com.google.common.collect.Lists
 import com.google.common.collect.Sets
@@ -29,6 +30,7 @@ import com.google.common.hash.HashFunction
 import com.google.common.hash.Hashing
 import com.google.common.io.Files
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
@@ -42,6 +44,12 @@ public class PreDex extends BaseTask {
     // ----- PUBLIC TASK API -----
 
     // ----- PRIVATE TASK API -----
+    @SuppressWarnings("GroovyUnusedDeclaration")
+    @InputFile
+    File getDxExe() {
+        plugin.ensureTargetSetup()
+        new File(builder.targetInfo.buildTools.getPath(BuildToolInfo.PathId.DX))
+    }
 
     // this is used automatically by Gradle, even though nothing
     // in the class uses it.

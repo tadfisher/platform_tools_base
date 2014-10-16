@@ -27,6 +27,7 @@ import com.android.ide.common.res2.ResourceMerger
 import com.android.ide.common.res2.ResourceSet
 import com.android.sdklib.BuildToolInfo
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 
@@ -43,6 +44,13 @@ public class MergeResources extends IncrementalTask {
     @InputFiles
     Iterable<File> getRawInputFolders() {
         return flattenSourceSets(getInputResourceSets())
+    }
+
+    @SuppressWarnings("GroovyUnusedDeclaration")
+    @InputFile
+    File getAaptExe() {
+        plugin.ensureTargetSetup()
+        new File(builder.targetInfo.buildTools.getPath(BuildToolInfo.PathId.AAPT))
     }
 
     @Input

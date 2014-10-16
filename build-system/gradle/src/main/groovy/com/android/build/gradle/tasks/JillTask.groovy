@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.tasks.BaseTask
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.DexOptions
 import com.android.ide.common.internal.WaitableExecutor
+import com.android.sdklib.BuildToolInfo
 import com.android.sdklib.repository.FullRevision
 import com.google.common.base.Charsets
 import com.google.common.collect.Lists
@@ -29,6 +30,7 @@ import com.google.common.hash.HashCode
 import com.google.common.hash.HashFunction
 import com.google.common.hash.Hashing
 import com.google.common.io.Files
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
@@ -44,6 +46,13 @@ public class JillTask extends BaseTask {
     // ----- PUBLIC TASK API -----
 
     // ----- PRIVATE TASK API -----
+    @SuppressWarnings("GroovyUnusedDeclaration")
+    @InputFile
+    File getJillExe() {
+        plugin.ensureTargetSetup()
+        new File(plugin.androidBuilder.targetInfo.buildTools.getPath(BuildToolInfo.PathId.JILL))
+    }
+
     @SuppressWarnings("GroovyUnusedDeclaration")
     @InputFiles
     Collection<File> inputLibs
