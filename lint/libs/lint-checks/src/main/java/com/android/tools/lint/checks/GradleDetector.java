@@ -750,6 +750,16 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         } else if ("com.google.code.gson".equals(dependency.getGroupId()) &&
                 "gson".equals(dependency.getArtifactId())) {
             version = getNewerRevision(dependency, 2, 3, 0);
+            if (version != null && version.getMicro() == 0) {
+                // gson doesn't use micro versions (see http://b.android.com/77594)
+                // so use FullRevision#toShortString() instead of #toString.
+                // In general we don't want to do that, since if we use it for "18.0" in Guava
+                // we'll end up with guava:18 which matches 18.1, 18.2, etc too.
+                String message = getNewerVersionAvailableMessage(dependency,
+                        version.toShortString());
+                report(context, cookie, issue, message);
+                return; // already handled
+            }
         } else if ("org.apache.httpcomponents".equals(dependency.getGroupId()) &&
                 "httpclient".equals(dependency.getArtifactId())) {
             version = getNewerRevision(dependency, 4, 3, 5);
