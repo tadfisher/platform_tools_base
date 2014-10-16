@@ -809,7 +809,7 @@
             <d:screen>
                 <d:screen-size>normal</d:screen-size>
                 <d:diagonal-length>5.96</d:diagonal-length>
-                <d:pixel-density>560dpi</d:pixel-density>
+                <d:pixel-density>xxxhdpi</d:pixel-density>
                 <d:screen-ratio>notlong</d:screen-ratio>
                 <d:dimensions>
                     <d:x-dimension>1440</d:x-dimension>
@@ -862,6 +862,7 @@
             </d:abi>
             <d:dock> </d:dock>
             <d:power-type>battery</d:power-type>
+            <d:skin>nexus_6</d:skin>
         </d:hardware>
         <d:software>
             <d:api-level>21</d:api-level>
@@ -979,6 +980,7 @@
             </d:abi>
             <d:dock> </d:dock>
             <d:power-type>battery</d:power-type>
+            <d:skin>nexus_9</d:skin>
         </d:hardware>
         <d:software>
             <d:api-level>21</d:api-level>
