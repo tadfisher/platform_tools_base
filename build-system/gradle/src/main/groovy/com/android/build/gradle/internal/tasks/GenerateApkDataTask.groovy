@@ -31,6 +31,12 @@ import static com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK
  */
 public class GenerateApkDataTask extends BaseTask {
 
+    @Input
+    String getBuildToolsVersion() {
+        plugin.ensureTargetSetup()
+        builder.targetInfo.buildTools.revision.toString()
+    }
+
     @InputFile
     File apkFile
 
