@@ -25,9 +25,11 @@ import com.android.builder.internal.incremental.DependencyData
 import com.android.builder.internal.incremental.DependencyDataStore
 import com.android.ide.common.internal.WaitableExecutor
 import com.android.ide.common.res2.FileStatus
+import com.android.sdklib.BuildToolInfo
 import com.google.common.collect.Lists
 import com.google.common.collect.Multimap
 import org.gradle.api.file.FileTree
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
@@ -53,6 +55,12 @@ public class AidlCompile extends IncrementalTask {
     // ----- PRIVATE TASK API -----
 
     List<File> sourceDirs
+
+    @InputFile
+    File getAidlExe() {
+        plugin.ensureTargetSetup()
+        new File(builder.targetInfo.buildTools.getPath(BuildToolInfo.PathId.AIDL))
+    }
 
     @InputFiles
     List<File> importDirs
@@ -107,6 +115,7 @@ public class AidlCompile extends IncrementalTask {
      */
     private void compileAllFiles(DependencyFileProcessor dependencyFileProcessor) {
         getBuilder().compileAllAidlFiles(
+                getAidlExe(),
                 getSourceDirs(),
                 getSourceOutputDir(),
                 getAidlParcelableDir(),
@@ -139,6 +148,7 @@ public class AidlCompile extends IncrementalTask {
             @Nullable List<File> importFolders,
             @NonNull DependencyFileProcessor dependencyFileProcessor) {
         getBuilder().compileAidlFile(
+                getAidlExe(),
                 sourceFolder,
                 file,
                 getSourceOutputDir(),

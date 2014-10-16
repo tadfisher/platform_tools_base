@@ -35,8 +35,10 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.CodeSource;
@@ -186,8 +188,8 @@ public class GradleProjectTestRule implements TestRule {
      *
      * @param tasks Variadic list of tasks to execute.
      */
-    public void execute(String ... tasks) {
-        execute(Collections.<String>emptyList(), tasks);
+    public String execute(String ... tasks) {
+        return execute(Collections.<String>emptyList(), tasks);
     }
 
     /**
@@ -196,7 +198,7 @@ public class GradleProjectTestRule implements TestRule {
      * @param arguments List of arguments for the gradle command.
      * @param tasks Variadic list of tasks to execute.
      */
-    public void execute(List<String> arguments, String ... tasks) {
+    public String execute(List<String> arguments, String ... tasks) {
         GradleConnector connector = GradleConnector.newConnector();
 
         ProjectConnection connection = connector
@@ -209,8 +211,14 @@ public class GradleProjectTestRule implements TestRule {
             args.add("-u");
             args.addAll(arguments);
 
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
             connection.newBuild().forTasks(tasks)
+                    .setStandardOutput(baos)
                     .withArguments(args.toArray(new String[args.size()])).run();
+            return baos.toString("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            return "";
         } finally {
             connection.close();
         }

@@ -17,7 +17,9 @@ package com.android.build.gradle.tasks
 import com.android.SdkConstants
 import com.android.build.gradle.internal.dsl.DexOptionsImpl
 import com.android.build.gradle.internal.tasks.BaseTask
+import com.android.sdklib.BuildToolInfo
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
@@ -40,6 +42,12 @@ public class Dex extends BaseTask {
     boolean enableIncremental = true
 
     // ----- PRIVATE TASK API -----
+
+    @InputFile
+    File getDxExe() {
+        plugin.ensureTargetSetup()
+        new File(builder.targetInfo.buildTools.getPath(BuildToolInfo.PathId.DX))
+    }
 
     @InputFiles
     Collection<File> inputFiles
@@ -99,6 +107,7 @@ public class Dex extends BaseTask {
         }
 
         getBuilder().convertByteCode(
+                getDxExe(),
                 getInputFiles(),
                 getLibraries(),
                 outFolder,

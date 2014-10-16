@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 import com.android.builder.core.AndroidBuilder
+import com.android.sdklib.BuildToolInfo
 import com.google.common.io.Files
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
@@ -30,6 +31,12 @@ import static com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK
  * Task to generate micro app data res file.
  */
 public class GenerateApkDataTask extends BaseTask {
+
+    @InputFile
+    File getAaptExe() {
+        plugin.ensureTargetSetup()
+        new File(builder.targetInfo.buildTools.getPath(BuildToolInfo.PathId.AAPT))
+    }
 
     @InputFile
     File apkFile
@@ -60,7 +67,7 @@ public class GenerateApkDataTask extends BaseTask {
         // now create the matching XML and the manifest entry.
         AndroidBuilder builder = getBuilder();
 
-        builder.generateApkData(apk, outDir, getMainPkgName(), ANDROID_WEAR_MICRO_APK)
+        builder.generateApkData(getAaptExe(), apk, outDir, getMainPkgName(), ANDROID_WEAR_MICRO_APK)
         builder.generateApkDataEntryInManifest(getManifestFile())
     }
 }

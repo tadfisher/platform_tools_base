@@ -19,6 +19,7 @@ import com.android.build.gradle.internal.dependency.SymbolFileProviderImpl
 import com.android.build.gradle.internal.dsl.AaptOptionsImpl
 import com.android.build.gradle.internal.tasks.IncrementalTask
 import com.android.builder.core.VariantConfiguration
+import com.android.sdklib.BuildToolInfo
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
@@ -57,6 +58,12 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     // ----- PRIVATE TASK API -----
 
+    @InputFile
+    File getAaptExe() {
+        plugin.ensureTargetSetup()
+        new File(builder.targetInfo.buildTools.getPath(BuildToolInfo.PathId.AAPT))
+    }
+
     @Nested @Optional
     List<SymbolFileProviderImpl> libraries
 
@@ -88,6 +95,7 @@ public class ProcessAndroidResources extends IncrementalTask {
 
         File resOutBaseNameFile = getPackageOutputFile()
         getBuilder().processResources(
+                getAaptExe(),
                 getManifestFile(),
                 getResDir(),
                 getAssetsDir(),

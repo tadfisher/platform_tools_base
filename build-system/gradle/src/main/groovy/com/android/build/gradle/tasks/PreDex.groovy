@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.tasks.BaseTask
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.DexOptions
 import com.android.ide.common.internal.WaitableExecutor
+import com.android.sdklib.BuildToolInfo
 import com.google.common.base.Charsets
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Sets
@@ -28,6 +29,7 @@ import com.google.common.hash.HashCode
 import com.google.common.hash.HashFunction
 import com.google.common.hash.Hashing
 import com.google.common.io.Files
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
@@ -41,6 +43,12 @@ public class PreDex extends BaseTask {
     // ----- PUBLIC TASK API -----
 
     // ----- PRIVATE TASK API -----
+
+    @InputFile
+    File getDxExe() {
+        plugin.ensureTargetSetup()
+        new File(builder.targetInfo.buildTools.getPath(BuildToolInfo.PathId.DX))
+    }
 
     // this is used automatically by Gradle, even though nothing
     // in the class uses it.
@@ -69,7 +77,10 @@ public class PreDex extends BaseTask {
         final ImmutableSet.Builder<File> inputFileDetailses = ImmutableSet.builder()
 
         taskInputs.outOfDate { final change ->
-            inputFileDetailses.add(change.file)
+            // TODO: Can dxExe be reported as changed this way?
+            if (!change.file.equals(getDxExe())) {
+                inputFileDetailses.add(change.file)
+            }
         }
 
         for (final File file : inputFileDetailses.build()) {
@@ -115,7 +126,7 @@ public class PreDex extends BaseTask {
             //noinspection GroovyAssignabilityCheck
             File preDexedFile = getDexFileName(outFolder, fileToProcess)
             //noinspection GroovyAssignabilityCheck
-            builder.preDexLibrary(fileToProcess, preDexedFile, options)
+            builder.preDexLibrary(getDxExe(), fileToProcess, preDexedFile, options)
 
             return null
         }
