@@ -50,10 +50,6 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
     @Override
     public void apply(Project project) {
         AndroidComponentModelPlugin.project = project;
-
-        // Add project as an extension so that it can be used in model rules until Gradle provides
-        // methods to replace project.file and project.container.
-        project.extensions.add("projectModel", project)
     }
 
     @RuleSource

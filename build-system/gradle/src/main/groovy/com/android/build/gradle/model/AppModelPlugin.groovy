@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.tasks.SigningReportTask
 import com.android.build.gradle.internal.variant.ApplicationVariantFactory
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantFactory
+import com.android.build.gradle.ndk.NdkExtension
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.DefaultBuildType
 import com.android.builder.model.SigningConfig
@@ -58,6 +59,8 @@ import org.gradle.language.base.internal.SourceTransformTaskConfig
 import org.gradle.model.Model
 import org.gradle.model.Mutate
 import org.gradle.model.RuleSource
+import org.gradle.model.internal.core.ModelCreators
+import org.gradle.model.internal.core.ModelReference
 import org.gradle.platform.base.BinaryContainer
 import org.gradle.platform.base.BinarySpec
 import org.gradle.platform.base.ComponentSpecContainer
@@ -88,6 +91,10 @@ public class AppModelPlugin extends BasePlugin implements Plugin<Project> {
     @Override
     void apply(Project project) {
         super.apply(project)
+        project.modelRegistry.create(
+                ModelCreators.of(ModelReference.of("basePlugin", BasePlugin.class), this)
+                        .simpleDescriptor("Android BasePlugin.")
+                        .build())
     }
 
     /**
@@ -127,11 +134,6 @@ public class AppModelPlugin extends BasePlugin implements Plugin<Project> {
 
     @RuleSource
     static class Rules {
-        @Model
-        BasePlugin androidPlugin(ExtensionContainer extensions) {
-            return extensions.getByType(AppModelPlugin)
-        }
-
         @Model("android")
         AppExtension androidapp(
                 ServiceRegistry serviceRegistry,
@@ -151,6 +153,13 @@ public class AppModelPlugin extends BasePlugin implements Plugin<Project> {
             extension.useNewNativePlugin = true
 
             return extension
+        }
+
+        @Mutate
+        void forwardCompileSdkVersion(NdkExtension ndkExtension, AppExtension baseExtension) {
+            if (ndkExtension.compileSdkVersion == null) {
+                ndkExtension.compileSdkVersion(baseExtension.compileSdkVersion);
+            }
         }
 
         @Model("android.signingConfig")

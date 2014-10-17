@@ -92,10 +92,6 @@ class NdkComponentModelPlugin implements Plugin<Project> {
 
         @Finalize
         void setDefaultNdkExtensionValue(NdkExtension extension) {
-            if (extension.getCompileSdkVersion() == null) {
-                // FIXME: Retrieve compileSdkVersion from BaseExtension instead of hardcoding.
-                extension.setCompileSdkVersion(19);
-            }
             NdkExtensionConventionAction.setExtensionDefault(extension)
         }
 
