@@ -58,7 +58,7 @@ subprojects {
                         srcDir '../src/main/java'
                     }
                 }
-                jni {
+                cpp {
                     source {
                         srcDir '../src/main/jni'
                     }

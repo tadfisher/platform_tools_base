@@ -80,14 +80,15 @@ model {
                 "assembleF2B1",
                 "assembleF2Debug",
                 "assembleF2Release",
-                "assembleRelease");
-        // TODO: Add  "assembleF1DebugTest", "assembleF2DebugTest", and "assembleTest" when androidTest tasks are added.
+                "assembleRelease",
+                "assembleTest",
+                "assembleF1DebugTest",
+                "assembleF2DebugTest");
     }
 
-    // TODO: Re-enable test when androidTest tasks are added.
-//    @Test
-//    @Category(DeviceTests.class)
-//    public void connnectedAndroidTest() {
-//        fixture.execute("connectedAndroidTest");
-//    }
+    @Test
+    @Category(DeviceTests.class)
+    public void connnectedAndroidTest() {
+        fixture.execute("connectedAndroidTest");
+    }
 }

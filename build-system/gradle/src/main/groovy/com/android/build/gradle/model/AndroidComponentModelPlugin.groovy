@@ -105,7 +105,7 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
         @Mutate
         void createAndroidComponents(
                 CollectionBuilder<AndroidComponentSpec> androidComponents) {
-            androidComponents.create("main")
+            androidComponents.create(BuilderConstants.COMPONENT)
         }
 
         @BinaryType
@@ -119,6 +119,7 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
                 NamedDomainObjectContainer<DefaultBuildType> buildTypes,
                 List<ProductFlavorGroup> flavorGroups,
                 ComponentSpecContainer specs) {
+            AndroidComponentSpec spec = specs.getByName(BuilderConstants.COMPONENT)
             if (flavorGroups.isEmpty()) {
                 flavorGroups.add(new ProductFlavorGroup());
             }
@@ -129,6 +130,7 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
                             getBinaryName(buildType, flavorGroup), AndroidBinary)
                     binary.buildType = buildType
                     binary.productFlavors = flavorGroup.flavorList
+                    spec.binaries.add(binary)
                 }
             }
         }

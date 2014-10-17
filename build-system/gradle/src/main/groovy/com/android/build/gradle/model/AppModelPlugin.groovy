@@ -33,6 +33,7 @@ import com.android.build.gradle.internal.tasks.PrepareSdkTask
 import com.android.build.gradle.internal.tasks.SigningReportTask
 import com.android.build.gradle.internal.variant.ApplicationVariantFactory
 import com.android.build.gradle.internal.variant.BaseVariantData
+import com.android.build.gradle.internal.variant.TestVariantData
 import com.android.build.gradle.internal.variant.VariantFactory
 import com.android.build.gradle.ndk.NdkExtension
 import com.android.builder.core.BuilderConstants
@@ -63,6 +64,8 @@ import org.gradle.model.internal.core.ModelCreators
 import org.gradle.model.internal.core.ModelReference
 import org.gradle.platform.base.BinaryContainer
 import org.gradle.platform.base.BinarySpec
+import org.gradle.platform.base.BinaryType
+import org.gradle.platform.base.BinaryTypeBuilder
 import org.gradle.platform.base.ComponentSpecContainer
 import org.gradle.platform.base.TransformationFileType
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
@@ -215,6 +218,26 @@ public class AppModelPlugin extends BasePlugin implements Plugin<Project> {
             }
         }
 
+        @BinaryType
+        void defineBinaryType(BinaryTypeBuilder<AndroidTestBinary> builder) {
+            builder.defaultImplementation(DefaultAndroidTestBinary)
+        }
+
+        @Mutate
+        void createTestBinary(BinaryContainer binaries, ComponentSpecContainer specs) {
+            AndroidComponentSpec spec =
+                    (AndroidComponentSpec) specs.getByName(BuilderConstants.COMPONENT)
+            spec.binaries.withType(AndroidBinary) { binary ->
+                if (binary.buildType.name.equals(DEBUG)) {
+                    DefaultAndroidTestBinary testBinary =
+                            (DefaultAndroidTestBinary) binaries.create(
+                                    binary.name + "Test", AndroidTestBinary);
+                    testBinary.testedBinary = binary
+                    spec.binaries.add(testBinary)
+                }
+            }
+        }
+
         @Mutate
         void createAndroidTasks(
                 TaskContainer tasks,
@@ -269,8 +292,17 @@ public class AppModelPlugin extends BasePlugin implements Plugin<Project> {
                         binary.productFlavors,
                         plugin.signingOverride
                 )
-                variantManager.getVariantDataList().add(variantData);
+                binary.variantData = variantData
+                variantManager.getVariantDataList().add(variantData)
                 variantManager.createTasksForVariantData(tasks, variantData)
+            }
+
+            // Create test tasks.
+            binaries.withType(AndroidTestBinary) { binary ->
+                TestVariantData testVariantData =
+                        variantManager.createTestVariantData(((DefaultAndroidBinary)binary.testedBinary).variantData, plugin.signingOverride)
+                variantManager.getVariantDataList().add(testVariantData);
+                variantManager.createTasksForVariantData(tasks, testVariantData)
             }
 
             // create the lint tasks.
