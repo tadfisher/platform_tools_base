@@ -273,7 +273,7 @@ public abstract class PreProcessCache<T extends PreProcessCache.Key> {
             if (storedItem != null) {
                 // check the sha1 is still valid, and the pre-dex file is still there.
                 File dexFile = storedItem.getOutputFile();
-                if (dexFile.isFile() &&
+                if (dexFile.exists() &&
                         storedItem.getSourceHash().equals(Files.hash(inputFile, Hashing.sha1()))) {
 
                     // create an item where the outFile is the one stored since it

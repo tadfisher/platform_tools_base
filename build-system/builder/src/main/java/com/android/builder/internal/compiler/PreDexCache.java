@@ -17,6 +17,7 @@
 package com.android.builder.internal.compiler;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DexOptions;
 import com.android.ide.common.internal.CommandLineRunner;
@@ -45,7 +46,7 @@ import java.io.IOException;
  * Because different project could use different build-tools, both the library to pre-dex and the
  * version of the build tools are used as keys in the cache.
  *
- * The API is fairly simple, just call {@link #preDexLibrary(java.io.File, java.io.File, com.android.builder.core.DexOptions, com.android.sdklib.BuildToolInfo, boolean, com.android.ide.common.internal.CommandLineRunner)}
+ * The API is fairly simple, just call {@link #preDexLibrary(java.io.File, java.io.File, boolean, com.android.builder.core.DexOptions, com.android.sdklib.BuildToolInfo, boolean, com.android.ide.common.internal.CommandLineRunner)}
  *
  * The call will be blocking until the pre-dexing happened, either through actual pre-dexing or
  * through copying the output of a previous pre-dex run.
@@ -91,6 +92,8 @@ public class PreDexCache extends PreProcessCache<DexKey> {
     public void preDexLibrary(
             @NonNull File inputFile,
             @NonNull File outFile,
+                     boolean multiDex,
+            @Nullable File tmpFile,
             @NonNull DexOptions dexOptions,
             @NonNull BuildToolInfo buildToolInfo,
             boolean verbose,
@@ -105,8 +108,8 @@ public class PreDexCache extends PreProcessCache<DexKey> {
         if (pair.getSecond()) {
             try {
                 // haven't process this file yet so do it and record it.
-                AndroidBuilder.preDexLibrary(inputFile, outFile, dexOptions, buildToolInfo,
-                        verbose, commandLineRunner);
+                AndroidBuilder.preDexLibrary(inputFile, outFile, multiDex, tmpFile, dexOptions,
+                        buildToolInfo, verbose, commandLineRunner);
 
                 incrementMisses();
             } catch (IOException exception) {

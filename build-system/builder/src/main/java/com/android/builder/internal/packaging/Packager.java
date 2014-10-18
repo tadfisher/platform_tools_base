@@ -16,6 +16,10 @@
 
 package com.android.builder.internal.packaging;
 
+import static com.android.SdkConstants.DOT_DEX;
+import static com.android.SdkConstants.FN_APK_CLASSES_DEX;
+import static com.android.SdkConstants.FN_APK_CLASSES_N_DEX;
+
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -210,6 +214,8 @@ public final class Packager implements IArchiveBuilder {
     private boolean mJniDebugMode = false;
     private boolean mIsSealed = false;
 
+    private int dexIndex = 1;
+
     private final NullZipFilter mNullFilter = new NullZipFilter();
     private final JavaAndNativeResourceFilter mFilter;
     private final HashMap<String, File> mAddedFiles = new HashMap<String, File>();
@@ -331,8 +337,35 @@ public final class Packager implements IArchiveBuilder {
 
         if (files != null && files.length > 0) {
             for (File file : files) {
-                addFile(file, file.getName());
+                addFile(file, generateDexName());
             }
+        }
+    }
+
+    public void addDexArchive(@NonNull File dexArchive)
+            throws DuplicateFileException, SealedPackageException, PackagerException {
+        addZipFile(dexArchive, new SignedJarBuilder.IZipEntryRenamer() {
+            @Override
+            public String checkEntry(String archivePath)
+                    throws IZipEntryFilter.ZipAbortException {
+                if (!archivePath.endsWith(DOT_DEX)) {
+                    return null;
+                }
+
+                return generateDexName();
+            }
+        });
+    }
+
+    private String generateDexName() {
+        try {
+            if (dexIndex == 1) {
+                return FN_APK_CLASSES_DEX;
+            }
+
+            return String.format(FN_APK_CLASSES_N_DEX, dexIndex);
+        } finally {
+            dexIndex++;
         }
     }
 
@@ -391,6 +424,20 @@ public final class Packager implements IArchiveBuilder {
      */
     void addZipFile(File zipFile) throws PackagerException, SealedPackageException,
             DuplicateFileException {
+        addZipFile(zipFile, null);
+    }
+
+    /**
+     * Adds the content from a zip file.
+     * All file keep the same path inside the archive.
+     * @param zipFile the zip File.
+     * @throws PackagerException if an error occurred
+     * @throws SealedPackageException if the APK is already sealed.
+     * @throws DuplicateFileException if a file conflicts with another already added to the APK
+     *                                   at the same location inside the APK archive.
+     */
+    private void addZipFile(File zipFile, SignedJarBuilder.IZipEntryRenamer renamer)
+            throws PackagerException, SealedPackageException, DuplicateFileException {
         if (mIsSealed) {
             throw new SealedPackageException("APK is already sealed");
         }
@@ -404,7 +451,7 @@ public final class Packager implements IArchiveBuilder {
 
             // ask the builder to add the content of the file.
             fis = new FileInputStream(zipFile);
-            mBuilder.writeZip(fis, mNullFilter);
+            mBuilder.writeZip(fis, mNullFilter, renamer);
         } catch (DuplicateFileException e) {
             mBuilder.cleanUp();
             throw e;

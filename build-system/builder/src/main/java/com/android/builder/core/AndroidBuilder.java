@@ -26,6 +26,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
@@ -93,6 +94,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -103,6 +105,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
 
 /**
  * This is the main builder class. It is given all the data to process the build (such as
@@ -1680,6 +1683,8 @@ public class AndroidBuilder {
     public void preDexLibrary(
             @NonNull File inputFile,
             @NonNull File outFile,
+                     boolean multiDex,
+            @Nullable File tmpFolder,
             @NonNull DexOptions dexOptions)
             throws IOException, InterruptedException, LoggedErrorException {
         checkState(mTargetInfo != null,
@@ -1687,13 +1692,15 @@ public class AndroidBuilder {
 
         BuildToolInfo buildToolInfo = mTargetInfo.getBuildTools();
 
-        PreDexCache.getCache().preDexLibrary(inputFile, outFile, dexOptions, buildToolInfo,
-                mVerboseExec, mCmdLineRunner);
+        PreDexCache.getCache().preDexLibrary(inputFile, outFile, multiDex, tmpFolder, dexOptions,
+                buildToolInfo, mVerboseExec, mCmdLineRunner);
     }
 
     public static void preDexLibrary(
             @NonNull File inputFile,
             @NonNull File outFile,
+            boolean multiDex,
+            @Nullable File tmpFolder,
             @NonNull DexOptions dexOptions,
             @NonNull BuildToolInfo buildToolInfo,
                      boolean verbose,
@@ -1702,6 +1709,10 @@ public class AndroidBuilder {
         checkNotNull(inputFile, "inputFile cannot be null.");
         checkNotNull(outFile, "outFile cannot be null.");
         checkNotNull(dexOptions, "dexOptions cannot be null.");
+
+        if (multiDex && tmpFolder == null) {
+            throw new RuntimeException("Multi-Dex mode in predex with null tmp folder");
+        }
 
         // launch dx: create the command line
         ArrayList<String> command = Lists.newArrayList();
@@ -1727,12 +1738,66 @@ public class AndroidBuilder {
             command.add("--force-jumbo");
         }
 
+        File output = outFile;
+
+        if (multiDex) {
+            command.add("--multi-dex");
+            if (!tmpFolder.exists()) {
+                tmpFolder.mkdirs();
+            }
+
+            output = tmpFolder;
+        }
+
         command.add("--output");
-        command.add(outFile.getAbsolutePath());
+        command.add(output.getAbsolutePath());
 
         command.add(inputFile.getAbsolutePath());
 
         commandLineRunner.runCmdLine(command, null);
+
+        // if multi dex, we need to zip up the result that's in tmpFolder
+        if (multiDex) {
+            SignedJarBuilder signedJarBuilder = null;
+
+            try {
+                signedJarBuilder = new SignedJarBuilder(
+                        new FileOutputStream(outFile),
+                        9,
+                        null, /*key*/
+                        null, /*certificate*/
+                        null, /*builtBy*/
+                        null /*createdBy*/
+                );
+
+                File[] files = tmpFolder.listFiles(new FilenameFilter() {
+                    @Override
+                    public boolean accept(File file, String name) {
+                        return name.endsWith(SdkConstants.DOT_DEX);
+                    }
+                });
+
+                if (files != null) {
+                    for (File file : files) {
+                        signedJarBuilder.writeFile(
+                                file,
+                                file.getName(),
+                                0 /*lastModified*/,
+                                ZipEntry.STORED);
+                    }
+                }
+            } catch (NoSuchAlgorithmException ignored) {
+              // wont happen since we don't do signing.
+            } finally {
+                if (signedJarBuilder != null) {
+                    try {
+                        signedJarBuilder.close();
+                    } catch (com.android.builder.signing.SigningException ignored) {
+                        // wont happen since we don't do signing.
+                    }
+                }
+            }
+        }
     }
 
     /**

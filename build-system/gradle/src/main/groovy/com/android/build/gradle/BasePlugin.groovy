@@ -1904,6 +1904,15 @@ public abstract class BasePlugin {
         return testTask
     }
 
+    static boolean isMultiDex(VariantConfiguration config) {
+        ApiVersion minSdkVersion = config.minSdkVersion
+        if (minSdkVersion.apiLevel >= 21) {
+            return config.multiDex
+        }
+
+        return false
+    }
+
     /**
      * Creates the post-compilation tasks for the given Variant.
      *
@@ -1936,12 +1945,7 @@ public abstract class BasePlugin {
         dexTask.dexOptions = extension.dexOptions
 
         dexTask.conventionMapping.multiDex = {
-            ApiVersion minSdkVersion = config.minSdkVersion
-            if (minSdkVersion.apiLevel >= 21) {
-                return config.multiDex
-            }
-
-            return false
+            isMultiDex(config)
         }
 
         JacocoInstrumentTask jacocoTask = null
@@ -1978,12 +1982,16 @@ public abstract class BasePlugin {
             PreDex preDexTask = null;
             boolean runPreDex = extension.dexOptions.preDexLibraries
             if (runPreDex) {
-                def preDexTaskName = "preDex${variantData.variantConfiguration.fullName.capitalize()}"
+                def preDexTaskName = "preDex${config.fullName.capitalize()}"
                 preDexTask = project.tasks.create(preDexTaskName, PreDex)
 
-                preDexTask.dependsOn variantData.variantDependency.packageConfiguration.buildDependencies
+                preDexTask.dependsOn variantData.prepareDependenciesTask
                 preDexTask.plugin = this
                 preDexTask.dexOptions = extension.dexOptions
+
+                preDexTask.conventionMapping.multiDex = {
+                    isMultiDex(config)
+                }
 
                 preDexTask.conventionMapping.inputFiles = {
                     Set<File> set = androidBuilder.getPackagedJars(config)
@@ -1995,7 +2003,11 @@ public abstract class BasePlugin {
                 }
                 preDexTask.conventionMapping.outputFolder = {
                     project.file(
-                            "${project.buildDir}/${FD_INTERMEDIATES}/pre-dexed/${variantData.variantConfiguration.dirName}")
+                            "${project.buildDir}/${FD_INTERMEDIATES}/pre-dexed/${config.dirName}")
+                }
+
+                preDexTask.conventionMapping.tempFolder = {
+                    project.file("$project.buildDir/${FD_INTERMEDIATES}/tmp/pre-dex/${config.dirName}")
                 }
 
                 if (agentTask != null) {
@@ -2009,7 +2021,7 @@ public abstract class BasePlugin {
             if (runPreDex) {
                 dexTask.dependsOn preDexTask
             } else {
-                dexTask.dependsOn variantData.variantDependency.packageConfiguration.buildDependencies
+                dexTask.dependsOn variantData.prepareDependenciesTask
             }
 
             dexTask.conventionMapping.inputFiles = {
@@ -2048,10 +2060,9 @@ public abstract class BasePlugin {
 
         // ----- Create Jill tasks -----
         JillTask jillRuntimeTask = project.tasks.create(
-                "jill${variantData.variantConfiguration.fullName.capitalize()}RuntimeLibraries",
+                "jill${config.fullName.capitalize()}RuntimeLibraries",
                 JillTask)
 
-        jillRuntimeTask.dependsOn variantData.variantDependency.packageConfiguration.buildDependencies
         jillRuntimeTask.plugin = this
         jillRuntimeTask.dexOptions = extension.dexOptions
 
@@ -2060,16 +2071,16 @@ public abstract class BasePlugin {
         }
         jillRuntimeTask.conventionMapping.outputFolder = {
             project.file(
-                    "${project.buildDir}/${FD_INTERMEDIATES}/jill/${variantData.variantConfiguration.dirName}/runtime")
+                    "${project.buildDir}/${FD_INTERMEDIATES}/jill/${config.dirName}/runtime")
         }
 
         // ----
 
         JillTask jillPackagedTask = project.tasks.create(
-                "jill${variantData.variantConfiguration.fullName.capitalize()}PackagedLibraries",
+                "jill${config.fullName.capitalize()}PackagedLibraries",
                 JillTask)
 
-        jillPackagedTask.dependsOn variantData.variantDependency.packageConfiguration.buildDependencies
+        jillPackagedTask.dependsOn variantData.prepareDependenciesTask
         jillPackagedTask.plugin = this
         jillPackagedTask.dexOptions = extension.dexOptions
 
@@ -2078,13 +2089,13 @@ public abstract class BasePlugin {
         }
         jillPackagedTask.conventionMapping.outputFolder = {
             project.file(
-                    "${project.buildDir}/${FD_INTERMEDIATES}/jill/${variantData.variantConfiguration.dirName}/packaged")
+                    "${project.buildDir}/${FD_INTERMEDIATES}/jill/${config.dirName}/packaged")
         }
 
 
         // ----- Create Jack Task -----
         JackTask compileTask = project.tasks.create(
-                "compile${variantData.variantConfiguration.fullName.capitalize()}Java",
+                "compile${config.fullName.capitalize()}Java",
                 JackTask)
         variantData.jackTask = compileTask
         variantData.jackTask.dependsOn variantData.sourceGenTask, jillRuntimeTask, jillPackagedTask
@@ -2115,15 +2126,15 @@ public abstract class BasePlugin {
         }
 
         compileTask.conventionMapping.destinationDir = {
-            project.file("$project.buildDir/${FD_INTERMEDIATES}/dex/${variantData.variantConfiguration.dirName}")
+            project.file("$project.buildDir/${FD_INTERMEDIATES}/dex/${config.dirName}")
         }
 
         compileTask.conventionMapping.jackFile = {
-            project.file("$project.buildDir/${FD_INTERMEDIATES}/classes/${variantData.variantConfiguration.dirName}/classes.zip")
+            project.file("$project.buildDir/${FD_INTERMEDIATES}/classes/${config.dirName}/classes.zip")
         }
 
         compileTask.conventionMapping.tempFolder = {
-            project.file("$project.buildDir/${FD_INTERMEDIATES}/tmp/jack/${variantData.variantConfiguration.dirName}")
+            project.file("$project.buildDir/${FD_INTERMEDIATES}/tmp/jack/${config.dirName}")
         }
 
         // set source/target compatibility

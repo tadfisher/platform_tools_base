@@ -22,12 +22,13 @@ import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.DexOptions
 import com.android.ide.common.internal.WaitableExecutor
 import com.google.common.base.Charsets
-import com.google.common.collect.ImmutableSet
+import com.google.common.collect.Lists
 import com.google.common.collect.Sets
 import com.google.common.hash.HashCode
 import com.google.common.hash.HashFunction
 import com.google.common.hash.Hashing
 import com.google.common.io.Files
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
@@ -54,32 +55,43 @@ public class PreDex extends BaseTask {
     @Nested
     DexOptionsImpl dexOptions
 
+    @Input
+    boolean multiDex
+
+    File tempFolder
+
     @TaskAction
     void taskAction(IncrementalTaskInputs taskInputs) {
-        final File outFolder = getOutputFolder()
+
+        final boolean multiDexEnabled = getMultiDex()
+
+        final File _tempFolder = getTempFolder()
+        final File _outputFolder = getOutputFolder()
 
         // if we are not in incremental mode, then outOfDate will contain
         // all th files, but first we need to delete the previous output
         if (!taskInputs.isIncremental()) {
-            emptyFolder(outFolder)
+            emptyFolder(_outputFolder)
+            emptyFolder(_tempFolder)
         }
 
         final Set<String> hashs = Sets.newHashSet()
         final WaitableExecutor<Void> executor = new WaitableExecutor<Void>()
-        final ImmutableSet.Builder<File> inputFileDetailses = ImmutableSet.builder()
+        final List<File> inputFileDetails = Lists.newArrayList()
 
         taskInputs.outOfDate { final change ->
-            inputFileDetailses.add(change.file)
+            inputFileDetails.add(change.file)
         }
 
-        for (final File file : inputFileDetailses.build()) {
-            Callable<Void> action = new PreDexTask(file, hashs);
+        for (final File file : inputFileDetails) {
+            Callable<Void> action = new PreDexTask(_outputFolder, file, hashs,
+                    multiDexEnabled, _tempFolder);
             executor.execute(action);
         }
 
         taskInputs.removed { change ->
             //noinspection GroovyAssignabilityCheck
-            File preDexedFile = getDexFileName(outFolder, change.file)
+            File preDexedFile = getDexFileName(_outputFolder, change.file)
             preDexedFile.delete()
         }
 
@@ -87,16 +99,26 @@ public class PreDex extends BaseTask {
     }
 
     private final class PreDexTask implements Callable<Void> {
-        private final File fileToProcess;
-        private final Set<String> hashs;
+        private final File outFolder
+        private final File fileToProcess
+        private final Set<String> hashs
+        private final boolean multiDexEnabled
+        private final File tempFolder
         private final DexOptions options = getDexOptions()
         private final AndroidBuilder builder = getBuilder()
-        final File outFolder = getOutputFolder()
 
 
-        private PreDexTask(File file, Set<String> hashs) {
-            this.fileToProcess = file;
-            this.hashs = hashs;
+        private PreDexTask(
+                File outFolder,
+                File file,
+                Set<String> hashs,
+                boolean multiDexEnabled,
+                File tempFolder) {
+            this.outFolder = outFolder
+            this.fileToProcess = file
+            this.hashs = hashs
+            this.multiDexEnabled = multiDexEnabled
+            this.tempFolder = tempFolder
         }
 
         @Override
@@ -114,8 +136,15 @@ public class PreDex extends BaseTask {
 
             //noinspection GroovyAssignabilityCheck
             File preDexedFile = getDexFileName(outFolder, fileToProcess)
+
+            // temp folder for multidexing.
+            File preDexFolder = null;
+            if (multiDexEnabled) {
+                preDexFolder = getDexFileName(tempFolder, fileToProcess)
+            }
+
             //noinspection GroovyAssignabilityCheck
-            builder.preDexLibrary(fileToProcess, preDexedFile, options)
+            builder.preDexLibrary(fileToProcess, preDexedFile, multiDexEnabled, preDexFolder, options)
 
             return null
         }
@@ -136,8 +165,11 @@ public class PreDex extends BaseTask {
      * if there are 2 libraries with the same file names (but different
      * paths)
      *
+     * If multidex is enabled the return File is actually a folder.
+     *
      * @param outFolder the output folder.
      * @param inputFile the library
+     * @param multidex whether multidex is enabled.
      * @return
      */
     @NonNull

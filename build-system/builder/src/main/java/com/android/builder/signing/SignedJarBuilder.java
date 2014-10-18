@@ -20,6 +20,9 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.signing.SignedJarBuilder.IZipEntryFilter.ZipAbortException;
+import com.google.common.hash.Hashing;
+import com.google.common.io.Files;
+
 import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.DEROutputStream;
 import org.bouncycastle.cert.jcajce.JcaCertStore;
@@ -108,7 +111,7 @@ public class SignedJarBuilder {
 
     /**
      * Classes which implement this interface provides a method to check whether a file should
-     * be added to a Jar file.
+     * be added to a Zip file.
      */
     public interface IZipEntryFilter {
 
@@ -137,7 +140,6 @@ public class SignedJarBuilder {
             }
         }
 
-
         /**
          * Checks a file for inclusion in a Jar archive.
          * @param archivePath the archive file path of the entry
@@ -145,6 +147,17 @@ public class SignedJarBuilder {
          * @throws ZipAbortException if writing the file should be aborted.
          */
         public boolean checkEntry(String archivePath) throws ZipAbortException;
+    }
+
+    public interface IZipEntryRenamer {
+        /**
+         * Checks a file for inclusion in a Zip archive, and if included, allows rename it
+         *
+         * @param archivePath the archive file path of the entry
+         * @return null if the entry is to be excluded, non null for inclusion with a given path.
+         * @throws ZipAbortException if writing the file should be aborted.
+         */
+        public String checkEntry(String archivePath) throws ZipAbortException;
     }
 
     /**
@@ -159,13 +172,34 @@ public class SignedJarBuilder {
      * @throws NoSuchAlgorithmException
      */
     public SignedJarBuilder(@NonNull OutputStream out,
+            @Nullable PrivateKey key,
+            @Nullable X509Certificate certificate,
+            @Nullable String builtBy,
+            @Nullable String createdBy) throws IOException, NoSuchAlgorithmException {
+        this(out, 9, key, certificate, builtBy, createdBy);
+    }
+
+    /**
+     * Creates a {@link SignedJarBuilder} with a given output stream, and signing information.
+     * <p/>If either <code>key</code> or <code>certificate</code> is <code>null</code> then
+     * the archive will not be signed.
+     * @param out the {@link OutputStream} where to write the Jar archive.
+     * @param compressionLevel the compressionLevel for DEFLATED entries
+     * @param key the {@link PrivateKey} used to sign the archive, or <code>null</code>.
+     * @param certificate the {@link X509Certificate} used to sign the archive, or
+     * <code>null</code>.
+     * @throws IOException
+     * @throws NoSuchAlgorithmException
+     */
+    public SignedJarBuilder(@NonNull OutputStream out,
+                                     int compressionLevel,
                             @Nullable PrivateKey key,
                             @Nullable X509Certificate certificate,
                             @Nullable String builtBy,
                             @Nullable String createdBy)
             throws IOException, NoSuchAlgorithmException {
         mOutputJar = new JarOutputStream(new BufferedOutputStream(out));
-        mOutputJar.setLevel(9);
+        mOutputJar.setLevel(compressionLevel);
         mKey = key;
         mCertificate = certificate;
 
@@ -191,13 +225,32 @@ public class SignedJarBuilder {
      * @throws IOException
      */
     public void writeFile(File inputFile, String jarPath) throws IOException {
+        writeFile(inputFile, jarPath, inputFile.lastModified(), ZipEntry.DEFLATED);
+    }
+
+    /**
+     * Writes a new {@link File} into the archive.
+     * @param inputFile the {@link File} to write.
+     * @param jarPath the filepath inside the archive.
+     * @param lastModified the lastModified value for the file.
+     * @param method the ZipEntry compression method to use.
+     * @throws IOException
+     */
+    public void writeFile(File inputFile, String jarPath, long lastModified, int method)
+            throws IOException {
         // Get an input stream on the file.
         FileInputStream fis = new FileInputStream(inputFile);
         try {
 
             // create the zip entry
             JarEntry entry = new JarEntry(jarPath);
-            entry.setTime(inputFile.lastModified());
+            entry.setTime(lastModified);
+            entry.setMethod(method);
+            if (method == ZipEntry.STORED) {
+                entry.setSize(inputFile.length());
+                entry.setCompressedSize(inputFile.length());
+                entry.setCrc(Files.hash(inputFile, Hashing.crc32()).padToLong());
+            }
 
             writeEntry(fis, entry);
         } finally {
@@ -216,7 +269,25 @@ public class SignedJarBuilder {
      * @throws ZipAbortException if the {@link IZipEntryFilter} filter indicated that the write
      *                           must be aborted.
      */
-    public void writeZip(InputStream input, IZipEntryFilter filter)
+    public void writeZip(@NonNull InputStream input,
+            @Nullable IZipEntryFilter filter)
+            throws IOException, ZipAbortException {
+        writeZip(input, filter, null);
+    }
+
+    /**
+     * Copies the content of a Jar/Zip archive into the receiver archive.
+     * <p/>An optional {@link IZipEntryFilter} allows to selectively choose which files
+     * to copy over.
+     * @param input the {@link InputStream} for the Jar/Zip to copy.
+     * @param filter the filter or <code>null</code>
+     * @throws IOException
+     * @throws ZipAbortException if the {@link IZipEntryFilter} filter indicated that the write
+     *                           must be aborted.
+     */
+    public void writeZip(@NonNull InputStream input,
+                         @Nullable IZipEntryFilter filter,
+                         @Nullable IZipEntryRenamer renamer)
             throws IOException, ZipAbortException {
         ZipInputStream zis = new ZipInputStream(input);
 
@@ -244,7 +315,6 @@ public class SignedJarBuilder {
                         continue;
                     }
 
-
                     // check for subfolder
                     int index = subName.indexOf('/');
                     if (index == -1) {
@@ -260,10 +330,27 @@ public class SignedJarBuilder {
                     continue;
                 }
 
+                String newName = null;
+                if (renamer != null) {
+                    newName = renamer.checkEntry(name);
+                    if (newName == null) {
+                        continue;
+                    }
+                }
+
                 JarEntry newEntry;
 
                 // Preserve the STORED method of the input entry.
-                if (entry.getMethod() == JarEntry.STORED) {
+                if (newName != null) {
+                    newEntry = new JarEntry(newName);
+                    if (entry.getMethod() == JarEntry.STORED) {
+                        newEntry.setMethod(entry.getMethod());
+                        newEntry.setSize(entry.getSize());
+                        newEntry.setCompressedSize(entry.getCompressedSize());
+                        newEntry.setCrc(entry.getCrc());
+                        newEntry.setTime(entry.getTime());
+                    }
+                } else if (entry.getMethod() == JarEntry.STORED) {
                     newEntry = new JarEntry(entry);
                 } else {
                     // Create a new entry so that the compressed len is recomputed.
