@@ -39,7 +39,7 @@ import java.util.Map;
  */
 public final class PlatformTarget implements IAndroidTarget {
 
-    private static final String PLATFORM_VENDOR = "Android Open Source Project";
+    private static final String PLATFORM_VENDOR = "Android";
 
     private static final String PLATFORM_NAME = "Android %s";
     private static final String PLATFORM_NAME_PREVIEW = "Android %s (Preview)";
