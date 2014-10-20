@@ -36,8 +36,8 @@ import org.gradle.api.specs.Spec
 import org.gradle.configuration.project.ProjectConfigurationActionContainer
 import org.gradle.internal.Actions
 import org.gradle.internal.reflect.Instantiator
-import org.gradle.nativebinaries.internal.DefaultSharedLibraryBinarySpec
-import org.gradle.nativebinaries.internal.DefaultStaticLibraryBinarySpec
+import org.gradle.nativeplatform.internal.DefaultSharedLibraryBinarySpec
+import org.gradle.nativeplatform.internal.DefaultStaticLibraryBinarySpec
 
 import javax.inject.Inject
 

@@ -20,7 +20,7 @@ import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.tasks.Copy;
-import org.gradle.nativebinaries.internal.DefaultSharedLibraryBinarySpec;
+import org.gradle.nativeplatform.internal.DefaultSharedLibraryBinarySpec;
 
 /**
  * Configuration to setup STL for NDK.

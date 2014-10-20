@@ -29,9 +29,9 @@ import org.gradle.language.c.CSourceSet
 import org.gradle.language.cpp.CppSourceSet
 import org.gradle.api.Task
 import org.gradle.api.tasks.Copy
-import org.gradle.nativebinaries.internal.DefaultSharedLibraryBinarySpec
-import org.gradle.nativebinaries.language.c.tasks.CCompile
-import org.gradle.nativebinaries.language.cpp.tasks.CppCompile
+import org.gradle.nativeplatform.internal.DefaultSharedLibraryBinarySpec
+import org.gradle.language.c.tasks.CCompile
+import org.gradle.language.cpp.tasks.CppCompile
 
 /**
  * Configure settings used by the native binaries.

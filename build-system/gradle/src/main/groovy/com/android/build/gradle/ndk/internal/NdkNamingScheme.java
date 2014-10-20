@@ -19,7 +19,7 @@ package com.android.build.gradle.ndk.internal;
 import com.android.builder.model.AndroidProject;
 import com.google.common.base.Joiner;
 
-import org.gradle.nativebinaries.NativeBinary;
+import org.gradle.nativeplatform.NativeBinary;
 
 import java.io.File;
 
