@@ -460,6 +460,7 @@ public abstract class BasePlugin {
             }
         }
 
+        validateDsl()
         variantManager.createAndroidTasks(getSigningOverride())
         createReportTasks()
 
@@ -470,6 +471,10 @@ public abstract class BasePlugin {
                 }
             }
         }
+    }
+
+    protected void validateDsl() {
+        return;
     }
 
     private SigningConfig getSigningOverride() {
