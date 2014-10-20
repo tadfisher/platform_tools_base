@@ -15,11 +15,13 @@
  */
 package com.android.build.gradle
 
+import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.variant.LibraryVariantFactory
 import com.android.build.gradle.internal.variant.VariantFactory
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.GradleException
 import org.gradle.internal.reflect.Instantiator
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 
@@ -55,5 +57,21 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
         super.apply(project)
 
         assembleDefault = project.tasks.create("assembleDefault")
+
+        project.afterEvaluate {
+            extension.buildTypes.each { buildType ->
+                if(buildType.getApplicationIdSuffix() != null) {
+                    throw new GradleException("Library projects cannot set applicationId. " +
+                            "applicationIdSuffix is set to '" + buildType.getApplicationIdSuffix() + "' in build type '" + buildType.name + "'.")
+                }
+            }
+
+            extension.productFlavors.each { productFlavor ->
+                if(productFlavor.getApplicationId() != null) {
+                    throw new GradleException("Library projects cannot set applicationIdSuffix. " +
+                            "applicationIdSuffix is set to '" + productFlavor.getApplicationId() + "' in flavor '" + productFlavor.name + "'.")
+                }
+            }
+        }
     }
 }
