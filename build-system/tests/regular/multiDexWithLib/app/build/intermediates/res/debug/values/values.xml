@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- From: file:/Volumes/Sources/ext/studio-1.0-dev/tools/base/build-system/tests/regular/multiDexWithLib/app/src/main/res/values/strings.xml -->
+    <eat-comment/>
+    <string name="app_name">_Test-Basic</string>
+    <!-- From: file:/Volumes/Sources/ext/studio-1.0-dev/tools/base/build-system/tests/regular/multiDexWithLib/app/build/generated/res/generated/debug/values/generated.xml -->
+    <eat-comment/>
+    <item name="foo" type="string">foo2</item>
+</resources>
