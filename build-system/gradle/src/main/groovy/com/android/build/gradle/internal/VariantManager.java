@@ -49,12 +49,14 @@ import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.model.BuildType;
+import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import org.gradle.api.GradleException;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -188,6 +190,8 @@ public class VariantManager {
      * Task creation entry point.
      */
     public void createAndroidTasks(@Nullable SigningConfig signingOverride) {
+        validateModel();
+
         if (!productFlavors.isEmpty()) {
             // there'll be more than one test app, so we need a top level assembleTest
             Task assembleTest = project.getTasks().create("assembleTest");
@@ -213,6 +217,33 @@ public class VariantManager {
         // Create the variant API objects after the tasks have been created!
         createApiObjects();
     }
+
+    /**
+     * Fail if the model is configured incorrectly.
+     *
+     * Prevent customization of applicationId or applicationIdSuffix in library projects.
+     */
+    private void validateModel() {
+        if (variantFactory.isLibrary()) {
+            for (BuildTypeData buildType : buildTypes.values()) {
+                if (buildType.getBuildType().getApplicationIdSuffix() != null) {
+                    throw new GradleException("Library projects cannot set applicationId. " +
+                            "applicationIdSuffix is set to '" +
+                            buildType.getBuildType().getApplicationIdSuffix() +
+                            "' in build type '" + buildType.getBuildType().getName() + "'.");
+                }
+            }
+            for (ProductFlavorData productFlavor : productFlavors.values()) {
+                if (productFlavor.getProductFlavor().getApplicationId() != null) {
+                    throw new GradleException("Library projects cannot set applicationId. " +
+                            "applicationId is set to '" +
+                            productFlavor.getProductFlavor().getApplicationId() + "' in flavor '" +
+                            productFlavor.getProductFlavor().getName() + "'.");
+                }
+            }
+        }
+    }
+
 
     /**
      * Create tasks for the specified variantData.
