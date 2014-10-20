@@ -94,7 +94,7 @@ public class JackConversionCache extends PreProcessCache<PreProcessCache.Key> {
 
         Key itemKey = Key.of(inputFile, buildToolInfo.getRevision());
 
-        Pair<PreProcessCache.Item, Boolean> pair = getItem(itemKey, inputFile, outFile);
+        Pair<PreProcessCache.Item, Boolean> pair = getItem(itemKey, inputFile);
 
         // if this is a new item
         if (pair.getSecond()) {
@@ -129,11 +129,13 @@ public class JackConversionCache extends PreProcessCache<PreProcessCache.Key> {
             pair.getFirst().getLatch().await();
 
             // check that the generated file actually exists
-            File fromFile = pair.getFirst().getOutputFile();
+            // TODO: support multi files.
+            File fromFile = pair.getFirst().getOutputFiles().get(0);
 
             if (fromFile.isFile()) {
                 // file already pre-dex, just copy the output.
-                Files.copy(pair.getFirst().getOutputFile(), outFile);
+                // TODO: support multi-files.
+                Files.copy(pair.getFirst().getOutputFiles().get(0), outFile);
                 incrementHits();
             }
         }
