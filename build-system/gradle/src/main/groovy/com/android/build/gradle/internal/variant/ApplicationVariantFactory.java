@@ -45,9 +45,6 @@ import java.util.Set;
  */
 public class ApplicationVariantFactory implements VariantFactory<ApplicationVariantData> {
 
-    public static final String CONFIG_WEAR_APP = "wearApp";
-
-
     @NonNull
     private final BasePlugin basePlugin;
 
@@ -212,19 +209,26 @@ public class ApplicationVariantFactory implements VariantFactory<ApplicationVari
     }
 
     private void handleMicroApp(@NonNull BaseVariantData<?> variantData) {
+        if (variantData.getVariantConfiguration().getBuildType().isEmbedMicroApp()) {
+            // get all possible configuration for the variant. We'll take the highest priority
+            // of them that have a file.
+            List<String> wearConfigNames = variantData.getWearConfigNames();
 
-        Configuration config = basePlugin.getProject().getConfigurations().findByName(
-                CONFIG_WEAR_APP);
-        Set<File> file = config.getFiles();
+            for (String configName : wearConfigNames) {
+                Configuration config = basePlugin.getProject().getConfigurations().findByName(
+                        configName);
+                Set<File> file = config.getFiles();
 
-        int count = file.size();
-        if (count == 1) {
-            if (variantData.getVariantConfiguration().getBuildType().isEmbedMicroApp()) {
-                basePlugin.createGenerateMicroApkDataTask(variantData, config);
+                int count = file.size();
+                if (count == 1) {
+                    basePlugin.createGenerateMicroApkDataTask(variantData, config);
+                    // found one, bail out.
+                    return;
+                } else if (count > 1) {
+                    throw new RuntimeException(String.format(
+                            "Configuration '%1$s' resolves to more than one apk.", configName));
+                }
             }
-        } else if (count > 1) {
-            throw new RuntimeException(
-                    CONFIG_WEAR_APP + " configuration resolves to more than one apk.");
         }
     }
 }
