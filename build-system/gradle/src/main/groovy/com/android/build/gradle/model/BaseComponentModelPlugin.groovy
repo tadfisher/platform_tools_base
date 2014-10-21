@@ -15,6 +15,7 @@
  */
 
 package com.android.build.gradle.model
+
 import com.android.annotations.Nullable
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.BaseExtension
@@ -46,7 +47,6 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.internal.project.ProjectInternal
-import org.gradle.api.plugins.ExtensionContainer
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.internal.reflect.Instantiator
@@ -59,6 +59,7 @@ import org.gradle.language.base.internal.LanguageRegistry
 import org.gradle.language.base.internal.SourceTransformTaskConfig
 import org.gradle.model.Model
 import org.gradle.model.Mutate
+import org.gradle.model.Path
 import org.gradle.model.RuleSource
 import org.gradle.model.internal.core.ModelCreators
 import org.gradle.model.internal.core.ModelReference
@@ -74,30 +75,25 @@ import javax.inject.Inject
 
 import static com.android.builder.core.BuilderConstants.DEBUG
 
-public class AppModelPlugin extends BasePlugin implements Plugin<Project> {
+public class BaseComponentModelPlugin extends BasePlugin implements Plugin<Project> {
     @Inject
-    protected AppModelPlugin(Instantiator instantiator, ToolingModelBuilderRegistry registry) {
+    protected BaseComponentModelPlugin(Instantiator instantiator, ToolingModelBuilderRegistry registry) {
         super(instantiator, registry);
     }
 
     @Override
     protected Class<? extends BaseExtension> getExtensionClass() {
-        return AppExtension.class
+        throw new RuntimeException("getExtensionClass should not called for component model plugin.")
     }
 
     @Override
     protected VariantFactory getVariantFactory() {
-        return new ApplicationVariantFactory(this)
+        throw new RuntimeException("getVariantFactory should not called for component model plugin.")
     }
-
 
     @Override
     void apply(Project project) {
         super.apply(project)
-        project.modelRegistry.create(
-                ModelCreators.of(ModelReference.of("basePlugin", BasePlugin.class), this)
-                        .simpleDescriptor("Android BasePlugin.")
-                        .build())
     }
 
     /**
@@ -106,11 +102,6 @@ public class AppModelPlugin extends BasePlugin implements Plugin<Project> {
     @Override
     protected void doApply() {
         project.plugins.apply(AndroidComponentModelPlugin)
-
-        // Add this plugin as an extension so that it can be accessed in model rules for now.
-        // Eventually, we can refactor so that BasePlugin is not used extensively through our
-        // codebase.
-        project.extensions.add("androidPlugin", this);
 
         configureProject()
 
@@ -131,23 +122,31 @@ public class AppModelPlugin extends BasePlugin implements Plugin<Project> {
                 jniLibs(AndroidLanguageSourceSet)
         }
 
-        // create the config to link a wear apk.
-        project.configurations.create(ApplicationVariantFactory.CONFIG_WEAR_APP)
+        project.modelRegistry.create(
+                ModelCreators.of(ModelReference.of("basePlugin", BasePlugin.class), this)
+                        .simpleDescriptor("Android BasePlugin.")
+                        .build())
     }
 
     @RuleSource
     static class Rules {
+//        @Model
+//        Class extensionClass() {
+//            return AppExtension
+//        }
+
         @Model("android")
-        AppExtension androidapp(
+        BaseExtension androidapp(
                 ServiceRegistry serviceRegistry,
                 NamedDomainObjectContainer<DefaultBuildType> buildTypeContainer,
                 NamedDomainObjectContainer<GroupableProductFlavorDsl> productFlavorContainer,
                 NamedDomainObjectContainer<SigningConfig> signingConfigContainer,
+                @Path("extensionClass") Class extensionClass,
                 BasePlugin plugin) {
             Instantiator instantiator = serviceRegistry.get(Instantiator.class);
             Project project = plugin.getProject()
 
-            AppExtension extension = instantiator.newInstance(AppExtension,
+            BaseExtension extension = (BaseExtension)instantiator.newInstance(extensionClass,
                     plugin, (ProjectInternal) project, instantiator,
                     buildTypeContainer, productFlavorContainer, signingConfigContainer, false)
             plugin.setBaseExtension(extension)
@@ -159,7 +158,7 @@ public class AppModelPlugin extends BasePlugin implements Plugin<Project> {
         }
 
         @Mutate
-        void forwardCompileSdkVersion(NdkExtension ndkExtension, AppExtension baseExtension) {
+        void forwardCompileSdkVersion(NdkExtension ndkExtension, BaseExtension baseExtension) {
             if (ndkExtension.compileSdkVersion == null) {
                 ndkExtension.compileSdkVersion(baseExtension.compileSdkVersion);
             }
@@ -186,17 +185,18 @@ public class AppModelPlugin extends BasePlugin implements Plugin<Project> {
         @Mutate
         void createAndroidComponents(
                 ComponentSpecContainer specContainer,
-                AppExtension androidExtension,
+                BaseExtension androidExtension,
                 NamedDomainObjectContainer<DefaultBuildType> buildTypeContainer,
                 NamedDomainObjectContainer<GroupableProductFlavorDsl> productFlavorContainer,
                 NamedDomainObjectContainer<SigningConfig> signingConfigContainer,
                 ProjectSourceSet sources,
+                VariantFactory variantFactory,
                 BasePlugin plugin) {
             VariantManager variantManager = new VariantManager(
                     plugin.project,
                     plugin,
                     androidExtension,
-                    new ApplicationVariantFactory(plugin))
+                    variantFactory)
 
             signingConfigContainer.all { SigningConfig signingConfig ->
                 variantManager.addSigningConfig((SigningConfigDsl) signingConfig)

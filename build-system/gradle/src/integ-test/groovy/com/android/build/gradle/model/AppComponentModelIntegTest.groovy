@@ -27,7 +27,7 @@ import org.junit.Test
 import org.junit.experimental.categories.Category
 
 /**
- * Basic integration test for AppModelPlugin.
+ * Basic integration test for AppComponentModelPlugin.
  */
 class AppComponentModelIntegTest {
     @Rule
@@ -37,8 +37,7 @@ class AppComponentModelIntegTest {
     public void setup() {
         new HelloWorldApp().writeSources(fixture.getSourceDir())
         fixture.buildFile << """
-import com.android.build.gradle.model.AppModelPlugin
-apply plugin: AppModelPlugin
+apply plugin: "com.android.model.application"
 
 model {
     android {

@@ -144,7 +144,6 @@ public class VariantManager {
         DefaultAndroidSourceSet sourceSet = (DefaultAndroidSourceSet) extension.getSourceSetsContainer().maybeCreate(name);
 
         BuildTypeData buildTypeData = new BuildTypeData(buildType, sourceSet, project);
-        System.out.println(project);
         project.getTasks().getByName("assemble").dependsOn(buildTypeData.getAssembleTask());
 
         buildTypes.put(name, buildTypeData);

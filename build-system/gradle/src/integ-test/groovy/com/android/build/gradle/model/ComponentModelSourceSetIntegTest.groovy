@@ -16,22 +16,17 @@
 
 package com.android.build.gradle.model
 
-import static org.junit.Assert.assertNotNull
-
-import com.android.build.gradle.internal.test.category.DeviceTests
 import com.android.build.gradle.internal.test.fixture.GradleProjectTestRule
 import com.android.build.gradle.internal.test.fixture.app.AndroidTestApp
-import com.android.build.gradle.internal.test.fixture.app.HelloWorldApp
 import com.android.build.gradle.internal.test.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.internal.test.fixture.app.TestSourceFile
-import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.ClassRule
-import org.junit.Rule
 import org.junit.Test
-import org.junit.experimental.categories.Category
 
 import java.util.zip.ZipFile
+
+import static org.junit.Assert.assertNotNull
 
 /**
  * Integration tests for different configuration of source sets.
@@ -57,8 +52,7 @@ class ComponentModelSourceSetIntegTest {
         app.writeSources(fixture.getSourceDir())
 
         fixture.buildFile << """
-import com.android.build.gradle.model.AppModelPlugin
-apply plugin: AppModelPlugin
+apply plugin: "com.android.model.application"
 
 model {
     android {
