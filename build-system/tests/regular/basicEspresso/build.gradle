@@ -1,0 +1,62 @@
+ext {
+    buildToolsVersion = System.env.CUSTOM_BUILDTOOLS != null ? System.env.CUSTOM_BUILDTOOLS : (project.hasProperty("CUSTOM_BUILDTOOLS") ? project.CUSTOM_BUILDTOOLS : '20.0.0')
+    useJack = System.env.CUSTOM_JACK != null ? true : (project.hasProperty("CUSTOM_JACK") ? true : false)
+}
+
+buildscript {
+    def gradleVersion = System.env.CUSTOM_GRADLE != null ? System.env.CUSTOM_GRADLE : '0.14.2'
+
+    repositories {
+        if (System.env.CUSTOM_REPO != null) {
+            maven { url System.env.CUSTOM_REPO }
+        } else {
+            mavenCentral()
+        }
+    }
+    dependencies {
+        classpath "com.android.tools.build:gradle:$gradleVersion"
+    }
+}
+apply plugin: 'com.android.application'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile 'com.android.support:support-v4:13.0.0'
+    compile 'com.google.android.gms:play-services:3.1.36'
+
+    debugCompile 'com.android.support:support-v13:13.0.0'
+    releaseCompile 'com.android.support:support-v13:20.0.0'
+
+    // Espresso can be downloaded from https://code.google.com/p/android-test-kit/wiki/Espresso
+    androidTestCompile files('lib/espresso-1.1-bundled.jar')
+}
+
+android {
+    compileSdkVersion 19
+    buildToolsVersion = rootProject.ext.buildToolsVersion
+
+    testBuildType "debug"
+
+    defaultConfig {
+        versionCode 12
+        versionName "2.0"
+        minSdkVersion 16
+        targetSdkVersion 16
+
+        testInstrumentationRunner "com.google.android.apps.common.testing.testrunner.GoogleInstrumentationTestRunner"
+        resConfig "en"
+        resConfigs "nodpi", "hdpi"
+    }
+
+    buildTypes {
+        debug {
+            applicationIdSuffix ".debug"
+            testCoverageEnabled true
+
+            useJack project.ext.useJack
+        }
+    }
+}
