@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.model;
 
+import static com.android.SdkConstants.DOT_JAR;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.BasePlugin;
@@ -28,16 +30,21 @@ import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
 import com.google.common.collect.Lists;
+import com.google.common.io.Closeables;
 
 import org.gradle.api.Project;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.jar.JarInputStream;
+import java.util.zip.ZipEntry;
 
 /**
  */
@@ -162,13 +169,68 @@ public class DependenciesImpl implements Dependencies, Serializable {
             clonedDeps.add(clonedLib);
         }
 
+        // compute local jar even if the bundle isn't exploded.
+        Collection<File> localJarOverride = findLocalJar(liblibraryDependency);
+
         return new AndroidLibraryImpl(
                 liblibraryDependency,
                 clonedDeps,
+                localJarOverride,
                 projectMatch != null ? projectMatch.getPath() : null,
                 liblibraryDependency.getProjectVariant(),
                 liblibraryDependency.getRequestedCoordinates(),
                 liblibraryDependency.getResolvedCoordinates());
+    }
+
+    /**
+     * Finds the local jar for an aar.
+     *
+     * Since the model can be queried before the aar are exploded, we attempt to get them
+     * from inside the aar.
+     *
+     * @param library the library.
+     * @return its local jars.
+     */
+    @NonNull
+    private static Collection<File> findLocalJar(LibraryDependency library) {
+        // if the library is exploded, just use the normal method.
+        File explodedFolder = library.getFolder();
+        if (explodedFolder.isDirectory()) {
+            return library.getLocalJars();
+        }
+
+        // if the aar file is present, search inside it for jar files under libs/
+        File aarFile = library.getBundle();
+        if (aarFile.isFile()) {
+            List<File> jarList = Lists.newArrayList();
+
+            JarInputStream zis = null;
+            try {
+                //noinspection IOResourceOpenedButNotSafelyClosed
+                zis = new JarInputStream(new FileInputStream(aarFile));
+
+                ZipEntry entry = zis.getNextEntry();
+                while (entry != null) {
+                    String name = entry.getName();
+
+                    if (name.startsWith("libs/") && name.endsWith(DOT_JAR)) {
+                        jarList.add(new File(explodedFolder, name.replace('/', File.separatorChar)));
+                    }
+
+                    entry = zis.getNextEntry();
+                }
+
+                return jarList;
+            } catch (FileNotFoundException ignored) {
+                // should not happen since we check ahead of time
+            } catch (IOException e) {
+                // we'll return an empty list below
+            } finally {
+                Closeables.closeQuietly(zis);
+            }
+        }
+
+        return Collections.emptyList();
     }
 
     @Nullable

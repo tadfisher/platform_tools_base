@@ -57,7 +57,6 @@ import junit.framework.TestCase;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
 import org.gradle.tooling.UnknownModelException;
-import org.gradle.tooling.internal.consumer.DefaultGradleConnector;
 import org.gradle.tooling.model.GradleProject;
 
 import java.io.File;
@@ -545,21 +544,26 @@ public class AndroidProjectTest extends TestCase {
         assertNotNull(releaseLibraries);
         assertEquals(3, releaseLibraries.size());
 
-        javaLibs = Sets.newHashSet(
-                "com.android.support:support-v13:20.0.0",
-                "com.android.support:support-v4:20.0.0",
-                "com.google.android.gms:play-services:3.1.36"
-        );
-
+        // map for each aar we expect to find and how many local jars they each have.
+        Map<String, Integer> aarLibs = Maps.newHashMapWithExpectedSize(3);
+        aarLibs.put("com.android.support:support-v13:21.0.0", 1);
+        aarLibs.put("com.android.support:support-v4:21.0.0", 1);
+        aarLibs.put("com.google.android.gms:play-services:3.1.36", 0);
         for (AndroidLibrary androidLib : releaseLibraries) {
             assertNotNull(androidLib.getBundle());
             assertNotNull(androidLib.getFolder());
             coord = androidLib.getResolvedCoordinates();
             assertNotNull(coord);
             String lib = coord.getGroupId() + ":" + coord.getArtifactId() + ":" + coord.getVersion();
-            assertTrue(javaLibs.contains(lib));
-            javaLibs.remove(lib);
+
+            Integer localJarCount = aarLibs.get(lib);
+            assertNotNull("Check presense of " + lib, localJarCount);
+            assertEquals("Check local jar count for " + lib,
+                    localJarCount.intValue(), androidLib.getLocalJars().size());
+            aarLibs.remove(lib);
         }
+
+        assertTrue("check for missing libs", aarLibs.isEmpty());
     }
 
     public void testBasicSigningConfigs() throws Exception {
