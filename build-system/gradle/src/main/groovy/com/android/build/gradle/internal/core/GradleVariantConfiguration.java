@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.core;
 
+import static com.android.builder.core.VariantConfiguration.Type.TEST;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.dsl.BuildTypeDsl;
@@ -97,6 +99,14 @@ public class GradleVariantConfiguration extends VariantConfiguration<BuildTypeDs
     @Nullable
     public Set<String> getSupportedAbis() {
         return mMergedNdkConfig.getAbiFilters();
+    }
+
+    public boolean isRunProguard() {
+        Type type = getType();
+        // if type == test then getTestedConfig always returns non-null
+        //noinspection ConstantConditions
+        return getBuildType().isRunProguard() &&
+                (type != TEST || (getTestedConfig().getType() != Type.LIBRARY));
     }
 
     private void computeNdkConfig() {

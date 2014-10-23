@@ -8,7 +8,7 @@ android {
     compileSdkVersion 19
     buildToolsVersion = rootProject.ext.buildToolsVersion
 
-    testBuildType "proguard"
+    testBuildType rootProject.ext.useJack ? "debug" : "proguard"
 
     defaultConfig {
         versionCode 12
@@ -21,6 +21,7 @@ android {
         proguard.initWith(buildTypes.debug)
         proguard {
             runProguard true
+            useJack rootProject.ext.useJack
             proguardFile getDefaultProguardFile('proguard-android.txt')
         }
     }

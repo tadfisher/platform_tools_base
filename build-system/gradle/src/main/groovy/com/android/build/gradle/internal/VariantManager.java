@@ -477,6 +477,9 @@ public class VariantManager {
                 variantData.setVariantDependency(variantDep);
 
                 if (buildTypeData == testData) {
+                    if (variantConfig.isRunProguard() && variantConfig.getBuildType().getUseJack()) {
+                        throw new RuntimeException("Cannot test proguarded variant when compiling with jack.");
+                    }
                     testedVariantData = variantData;
                 }
 
@@ -553,6 +556,10 @@ public class VariantManager {
                 variantDataList.add(variantData);
 
                 if (buildTypeData == testData) {
+                    if (variantData.getVariantConfiguration().isRunProguard() &&
+                            variantData.getVariantConfiguration().getBuildType().getUseJack()) {
+                        throw new RuntimeException("Cannot test proguarded variant when compiling with jack.");
+                    }
                     testedVariantData = variantData;
                 }
             }
