@@ -24,6 +24,7 @@ import com.google.common.io.Files
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.compile.AbstractCompile
@@ -45,6 +46,9 @@ public class JackTask extends AbstractCompile {
     @InputFiles
     Collection<File> packagedLibraries
 
+    @InputFiles @Optional
+    Collection<File> proguardFiles
+
     @Input
     boolean debug
 
@@ -52,6 +56,9 @@ public class JackTask extends AbstractCompile {
 
     @OutputFile
     File jackFile
+
+    @OutputFile @Optional
+    File mappingFile
 
     @TaskAction
     void compile() {
@@ -77,6 +84,10 @@ public class JackTask extends AbstractCompile {
 
         // temp workaround since --jack-output cannot be used
         // with the dex output.
+        /*
+        command << "--jack-output"
+        command << jackOutFolder.absolutePath
+        */
         command << "-D"
         command << "jack.jackfile.generate=true"
         command << "-D"
@@ -84,13 +95,22 @@ public class JackTask extends AbstractCompile {
         command << "-D"
         command << "jack.jackfile.output.zip=${getJackFile().absolutePath}".toString()
 
-        /*
-        command << "--jack-output"
-        command << jackOutFolder.absolutePath
-        */
-
         command << "-D"
         command << "jack.import.resource.policy=keep-first"
+
+        Collection<File> _proguardFiles = getProguardFiles()
+        if (_proguardFiles != null && !_proguardFiles.isEmpty()) {
+            for (File file : _proguardFiles) {
+                command << "--proguard-flags"
+                command << file.absolutePath
+            }
+
+            File _mappingFile = getMappingFile()
+            if (_mappingFile != null) {
+                command << "-D"
+                command << "jack.obfuscation.mapping.dump.file=${_mappingFile.absolutePath}".toString()
+            }
+        }
 
         command << "--ecj"
         command << computeEcjOptionFile()
