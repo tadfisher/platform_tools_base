@@ -89,7 +89,8 @@ public class DeviceTest extends BuildTest {
     };
 
     private static final String[] sJackProjects = new String[] {
-            "basic"
+            "basic",
+            "proguard",
     };
 
     public static Test suite() {
