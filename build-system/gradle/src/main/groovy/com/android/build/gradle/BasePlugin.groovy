@@ -1927,10 +1927,7 @@ public abstract class BasePlugin {
     public void createPostCompilationTasks(@NonNull ApkVariantData variantData) {
         GradleVariantConfiguration config = variantData.variantConfiguration
 
-        boolean runProguard = config.buildType.runProguard &&
-                (config.type != TEST ||
-                        (config.type == TEST &&
-                                config.testedConfig.type != VariantConfiguration.Type.LIBRARY))
+        boolean runProguard = config.isRunProguard()
 
         boolean runInstrumentation = config.buildType.isTestCoverageEnabled() &&
                 config.type != TEST
@@ -2064,7 +2061,7 @@ public abstract class BasePlugin {
             @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData,
             @Nullable BaseVariantData<? extends BaseVariantOutputData> testedVariantData) {
 
-        VariantConfiguration config = variantData.variantConfiguration
+        GradleVariantConfiguration config = variantData.variantConfiguration
 
         // ----- Create Jill tasks -----
         JillTask jillRuntimeTask = project.tasks.create(
@@ -2143,6 +2140,33 @@ public abstract class BasePlugin {
 
         compileTask.conventionMapping.tempFolder = {
             project.file("$project.buildDir/${FD_INTERMEDIATES}/tmp/jack/${config.dirName}")
+        }
+        if (config.isRunProguard()) {
+            compileTask.conventionMapping.proguardFiles = {
+                // since all the output use the same resources, we can use the first output
+                // to query for a proguard file.
+                BaseVariantOutputData variantOutputData = variantData.outputs.get(0)
+
+                List<File> proguardFiles = config.getProguardFiles(true /*includeLibs*/)
+                File proguardResFile = variantOutputData.processResourcesTask.proguardOutputFile
+                if (proguardResFile != null) {
+                    proguardFiles.add(proguardResFile)
+                }
+                // for tested app, we only care about their aapt config since the base
+                // configs are the same files anyway.
+                if (testedVariantData != null) {
+                    // use single output for now.
+                    proguardResFile = testedVariantData.outputs.get(0).processResourcesTask.proguardOutputFile
+                    if (proguardResFile != null) {
+                        proguardFiles.add(proguardResFile)
+                    }
+                }
+
+                return proguardFiles
+            }
+
+            compileTask.mappingFile = variantData.mappingFile = project.file(
+                    "${project.buildDir}/${FD_OUTPUTS}/proguard/${variantData.variantConfiguration.dirName}/mapping.txt")
         }
 
         // set source/target compatibility
