@@ -180,11 +180,6 @@ public class BuildTypeDsl extends DefaultBuildType implements Serializable {
         return !useJack && super.isTestCoverageEnabled()
     }
 
-    @Override
-    public boolean isRunProguard() {
-        return !useJack && super.isRunProguard();
-    }
-
     // ---------------
     // TEMP for compatibility
     // STOPSHIP Remove in 1.0
