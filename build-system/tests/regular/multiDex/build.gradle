@@ -1,5 +1,5 @@
 ext {
-    buildToolsVersion = System.env.CUSTOM_BUILDTOOLS != null ? System.env.CUSTOM_BUILDTOOLS : (project.hasProperty("CUSTOM_BUILDTOOLS") ? project.CUSTOM_BUILDTOOLS : '21.0.0')
+    buildToolsVersion = System.env.CUSTOM_BUILDTOOLS != null ? System.env.CUSTOM_BUILDTOOLS : (project.hasProperty("CUSTOM_BUILDTOOLS") ? project.CUSTOM_BUILDTOOLS : '21.1.0')
     useJack = System.env.CUSTOM_JACK != null ? true : (project.hasProperty("CUSTOM_JACK") ? true : false)
 }
 
@@ -10,7 +10,7 @@ buildscript {
         if (System.env.CUSTOM_REPO != null) {
             maven { url System.env.CUSTOM_REPO }
         } else {
-            mavenCentral()
+            maven { url '/Volumes/Sources/ext/studio-1.0-dev/out/repo' }
         }
     }
     dependencies {
@@ -25,11 +25,17 @@ android {
   buildToolsVersion = rootProject.ext.buildToolsVersion
 
   defaultConfig {
-    minSdkVersion 21
-
     buildConfigField "String", "FOO", "\"foo\""
-
     multiDex = true
+  }
+
+  productFlavors {
+    ics {
+      minSdkVersion 14
+    }
+    lollipop {
+      minSdkVersion 21
+    }
   }
 
   buildTypes {

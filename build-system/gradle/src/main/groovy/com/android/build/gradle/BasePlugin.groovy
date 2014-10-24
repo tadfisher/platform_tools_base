@@ -1907,15 +1907,6 @@ public abstract class BasePlugin {
         return testTask
     }
 
-    static boolean isMultiDex(VariantConfiguration config) {
-        ApiVersion minSdkVersion = config.minSdkVersion
-        if (minSdkVersion.apiLevel >= 21) {
-            return config.multiDex
-        }
-
-        return false
-    }
-
     /**
      * Creates the post-compilation tasks for the given Variant.
      *
@@ -1945,7 +1936,7 @@ public abstract class BasePlugin {
         dexTask.dexOptions = extension.dexOptions
 
         dexTask.conventionMapping.multiDex = {
-            isMultiDex(config)
+            config.isMultiDex()
         }
 
         JacocoInstrumentTask jacocoTask = null
@@ -1991,7 +1982,7 @@ public abstract class BasePlugin {
                 preDexTask.dexOptions = extension.dexOptions
 
                 preDexTask.conventionMapping.multiDex = {
-                    return isMultiDex(config)
+                    return config.isMultiDex()
                 }
 
                 preDexTask.conventionMapping.inputFiles = {
@@ -2032,7 +2023,7 @@ public abstract class BasePlugin {
                 // if multi-dex is enabled, then each library will just be added to the
                 // package task.
                 dexTask.conventionMapping.libraries = {
-                    if (isMultiDex(config)) {
+                    if (config.isMultiDex()) {
                         return Collections.emptyList()
                     }
 
@@ -2112,6 +2103,9 @@ public abstract class BasePlugin {
         compileTask.plugin = this
 
         compileTask.source = variantData.getJavaSources()
+
+        compileTask.multiDexEnabled = config.isMultiDex()
+        compileTask.minSdkVersion = config.minSdkVersion.apiLevel
 
         // if the tested variant is an app, add its classpath. For the libraries,
         // it's done automatically since the classpath includes the library output as a normal
@@ -2248,7 +2242,7 @@ public abstract class BasePlugin {
                 return null
             }
             packageApp.conventionMapping.dexedLibraries = {
-                if (isMultiDex(config) && variantData.preDexTask != null) {
+                if (config.isMultiDex() && variantData.preDexTask != null) {
                     return project.fileTree(variantData.preDexTask.outputFolder).files
                 }
 
