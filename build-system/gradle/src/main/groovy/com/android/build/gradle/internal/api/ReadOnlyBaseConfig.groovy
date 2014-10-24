@@ -14,19 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.api;
-
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.builder.model.BaseConfig;
-import com.android.builder.model.ClassField;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-
-import java.io.File;
-import java.util.Collection;
-import java.util.Map;
-
+package com.android.build.gradle.internal.api
+import com.android.annotations.NonNull
+import com.android.annotations.Nullable
+import com.android.builder.model.BaseConfig
+import com.android.builder.model.ClassField
+import com.google.common.collect.ImmutableList
+import com.google.common.collect.ImmutableMap
 /**
  * Read-only version of the BaseConfig wrapping another BaseConfig.
  *
@@ -88,8 +82,8 @@ abstract class ReadOnlyBaseConfig implements BaseConfig {
 
     @Nullable
     @Override
-    public Boolean getMultiDex() {
-        return baseConfig.getMultiDex();
+    public Boolean getMultiDexEnabled() {
+        return baseConfig.getMultiDexEnabled();
     }
 
     /**
