@@ -722,7 +722,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     }
 
     /**
-     * Returns the product flavors.
+     * Returns the product flavors. Items earlier in the list override later items.
      */
     @NonNull
     public List<F> getProductFlavors() {
@@ -1697,7 +1697,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         return mergedFlavorsPlaceholders;
     }
 
-    public boolean getMultiDex() {
+    public boolean isMultiDex() {
         Boolean value = mBuildType.getMultiDex();
         if (value != null) {
             return value;
@@ -1709,6 +1709,10 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         }
 
         return false;
+    }
+
+    public boolean isMultiDexLegacyMode() {
+        return isMultiDex() && getMinSdkVersion().getApiLevel() < 21;
     }
 
     /**

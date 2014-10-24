@@ -19,6 +19,7 @@ package com.android.builder.core;
 import static com.android.SdkConstants.DOT_DEX;
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.FD_RES_XML;
+import static com.android.SdkConstants.FN_RENDERSCRIPT_V8_JAR;
 import static com.android.builder.core.BuilderConstants.ANDROID_WEAR;
 import static com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK;
 import static com.android.manifmerger.ManifestMerger2.Invoker;
@@ -329,6 +330,25 @@ public class AndroidBuilder {
     }
 
     /**
+     * Returns the jar file for the multi-dex legacy mode.
+     *
+     * This may return null if the SDK has not been loaded yet.
+     *
+     * @return the jar file, or null.
+     *
+     * @see #setTargetInfo(com.android.builder.sdk.SdkInfo, com.android.builder.sdk.TargetInfo)
+     */
+    @Nullable
+    public File getMultiDexSupportJar() {
+        if (mTargetInfo != null) {
+            return new File(mTargetInfo.getBuildTools().getLocation().getAbsolutePath(),
+                    "multidex" + File.separator + "android-support-multidex.jar");
+        }
+
+        return null;
+    }
+
+    /**
      * Returns the compile classpath for this config. If the config tests a library, this
      * will include the classpath of the tested config.
      *
@@ -364,17 +384,21 @@ public class AndroidBuilder {
      */
     @NonNull
     public Set<File> getPackagedJars(@NonNull VariantConfiguration<?,?,?> variantConfiguration) {
-        Set<File> packagedJars = variantConfiguration.getPackagedJars();
+        Set<File> packagedJars = Sets.newHashSet(variantConfiguration.getPackagedJars());
 
         if (variantConfiguration.getRenderscriptSupportMode()) {
             File renderScriptSupportJar = getRenderScriptSupportJar();
 
-            Set<File> fullJars = Sets.newHashSetWithExpectedSize(packagedJars.size() + 1);
-            fullJars.addAll(packagedJars);
             if (renderScriptSupportJar != null) {
-                fullJars.add(renderScriptSupportJar);
+                packagedJars.add(renderScriptSupportJar);
             }
-            packagedJars = fullJars;
+        }
+
+        if (variantConfiguration.isMultiDexLegacyMode()) {
+            File supportJar = getMultiDexSupportJar();
+            if (supportJar != null) {
+                packagedJars.add(supportJar);
+            }
         }
 
         return packagedJars;
