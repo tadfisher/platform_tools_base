@@ -92,7 +92,8 @@ public class AutomatedBuildTest extends BuildTest {
 
     private static final String[] sJackProjects = new String[] {
             "basic",
-            "minify"
+            "minify",
+            "multidex",
     };
 
     public static Test suite() {

@@ -88,6 +88,7 @@ public class DeviceTest extends BuildTest {
     private static final String[] sJackProjects = new String[] {
             "basic",
             "minify",
+            "multidex",
     };
 
     public static Test suite() {
