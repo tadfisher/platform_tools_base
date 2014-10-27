@@ -1058,6 +1058,8 @@ public final class SdkConstants {
     public static final String EXT_AAR = "aar"; //$NON-NLS-1$
     /** Extension for Java heap dumps. */
     public static final String EXT_HPROF = "hprof"; //$NON-NLS-1$
+    /** Extension for OpenGL rendering traces. */
+    public static final String EXT_GFX_TRACE = "gfxtrace"; //$NON-NLS-1$
 
     private static final String DOT = "."; //$NON-NLS-1$
 
