@@ -84,10 +84,13 @@ public class Lint extends DefaultTask {
         }
 
         // Compute error matrix
+        def quiet = mPlugin.getExtension().lintOptions.quiet
+
+
         for (Map.Entry<Variant,List<Warning>> entry : warningMap.entrySet()) {
             def variant = entry.getKey()
             def warnings = entry.getValue()
-            if (!mFatalOnly) {
+            if (!mFatalOnly && !quiet) {
                 println "Ran lint on variant " + variant.getName() + ": " + warnings.size() +
                         " issues found"
             }
