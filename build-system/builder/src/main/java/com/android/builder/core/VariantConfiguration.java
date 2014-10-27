@@ -1719,7 +1719,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      * Returns the renderscript support mode.
      */
     public boolean getRenderscriptSupportMode() {
-        Boolean value = mMergedFlavor.getRenderscriptSupportMode();
+        Boolean value = mMergedFlavor.getRenderscriptSupportModeEnabled();
         if (value != null) {
             return value;
         }
@@ -1732,7 +1732,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      * Returns the renderscript NDK mode.
      */
     public boolean getRenderscriptNdkMode() {
-        Boolean value = mMergedFlavor.getRenderscriptNdkMode();
+        Boolean value = mMergedFlavor.getRenderscriptNdkModeEnabled();
         if (value != null) {
             return value;
         }

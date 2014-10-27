@@ -851,7 +851,7 @@ public abstract class BasePlugin {
 
         renderscriptTask.supportMode = config.renderscriptSupportMode
         renderscriptTask.ndkMode = ndkMode
-        renderscriptTask.debugBuild = config.buildType.renderscriptDebugBuild
+        renderscriptTask.debugBuild = config.buildType.renderscriptDebuggable
         renderscriptTask.optimLevel = config.buildType.renderscriptOptimLevel
 
         renderscriptTask.conventionMapping.sourceDirs = { config.renderscriptSourceList }
@@ -1367,7 +1367,7 @@ public abstract class BasePlugin {
 
         VariantConfiguration variantConfig = variantData.variantConfiguration
 
-        if (variantConfig.mergedFlavor.renderscriptNdkMode) {
+        if (variantConfig.mergedFlavor.renderscriptNdkModeEnabled) {
             ndkCompile.ndkRenderScriptMode = true
             ndkCompile.dependsOn variantData.renderscriptCompileTask
         } else {
@@ -1376,7 +1376,7 @@ public abstract class BasePlugin {
 
         ndkCompile.conventionMapping.sourceFolders = {
             List<File> sourceList = variantConfig.jniSourceList
-            if (variantConfig.mergedFlavor.renderscriptNdkMode) {
+            if (variantConfig.mergedFlavor.renderscriptNdkModeEnabled) {
                 sourceList.add(variantData.renderscriptCompileTask.sourceOutputDir)
             }
 
@@ -1390,7 +1390,7 @@ public abstract class BasePlugin {
         ndkCompile.conventionMapping.ndkConfig = { variantConfig.ndkConfig }
 
         ndkCompile.conventionMapping.debuggable = {
-            variantConfig.buildType.jniDebugBuild
+            variantConfig.buildType.jniDebuggable
         }
 
         ndkCompile.conventionMapping.objFolder = {
@@ -2181,7 +2181,7 @@ public abstract class BasePlugin {
                 set.addAll(config.libraryJniFolders)
                 set.addAll(config.jniLibsList)
 
-                if (config.mergedFlavor.renderscriptSupportMode) {
+                if (config.mergedFlavor.renderscriptSupportModeEnabled) {
                     File rsLibs = androidBuilder.getSupportNativeLibFolder()
                     if (rsLibs != null && rsLibs.isDirectory()) {
                         set.add(rsLibs);
@@ -2196,7 +2196,7 @@ public abstract class BasePlugin {
                 }
                 return config.supportedAbis
             }
-            packageApp.conventionMapping.jniDebugBuild = { config.buildType.jniDebugBuild }
+            packageApp.conventionMapping.jniDebugBuild = { config.buildType.jniDebuggable }
 
             packageApp.conventionMapping.signingConfig = { sc }
             if (sc != null) {

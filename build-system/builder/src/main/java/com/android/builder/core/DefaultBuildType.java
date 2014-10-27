@@ -49,13 +49,13 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
 
         setDebuggable(that.isDebuggable());
         setTestCoverageEnabled(that.isTestCoverageEnabled());
-        setJniDebugBuild(that.isJniDebugBuild());
-        setRenderscriptDebugBuild(that.isRenderscriptDebugBuild());
+        setJniDebuggable(that.isJniDebuggable());
+        setRenderscriptDebuggable(that.isRenderscriptDebuggable());
         setRenderscriptOptimLevel(that.getRenderscriptOptimLevel());
         setApplicationIdSuffix(that.getApplicationIdSuffix());
         setVersionNameSuffix(that.getVersionNameSuffix());
         setMinifyEnabled(that.isMinifyEnabled() );
-        setZipAlign(that.isZipAlign());
+        setZipAlignEnabled(that.isZipAlignEnabled());
         setSigningConfig(that.getSigningConfig());
         setEmbedMicroApp(that.isEmbedMicroApp());
 
@@ -95,24 +95,41 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
      */
     @NonNull
     public BuildType setJniDebugBuild(boolean jniDebugBuild) {
+        warn("WARNING: jniDebugBuild is deprecated (and will soon stop working); change to \"jniDebuggable\" instead");
+        mJniDebugBuild = jniDebugBuild;
+        return this;
+    }
+
+    /**
+     * Whether this build type is configured to generate an APK with debuggable native code.
+     */
+    @NonNull
+    public BuildType setJniDebuggable(boolean jniDebugBuild) {
         mJniDebugBuild = jniDebugBuild;
         return this;
     }
 
     @Override
-    public boolean isJniDebugBuild() {
+    public boolean isJniDebuggable() {
         return mJniDebugBuild;
     }
 
+    /**
+     * Whether the build type is configured to generate an apk with debuggable RenderScript code.
+     */
+    //public void setRenderscriptDebugBuild(boolean renderscriptDebugBuild) {
+    //    mRenderscriptDebugBuild = renderscriptDebugBuild;
+    //}
+
     @Override
-    public boolean isRenderscriptDebugBuild() {
+    public boolean isRenderscriptDebuggable() {
         return mRenderscriptDebugBuild;
     }
 
     /**
      * Whether the build type is configured to generate an apk with debuggable RenderScript code.
      */
-    public void setRenderscriptDebugBuild(boolean renderscriptDebugBuild) {
+    public void setRenderscriptDebuggable(boolean renderscriptDebugBuild) {
         mRenderscriptDebugBuild = renderscriptDebugBuild;
     }
 
@@ -167,14 +184,20 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
     }
 
     /** Whether zipalign is enabled for this build type. */
+    //@NonNull
+    //public BuildType setZipAlign(boolean zipAlign) {
+    //    return setZipAlignEnabled(zipAlign);
+    //}
+
+    /** Whether zipalign is enabled for this build type. */
     @NonNull
-    public BuildType setZipAlign(boolean zipAlign) {
+    public BuildType setZipAlignEnabled(boolean zipAlign) {
         mZipAlign = zipAlign;
         return this;
     }
 
     @Override
-    public boolean isZipAlign() {
+    public boolean isZipAlignEnabled() {
         return mZipAlign;
     }
 
@@ -231,6 +254,10 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
         if (mEmbedMicroApp != buildType.mEmbedMicroApp) return false;
 
         return true;
+    }
+
+    protected void warn(String message) {
+
     }
 
     @Override

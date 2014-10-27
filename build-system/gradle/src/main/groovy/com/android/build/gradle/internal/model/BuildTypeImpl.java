@@ -49,13 +49,13 @@ class BuildTypeImpl extends BaseConfigImpl implements BuildType, Serializable {
         clonedBuildType.name = buildType.getName();
         clonedBuildType.debuggable = buildType.isDebuggable();
         clonedBuildType.testCoverageEnabled = buildType.isTestCoverageEnabled();
-        clonedBuildType.jniDebugBuild = buildType.isJniDebugBuild();
-        clonedBuildType.renderscriptDebugBuild = buildType.isRenderscriptDebugBuild();
+        clonedBuildType.jniDebugBuild = buildType.isJniDebuggable();
+        clonedBuildType.renderscriptDebugBuild = buildType.isRenderscriptDebuggable();
         clonedBuildType.renderscriptOptimLevel = buildType.getRenderscriptOptimLevel();
         clonedBuildType.applicationIdSuffix = buildType.getApplicationIdSuffix();
         clonedBuildType.versionNameSuffix = buildType.getVersionNameSuffix();
         clonedBuildType.minifyEnabled = buildType.isMinifyEnabled();
-        clonedBuildType.zipAlign = buildType.isZipAlign();
+        clonedBuildType.zipAlign = buildType.isZipAlignEnabled();
         clonedBuildType.embedMicroApp = buildType.isEmbedMicroApp();
 
         return clonedBuildType;
@@ -82,12 +82,12 @@ class BuildTypeImpl extends BaseConfigImpl implements BuildType, Serializable {
     }
 
     @Override
-    public boolean isJniDebugBuild() {
+    public boolean isJniDebuggable() {
         return jniDebugBuild;
     }
 
     @Override
-    public boolean isRenderscriptDebugBuild() {
+    public boolean isRenderscriptDebuggable() {
         return renderscriptDebugBuild;
     }
 
@@ -114,7 +114,7 @@ class BuildTypeImpl extends BaseConfigImpl implements BuildType, Serializable {
     }
 
     @Override
-    public boolean isZipAlign() {
+    public boolean isZipAlignEnabled() {
         return zipAlign;
     }
 

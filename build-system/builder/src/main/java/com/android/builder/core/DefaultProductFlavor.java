@@ -175,7 +175,7 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
 
     @Override
     @Nullable
-    public Boolean getRenderscriptSupportMode() {
+    public Boolean getRenderscriptSupportModeEnabled() {
         return mRenderscriptSupportMode;
     }
 
@@ -183,18 +183,31 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
      * Sets whether the renderscript code should be compiled in support mode to make it compatible
      * with older versions of Android.
      */
-    public void setRenderscriptSupportMode(Boolean renderscriptSupportMode) {
+    //public void setRenderscriptSupportMode(Boolean renderscriptSupportMode) {
+    //    mRenderscriptSupportMode = renderscriptSupportMode;
+    //}
+
+    /**
+     * Sets whether the renderscript code should be compiled in support mode to make it compatible
+     * with older versions of Android.
+     */
+    public void setRenderscriptSupportModeEnabled(Boolean renderscriptSupportMode) {
         mRenderscriptSupportMode = renderscriptSupportMode;
     }
 
     @Override
     @Nullable
-    public Boolean getRenderscriptNdkMode() {
+    public Boolean getRenderscriptNdkModeEnabled() {
         return mRenderscriptNdkMode;
     }
 
     /** Sets whether the renderscript code should be compiled to generate C/C++ bindings. */
-    public void setRenderscriptNdkMode(Boolean renderscriptNdkMode) {
+    //public void setRenderscriptNdkMode(Boolean renderscriptNdkMode) {
+    //    mRenderscriptNdkMode = renderscriptNdkMode;
+    //}
+
+    /** Sets whether the renderscript code should be compiled to generate C/C++ bindings. */
+    public void setRenderscriptNdkModeEnabled(Boolean renderscriptNdkMode) {
         mRenderscriptNdkMode = renderscriptNdkMode;
     }
 
@@ -324,11 +337,11 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
                 overlay.getRenderscriptTargetApi(),
                 base.getRenderscriptTargetApi());
         flavor.mRenderscriptSupportMode = chooseNotNull(
-                overlay.getRenderscriptSupportMode(),
-                base.getRenderscriptSupportMode());
+                overlay.getRenderscriptSupportModeEnabled(),
+                base.getRenderscriptSupportModeEnabled());
         flavor.mRenderscriptNdkMode = chooseNotNull(
-                overlay.getRenderscriptNdkMode(),
-                base.getRenderscriptNdkMode());
+                overlay.getRenderscriptNdkModeEnabled(),
+                base.getRenderscriptNdkModeEnabled());
 
         flavor.mVersionCode = chooseNotNull(overlay.getVersionCode(), base.getVersionCode());
         flavor.mVersionName = chooseNotNull(overlay.getVersionName(), base.getVersionName());
@@ -388,8 +401,8 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
         flavor.mTargetSdkVersion = productFlavor.getTargetSdkVersion();
         flavor.mMaxSdkVersion = productFlavor.getMaxSdkVersion();
         flavor.mRenderscriptTargetApi = productFlavor.getRenderscriptTargetApi();
-        flavor.mRenderscriptSupportMode = productFlavor.getRenderscriptSupportMode();
-        flavor.mRenderscriptNdkMode = productFlavor.getRenderscriptNdkMode();
+        flavor.mRenderscriptSupportMode = productFlavor.getRenderscriptSupportModeEnabled();
+        flavor.mRenderscriptNdkMode = productFlavor.getRenderscriptNdkModeEnabled();
 
         flavor.mVersionCode = productFlavor.getVersionCode();
         flavor.mVersionName = productFlavor.getVersionName();

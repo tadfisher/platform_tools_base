@@ -184,14 +184,14 @@ public class BuildTypeDsl extends DefaultBuildType implements Serializable {
     }
 
     public BuildType setRunProguard(boolean enabled) {
-        logger.warn("WARNING: runProguard is deprecated (and will soon stop working); change to \"minifyEnabled\" instead");
+        warn("WARNING: runProguard is deprecated (and will soon stop working); change to \"minifyEnabled\" instead");
         return setMinifyEnabled(enabled)
     }
 
     /** Package name suffix applied to this build type. */
     @NonNull
     public BuildType setPackageNameSuffix(@Nullable String packageNameSuffix) {
-        logger.warn("WARNING: packageNameSuffix is deprecated (and will soon stop working); change to \"applicationIdSuffix\" instead");
+        warn("WARNING: packageNameSuffix is deprecated (and will soon stop working); change to \"applicationIdSuffix\" instead");
         return setApplicationIdSuffix(packageNameSuffix);
     }
 
@@ -202,7 +202,12 @@ public class BuildTypeDsl extends DefaultBuildType implements Serializable {
 
     @Nullable
     public String getPackageNameSuffix() {
-        logger.warn("WARNING: packageNameSuffix is deprecated (and will soon stop working); change to \"applicationIdSuffix\" instead");
+        warn("WARNING: packageNameSuffix is deprecated (and will soon stop working); change to \"applicationIdSuffix\" instead");
         return getApplicationIdSuffix();
+    }
+
+    @Override
+    protected void warn(String message) {
+        logger.warn(message);
     }
 }

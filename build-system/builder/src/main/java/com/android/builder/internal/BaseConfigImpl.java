@@ -134,6 +134,11 @@ public abstract class BaseConfigImpl implements Serializable, BaseConfig {
         mMultiDexEnabled = multiDex;
     }
 
+    //@Deprecated
+    //public void setMultiDex(@Nullable Boolean multiDex) {
+    //    mMultiDex = multiDex;
+    //}
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
