@@ -71,7 +71,12 @@ public class VariantConfigurationTest extends TestCase {
     protected void setUp() throws Exception {
         mDefaultConfig = new DefaultProductFlavor("main");
         mFlavorConfig = new DefaultProductFlavor("flavor");
-        mBuildType = new DefaultBuildType("debug");
+        mBuildType = new DefaultBuildType("debug") {
+            @Override
+            protected void warn(String message) {
+                fail(message);
+            }
+        };
     }
 
     public void testPackageOverrideNone() {

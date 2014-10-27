@@ -23,14 +23,14 @@ import com.android.builder.model.BuildType;
 import com.android.builder.model.SigningConfig;
 import com.google.common.base.Objects;
 
-public class DefaultBuildType extends BaseConfigImpl implements BuildType {
+public abstract class DefaultBuildType extends BaseConfigImpl implements BuildType {
     private static final long serialVersionUID = 1L;
 
     private final String mName;
     private boolean mDebuggable = false;
     private boolean mTestCoverageEnabled = false;
-    private boolean mJniDebugBuild = false;
-    private boolean mRenderscriptDebugBuild = false;
+    private boolean mJniDebuggable = false;
+    private boolean mRenderscriptDebuggable = false;
     private int mRenderscriptOptimLevel = 3;
     private String mApplicationIdSuffix = null;
     private String mVersionNameSuffix = null;
@@ -49,13 +49,13 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
 
         setDebuggable(that.isDebuggable());
         setTestCoverageEnabled(that.isTestCoverageEnabled());
-        setJniDebugBuild(that.isJniDebugBuild());
-        setRenderscriptDebugBuild(that.isRenderscriptDebugBuild());
+        setJniDebuggable(that.isJniDebuggable());
+        setRenderscriptDebuggable(that.isRenderscriptDebuggable());
         setRenderscriptOptimLevel(that.getRenderscriptOptimLevel());
         setApplicationIdSuffix(that.getApplicationIdSuffix());
         setVersionNameSuffix(that.getVersionNameSuffix());
         setMinifyEnabled(that.isMinifyEnabled() );
-        setZipAlign(that.isZipAlign());
+        setZipAlignEnabled(that.isZipAlignEnabled());
         setSigningConfig(that.getSigningConfig());
         setEmbedMicroApp(that.isEmbedMicroApp());
 
@@ -95,25 +95,43 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
      */
     @NonNull
     public BuildType setJniDebugBuild(boolean jniDebugBuild) {
-        mJniDebugBuild = jniDebugBuild;
+        warn("WARNING: jniDebugBuild is deprecated (and will soon stop working); change to \"jniDebuggable\" instead");
+        mJniDebuggable = jniDebugBuild;
+        return this;
+    }
+
+    /**
+     * Whether this build type is configured to generate an APK with debuggable native code.
+     */
+    @NonNull
+    public BuildType setJniDebuggable(boolean jniDebugBuild) {
+        mJniDebuggable = jniDebugBuild;
         return this;
     }
 
     @Override
-    public boolean isJniDebugBuild() {
-        return mJniDebugBuild;
-    }
-
-    @Override
-    public boolean isRenderscriptDebugBuild() {
-        return mRenderscriptDebugBuild;
+    public boolean isJniDebuggable() {
+        return mJniDebuggable;
     }
 
     /**
      * Whether the build type is configured to generate an apk with debuggable RenderScript code.
      */
     public void setRenderscriptDebugBuild(boolean renderscriptDebugBuild) {
-        mRenderscriptDebugBuild = renderscriptDebugBuild;
+        warn("WARNING: renderscriptDebugBuilder is deprecated (and will soon stop working); change to \"renderscriptDebuggable\" instead");
+        mRenderscriptDebuggable = renderscriptDebugBuild;
+    }
+
+    @Override
+    public boolean isRenderscriptDebuggable() {
+        return mRenderscriptDebuggable;
+    }
+
+    /**
+     * Whether the build type is configured to generate an apk with debuggable RenderScript code.
+     */
+    public void setRenderscriptDebuggable(boolean renderscriptDebugBuild) {
+        mRenderscriptDebuggable = renderscriptDebugBuild;
     }
 
     @Override
@@ -169,12 +187,19 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
     /** Whether zipalign is enabled for this build type. */
     @NonNull
     public BuildType setZipAlign(boolean zipAlign) {
+        warn("WARNING: zipAlign is deprecated (and will soon stop working); change to \"zipAlignEnabled\" instead");
+        return setZipAlignEnabled(zipAlign);
+    }
+
+    /** Whether zipalign is enabled for this build type. */
+    @NonNull
+    public BuildType setZipAlignEnabled(boolean zipAlign) {
         mZipAlign = zipAlign;
         return this;
     }
 
     @Override
-    public boolean isZipAlign() {
+    public boolean isZipAlignEnabled() {
         return mZipAlign;
     }
 
@@ -211,8 +236,8 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
         if (!mName.equals(buildType.mName)) return false;
         if (mDebuggable != buildType.mDebuggable) return false;
         if (mTestCoverageEnabled != buildType.mTestCoverageEnabled) return false;
-        if (mJniDebugBuild != buildType.mJniDebugBuild) return false;
-        if (mRenderscriptDebugBuild != buildType.mRenderscriptDebugBuild) return false;
+        if (mJniDebuggable != buildType.mJniDebuggable) return false;
+        if (mRenderscriptDebuggable != buildType.mRenderscriptDebuggable) return false;
         if (mRenderscriptOptimLevel != buildType.mRenderscriptOptimLevel) return false;
         if (mMinifyEnabled != buildType.mMinifyEnabled) return false;
         if (mZipAlign != buildType.mZipAlign) return false;
@@ -233,14 +258,17 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
         return true;
     }
 
+    // warn the user
+    protected abstract void warn(String message);
+
     @Override
     public int hashCode() {
         int result = super.hashCode();
         result = 31 * result + (mName.hashCode());
         result = 31 * result + (mDebuggable ? 1 : 0);
         result = 31 * result + (mTestCoverageEnabled ? 1 : 0);
-        result = 31 * result + (mJniDebugBuild ? 1 : 0);
-        result = 31 * result + (mRenderscriptDebugBuild ? 1 : 0);
+        result = 31 * result + (mJniDebuggable ? 1 : 0);
+        result = 31 * result + (mRenderscriptDebuggable ? 1 : 0);
         result = 31 * result + mRenderscriptOptimLevel;
         result = 31 * result + (mApplicationIdSuffix != null ? mApplicationIdSuffix.hashCode() : 0);
         result = 31 * result + (mVersionNameSuffix != null ? mVersionNameSuffix.hashCode() : 0);
@@ -258,8 +286,8 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
                 .add("name", mName)
                 .add("debuggable", mDebuggable)
                 .add("testCoverageEnabled", mTestCoverageEnabled)
-                .add("jniDebugBuild", mJniDebugBuild)
-                .add("renderscriptDebugBuild", mRenderscriptDebugBuild)
+                .add("jniDebugBuild", mJniDebuggable)
+                .add("renderscriptDebugBuild", mRenderscriptDebuggable)
                 .add("renderscriptOptimLevel", mRenderscriptOptimLevel)
                 .add("applicationIdSuffix", mApplicationIdSuffix)
                 .add("versionNameSuffix", mVersionNameSuffix)
