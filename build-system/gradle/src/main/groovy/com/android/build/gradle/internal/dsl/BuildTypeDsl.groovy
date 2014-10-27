@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.dsl
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable
 import com.android.annotations.VisibleForTesting
+import com.android.build.gradle.BasePlugin
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.DefaultBuildType
@@ -184,14 +185,14 @@ public class BuildTypeDsl extends DefaultBuildType implements Serializable {
     }
 
     public BuildType setRunProguard(boolean enabled) {
-        logger.warn("WARNING: runProguard is deprecated (and will soon stop working); change to \"minifyEnabled\" instead");
+        BasePlugin.displayDeprecationWarning(logger, project, "WARNING: runProguard is deprecated (and will soon stop working); change to \"minifyEnabled\" instead");
         return setMinifyEnabled(enabled)
     }
 
     /** Package name suffix applied to this build type. */
     @NonNull
     public BuildType setPackageNameSuffix(@Nullable String packageNameSuffix) {
-        logger.warn("WARNING: packageNameSuffix is deprecated (and will soon stop working); change to \"applicationIdSuffix\" instead");
+        BasePlugin.displayDeprecationWarning(logger, project, "WARNING: packageNameSuffix is deprecated (and will soon stop working); change to \"applicationIdSuffix\" instead");
         return setApplicationIdSuffix(packageNameSuffix);
     }
 
@@ -202,7 +203,31 @@ public class BuildTypeDsl extends DefaultBuildType implements Serializable {
 
     @Nullable
     public String getPackageNameSuffix() {
-        logger.warn("WARNING: packageNameSuffix is deprecated (and will soon stop working); change to \"applicationIdSuffix\" instead");
+        BasePlugin.displayDeprecationWarning(logger, project, "WARNING: packageNameSuffix is deprecated (and will soon stop working); change to \"applicationIdSuffix\" instead");
         return getApplicationIdSuffix();
+    }
+
+    /**
+     * Whether this build type is configured to generate an APK with debuggable native code.
+     */
+    @NonNull
+    public BuildType setJniDebugBuild(boolean jniDebugBuild) {
+        BasePlugin.displayDeprecationWarning(logger, project, "WARNING: jniDebugBuild is deprecated (and will soon stop working); change to \"jniDebuggable\" instead");
+        return super.setJniDebuggable(jniDebugBuild);
+    }
+
+    /**
+     * Whether the build type is configured to generate an apk with debuggable RenderScript code.
+     */
+    public BuildType setRenderscriptDebugBuild(boolean renderscriptDebugBuild) {
+        BasePlugin.displayDeprecationWarning(logger, project, "WARNING: renderscriptDebugBuild is deprecated (and will soon stop working); change to \"renderscriptDebuggable\" instead");
+        return setRenderscriptDebuggable(renderscriptDebugBuild);
+    }
+
+    /** Whether zipalign is enabled for this build type. */
+    @NonNull
+    public BuildType setZipAlign(boolean zipAlign) {
+        BasePlugin.displayDeprecationWarning(logger, project, "WARNING: zipAlign is deprecated (and will soon stop working); change to \"zipAlignEnabled\" instead");
+        return setZipAlignEnabled(zipAlign);
     }
 }

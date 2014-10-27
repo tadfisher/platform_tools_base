@@ -267,7 +267,7 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
             // for the other, there's no duplicate so no issue.
             sourceList.add(generateBuildConfigTask.getSourceOutputDir());
             sourceList.add(aidlCompileTask.getSourceOutputDir());
-            if (!variantConfiguration.getRenderscriptNdkMode()) {
+            if (!variantConfiguration.getRenderscriptNdkModeEnabled()) {
                 sourceList.add(renderscriptCompileTask.getSourceOutputDir());
             }
 
@@ -305,7 +305,7 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
             sourceFolders.add(sourceFolder);
         }
 
-        if (!variantConfiguration.getRenderscriptNdkMode()) {
+        if (!variantConfiguration.getRenderscriptNdkModeEnabled()) {
             sourceFolder = renderscriptCompileTask.getSourceOutputDir();
             if (sourceFolder.isDirectory()) {
                 sourceFolders.add(sourceFolder);
