@@ -29,8 +29,8 @@ import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.GroupableProductFlavor;
-import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
+import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.api.TestVariantImpl;
 import com.android.build.gradle.internal.api.TestedVariant;
 import com.android.build.gradle.internal.api.VariantFilterImpl;
@@ -49,14 +49,12 @@ import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.model.BuildType;
-import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import org.gradle.api.GradleException;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -227,7 +225,6 @@ public class VariantManager implements VariantModel {
     public void createTasksForVariantData(TaskContainer tasks, BaseVariantData variantData) {
         if (variantData.getVariantConfiguration().getType()
                 == GradleVariantConfiguration.Type.TEST) {
-            ProductFlavorData defaultConfigData = basePlugin.getDefaultConfigData();
             GradleVariantConfiguration testVariantConfig = variantData.getVariantConfiguration();
             BaseVariantData testedVariantData = (BaseVariantData) ((TestVariantData) variantData)
                     .getTestedVariantData();
@@ -403,7 +400,7 @@ public class VariantManager implements VariantModel {
         }
 
         // now add the defaultConfig
-        variantProviders.add(basePlugin.getDefaultConfigData().getMainProvider());
+        variantProviders.add(defaultConfigData.getMainProvider());
 
         // Create variant source sets if necessary.
         NamedDomainObjectContainer<AndroidSourceSet> sourceSetsContainer = extension
@@ -437,6 +434,13 @@ public class VariantManager implements VariantModel {
                 variantFactory.isLibrary(),
                 variantProviders.toArray(new ConfigurationProvider[variantProviders.size()]));
         variantData.setVariantDependency(variantDep);
+
+        if (variantConfig.isMultiDexEnabled() && variantConfig.isLegacyMultiDexMode()) {
+            project.getDependencies().add(
+                    variantDep.getCompileConfiguration().getName(), "com.android.support:multidex:1.0.0");
+            project.getDependencies().add(
+                    variantDep.getPackageConfiguration().getName(), "com.android.support:multidex:1.0.0");
+        }
 
         basePlugin.resolveDependencies(variantDep);
         variantConfig.setDependencies(variantDep);
