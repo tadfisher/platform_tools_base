@@ -27,6 +27,9 @@ import com.google.android.gms.plus.Plus;
 <#if includeWallet>
 import com.google.android.gms.wallet.Wallet;
 </#if>
+<#if includeCloudSave>
+import com.google.android.gms.cloudsave.CloudSaveManager;
+</#if>
 
 public class ${activityClass} extends Activity implements
         GoogleApiClient.ConnectionCallbacks,
@@ -47,13 +50,13 @@ public class ${activityClass} extends Activity implements
     private GoogleApiClient mGoogleApiClient;
 
     /**
-     * Determines if the client is in a resolution state, and
-     * waiting for resolution intent to return.
+     * Used to determine if the client is currently in a resolution state or is
+     * waiting for a resolution intent to return.
      */
     private boolean mIsInResolution;
 
     /**
-     * Called when the activity is starting. Restores the activity state.
+     * Called when the activity is created. Restores any activity state, if it exists.
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,10 +68,10 @@ public class ${activityClass} extends Activity implements
 
     /**
      * Called when the Activity is made visible.
-     * A connection to Play Services need to be initiated as
+     * A connection to Play Services needs to be initiated as
      * soon as the activity is visible. Registers {@code ConnectionCallbacks}
      * and {@code OnConnectionFailedListener} on the
-     * activities itself.
+     * activity itself.
      */
     @Override
     protected void onStart() {
@@ -90,6 +93,9 @@ public class ${activityClass} extends Activity implements
                     <#if includeWallet>
                     .addApi(Wallet.API)
                     </#if>
+                    <#if includeCloudSave>
+                    .addApi(CloudSaveManager.API)
+                    </#if>
                     <#if includeDrive>
                     .addScope(Drive.SCOPE_FILE)
                     </#if>
@@ -98,6 +104,9 @@ public class ${activityClass} extends Activity implements
                     </#if>
                     <#if includePlus>
                     .addScope(Plus.SCOPE_PLUS_LOGIN)
+                    </#if>
+                    <#if includeCloudSave>
+                    .addScope(CloudSaveManager.SCOPE_CLOUD_SAVE)
                     </#if>
                     // Optionally, add additional APIs and scopes if required.
                     .addConnectionCallbacks(this)
@@ -108,8 +117,8 @@ public class ${activityClass} extends Activity implements
     }
 
     /**
-     * Called when activity gets invisible. Connection to Play Services needs to
-     * be disconnected as soon as an activity is invisible.
+     * Called when the activity is no longer visible. Connection to Play Services needs to
+     * be disconnected as soon as an activity is no longer visible.
      */
     @Override
     protected void onStop() {
@@ -149,12 +158,27 @@ public class ${activityClass} extends Activity implements
     }
 
     /**
-     * Called when {@code mGoogleApiClient} is connected.
+     * Called when the {@code mGoogleApiClient} is connected.
      */
     @Override
     public void onConnected(Bundle connectionHint) {
         Log.i(TAG, "GoogleApiClient connected");
+    <#if includeCloudSave>
+        // TODO 1: Before you use the Cloud Save API, you need to obtain a client ID for your Android app in Google Developers Console.
+        // To get a client ID, follow this link, follow the directions and press "Create" at the end:
+        //   https://console.developers.google.com/flows/enableapi?apiid=datastoremobile&keyType=CLIENT_SIDE_ANDROID&r=${debugKeystoreSha1}%3B${packageName}&project=${cloudsaveProjectID}
+        //
+        // TODO 2: Once you have registered the client ID, you need to create a consent screen in Google Developers Console.
+        // To create a consent screen, follow this link, supply your email address and product name (the other fields in the dialog are optional) and click "Save".
+        //   https://console.developers.google.com/project/${cloudsaveProjectID}/apiui/consent
+        //
+        // TODO 3: Start making API requests.
+        //
+        // To resolve merge conflicts manually, add a CloudSave ConflictResolutionService by selecting
+        // New->Google->CloudSave ConflictResolutionService
+    <#else>
         // TODO: Start making API requests.
+    </#if>
     }
 
     /**
@@ -167,7 +191,7 @@ public class ${activityClass} extends Activity implements
     }
 
     /**
-     * Called when {@code mGoogleApiClient} is trying to connect but failed.
+     * Called when {@code mGoogleApiClient} has failed to connect.
      * Handle {@code result.getResolution()} if there is a resolution
      * available.
      */
@@ -186,7 +210,7 @@ public class ${activityClass} extends Activity implements
             return;
         }
         // If there is an existing resolution error being displayed or a resolution
-        // activity has started before, do nothing and wait for resolution
+        // activity has already been started, do nothing and wait for resolution
         // progress to be completed.
         if (mIsInResolution) {
             return;

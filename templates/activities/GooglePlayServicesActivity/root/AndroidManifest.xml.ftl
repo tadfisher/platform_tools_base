@@ -19,6 +19,15 @@
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
-    </application>
 
+        <#if includeCloudSave>
+        <meta-data
+            android:name="com.google.android.gms.cloudsave.PROJECT_ID"
+            android:value="@string/projectid" />
+        </#if>
+    </application>
+    <#if includeCloudSave>
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    </#if>
 </manifest>
