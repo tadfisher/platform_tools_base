@@ -282,6 +282,12 @@ public class RenderSession {
     }
 
     /**
+     * Forces the invalidation of the current view measured sizes. This will cause the next render call
+     * to trigger another measurement of the layout.
+     */
+    public void invalidateRenderingSize() {}
+
+    /**
      * Discards the layout. No more actions can be called on this object.
      */
     public void dispose() {
