@@ -2068,7 +2068,7 @@ public abstract class BasePlugin {
         dexTask.conventionMapping.libraries = pcData.inputLibraries
     }
 
-    public PostCompilationData createJacocoTask(
+    public void createJacocoTask(
             @NonNull GradleVariantConfiguration config,
             @NonNull BaseVariantData variantData,
             @NonNull final PostCompilationData pcData) {
@@ -2088,28 +2088,23 @@ public abstract class BasePlugin {
         jacocoTask.dependsOn agentTask
 
         // update dependency.
-        PostCompilationData pcData2 = new PostCompilationData()
         optionalDependsOn(jacocoTask, pcData.classGeneratingTask)
-        pcData2.classGeneratingTask = Collections.singletonList(jacocoTask)
-        List<Object> libTasks = Lists.<Object> newArrayList(pcData.libraryGeneratingTask)
-        libTasks.add(agentTask)
-        pcData2.libraryGeneratingTask = libTasks
+        optionalDependsOn(jacocoTask, pcData.libraryGeneratingTask)
+        pcData.libraryGeneratingTask = pcData.classGeneratingTask = Collections.singletonList(jacocoTask)
 
         // update inputs
-        pcData2.inputFiles = {
+        pcData.inputFiles = {
             return project.files(jacocoTask.getOutputDir()).files
         }
-        pcData2.inputDir = {
+        pcData.inputDir = {
             return jacocoTask.getOutputDir()
         }
-        pcData2.inputLibraries = {
+        pcData.inputLibraries = {
             Set<File> set = Sets.newHashSet(pcData.inputLibraries.call())
             set.add(new File(agentTask.destinationDir, FILE_JACOCO_AGENT))
 
             return set
         }
-
-        return pcData
     }
 
     private static ProGuardTask createShrinkingProGuardTask(
