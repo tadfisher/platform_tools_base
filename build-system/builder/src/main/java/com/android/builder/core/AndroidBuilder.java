@@ -750,6 +750,30 @@ public class AndroidBuilder {
         return attributeInjection;
     }
 
+    public void createApkFromManifest(
+            @NonNull  File manifestFile,
+            boolean debuggable,
+            @NonNull AaptOptions options,
+            @NonNull String outputFile)
+            throws IOException, InterruptedException, LoggedErrorException {
+
+        _processResources(manifestFile,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                outputFile,
+                null,
+                null,
+                debuggable,
+                options,
+                ImmutableList.<String>of(),
+                false,
+                null);
+    }
+
     /**
      * Process the resources and generate R.java and/or the packaged resources.
      *
@@ -785,16 +809,50 @@ public class AndroidBuilder {
             @Nullable String symbolOutputDir,
             @Nullable String resPackageOutput,
             @Nullable String proguardOutput,
-                      VariantConfiguration.Type type,
-                      boolean debuggable,
+            VariantConfiguration.Type type,
+        boolean debuggable,
+        @NonNull  AaptOptions options,
+        @NonNull  Collection<String> resourceConfigs,
+        boolean enforceUniquePackageName,
+        @Nullable Collection<String> splits)
+        throws IOException, InterruptedException, LoggedErrorException {
+        checkNotNull(resFolder, "resFolder cannot be null.");
+        _processResources(manifestFile,
+                resFolder,
+                assetsDir,
+                libraries,
+                packageForR,
+                sourceOutputDir,
+                symbolOutputDir,
+                resPackageOutput,
+                proguardOutput,
+                type,
+                debuggable,
+                options,
+                resourceConfigs,
+                enforceUniquePackageName,
+                splits);
+    }
+
+    private void _processResources(
+            @NonNull  File manifestFile,
+            @Nullable  File resFolder,
+            @Nullable File assetsDir,
+            @Nullable  List<? extends SymbolFileProvider> libraries,
+            @Nullable String packageForR,
+            @Nullable String sourceOutputDir,
+            @Nullable String symbolOutputDir,
+            @Nullable String resPackageOutput,
+            @Nullable String proguardOutput,
+            VariantConfiguration.Type type,
+            boolean debuggable,
             @NonNull  AaptOptions options,
             @NonNull  Collection<String> resourceConfigs,
-                      boolean enforceUniquePackageName,
+            boolean enforceUniquePackageName,
             @Nullable Collection<String> splits)
             throws IOException, InterruptedException, LoggedErrorException {
 
         checkNotNull(manifestFile, "manifestFile cannot be null.");
-        checkNotNull(resFolder, "resFolder cannot be null.");
         checkNotNull(options, "options cannot be null.");
         // if both output types are empty, then there's nothing to do and this is an error
         checkArgument(sourceOutputDir != null || resPackageOutput != null,
@@ -833,7 +891,7 @@ public class AndroidBuilder {
         command.add("-M");
         command.add(manifestFile.getAbsolutePath());
 
-        if (resFolder.isDirectory()) {
+        if (resFolder!= null && resFolder.isDirectory()) {
             command.add("-S");
             command.add(resFolder.getAbsolutePath());
         }
@@ -1624,7 +1682,7 @@ public class AndroidBuilder {
      */
     public void packageApk(
             @NonNull String androidResPkgLocation,
-            @NonNull File dexFolder,
+            @Nullable File dexFolder,
             @Nullable Collection<File> dexedLibraries,
             @NonNull Collection<File> packagedJars,
             @Nullable String javaResourcesLocation,
@@ -1637,8 +1695,6 @@ public class AndroidBuilder {
             throws DuplicateFileException, FileNotFoundException,
             KeytoolException, PackagerException, SigningException {
         checkNotNull(androidResPkgLocation, "androidResPkgLocation cannot be null.");
-        checkNotNull(dexFolder, "dexFolder cannot be null.");
-        checkArgument(dexFolder.isDirectory(), "dexFolder is not a directory");
         checkNotNull(outApkLocation, "outApkLocation cannot be null.");
 
         CertificateInfo certificateInfo = null;
@@ -1654,8 +1710,16 @@ public class AndroidBuilder {
 
         try {
             Packager packager = new Packager(
-                    outApkLocation, androidResPkgLocation, dexFolder,
+                    outApkLocation, androidResPkgLocation,
                     certificateInfo, mCreatedBy, packagingOptions, mLogger);
+
+            // add dex folder to the apk root.
+            if (dexFolder != null) {
+                if (!dexFolder.isDirectory()) {
+                    throw new IllegalArgumentException("dexFolder must be a directory");
+                }
+                packager.addDexFolder(dexFolder);
+            }
 
             if (dexedLibraries != null) {
                 for (File dexedLibrary : dexedLibraries) {
