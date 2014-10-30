@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks
 import com.android.build.gradle.internal.dependency.SymbolFileProviderImpl
 import com.android.build.gradle.internal.dsl.AaptOptionsImpl
 import com.android.build.gradle.internal.tasks.IncrementalTask
+import com.android.builder.core.AaptPackageCommandBuilder
 import com.android.builder.core.VariantConfiguration
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
@@ -87,22 +88,24 @@ public class ProcessAndroidResources extends IncrementalTask {
         }
 
         File resOutBaseNameFile = getPackageOutputFile()
+        AaptPackageCommandBuilder aaptPackageCommandBuilder =
+                new AaptPackageCommandBuilder(getManifestFile(), getAaptOptions())
+                    .setAssetsFolder(getAssetsDir())
+                    .setResFolder(getResDir())
+                    .setLibraries(getLibraries())
+                    .setPackageForR(getPackageForR())
+                    .setSourceOutputDir(srcOut?.absolutePath)
+                    .setSymbolOutputDir(getTextSymbolOutputDir()?.absolutePath)
+                    .setResPackageOutput(resOutBaseNameFile?.absolutePath)
+                    .setProguardOutput(getProguardOutputFile()?.absolutePath)
+                    .setType(getType())
+                    .setDebuggable(getDebuggable())
+                    .setResourceConfigs(getResourceConfigs())
+                    .setSplits(getSplits())
+
         getBuilder().processResources(
-                getManifestFile(),
-                getResDir(),
-                getAssetsDir(),
-                getLibraries(),
-                getPackageForR(),
-                srcOut?.absolutePath,
-                getTextSymbolOutputDir()?.absolutePath,
-                resOutBaseNameFile?.absolutePath,
-                getProguardOutputFile()?.absolutePath,
-                getType(),
-                getDebuggable(),
-                getAaptOptions(),
-                getResourceConfigs(),
+                aaptPackageCommandBuilder,
                 getEnforceUniquePackageName(),
-                getSplits()
         )
     }
 }
