@@ -97,7 +97,7 @@ public class DependencyHelper {
         public void processLibrary(String libRootPath, IPropertySource properties) {
             // get the library output
             // FIXME: support renamed folder.
-            mJars.add(new File(libRootPath + "/" + SdkConstants.FD_OUTPUT +
+            mJars.add(new File(libRootPath + "/" + DependencyHelper.getOutDir(properties) +
                     "/" + SdkConstants.FN_CLASSES_JAR));
 
             // Get the 3rd party jar files.
@@ -298,7 +298,7 @@ public class DependencyHelper {
         }
     }
 
-    private static String getOutDir(IPropertySource properties) {
+    public static String getOutDir(IPropertySource properties) {
         String bin = properties.getProperty("out.dir");
         if (bin == null) {
             return SdkConstants.FD_OUTPUT;

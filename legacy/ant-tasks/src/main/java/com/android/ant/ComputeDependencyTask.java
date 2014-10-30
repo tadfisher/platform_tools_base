@@ -174,7 +174,7 @@ public class ComputeDependencyTask extends GetLibraryPathTask {
                 // get the res path. $PROJECT/res as well as the crunch cache.
                 // FIXME: support renamed folders.
                 element = resFolderPath.createPathElement();
-                element.setPath(libRootPath + '/' + SdkConstants.FD_OUTPUT +
+                element.setPath(libRootPath + '/' + DependencyHelper.getOutDir(properties) +
                         '/' + SdkConstants.FD_RES);
                 element = resFolderPath.createPathElement();
                 element.setPath(libRootPath + '/' + SdkConstants.FD_RESOURCES);
@@ -187,7 +187,7 @@ public class ComputeDependencyTask extends GetLibraryPathTask {
                 // get the bin/aidl folder. $PROJECT/bin/aidl for now
                 // FIXME: support renamed folder.
                 element = binAidlFolderPath.createPathElement();
-                element.setPath(libRootPath + '/' + SdkConstants.FD_OUTPUT +
+                element.setPath(libRootPath + '/' + DependencyHelper.getOutDir(properties) +
                         '/' + SdkConstants.FD_AIDL);
 
                 // get the package from the manifest.
@@ -204,7 +204,7 @@ public class ComputeDependencyTask extends GetLibraryPathTask {
                         // This must be in sync with the package list.
                         // FIXME: support renamed folder.
                         element = rFilePath.createPathElement();
-                        element.setPath(libRootPath + "/" + SdkConstants.FD_OUTPUT +
+                        element.setPath(libRootPath + "/" + DependencyHelper.getOutDir(properties) +
                                 "/" + "R.txt");
 
                     }
