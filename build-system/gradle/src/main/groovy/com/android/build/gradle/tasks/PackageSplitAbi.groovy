@@ -20,9 +20,11 @@ import com.android.annotations.NonNull
 import com.android.build.FilterData
 import com.android.build.OutputFile
 import com.android.build.gradle.api.ApkOutputFile
+import com.android.build.gradle.internal.dsl.PackagingOptionsImpl
 import com.android.build.gradle.internal.dsl.SigningConfigDsl
 import com.android.build.gradle.internal.tasks.BaseTask
 import com.google.common.collect.ImmutableList
+import com.google.common.collect.ImmutableSet
 import com.google.common.util.concurrent.Callables
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Nested
@@ -34,9 +36,9 @@ import java.util.regex.Matcher
 import java.util.regex.Pattern
 
 /**
- * Package each split resources into a specific signed apk file.
+ * Package a abi dimension specific split APK
  */
-class PackageSplitRes extends BaseTask {
+class PackageSplitAbi extends BaseTask {
 
     ImmutableList<ApkOutputFile> mOutputFiles;
 
@@ -52,8 +54,17 @@ class PackageSplitRes extends BaseTask {
     @Input
     String outputBaseName
 
+    @Input
+    boolean jniDebuggable
+
     @Nested @Optional
     SigningConfigDsl signingConfig
+
+    @Nested
+    PackagingOptionsImpl packagingOptions
+
+    @Input
+    Collection<File> jniFolders;
 
     @NonNull
     public synchronized  ImmutableList<ApkOutputFile> getOutputSplitFiles() {
@@ -62,14 +73,14 @@ class PackageSplitRes extends BaseTask {
             ImmutableList.Builder<ApkOutputFile> builder = ImmutableList.builder();
             if (outputDirectory.exists() && outputDirectory.listFiles().length > 0) {
                 final Pattern pattern = Pattern.compile(
-                        "${project.archivesBaseName}-${outputBaseName}-([h|x|d|p|i|m]*)(.*)")
+                        "${project.archivesBaseName}-${outputBaseName}-(.*)")
                 for (File file : outputDirectory.listFiles()) {
                     Matcher matcher = pattern.matcher(file.getName());
-                    if (matcher.matches()) {
+                    if (matcher.matches() && isAbiSplit(file.getName())) {
                         builder.add(new ApkOutputFile(
                                 OutputFile.OutputType.SPLIT,
                                 ImmutableList.<FilterData> of(FilterData.Builder.build(
-                                        OutputFile.DENSITY,
+                                        OutputFile.ABI,
                                         matcher.group(1))),
                                 Callables.returning(file)));
                     }
@@ -82,7 +93,7 @@ class PackageSplitRes extends BaseTask {
                     ApkOutputFile apkOutput = new ApkOutputFile(
                             OutputFile.OutputType.SPLIT,
                             ImmutableList.<FilterData>of(
-                                    FilterData.Builder.build(OutputFile.DENSITY,
+                                    FilterData.Builder.build(OutputFile.ABI,
                                             "${project.archivesBaseName}-${outputBaseName}-${split}")),
                             Callables.returning(new File(outputDirectory, split)))
                     builder.add(apkOutput)
@@ -93,19 +104,28 @@ class PackageSplitRes extends BaseTask {
         return mOutputFiles;
     }
 
+    private boolean isAbiSplit(String fileName) {
+        for (String abi : splits) {
+            if (fileName.contains(abi)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @TaskAction
     protected void doFullTaskAction() {
 
         // resources- and .ap_ should be shared in a setting somewhere. see BasePlugin:1206
         final Pattern pattern = Pattern.compile(
-                "resources-${outputBaseName}.ap__([h|x|d|p|i|m]*)(.*)")
+                "resources-${outputBaseName}-(.*).ap_")
         for (File file : inputDirectory.listFiles()) {
             Matcher matcher = pattern.matcher(file.getName());
             if (matcher.matches()) {
                 ApkOutputFile outputFile = new ApkOutputFile(
                         OutputFile.OutputType.SPLIT,
                         ImmutableList.<FilterData> of(FilterData.Builder.build(
-                                OutputFile.DENSITY,
+                                OutputFile.ABI,
                                 matcher.group(1))),
                         Callables.returning(file));
 
@@ -116,7 +136,18 @@ class PackageSplitRes extends BaseTask {
                         : "-unaligned.apk")
 
                 File outFile = new File(outputDirectory, apkName);
-                getBuilder().signApk(outputFile.getOutputFile(), signingConfig, outFile)
+                getBuilder().packageApk(
+                        file.absolutePath,
+                        null, /* dexFolder */
+                        null, /* dexedLibraries */
+                        ImmutableList.of(),
+                        null, /* getJavaResourceDir */
+                        getJniFolders(),
+                        ImmutableSet.of(matcher.group(1)),
+                        getJniDebuggable(),
+                        getSigningConfig(),
+                        getPackagingOptions(),
+                        outFile.absolutePath)
             }
         }
     }
