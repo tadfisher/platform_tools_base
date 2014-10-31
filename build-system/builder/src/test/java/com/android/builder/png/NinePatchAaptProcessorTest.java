@@ -91,7 +91,7 @@ public class NinePatchAaptProcessorTest extends BasePngTest {
 
     @NonNull
     protected File getAapt() {
-        return getAapt(FullRevision.parseRevision("20"));
+        return getAapt(FullRevision.parseRevision("21"));
     }
 
     @NonNull
@@ -131,7 +131,7 @@ public class NinePatchAaptProcessorTest extends BasePngTest {
             System.out.println(sourceAndCrunched.getKey().getName());
             File crunched = new File(sourceAndCrunched.getKey().getParent(), sourceAndCrunched.getKey().getName() + getControlFileSuffix());
 
-            //copyFile(sourceAndCrunched.getValue(), crunched);
+            copyFile(sourceAndCrunched.getValue(), crunched);
             Map<String, Chunk> testedChunks = compareChunks(crunched, sourceAndCrunched.getValue());
 
             try {
