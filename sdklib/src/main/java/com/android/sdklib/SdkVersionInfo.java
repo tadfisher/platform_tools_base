@@ -16,8 +16,10 @@
 package com.android.sdklib;
 
 import com.android.annotations.Nullable;
+import com.google.common.base.Strings;
 
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 /** Information about available SDK Versions */
 public class SdkVersionInfo {
@@ -40,6 +42,13 @@ public class SdkVersionInfo {
     * as the distribution of older platforms decreases.
     */
     public static final int LOWEST_ACTIVE_API = 8;
+
+    private static final Pattern ANDROID_VERSION_PATTERN =
+            Pattern.compile("^android-(\\d+)(\\.\\d+)*$");
+    private static final Pattern VENDOR_VERSION_PATTERN =
+            Pattern.compile("\\w+:\\w+:\\d+");
+    private static final Pattern FIRST_NUMBER =
+            Pattern.compile("\\d+");
 
     /**
      * Returns the Android version and code name of the given API level, or null
@@ -258,7 +267,7 @@ public class SdkVersionInfo {
     public static AndroidVersion getVersion(
             @Nullable String apiOrPreviewName,
             @Nullable IAndroidTarget[] targets) {
-        if (apiOrPreviewName == null || apiOrPreviewName.isEmpty()) {
+        if (Strings.isNullOrEmpty(apiOrPreviewName)) {
             return null;
         }
 
