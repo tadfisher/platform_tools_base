@@ -40,10 +40,14 @@ import com.android.builder.model.SigningConfig
 import com.android.builder.model.SourceProvider
 import com.android.builder.testing.api.DeviceProvider
 import com.android.builder.testing.api.TestServer
+import com.android.sdklib.SdkVersionInfo
 import com.android.sdklib.repository.FullRevision
 import com.android.utils.ILogger
+import com.google.common.base.CharMatcher
 import com.google.common.collect.Lists
 import org.gradle.api.Action
+import org.gradle.api.GradleException
+import org.gradle.api.JavaVersion
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ConfigurationContainer
@@ -80,7 +84,7 @@ public abstract class BaseExtension {
 
     private String defaultPublishConfig = "release"
     private boolean publishNonDefault = false
-
+    private boolean modifiedCompileOptions = false
     private boolean useNewNativePlugin = false
 
     private Closure<Void> variantFilter
@@ -170,6 +174,7 @@ public abstract class BaseExtension {
     void compileSdkVersion(String target) {
         plugin.checkTasksAlreadyCreated()
         this.target = target
+        updateLanguageLevel()
     }
 
     void compileSdkVersion(int apiLevel) {
@@ -250,6 +255,7 @@ public abstract class BaseExtension {
     void compileOptions(Action<CompileOptions> action) {
         plugin.checkTasksAlreadyCreated()
         action.execute(compileOptions)
+        modifiedCompileOptions = true
     }
 
     void packagingOptions(Action<PackagingOptionsImpl> action) {
@@ -447,5 +453,41 @@ public abstract class BaseExtension {
 
     public void setUseNewNativePlugin(boolean value) {
         useNewNativePlugin = value
+    }
+
+    /**
+     * Updates the language level based on the compile SDK version.
+     *
+     * @throws GradleException If the language level has already been set to a different value.
+     *         This is to prevent a situation where an explicit compileOptions {...} block is
+     *         silently overridden by this mechanism.
+     */
+    void updateLanguageLevel() {
+        def versionMatcher = /^android-(\d+)(\.\d+)*/
+        if (!compileSdkVersion.matches(versionMatcher)) {
+            logger.warning(
+                    "Can't determine language level based on compileSdkVersion '%s'",
+                    compileSdkVersion)
+            return
+        }
+
+        // Just extract the first number:
+        int majorVersion = (compileSdkVersion =~ versionMatcher)[0][1] as int
+
+        if (majorVersion >= 21) {
+            if (modifiedCompileOptions
+                    && (compileOptions.sourceCompatibility != JavaVersion.VERSION_1_7
+                    || compileOptions.targetCompatibility != JavaVersion.VERSION_1_7)) {
+                throw new GradleException("Setting compileSdkVersion to ${compileSdkVersion} " +
+                        "changes the language level to ${JavaVersion.VERSION_1_7}, which " +
+                        "would overwrite your settings. Please set the language level after " +
+                        "specifying the compileSdkVersion.")
+            }
+
+            compileOptions {
+                sourceCompatibility JavaVersion.VERSION_1_7
+                targetCompatibility JavaVersion.VERSION_1_7
+            }
+        }
     }
 }

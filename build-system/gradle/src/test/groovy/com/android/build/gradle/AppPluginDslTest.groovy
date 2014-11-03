@@ -19,6 +19,8 @@ import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.api.TestVariant
 import com.android.build.gradle.internal.test.BaseTest
+import org.gradle.api.GradleException
+import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 /**
@@ -325,6 +327,55 @@ public class AppPluginDslTest extends BaseTest {
         }
     }
 
+    public void testSettingLanguageLevelFromCompileSdk() {
+        def testLanguageLevel = { version, JavaVersion expectedLanguageLevel ->
+            Project project = ProjectBuilder.builder().withProjectDir(
+                    new File(testDir, "${FOLDER_TEST_REGULAR}/basic")).build()
+
+            project.apply plugin: 'com.android.application'
+            project.android {
+                compileSdkVersion version
+            }
+
+            AppPlugin plugin = project.plugins.getPlugin(AppPlugin)
+            plugin.createAndroidTasks(false)
+
+            assertEquals(
+                    "target compatibility for ${version}",
+                    expectedLanguageLevel,
+                    plugin.extension.compileOptions.targetCompatibility)
+            assertEquals(
+                    "source compatibility for ${version}",
+                    expectedLanguageLevel,
+                    plugin.extension.compileOptions.sourceCompatibility)
+        }
+
+        testLanguageLevel(15, JavaVersion.VERSION_1_6)
+        testLanguageLevel(21, JavaVersion.VERSION_1_7)
+        testLanguageLevel('android-21', JavaVersion.VERSION_1_7)
+        testLanguageLevel('android-21.1', JavaVersion.VERSION_1_7)
+        testLanguageLevel('android-19.1', JavaVersion.VERSION_1_6)
+    }
+
+    public void testSettingLanguageLevelFromCompileSdk_dontOverrideSilently() {
+        Project project = ProjectBuilder.builder().withProjectDir(
+                new File(testDir, "${FOLDER_TEST_REGULAR}/basic")).build()
+
+        project.apply plugin: 'com.android.application'
+        try {
+            project.android {
+                compileOptions {
+                    sourceCompatibility JavaVersion.VERSION_1_6
+                    targetCompatibility JavaVersion.VERSION_1_6
+                }
+                compileSdkVersion 21
+            }
+            fail("Should not silently override the compileOptions block.")
+        } catch (GradleException e) {
+            assertTrue e.message.contains("compileSdkVersion")
+            assertTrue e.message.contains("overwrite")
+        }
+    }
 
     private static void checkTestedVariant(@NonNull String variantName,
                                            @NonNull String testedVariantName,
