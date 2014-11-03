@@ -40,10 +40,14 @@ import com.android.builder.model.SigningConfig
 import com.android.builder.model.SourceProvider
 import com.android.builder.testing.api.DeviceProvider
 import com.android.builder.testing.api.TestServer
+import com.android.sdklib.SdkVersionInfo
 import com.android.sdklib.repository.FullRevision
 import com.android.utils.ILogger
+import com.google.common.base.CharMatcher
 import com.google.common.collect.Lists
 import org.gradle.api.Action
+import org.gradle.api.GradleException
+import org.gradle.api.JavaVersion
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ConfigurationContainer
@@ -80,7 +84,6 @@ public abstract class BaseExtension {
 
     private String defaultPublishConfig = "release"
     private boolean publishNonDefault = false
-
     private boolean useNewNativePlugin = false
 
     private Closure<Void> variantFilter
@@ -250,6 +253,7 @@ public abstract class BaseExtension {
     void compileOptions(Action<CompileOptions> action) {
         plugin.checkTasksAlreadyCreated()
         action.execute(compileOptions)
+        compileOptions.setExplicitly = true
     }
 
     void packagingOptions(Action<PackagingOptionsImpl> action) {
