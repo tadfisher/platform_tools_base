@@ -16,9 +16,12 @@
 
 package com.android.ddmlib;
 
+import com.android.annotations.Nullable;
 import com.android.ddmlib.log.LogReceiver;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -375,6 +378,16 @@ final class AdbHelper {
         TimeUnit maxTimeUnits) throws TimeoutException, AdbCommandRejectedException,
         ShellCommandUnresponsiveException, IOException {
 
+        executeRemoteCommand(adbSockAddr, command, device, rcvr, maxTimeToOutputResponse,
+                maxTimeUnits, null /* inputStream */);
+    }
+
+    static void executeRemoteCommand(InetSocketAddress adbSockAddr,
+            String command, IDevice device, IShellOutputReceiver rcvr, long maxTimeToOutputResponse,
+            TimeUnit maxTimeUnits,
+            @Nullable InputStream is) throws TimeoutException, AdbCommandRejectedException,
+            ShellCommandUnresponsiveException, IOException {
+
         long maxTimeToOutputMs = 0;
         if (maxTimeToOutputResponse > 0) {
             if (maxTimeUnits == null) {
@@ -405,7 +418,26 @@ final class AdbHelper {
             }
 
             byte[] data = new byte[16384];
+
+            // stream the input file if present.
+            if (is != null) {
+                int read;
+                while ((read = is.read(data)) != -1) {
+                    ByteBuffer buf = ByteBuffer.wrap(data, 0, read);
+                    int written = 0;
+                    while (buf.hasRemaining()) {
+                        written += adbChan.write(buf);
+                    }
+                    if (written != read) {
+                        Log.e("ddms",
+                                "ADB write inconsistency, wrote " + written + "expected " + read);
+                        throw new AdbCommandRejectedException("write failed");
+                    }
+                }
+            }
+
             ByteBuffer buf = ByteBuffer.wrap(data);
+            buf.clear();
             long timeToResponseCount = 0;
             while (true) {
                 int count;

@@ -119,7 +119,7 @@ public class SimpleTestCallable implements Callable<Boolean> {
             if (!testedApks.isEmpty()) {
                 logger.verbose("DeviceConnector '%s': installing %s", deviceName, Joiner.on(',').join(testedApks));
                 if (testedApks.size() > 1) {
-                    List<String> args = new ArrayList<String>();
+                    /** List<String> args = new ArrayList<String>();
                     args.add(adbExec.getAbsolutePath());
                     args.add("install-multiple");
                     args.add("-r");
@@ -145,7 +145,8 @@ public class SimpleTestCallable implements Callable<Boolean> {
                     } catch (InterruptedException e) {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
-                    }
+                    }*/
+                    device.installPackages(testedApks, timeout, logger);
                 } else {
                     device.installPackage(testedApks.get(0), timeout, logger);
                 }

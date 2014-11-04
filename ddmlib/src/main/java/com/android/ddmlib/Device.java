@@ -17,18 +17,28 @@
 package com.android.ddmlib;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.concurrency.GuardedBy;
 import com.android.ddmlib.log.LogReceiver;
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +50,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 
 /**
@@ -838,6 +850,191 @@ final class Device implements IDevice {
     }
 
     @Override
+    public boolean installPackages(List<String> apkFilePaths, int timeOut, boolean reinstall,
+            String... extraArgs) throws InstallException {
+
+        assert(!apkFilePaths.isEmpty());
+        String mainPackageFilePath = apkFilePaths.get(0);
+        Log.d(mainPackageFilePath,
+                String.format("Uploading main %1$s and %2$s split APKs onto device '%3$s'",
+                        mainPackageFilePath, Joiner.on(',').join(apkFilePaths),
+                        getSerialNumber()));
+
+        try {
+
+            String sessionId = createMultiInstallSession(apkFilePaths);
+            if (sessionId == null) {
+                Log.d(mainPackageFilePath, "Failed to establish session, quit installation");
+                return false;
+            }
+            Log.d(mainPackageFilePath, String.format("Established session id=%1$s", sessionId));
+
+            // now upload each APK in turn.
+            int index = 1;
+            boolean allUploadSucceeded = true;
+            for (String splitPackageFilePath : apkFilePaths) {
+                index++;
+                if (allUploadSucceeded) {
+                    allUploadSucceeded = uploadAPK(sessionId, splitPackageFilePath, index);
+                }
+            }
+            String command = allUploadSucceeded
+                    ? "pm install-commit " + sessionId
+                    : "pm install-abandon " + sessionId;
+            InstallReceiver receiver = new InstallReceiver();
+            executeShellCommand(command, receiver, timeOut);
+            String errorMessage = receiver.getErrorMessage();
+            if (errorMessage != null) {
+                Log.e(mainPackageFilePath, String.format("Failed to finalize session : %1$s", errorMessage));
+                return allUploadSucceeded;
+            } else {
+                return allUploadSucceeded;
+            }
+
+        } catch (TimeoutException e) {
+            Log.e(LOG_TAG, "Error during Sync: timeout.");
+            throw new InstallException(e);
+
+        } catch (IOException e) {
+            Log.e(LOG_TAG, String.format("Error during Sync: %1$s", e.getMessage()));
+            throw new InstallException(e);
+
+        } catch (AdbCommandRejectedException e) {
+            throw new InstallException(e);
+        } catch (ShellCommandUnresponsiveException e) {
+            Log.e(LOG_TAG, String.format("Error during shell execution: %1$s", e.getMessage()));
+            throw new InstallException(e);
+        }
+    }
+
+    private class MultiInstallReceiver extends MultiLineReceiver {
+
+        Pattern successPattern = Pattern.compile("Success: .*\\[(\\d*)\\]");
+
+        String sessionId = null;
+
+        @Override
+        public boolean isCancelled() {
+            return false;
+        }
+
+        @Override
+        public void processNewLines(String[] lines) {
+            for (String line : lines) {
+                Matcher matcher = successPattern.matcher(line);
+                if (matcher.matches()) {
+                    sessionId = matcher.group(1);
+                }
+            }
+
+        }
+
+        public String getSessionId() {
+            return sessionId;
+        }
+    }
+
+    @Nullable
+    private String createMultiInstallSession(List<String> apkFileNames)
+            throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
+            IOException {
+
+        List<File> apkFiles = Lists.transform(apkFileNames, new Function<String, File>() {
+            @Override
+            public File apply(String input) {
+                return new File(input);
+            }
+        });
+
+        long totalFileSize = 0L;
+        for (File apkFile : apkFiles) {
+            if (apkFile.exists() && apkFile.isFile()) {
+                totalFileSize += apkFile.length();
+            } else {
+                throw new IllegalArgumentException(apkFile.getAbsolutePath() + " is not a file");
+            }
+        }
+        MultiInstallReceiver receiver = new MultiInstallReceiver();
+        String cmd = String.format("pm install-create -S %1$d", totalFileSize);
+        executeShellCommand(cmd, receiver, DdmPreferences.getTimeOut());
+        return receiver.getSessionId();
+    }
+
+
+    private boolean uploadAPK(final String sessionId, String apkFilePath, int uniqueId) {
+        Log.d(sessionId, String.format("Uploading APK %1$s ", apkFilePath));
+        File fileToUpload = new File(apkFilePath);
+        if (!fileToUpload.exists()) {
+            Log.e(sessionId, String.format("File not found: %1$s", apkFilePath));
+            return false;
+        }
+        if (fileToUpload.isDirectory()) {
+            Log.e(sessionId, String.format("Directory upload not supported: %1$s", apkFilePath));
+            return false;
+        }
+        String command = String.format("pm install-write -S %d %s %d_%s -", fileToUpload.length(),
+                sessionId, uniqueId, fileToUpload.getName().substring(0, fileToUpload.getName().length() - 4));
+        Log.d(sessionId, String.format("Executing : %1$s", command));
+        InputStream inputStream = null;
+        try {
+            inputStream = new BufferedInputStream(new FileInputStream(fileToUpload));
+            // dump content, to make sure this is a Zip file.
+            ZipFile zipFile = new ZipFile(fileToUpload);
+            Enumeration<? extends ZipEntry> entries = zipFile.entries();
+            while (entries.hasMoreElements()) {
+                ZipEntry zipEntry = entries.nextElement();
+                System.out.println("in " + fileToUpload.getName() + " : " + zipEntry.getName());
+            }
+            zipFile.close();
+
+            final File tmpOut = File.createTempFile(fileToUpload.getName(), null);
+            System.out.println("dumping in " + tmpOut.getAbsolutePath());
+            final FileOutputStream fileOutputStream = new FileOutputStream(tmpOut);
+
+            IShellOutputReceiver receiver = new IShellOutputReceiver() {
+                @Override
+                public void addOutput(byte[] data, int offset, int length) {
+                    try {
+                        fileOutputStream.write(data, offset, length);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void flush() {
+                    try {
+                        fileOutputStream.flush();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public boolean isCancelled() {
+                    return false;
+                }
+            };
+            AdbHelper.executeRemoteCommand(AndroidDebugBridge.getSocketAddress(), command, this,
+                    receiver, DdmPreferences.getTimeOut(), TimeUnit.MILLISECONDS, inputStream);
+            fileOutputStream.close();
+            return true;
+        } catch (Exception e) {
+            Log.e(sessionId, e);
+            return false;
+        } finally {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    Log.e(sessionId, e);
+                }
+            }
+
+        }
+    }
+
+    @Override
     public String syncPackageToDevice(String localFilePath)
             throws IOException, AdbCommandRejectedException, TimeoutException, SyncException {
         SyncService sync = null;
@@ -882,7 +1079,7 @@ final class Device implements IDevice {
      * @param filePath full directory path to file
      * @return {@link String} file name
      */
-    private String getFileName(String filePath) {
+    private static String getFileName(String filePath) {
         return new File(filePath).getName();
     }
 

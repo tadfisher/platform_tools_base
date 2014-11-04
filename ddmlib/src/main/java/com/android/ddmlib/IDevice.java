@@ -478,6 +478,9 @@ public interface IDevice extends IShellEnabledDevice {
     public String installPackage(String packageFilePath, boolean reinstall, String... extraArgs)
             throws InstallException;
 
+
+    public boolean installPackages(List<String> aplFilePaths, int timeOut,
+            boolean reinstall, String... extraArgs) throws InstallException;
     /**
      * Pushes a file to device
      *

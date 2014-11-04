@@ -55,6 +55,8 @@ public abstract class DeviceConnector implements IShellEnabledDevice {
      */
     public abstract void installPackage(@NonNull File apkFile, int timeout, ILogger logger) throws DeviceException;
 
+    public abstract void installPackages(@NonNull List<File> apkFiles, int timeout, ILogger logger) throws DeviceException;
+
     /**
      * Uninstall the given package name from the device
      * @param packageName the package name
