@@ -28,13 +28,9 @@ import com.android.ddmlib.testrunner.TestRunResult;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -119,33 +115,7 @@ public class SimpleTestCallable implements Callable<Boolean> {
             if (!testedApks.isEmpty()) {
                 logger.verbose("DeviceConnector '%s': installing %s", deviceName, Joiner.on(',').join(testedApks));
                 if (testedApks.size() > 1) {
-                    List<String> args = new ArrayList<String>();
-                    args.add(adbExec.getAbsolutePath());
-                    args.add("install-multiple");
-                    args.add("-r");
-                    for (File testedApk : testedApks) {
-                        args.add(testedApk.getAbsolutePath());
-                    }
-                    // for now, do a simple java exec adb
-                    ProcessBuilder processBuilder = new ProcessBuilder(args);
-                    Process process = processBuilder.start();
-                    //Read out dir output
-                    InputStream is = process.getErrorStream();
-                    InputStreamReader isr = new InputStreamReader(is);
-                    BufferedReader br = new BufferedReader(isr);
-                    String line;
-                    while ((line = br.readLine()) != null) {
-                        logger.verbose("adb output is :" + line);
-                    }
-
-                    //Wait to get exit value
-                    try {
-                        int exitValue = process.waitFor();
-                        logger.verbose("\n\nExit Value is " + exitValue);
-                    } catch (InterruptedException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
+                    device.installPackages(testedApks, timeout, logger);
                 } else {
                     device.installPackage(testedApks.get(0), timeout, logger);
                 }
