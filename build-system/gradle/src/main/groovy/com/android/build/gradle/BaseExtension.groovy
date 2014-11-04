@@ -56,6 +56,8 @@ import org.gradle.internal.reflect.Instantiator
  */
 public abstract class BaseExtension {
 
+    public static final String DEFAULT_PROGUARD_CONFIG_FILE = "proguard-android.txt"
+
     private String target
     private FullRevision buildToolsRevision
 
@@ -113,6 +115,8 @@ public abstract class BaseExtension {
 
         defaultConfig = instantiator.newInstance(ProductFlavorDsl, BuilderConstants.MAIN,
                 project, instantiator, project.getLogger())
+
+        defaultConfig.proguardFile(getDefaultProguardFile(DEFAULT_PROGUARD_CONFIG_FILE))
 
         aaptOptions = instantiator.newInstance(AaptOptionsImpl)
         dexOptions = instantiator.newInstance(DexOptionsImpl)
