@@ -18,7 +18,7 @@
 
 package com.android.build.gradle
 
-import com.android.build.gradle.internal.test.fixture.GradleProjectTestRule
+import com.android.build.gradle.internal.test.fixture.GradleTestProject
 import com.android.build.gradle.internal.test.fixture.app.HelloWorldApp
 import groovy.util.slurpersupport.GPathResult
 import org.junit.Before
@@ -31,24 +31,24 @@ import static org.junit.Assert.assertNotNull
 class DslTest {
 
     @Rule
-    public GradleProjectTestRule fixture = new GradleProjectTestRule();
+    public GradleTestProject project = GradleTestProject.builder().create();
 
     @Before
     public void setup() {
-        new HelloWorldApp().writeSources(fixture.getSourceDir())
-        fixture.getBuildFile() << """
+        new HelloWorldApp().writeSources(project.getSourceDir())
+        project.getBuildFile() << """
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion $GradleProjectTestRule.DEFAULT_COMPILE_SDK_VERSION
-    buildToolsVersion "$GradleProjectTestRule.DEFAULT_BUILD_TOOL_VERSION"
+    compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+    buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
 }
 """
     }
 
     @Test
     public void versionNameSuffix() {
-        fixture.getBuildFile() << """
+        project.getBuildFile() << """
 android {
     defaultConfig {
         versionName 'foo'
@@ -62,9 +62,9 @@ android {
 }
 """
         // no need to do a full build. Let's just run the manifest task.
-        fixture.execute("processDebugManifest")
+        project.execute("processDebugManifest")
 
-        File manifestFile = fixture.file(
+        File manifestFile = project.file(
                 "build/intermediates/manifests/full/debug/AndroidManifest.xml")
 
         GPathResult xml = new XmlSlurper().parse(manifestFile).declareNamespace(
