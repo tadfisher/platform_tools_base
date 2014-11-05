@@ -1628,14 +1628,10 @@ public class AndroidBuilder {
 
         try {
             Packager packager = new Packager(
-                    outApkLocation, androidResPkgLocation, dexFolder,
+                    outApkLocation, androidResPkgLocation,
                     certificateInfo, mCreatedBy, packagingOptions, mLogger);
 
-            if (dexedLibraries != null) {
-                for (File dexedLibrary : dexedLibraries) {
-                    packager.addDexFile(dexedLibrary);
-                }
-            }
+            packager.addDexFiles(dexFolder, dexedLibraries);
 
             packager.setJniDebugMode(jniDebugBuild);
 

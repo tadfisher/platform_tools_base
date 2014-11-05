@@ -44,6 +44,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -280,7 +281,6 @@ public final class Packager implements IArchiveBuilder {
     public Packager(
             @NonNull String apkLocation,
             @NonNull String resLocation,
-            @NonNull File dexFolder,
             CertificateInfo certificateInfo,
             @Nullable String createdBy,
             @Nullable PackagingOptions packagingOptions,
@@ -308,10 +308,6 @@ public final class Packager implements IArchiveBuilder {
             // add the resources
             addZipFile(resFile);
 
-            // add the class dex file at the root of the apk
-
-            addDexFolder(dexFolder);
-
         } catch (PackagerException e) {
             if (mBuilder != null) {
                 mBuilder.cleanUp();
@@ -325,25 +321,32 @@ public final class Packager implements IArchiveBuilder {
         }
     }
 
-    private void addDexFolder(@NonNull File dexFolder)
+    public void addDexFiles(@NonNull File mainDexFolder, @Nullable Collection<File> extraDexFiles)
             throws DuplicateFileException, SealedPackageException, PackagerException {
-        File[] files = dexFolder.listFiles(new FilenameFilter() {
+
+        File[] mainDexFiles = mainDexFolder.listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File file, String name) {
                 return name.endsWith(SdkConstants.DOT_DEX);
             }
         });
 
-        if (files != null && files.length > 0) {
-            for (File file : files) {
-                addDexFile(file);
+        if (mainDexFiles != null && mainDexFiles.length > 0) {
+            // Never rename the dex files in the main dex folder, in case we are in legacy mode
+            // we requires the main dex files to not be renamed.
+            for (File dexFile : mainDexFiles) {
+                addFile(dexFile, dexFile.getName());
+            }
+
+            // prepare the index for the next files.
+            dexIndex = mainDexFiles.length + 1;
+
+            if (extraDexFiles != null) {
+                for (File dexFile : extraDexFiles) {
+                    addFile(dexFile, generateDexName());
+                }
             }
         }
-    }
-
-    public void addDexFile(@NonNull File dexFile)
-            throws DuplicateFileException, SealedPackageException, PackagerException {
-        addFile(dexFile, generateDexName());
     }
 
     private String generateDexName() {
