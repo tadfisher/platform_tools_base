@@ -591,6 +591,12 @@ public class ResourceUsageAnalyzer {
         return getFieldName(element.getAttribute(ATTR_NAME));
     }
 
+    private static String getResourceName(File path) {
+        String name = path.getName();
+        int dot = name.indexOf('.');
+        return dot != -1 ? name.substring(0, dot) : name;
+    }
+
     @Nullable
     private Resource getResource(Element element) {
         ResourceType type = getResourceType(element);
@@ -707,7 +713,7 @@ public class ResourceUsageAnalyzer {
     }
 
     private void keepPossiblyReferencedResources() {
-        if (!mFoundGetIdentifier || mStrings == null) {
+        if ((!mFoundGetIdentifier && !mFoundWebContent) || mStrings == null) {
             // No calls to android.content.res.Resources#getIdentifier; no need
             // to worry about string references to resources
             return;
@@ -718,6 +724,7 @@ public class ResourceUsageAnalyzer {
             Collections.sort(strings);
             System.out.println("android.content.res.Resources#getIdentifier present: "
                     + mFoundGetIdentifier);
+            System.out.println("Web content present: " + mFoundWebContent);
             System.out.println("Referenced Strings:");
             for (String s : strings) {
                 s = s.trim().replace("\n", "\\n");
@@ -890,7 +897,25 @@ public class ResourceUsageAnalyzer {
                 if (isXml) {
                     // For value files, and drawables and colors etc also pull in resource
                     // references inside the file
-                    recordResourcesUsages(file, isDefaultFolder, from);
+                    recordXmlResourcesUsages(file, isDefaultFolder, from);
+                } else if (folderType == ResourceFolderType.RAW) {
+                    // Is this an HTML, CSS or JavaScript document bundled with the app?
+                    // We can't easily track whether these resources are actually used.
+                    // We just assume that HTML files (etc) present are used in the app.
+                    if (endsWithIgnoreCase(path, ".html") || endsWithIgnoreCase(path, ".htm")) {
+                        tokenizeHtml(from, Files.toString(file, UTF_8));
+                        mFoundWebContent = true;
+
+                        markReachable(getResource(ResourceType.RAW, getResourceName(file)));
+                    } else if (endsWithIgnoreCase(path, ".css")) {
+                        tokenizeCss(from, Files.toString(file, UTF_8));
+                        mFoundWebContent = true;
+                        markReachable(getResource(ResourceType.RAW, getResourceName(file)));
+                    } else if (endsWithIgnoreCase(path, ".js")) {
+                        tokenizeJs(from, Files.toString(file, UTF_8));
+                        mFoundWebContent = true;
+                        markReachable(getResource(ResourceType.RAW, getResourceName(file)));
+                    }
                 }
             }
         }
@@ -936,12 +961,482 @@ public class ResourceUsageAnalyzer {
         recordManifestUsages(document.getDocumentElement());
     }
 
-    private void recordResourcesUsages(@NonNull File file, boolean isDefaultFolder,
+    private void recordXmlResourcesUsages(@NonNull File file, boolean isDefaultFolder,
             @Nullable Resource from)
             throws IOException, ParserConfigurationException, SAXException {
         String xml = Files.toString(file, UTF_8);
         Document document = XmlUtils.parseDocument(xml, true);
         recordResourceReferences(file, isDefaultFolder, document.getDocumentElement(), from);
+    }
+
+    private void tokenizeHtml(@Nullable Resource from, @NonNull String  html) {
+        // Look for
+        //    (1) URLs of the form /android_res/drawable/foo.ext
+        //        which we will use to keep R.drawable.foo
+        // and
+        //    (2) Filenames. If the web content is loaded with something like
+        //        WebView.loadDataWithBaseURL("file:///android_res/drawable/", ...)
+        //        this is similar to Resources#getIdentifier handling where all
+        //        *potentially* aliased filenames are kept to play it safe.
+
+        // Simple HTML tokenizer
+        int length = html.length();
+        final int STATE_TEXT = 1;
+        final int STATE_SLASH = 2;
+        final int STATE_ATTRIBUTE_NAME = 3;
+        final int STATE_BEFORE_TAG = 4;
+        final int STATE_IN_TAG = 5;
+        final int STATE_BEFORE_ATTRIBUTE = 6;
+        final int STATE_ATTRIBUTE_BEFORE_EQUALS = 7;
+        final int STATE_ATTRIBUTE_AFTER_EQUALS = 8;
+        final int STATE_ATTRIBUTE_VALUE_NONE = 9;
+        final int STATE_ATTRIBUTE_VALUE_SINGLE = 10;
+        final int STATE_ATTRIBUTE_VALUE_DOUBLE = 11;
+        final int STATE_CLOSE_TAG = 12;
+
+        int state = STATE_TEXT;
+        int offset = 0;
+        int valueStart = 0;
+        int tagStart = 0;
+        String tag = null;
+        String attribute = null;
+        int attributeStart = 0;
+        int prev = -1;
+        while (offset < length) {
+            if (offset == prev) {
+                // Purely here to prevent potential bugs in the state machine from looping
+                // infinitely
+                offset++;
+            }
+            prev = offset;
+
+
+            char c = html.charAt(offset);
+
+            // MAke sure I handle doctypes properly.
+            // Make sure I handle cdata properly.
+            // Oh and what about <style> tags? tokenize everything inside as CSS!
+            // ANd <script> tag content as js!
+            switch (state) {
+                case STATE_TEXT: {
+                    if (c == '<') {
+                        state = STATE_SLASH;
+                        offset++;
+                        continue;
+                    }
+
+                    // Other text is just ignored
+                    offset++;
+                    break;
+                }
+
+                case STATE_SLASH: {
+                    if (c == '!') {
+                        if (html.startsWith("!--", offset)) {
+                            // Comment
+                            int end = html.indexOf("-->", offset + 3);
+                            if (end == -1) {
+                                offset++;
+                                break;
+                            }
+                            offset = end + 3;
+                            continue;
+                        } else if (html.startsWith("![CDATA[", offset)) {
+                            // Skip CDATA text content; HTML text is irrelevant to this tokenizer
+                            // anyway
+                            int end = html.indexOf("]]>", offset + 8);
+                            if (end == -1) {
+                                offset++;
+                                break;
+                            }
+                            offset = end + 3;
+                            continue;
+                        }
+                    } else if (c == '/') {
+                        state = STATE_CLOSE_TAG;
+                        offset++;
+                        continue;
+                    } else if (c == '?') {
+                        // XML Prologue
+                        int end = html.indexOf('>', offset + 2);
+                        if (end == -1) {
+                            offset++;
+                            break;
+                        }
+                        offset = end + 1;
+                        continue;
+                    }
+                    state = STATE_IN_TAG;
+                    tagStart = offset;
+                    break;
+                }
+
+                case STATE_CLOSE_TAG: {
+                    if (c == '>') {
+                        state = STATE_TEXT;
+                    }
+                    offset++;
+                    break;
+                }
+
+                case STATE_BEFORE_TAG: {
+                    if (!Character.isWhitespace(c)) {
+                        state = STATE_IN_TAG;
+                        tagStart = offset;
+                    }
+                    // (For an end tag we'll include / in the tag name here)
+                    offset++;
+                    break;
+                }
+                case STATE_IN_TAG: {
+                    if (Character.isWhitespace(c)) {
+                        state = STATE_BEFORE_ATTRIBUTE;
+                        tag = html.substring(tagStart, offset).trim();
+                    } else if (c == '>') {
+                        tag = html.substring(tagStart, offset).trim();
+                        endHtmlTag(from, html, offset, tag);
+                        state = STATE_TEXT;
+                    }
+                    offset++;
+                    break;
+                }
+                case STATE_BEFORE_ATTRIBUTE: {
+                    if (c == '>') {
+                        endHtmlTag(from, html, offset, tag);
+                        state = STATE_TEXT;
+                    } else if (c == '/') {
+                        // we expect an '>' next to close the tag
+                    } else if (!Character.isWhitespace(c)) {
+                        state = STATE_ATTRIBUTE_NAME;
+                        attributeStart = offset;
+                    }
+                    offset++;
+                    break;
+                }
+                case STATE_ATTRIBUTE_NAME: {
+                    if (c == '>') {
+                        endHtmlTag(from, html, offset, tag);
+                        state = STATE_TEXT;
+                    } else if (c == '=') {
+                        attribute = html.substring(attributeStart, offset);
+                        state = STATE_ATTRIBUTE_AFTER_EQUALS;
+                    } else if (Character.isWhitespace(c)) {
+                        attribute = html.substring(attributeStart, offset);
+                        state = STATE_ATTRIBUTE_BEFORE_EQUALS;
+                    }
+                    offset++;
+                    break;
+                }
+                case STATE_ATTRIBUTE_BEFORE_EQUALS: {
+                    if (c == '=') {
+                        state = STATE_ATTRIBUTE_AFTER_EQUALS;
+                    } else if (c == '>') {
+                        endHtmlTag(from, html, offset, tag);
+                        state = STATE_TEXT;
+                    } else if (!Character.isWhitespace(c)) {
+                        // Attribute value not specified (used for some boolean attributes)
+                        state = STATE_ATTRIBUTE_NAME;
+                        attributeStart = offset;
+                    }
+                    offset++;
+                    break;
+                }
+
+                case STATE_ATTRIBUTE_AFTER_EQUALS: {
+                    if (c == '\'') {
+                        // a='b'
+                        state = STATE_ATTRIBUTE_VALUE_SINGLE;
+                        valueStart = offset + 1;
+                    } else if (c == '"') {
+                        // a="b"
+                        state = STATE_ATTRIBUTE_VALUE_DOUBLE;
+                        valueStart = offset + 1;
+                    } else if (!Character.isWhitespace(c)) {
+                        // a=b
+                        state = STATE_ATTRIBUTE_VALUE_NONE;
+                        valueStart = offset + 1;
+                    }
+                    offset++;
+                    break;
+                }
+
+                case STATE_ATTRIBUTE_VALUE_SINGLE: {
+                    if (c == '\'') {
+                        state = STATE_BEFORE_ATTRIBUTE;
+                        recordHtmlAttributeValue(from, tag, attribute,
+                                html.substring(valueStart, offset));
+                    }
+                    offset++;
+                    break;
+                }
+                case STATE_ATTRIBUTE_VALUE_DOUBLE: {
+                    if (c == '"') {
+                        state = STATE_BEFORE_ATTRIBUTE;
+                        recordHtmlAttributeValue(from, tag, attribute,
+                                html.substring(valueStart, offset));
+                    }
+                    offset++;
+                    break;
+                }
+                case STATE_ATTRIBUTE_VALUE_NONE: {
+                    if (c == '>') {
+                        recordHtmlAttributeValue(from, tag, attribute,
+                                html.substring(valueStart, offset));
+                        endHtmlTag(from, html, offset, tag);
+                        state = STATE_TEXT;
+                    } else if (Character.isWhitespace(c)) {
+                        state = STATE_BEFORE_ATTRIBUTE;
+                        recordHtmlAttributeValue(from, tag, attribute,
+                                html.substring(valueStart, offset));
+                    }
+                    offset++;
+                    break;
+                }
+                default:
+                    assert false : state;
+            }
+        }
+    }
+
+    private void endHtmlTag(@Nullable Resource from, @NonNull String html, int offset,
+            @Nullable String tag) {
+        if ("script".equals(tag)) {
+            int end = html.indexOf("</script>", offset + 1);
+            if (end != -1) {
+                // Attempt to tokenize the text as JavaScript
+                String js = html.substring(offset + 1, end);
+                tokenizeJs(from, js);
+            }
+        } else if ("style".equals(tag)) {
+            int end = html.indexOf("</style>", offset + 1);
+            if (end != -1) {
+                // Attempt to tokenize the text as CSS
+                String css = html.substring(offset + 1, end);
+                tokenizeCss(from, css);
+            }
+        }
+    }
+
+    private void tokenizeJs(@Nullable Resource from, @NonNull String js) {
+        // Simple JavaScript tokenizer: only looks for literal strings,
+        // and records those as string references
+        int length = js.length();
+        final int STATE_INIT = 1;
+        final int STATE_SLASH = 2;
+        final int STATE_STRING_DOUBLE = 3;
+        final int STATE_STRING_DOUBLE_QUOTED = 4;
+        final int STATE_STRING_SINGLE = 5;
+        final int STATE_STRING_SINGLE_QUOTED = 6;
+
+        int state = STATE_INIT;
+        int offset = 0;
+        int stringStart = 0;
+        int prev = -1;
+        while (offset < length) {
+            if (offset == prev) {
+                // Purely here to prevent potential bugs in the state machine from looping
+                // infinitely
+                offset++;
+            }
+            prev = offset;
+
+            char c = js.charAt(offset);
+            switch (state) {
+                case STATE_INIT: {
+                    if (c == '/') {
+                        state = STATE_SLASH;
+                    } else if (c == '"') {
+                        stringStart = offset + 1;
+                        state = STATE_STRING_DOUBLE;
+                    } else if (c == '\'') {
+                        stringStart = offset + 1;
+                        state = STATE_STRING_SINGLE;
+                    }
+                    offset++;
+                    break;
+                }
+                case STATE_SLASH: {
+                    if (c == '*') {
+                        // Comment block
+                        state = STATE_INIT;
+                        int end = js.indexOf("*/", offset + 1);
+                        if (end == -1) {
+                            offset++;
+                            break;
+                        }
+                        offset = end + 2;
+                        continue;
+                    } else if (c == '/') {
+                        // Line comment
+                        state = STATE_INIT;
+                        int end = js.indexOf('\n', offset + 1);
+                        if (end == -1) {
+                            offset++;
+                            break;
+                        }
+                        offset = end + 1;
+                        continue;
+                    } else {
+                        // division - just continue
+                        state = STATE_INIT;
+                        offset++;
+                        break;
+                    }
+                }
+                case STATE_STRING_DOUBLE: {
+                    if (c == '"') {
+                        recordJsString(js.substring(stringStart, offset));
+                        state = STATE_INIT;
+                    } else if (c == '\\') {
+                        state = STATE_STRING_DOUBLE_QUOTED;
+                    }
+                    offset++;
+                    break;
+                }
+                case STATE_STRING_DOUBLE_QUOTED: {
+                    state = STATE_STRING_DOUBLE;
+                    offset++;
+                    break;
+                }
+                case STATE_STRING_SINGLE: {
+                    if (c == '\'') {
+                        recordJsString(js.substring(stringStart, offset));
+                        state = STATE_INIT;
+                    } else if (c == '\\') {
+                        state = STATE_STRING_SINGLE_QUOTED;
+                    }
+                    offset++;
+                    break;
+                }
+                case STATE_STRING_SINGLE_QUOTED: {
+                    state = STATE_STRING_SINGLE;
+                    offset++;
+                    break;
+                }
+                default:
+                    assert false : state;
+            }
+        }
+    }
+
+    private void tokenizeCss(@Nullable Resource from, @NonNull String  css) {
+        // Simple CSS tokenizer: Only looks for URL references, and records those
+        // filenames. Skips everything else (unrelated to images).
+        int length = css.length();
+        final int STATE_INIT = 1;
+        final int STATE_SLASH = 2;
+        int state = STATE_INIT;
+        int offset = 0;
+        int prev = -1;
+        while (offset < length) {
+            if (offset == prev) {
+                // Purely here to prevent potential bugs in the state machine from looping
+                // infinitely
+                offset++;
+            }
+            prev = offset;
+
+            char c = css.charAt(offset);
+            switch (state) {
+                case STATE_INIT: {
+                    if (c == '/') {
+                        state = STATE_SLASH;
+                    } else if (c == 'u' && css.startsWith("url(", offset) && offset > 0) {
+                        char prevChar = css.charAt(offset-1);
+                        if (Character.isWhitespace(prevChar) || prevChar == ':') {
+                            int end = css.indexOf(')', offset);
+                            offset += 4; // skip url(
+                            while (offset < length && Character.isWhitespace(css.charAt(offset))) {
+                                offset++;
+                            }
+                            if (end != -1 && end > offset + 1) {
+                                while (end > offset
+                                        && Character.isWhitespace(css.charAt(end - 1))) {
+                                    end--;
+                                }
+                                if ((css.charAt(offset) == '"'
+                                        && css.charAt(end - 1) == '"')
+                                        || (css.charAt(offset) == '\''
+                                        && css.charAt(end - 1) == '\'')) {
+                                    // Strip " or '
+                                    offset++;
+                                    end--;
+                                }
+                                recordCssUrl(from, css.substring(offset, end).trim());
+                            }
+                            offset = end + 1;
+                            continue;
+                        }
+
+                    }
+                    offset++;
+                    break;
+                }
+                case STATE_SLASH: {
+                    if (c == '*') {
+                        // CSS comment? Skip the whole block rather than staying within the
+                        // character tokenizer.
+                        int end = css.indexOf("*/", offset + 1);
+                        if (end == -1) {
+                            offset++;
+                            break;
+                        }
+                        offset = end + 2;
+                        continue;
+                    }
+                    state = STATE_INIT;
+                    offset++;
+                    break;
+                }
+                default:
+                    assert false : state;
+            }
+        }
+    }
+
+    private void recordCssUrl(@Nullable Resource from, @NonNull String value) {
+        if (!referencedUrl(from, value)) {
+            referencedString(value);
+        }
+    }
+
+    /**
+     * See if the given URL is a URL that we can resolve to a specific resource; if so,
+     * record it and return true, otherwise returns false.
+     */
+    private boolean referencedUrl(@Nullable Resource from, @NonNull String url) {
+        Resource resource = getResourceFromFilePath(url);
+        if (resource != null) {
+            if (from != null) {
+                from.addReference(resource);
+            } else {
+                // We don't have an inclusion context, so just assume this resource is reachable
+                markReachable(resource);
+            }
+            return true;
+        }
+
+        return false;
+    }
+
+    private void recordHtmlAttributeValue(@Nullable Resource from, @Nullable String tagName,
+            @Nullable String attribute, @NonNull String value) {
+        if ("href".equals(attribute) || "src".equals(attribute)) {
+            // In general we'd need to unescape the HTML here (e.g. remove entities) but
+            // those wouldn't be valid characters in the resource name anyway
+            if (!referencedUrl(from, value)) {
+                referencedString(value);
+            }
+
+            // If this document includes another, record the reachability of that script/resource
+            if (from != null) {
+                from.addReference(getResourceFromFilePath(attribute));
+            }
+        }
+    }
+
+    private void recordJsString(@NonNull String string) {
+        referencedString(string);
     }
 
     @Nullable
@@ -954,10 +1449,54 @@ public class ResourceUsageAnalyzer {
     }
 
     @Nullable
-    private Resource getResource(@NonNull String possibleUrlReference) {
+    private Resource getResourceFromUrl(@NonNull String possibleUrlReference) {
         ResourceUrl url = ResourceUrl.parse(possibleUrlReference);
         if (url != null && !url.framework) {
             return getResource(url.type, url.name);
+        }
+
+        return null;
+    }
+
+    @Nullable
+    private Resource getResourceFromFilePath(@NonNull String url) {
+        // Look for
+        //   (1) a full resource URL: /android_res/type/name.ext
+        //   (2) a partial URL that uniquely identifies a given resource: drawable/name.ext
+        final String ANDROID_RES = "android_res/";
+        // e.g. file:///android_res/drawable/bar.png
+        int androidRes = url.indexOf(ANDROID_RES);
+        if (androidRes != -1) {
+            androidRes += ANDROID_RES.length();
+            int slash = url.indexOf('/', androidRes);
+            if (slash != -1) {
+                String folderName = url.substring(androidRes, slash);
+                ResourceFolderType folderType = ResourceFolderType.getFolderType(folderName);
+                if (folderType != null) {
+                    List<ResourceType> types = FolderTypeRelationship.getRelatedResourceTypes(
+                            folderType);
+                    if (!types.isEmpty()) {
+                        ResourceType type = types.get(0);
+                        int nameBegin = slash + 1;
+                        int dot = url.indexOf('.', nameBegin);
+                        String name = url.substring(nameBegin, dot != -1 ? dot : url.length());
+                        return getResource(type, name);
+                    }
+                }
+            }
+        }
+
+        // Some other relative path. Just look from the end:
+        int nameSlash = url.lastIndexOf('/');
+        if (nameSlash != -1) {
+            int typeSlash = url.lastIndexOf('/', nameSlash - 1);
+            ResourceType type = ResourceType.getEnum(url.substring(typeSlash + 1, nameSlash));
+            if (type != null) {
+                int nameBegin = nameSlash + 1;
+                int dot = url.indexOf('.', nameBegin);
+                String name = url.substring(nameBegin, dot != -1 ? dot : url.length());
+                return getResource(type, name);
+            }
         }
 
         return null;
@@ -970,12 +1509,12 @@ public class ResourceUsageAnalyzer {
             NamedNodeMap attributes = element.getAttributes();
             for (int i = 0, n = attributes.getLength(); i < n; i++) {
                 Attr attr = (Attr) attributes.item(i);
-                markReachable(getResource(attr.getValue()));
+                markReachable(getResourceFromUrl(attr.getValue()));
             }
         } else if (nodeType == Node.TEXT_NODE) {
             // Does this apply to any manifests??
             String text = node.getNodeValue().trim();
-            markReachable(getResource(text));
+            markReachable(getResourceFromUrl(text));
         }
 
         NodeList children = node.getChildNodes();
@@ -995,7 +1534,7 @@ public class ResourceUsageAnalyzer {
                 NamedNodeMap attributes = element.getAttributes();
                 for (int i = 0, n = attributes.getLength(); i < n; i++) {
                     Attr attr = (Attr) attributes.item(i);
-                    Resource resource = getResource(attr.getValue());
+                    Resource resource = getResourceFromUrl(attr.getValue());
                     if (resource != null) {
                         // Ignore tools: namespace attributes, unless it's
                         // a keep attribute
@@ -1053,7 +1592,7 @@ public class ResourceUsageAnalyzer {
                         if (!parentStyle.startsWith(STYLE_RESOURCE_PREFIX)) {
                             parentStyle = STYLE_RESOURCE_PREFIX + parentStyle;
                         }
-                        Resource ps = getResource(getFieldName(parentStyle));
+                        Resource ps = getResourceFromUrl(getFieldName(parentStyle));
                         if (ps != null && definition != null) {
                             definition.addReference(ps);
                         }
@@ -1065,7 +1604,8 @@ public class ResourceUsageAnalyzer {
                         int index = name.lastIndexOf('_');
                         if (index != -1) {
                             name = name.substring(0, index);
-                            Resource ps = getResource(STYLE_RESOURCE_PREFIX + getFieldName(name));
+                            Resource ps = getResourceFromUrl(
+                                    STYLE_RESOURCE_PREFIX + getFieldName(name));
                             if (ps != null && definition != null) {
                                 definition.addReference(ps);
                             }
@@ -1096,7 +1636,7 @@ public class ResourceUsageAnalyzer {
             }
         } else if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
             String text = node.getNodeValue().trim();
-            Resource textResource = getResource(getFieldName(text));
+            Resource textResource = getResourceFromUrl(getFieldName(text));
             if (textResource != null && from != null) {
                 from.addReference(textResource);
             }
@@ -1121,6 +1661,7 @@ public class ResourceUsageAnalyzer {
 
     private Set<String> mStrings;
     private boolean mFoundGetIdentifier;
+    private boolean mFoundWebContent;
 
     private void referencedString(@NonNull String string) {
         // See if the string is at all eligible; ignore strings that aren't
