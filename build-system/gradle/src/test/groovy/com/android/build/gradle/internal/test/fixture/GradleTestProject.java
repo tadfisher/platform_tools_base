@@ -36,6 +36,8 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URISyntaxException;
@@ -55,13 +57,44 @@ import java.util.List;
  * The test directory is always deleted if it already exist at the start of the test to ensure a
  * clean environment.
  */
-public class GradleProjectTestRule implements TestRule {
+public class GradleTestProject implements TestRule {
+
+    public static class Builder {
+        private static final File SAMPLE_PROJECT_DIR = new File("../tests");
+
+        private String name;
+
+        private File projectDir;
+
+        public GradleTestProject build()  {
+            return new GradleTestProject(name, projectDir);
+        }
+
+        public Builder withName(@NonNull String name) {
+            this.name = name;
+            return this;
+        }
+
+        public Builder fromSample(@NonNull String project) {
+            projectDir = new File(SAMPLE_PROJECT_DIR, project);
+            return this;
+        }
+
+        public Builder fromLocalDir(@NonNull String project) {
+            projectDir = new File(project);
+            return this;
+        }
+    }
+
+    private static final String DEFAULT_TEST_PROJECT_NAME = "project";
 
     public static final int DEFAULT_COMPILE_SDK_VERSION = 19;
 
     public static final String DEFAULT_BUILD_TOOL_VERSION = "20.0.0";
 
     private static final String ANDROID_GRADLE_VERSION = "0.14.2";
+
+    private String name;
 
     private File testDir;
 
@@ -73,9 +106,22 @@ public class GradleProjectTestRule implements TestRule {
 
     private File sdkDir;
 
-    public GradleProjectTestRule() {
+    @Nullable
+    private File projectSourceDir;
+
+    public GradleTestProject() {
+        this(null, null);
+    }
+
+    public GradleTestProject(@Nullable String name, @Nullable File projectSourceDir) {
         sdkDir = findSdkDir();
         ndkDir = findNdkDir();
+        this.name = (name == null) ? DEFAULT_TEST_PROJECT_NAME : name;
+        this.projectSourceDir = projectSourceDir;
+    }
+
+    public static Builder builder() {
+        return new Builder();
     }
 
     /**
@@ -86,11 +132,35 @@ public class GradleProjectTestRule implements TestRule {
     private static void deleteRecursive(File root) {
         if (root.exists()) {
             if (root.isDirectory()) {
-                for (File file : root.listFiles()) {
-                    deleteRecursive(file);
+                File files[] = root.listFiles();
+                if (files != null) {
+                    for (File file : files) {
+                        deleteRecursive(file);
+                    }
                 }
             }
             assertTrue(root.delete());
+        }
+    }
+
+    private static void copyRecursive(File src, File dest) {
+        if (src.isDirectory()) {
+            //if directory not exists, create it
+            if (!dest.exists()) {
+                assertTrue(dest.mkdir());
+            }
+
+            // Recursively copy each file in directory.
+            for (String file : src.list()) {
+                File srcFile = new File(src, file);
+                File destFile = new File(dest, file);
+                copyRecursive(srcFile, destFile);
+            }
+        } else {
+            try {
+                Files.copy(src, dest);
+            } catch (Exception ignore) {
+            }
         }
     }
 
@@ -104,6 +174,7 @@ public class GradleProjectTestRule implements TestRule {
         if (description.getMethodName() != null) {
             testDir = new File(testDir, description.getMethodName());
         }
+        testDir = new File(testDir, name);
 
         buildFile = new File(testDir, "build.gradle");
         sourceDir = new File(testDir, "src");
@@ -117,22 +188,33 @@ public class GradleProjectTestRule implements TestRule {
                 assertTrue(testDir.mkdirs());
                 assertTrue(sourceDir.mkdirs());
 
-                Files.write(
-                        "buildscript {\n" +
-                        "    repositories {\n" +
-                        "        maven { url '" + getRepoDir().toString() + "' }\n" +
-                        "    }\n" +
-                        "    dependencies {\n" +
-                        "        classpath \"com.android.tools.build:gradle:" + ANDROID_GRADLE_VERSION + "\"\n" +
-                        "    }\n" +
-                        "}\n",
-                        buildFile,
-                        Charsets.UTF_8);
+                if (projectSourceDir != null) {
+                    copyRecursive(projectSourceDir, testDir);
+                } else {
+                    Files.write(
+                            "buildscript {\n" +
+                            "    repositories {\n" +
+                            "        maven { url '" + getRepoDir().toString() + "' }\n" +
+                            "    }\n" +
+                            "    dependencies {\n" +
+                            "        classpath \"com.android.tools.build:gradle:" + ANDROID_GRADLE_VERSION + "\"\n" +
+                            "    }\n" +
+                            "}\n",
+                            buildFile,
+                            Charsets.UTF_8);
+                }
 
                 createLocalProp(testDir, sdkDir, ndkDir);
                 base.evaluate();
             }
         };
+    }
+
+    /**
+     * Return the name of the test project.
+     */
+    public String getName() {
+        return name;
     }
 
     /**
