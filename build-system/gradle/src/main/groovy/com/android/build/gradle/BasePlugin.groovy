@@ -138,7 +138,6 @@ import com.google.common.collect.Multimap
 import com.google.common.collect.Sets
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
-import org.gradle.api.InvalidUserCodeException
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration
@@ -2349,7 +2348,7 @@ public abstract class BasePlugin {
                     return project.fileTree(variantData.preDexTask.outputFolder).files
                 }
 
-                return null
+                return Collections.<File>emptyList()
             }
             packageApp.conventionMapping.packagedJars =
                     { androidBuilder.getPackagedJars(config) }

@@ -1599,7 +1599,7 @@ public class AndroidBuilder {
     public void packageApk(
             @NonNull String androidResPkgLocation,
             @NonNull File dexFolder,
-            @Nullable Collection<File> dexedLibraries,
+            @NonNull Collection<File> dexedLibraries,
             @NonNull Collection<File> packagedJars,
             @Nullable String javaResourcesLocation,
             @Nullable Collection<File> jniLibsFolders,
@@ -1628,14 +1628,10 @@ public class AndroidBuilder {
 
         try {
             Packager packager = new Packager(
-                    outApkLocation, androidResPkgLocation, dexFolder,
+                    outApkLocation, androidResPkgLocation,
                     certificateInfo, mCreatedBy, packagingOptions, mLogger);
 
-            if (dexedLibraries != null) {
-                for (File dexedLibrary : dexedLibraries) {
-                    packager.addDexFile(dexedLibrary);
-                }
-            }
+            packager.addDexFiles(dexFolder, dexedLibraries);
 
             packager.setJniDebugMode(jniDebugBuild);
 
