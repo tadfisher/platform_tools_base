@@ -3438,18 +3438,23 @@ public abstract class BasePlugin {
 
     /**
      * Returns a plugin that is an instance of BasePlugin.  Returns null if a BasePlugin cannot
-     * be found, and throws an InvalidUserCodeException if more than one is found.
+     * be found.
      */
     public static BasePlugin findBasePlugin(Project project) {
         BasePlugin plugin = project.plugins.findPlugin(AppPlugin)
         if (plugin != null) {
             return plugin
+<<<<<<< HEAD
         }
         plugin = project.plugins.findPlugin(LibraryPlugin)
         if (plugin != null) {
             return plugin
         }
         plugin = project.plugins.findPlugin(BaseComponentModelPlugin)
+=======
+        }
+        plugin = project.plugins.findPlugin(LibraryPlugin)
+>>>>>>> 228bb37
         return plugin
     }
 
