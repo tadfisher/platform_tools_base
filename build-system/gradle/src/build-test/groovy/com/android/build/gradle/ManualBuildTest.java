@@ -687,7 +687,7 @@ public class ManualBuildTest extends BuildTest {
 
         Map<String, VersionData> expected = Maps.newHashMapWithExpectedSize(5);
         expected.put("universal", VersionData.of(112, "version 112"));
-        expected.put("mdpi",      VersionData.of(212, "version 212"));
+        expected.put("mdpi", VersionData.of(212, "version 212"));
         expected.put("hdpi",      VersionData.of(312, "version 312"));
         expected.put("xhdpi",     VersionData.of(412, "version 412"));
         expected.put("xxhdpi",    VersionData.of(512, "version 512"));
@@ -947,6 +947,11 @@ public class ManualBuildTest extends BuildTest {
         compareApkEntry(apk, "classes.dex", classesDex);
     }
 
+    public void testMultiDexDontObfuscate() throws Exception {
+        File project = new File(regularDir, "multiDex");
+        runTasksOn(project, BasePlugin.GRADLE_TEST_VERSION, "assembleIcsProguard");
+    }
+
     private void checkMaxSdkVersion(File testApk, String version)
             throws InterruptedException, LoggedErrorException, IOException {
 
@@ -986,8 +991,6 @@ public class ManualBuildTest extends BuildTest {
         }
         fail("Could not find uses-sdk:maxSdkVersion set to " + version + " in apk dump");
     }
-
-
 
     private static void checkImageColor(File folder, String fileName, int expectedColor)
             throws IOException {
