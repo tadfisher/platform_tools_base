@@ -85,8 +85,12 @@ public class InstallVariantTask extends BaseTask {
                                 "and an ABI in " + Joiner.on(", ").join(device.getAbis()));
                     } else {
                         if (outputFiles.size() > 1) {
-                            project.logger.lifecycle("Multiple APK selected for installation " +
-                                    Joiner.on(", ").join(outputFiles));
+                            List<File> apkFiles = ((List<ApkOutputFile>) outputFiles)*.getOutputFile()
+                            List<String> apkFileNames = apkFiles*.getName()
+                            project.logger.lifecycle("Installing multiple APK '${Joiner.on(", ").join(apkFileNames)}'" +
+                                    " on '${device.getName()}'")
+                            device.installPackages(apkFiles, getTimeOut(), plugin.logger);
+                            successfulInstallCount++
                         } else {
                             File apkFile = ((ApkOutputFile) outputFiles.get(0)).getOutputFile();
                             project.logger.lifecycle(
