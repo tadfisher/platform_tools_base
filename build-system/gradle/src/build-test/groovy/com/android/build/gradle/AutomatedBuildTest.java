@@ -94,6 +94,7 @@ public class AutomatedBuildTest extends BuildTest {
             "multiDex",
     };
 
+
     public static Test suite() {
         TestSuite suite = new TestSuite();
         suite.setName("AutomatedBuildTest");

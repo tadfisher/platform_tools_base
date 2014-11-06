@@ -18,7 +18,7 @@
 
 package com.android.build.gradle
 
-import com.android.build.gradle.internal.test.fixture.GradleProjectTestRule
+import com.android.build.gradle.internal.test.fixture.GradleTestProject
 import com.android.build.gradle.internal.test.fixture.app.HelloWorldApp
 import groovy.util.slurpersupport.GPathResult
 import org.junit.Before
@@ -31,7 +31,7 @@ import static org.junit.Assert.assertNotNull
 class DslTest {
 
     @Rule
-    public GradleProjectTestRule fixture = new GradleProjectTestRule();
+    public GradleTestProject fixture = GradleTestProject.builder().build();
 
     @Before
     public void setup() {
@@ -40,8 +40,8 @@ class DslTest {
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion $GradleProjectTestRule.DEFAULT_COMPILE_SDK_VERSION
-    buildToolsVersion "$GradleProjectTestRule.DEFAULT_BUILD_TOOL_VERSION"
+    compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+    buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
 }
 """
     }

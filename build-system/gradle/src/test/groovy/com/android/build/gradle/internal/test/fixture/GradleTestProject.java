@@ -64,10 +64,12 @@ public class GradleTestProject implements TestRule {
 
         private String name;
 
+        private boolean singleProject = false;
+
         private File projectDir;
 
         public GradleTestProject build()  {
-            return new GradleTestProject(name, projectDir);
+            return new GradleTestProject(name, projectDir, singleProject);
         }
 
         public Builder withName(@NonNull String name) {
@@ -82,6 +84,11 @@ public class GradleTestProject implements TestRule {
 
         public Builder fromLocalDir(@NonNull String project) {
             projectDir = new File(project);
+            return this;
+        }
+
+        public Builder withSingleProject(boolean singleProject) {
+            this.singleProject = singleProject;
             return this;
         }
     }
@@ -106,18 +113,26 @@ public class GradleTestProject implements TestRule {
 
     private File sdkDir;
 
+    private boolean singleProject;
+
+    private boolean isApplied = false;
+
     @Nullable
     private File projectSourceDir;
 
     public GradleTestProject() {
-        this(null, null);
+        this(null, null, false);
     }
 
-    public GradleTestProject(@Nullable String name, @Nullable File projectSourceDir) {
+    public GradleTestProject(
+            @Nullable String name,
+            @Nullable File projectSourceDir,
+            boolean singleProject) {
         sdkDir = findSdkDir();
         ndkDir = findNdkDir();
         this.name = (name == null) ? DEFAULT_TEST_PROJECT_NAME : name;
         this.projectSourceDir = projectSourceDir;
+        this.singleProject = singleProject;
     }
 
     public static Builder builder() {
@@ -166,12 +181,17 @@ public class GradleTestProject implements TestRule {
 
     @Override
     public Statement apply(final Statement base, Description description) {
+        if (singleProject && isApplied) {
+            return base;
+        }
+        isApplied = true;
+
         testDir = new File("build/tmp/tests/" +
                 description.getTestClass().getName());
 
         // Create separate directory based on test method name if @Rule is used.
         // getMethodName() is null if this rule is used as a @ClassRule.
-        if (description.getMethodName() != null) {
+        if (description.getMethodName() != null && !singleProject) {
             testDir = new File(testDir, description.getMethodName());
         }
         testDir = new File(testDir, name);
