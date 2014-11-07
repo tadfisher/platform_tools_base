@@ -20,6 +20,7 @@ package com.android.build.gradle.internal.tasks.multidex
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.xml.sax.Attributes
@@ -36,12 +37,16 @@ class CreateManifestKeepList extends DefaultTask {
     @OutputFile
     File outputFile
 
+    @InputFile @Optional
+    File proguardFile
+
     Closure filter
 
     @TaskAction
     void generateKeepListFromManifest() {
         SAXParser parser = SAXParserFactory.newInstance().newSAXParser()
 
+        Reader input = null
         Writer out = new BufferedWriter(new FileWriter(getOutputFile()))
         try {
             parser.parse(getManifest(), new ManifestHandler(out))
@@ -55,8 +60,17 @@ class CreateManifestKeepList extends DefaultTask {
     *;
 }""")
 
+            if (proguardFile != null) {
+                input = new BufferedReader(new FileReader(proguardFile))
+                String line = null
+                while ((line = input.readLine()) != null) {
+                    out.newLine()
+                    out.write(line)
+                }
+            }
         } finally {
             out.close()
+            if (input != null) input.close()
         }
     }
 
