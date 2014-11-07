@@ -269,7 +269,10 @@ public class ManualBuildTest extends BuildTest {
                 + "res/layout/used18.xml\n"
                 + "res/layout/used19.xml\n"
                 + "res/layout/used20.xml\n"
-                + "res/layout/used21.xml";
+                + "res/layout/used21.xml\n"
+                + "res/layout/used22_a.xml\n"
+                + "res/layout/used22_b2.xml\n"
+                + "res/layout/used22_c.xml";
 
         String expectedStrippedApkContents = ""
                 + "AndroidManifest.xml\n"
@@ -295,11 +298,14 @@ public class ManualBuildTest extends BuildTest {
                 + "res/layout/used18.xml\n"
                 + "res/layout/used19.xml\n"
                 + "res/layout/used20.xml\n"
-                + "res/layout/used21.xml";
+                + "res/layout/used21.xml\n"
+                + "res/layout/used22_a.xml\n"
+                + "res/layout/used22_b2.xml\n"
+                + "res/layout/used22_c.xml";
 
         // Should not have any unused resources in the compressed list
         assertFalse(expectedStrippedApkContents, expectedStrippedApkContents.contains("unused"));
-        // Should have *all* the used resources, currently 1-20
+        // Should have *all* the used resources, currently 1-21
         for (int i = 1; i <= 21; i++) {
             assertTrue("Missing used"+i + " in " + expectedStrippedApkContents,
                     expectedStrippedApkContents.contains("/used" + i + "."));
