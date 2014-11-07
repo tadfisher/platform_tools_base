@@ -85,6 +85,9 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
 
     public void setTestCoverageEnabled(boolean testCoverageEnabled) {
         mTestCoverageEnabled = testCoverageEnabled;
+        if (mTestCoverageEnabled) { // Accessing coverage data requires a debuggable package.
+            mDebuggable = true;
+        }
     }
 
     @Override
