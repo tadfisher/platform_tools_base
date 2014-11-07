@@ -400,6 +400,7 @@ public class GradleTestProject implements TestRule {
         } finally {
             connection.close();
         }
+        System.out.print(stdout.toString());
 
         return null;
     }
