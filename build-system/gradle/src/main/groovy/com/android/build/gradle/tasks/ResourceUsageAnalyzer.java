@@ -53,8 +53,8 @@ import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.tools.lint.client.api.DefaultConfiguration;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.utils.XmlUtils;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
@@ -504,7 +504,7 @@ public class ResourceUsageAnalyzer {
             } else if (!skip.contains(source) && source.isFile()) {
                 String contents = replace.get(source);
                 if (contents != null) {
-                    Files.write(contents, destination, Charsets.UTF_8);
+                    Files.write(contents, destination, UTF_8);
                 } else {
                     Files.copy(source, destination);
                 }
@@ -952,6 +952,8 @@ public class ResourceUsageAnalyzer {
                         tokenizeCss(from, Files.toString(file, UTF_8));
                     } else if (endsWithIgnoreCase(path, ".js")) {
                         tokenizeJs(from, Files.toString(file, UTF_8));
+                    } else if (file.isFile() && !LintUtils.isBitmapFile(file)) {
+                        tokenizeUnknown(from, file);
                     }
                 }
             }
@@ -1252,6 +1254,53 @@ public class ResourceUsageAnalyzer {
                 tokenizeCss(from, css);
             }
         }
+    }
+
+    private static byte[] sAndroidResBytes;
+
+    /** Look through binary/unknown files looking for resource URLs */
+    private void tokenizeUnknown(@Nullable Resource from, @NonNull File file) {
+        try {
+            if (sAndroidResBytes == null) {
+                sAndroidResBytes = ANDROID_RES.getBytes(SdkConstants.UTF_8);
+            }
+            byte[] bytes = Files.toByteArray(file);
+            int index = 0;
+            while (index != -1) {
+                index = indexOf(bytes, sAndroidResBytes, index);
+                if (index != -1) {
+                    index += sAndroidResBytes.length;
+
+                    // Find the end of the URL
+                    int begin = index;
+                    int end = begin;
+                    for (; end < bytes.length; end++) {
+                        byte c = bytes[end];
+                        if (c != '/' && !Character.isJavaIdentifierPart((char)c)) {
+                            // android_res/raw/my_drawable.png => @raw/my_drawable
+                            String url = "@" + new String(bytes, begin, end - begin, UTF_8);
+                            markReachable(getResourceFromUrl(url));
+                            break;
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            // Ignore
+        }
+    }
+
+    private static int indexOf(byte[] array, byte[] target, int fromIndex) {
+        outer:
+        for (int i = fromIndex; i < array.length - target.length + 1; i++) {
+            for (int j = 0; j < target.length; j++) {
+                if (array[i + j] != target[j]) {
+                    continue outer;
+                }
+            }
+            return i;
+        }
+        return -1;
     }
 
     private void tokenizeJs(@Nullable Resource from, @NonNull String js) {
