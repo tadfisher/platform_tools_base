@@ -34,6 +34,11 @@ class AppPlugin extends BasePlugin implements Plugin<Project> {
         super(instantiator, registry)
     }
 
+    /**
+     * Foo
+     */
+    int foo
+
     @Override
     protected Class<? extends BaseExtension> getExtensionClass() {
         return AppExtension.class

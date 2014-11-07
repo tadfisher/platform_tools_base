@@ -61,12 +61,18 @@ class ProductFlavorDsl extends DefaultProductFlavor {
         return ndkConfig;
     }
 
+    /**
+     * Min SDK version int
+     */
     @NonNull
     public ProductFlavor setMinSdkVersion(int minSdkVersion) {
         setMinSdkVersion(new DefaultApiVersion(minSdkVersion));
         return this;
     }
 
+    /**
+     * Min SDK version not setter.
+     */
     @NonNull
     public ProductFlavor minSdkVersion(int minSdkVersion) {
         setMinSdkVersion(minSdkVersion);
@@ -85,24 +91,36 @@ class ProductFlavorDsl extends DefaultProductFlavor {
         return this;
     }
 
+    /**
+     * Target SDK version int.
+     */
     @NonNull
     public ProductFlavor setTargetSdkVersion(int targetSdkVersion) {
         setTargetSdkVersion(new DefaultApiVersion(targetSdkVersion));
         return this;
     }
 
+    /**
+     * Target SDK version int, not a setter.
+     */
     @NonNull
     public ProductFlavor targetSdkVersion(int targetSdkVersion) {
         setTargetSdkVersion(targetSdkVersion);
         return this;
     }
 
+    /**
+     * Target SDK version String.
+     */
     @NonNull
     public ProductFlavor setTargetSdkVersion(String targetSdkVersion) {
         setTargetSdkVersion(getApiVersion(targetSdkVersion))
         return this;
     }
 
+    /**
+     * Target SDK version String, not a setter.
+     */
     @NonNull
     public ProductFlavor targetSdkVersion(String targetSdkVersion) {
         setTargetSdkVersion(targetSdkVersion);
