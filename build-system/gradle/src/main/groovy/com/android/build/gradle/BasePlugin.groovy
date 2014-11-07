@@ -1972,6 +1972,8 @@ public abstract class BasePlugin {
         boolean isMinifyEnabled = config.isMinifyEnabled()
         boolean isMultiDexEnabled = config.isMultiDexEnabled() && config.type != TEST
         boolean isLegacyMultiDexMode = config.isLegacyMultiDexMode()
+        File multiDexKeepProguard = config.getMultiDexKeepProguard()
+        File multiDexKeepFile = config.getMultiDexKeepFile()
 
         boolean isTestCoverageEnabled = config.buildType.isTestCoverageEnabled() &&
                 config.type != TEST
@@ -2095,6 +2097,7 @@ public abstract class BasePlugin {
                 output.manifestProcessorTask.manifestOutputFile
             }
 
+            manifestKeepListTask.proguardFile = multiDexKeepProguard
             manifestKeepListTask.outputFile = project.file(
                     "${project.buildDir}/${FD_INTERMEDIATES}/multi-dex/${config.dirName}/manifest_keep.txt")
 
@@ -2145,6 +2148,7 @@ public abstract class BasePlugin {
             createMainDexListTask.allClassesJarFile = pcData.inputFiles.call().iterator().next()
             createMainDexListTask.conventionMapping.componentsJarFile = { componentsJarFile }
             //createMainDexListTask.conventionMapping.includeInMainDexJarFile = { mainDexJarFile }
+            createMainDexListTask.mainDexListFile = multiDexKeepFile
             createMainDexListTask.outputFile = project.file(
                     "${project.buildDir}/${FD_INTERMEDIATES}/multi-dex/${config.dirName}/maindexlist.txt")
 
