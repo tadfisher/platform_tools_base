@@ -276,6 +276,9 @@ public abstract class BasePlugin {
         return extension
     }
 
+    /**
+     * This and that.
+     */
     protected void apply(Project project) {
         this.project = project
         doApply()
