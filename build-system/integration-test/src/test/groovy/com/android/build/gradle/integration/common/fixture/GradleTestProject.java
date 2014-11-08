@@ -66,14 +66,6 @@ import java.util.List;
  */
 public class GradleTestProject implements TestRule {
 
-    private static final String DEFAULT_TEST_PROJECT_NAME = "project";
-
-    public static final int DEFAULT_COMPILE_SDK_VERSION = 21;
-
-    public static final String DEFAULT_BUILD_TOOL_VERSION = "21.0.1";
-
-    private static final String ANDROID_GRADLE_VERSION = "0.14.4";
-
     public static class Builder {
         private static final File SAMPLE_PROJECT_DIR = new File("samples");
 
@@ -141,6 +133,14 @@ public class GradleTestProject implements TestRule {
         static class EmptyTestApp extends AbstractAndroidTestApp {
         }
     }
+
+    private static final String DEFAULT_TEST_PROJECT_NAME = "project";
+
+    public static final int DEFAULT_COMPILE_SDK_VERSION = 21;
+
+    public static final String DEFAULT_BUILD_TOOL_VERSION = "21.0.1";
+
+    private static final String ANDROID_GRADLE_VERSION = "0.14.4";
 
     private String name;
 
