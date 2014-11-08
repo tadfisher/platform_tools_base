@@ -341,6 +341,24 @@ public class GradleTestProject implements TestRule {
     }
 
     /**
+     * Creates a new file in the project.
+     *
+     * getTestDir will be the base directory if a relative path is supplied.
+     *
+     * @param path Full path of the file.  May be a relative path.
+     * @throws IOException if the file already exists or cannot be created.
+     */
+    public File createFile(String path) throws IOException {
+        File file = file(path);
+        if(file.exists()) {
+            throw new IOException("File " + path + " already exists.");
+        }
+        Files.createParentDirs(file);
+        Files.touch(file);
+        return file;
+    }
+
+    /**
      * Returns the SDK folder as built from the Android source tree.
      */
     private static File findSdkDir() {
