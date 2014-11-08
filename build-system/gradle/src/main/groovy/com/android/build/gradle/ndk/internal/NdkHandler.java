@@ -70,6 +70,9 @@ public class NdkHandler {
             SdkConstants.ABI_MIPS,
             SdkConstants.ABI_MIPS64);
 
+    private static final String DEFAULT_LLVM_GCC32_VERSION="4.8";
+    private static final String DEFAULT_LLVM_GCC64_VERSION="4.9";
+
     private NdkExtension ndkExtension;
 
     private File ndkDirectory;
@@ -220,7 +223,8 @@ public class NdkHandler {
         }
 
         // Fallback to 32-bit if we can't find the 64-bit toolchain.
-        toolchainPath = new File(prebuiltFolder, hostOs);
+        String osString = (osName.equals("windows")) ? hostOs : hostOs + "-x86";
+        toolchainPath = new File(prebuiltFolder, osString);
         if (toolchainPath.isDirectory()) {
             return toolchainPath;
         } else {
@@ -262,13 +266,16 @@ public class NdkHandler {
      * Return the gcc version that will be used by the NDK.
      *
      * If the gcc toolchain is used, then it's simply the toolchain version requested by the user.
-     * If clang is used, then it depends on the version of the NDK.
+     * If clang is used, then it depends the target abi.
      */
-    public String getGccToolchainVersion() {
+    public String getGccToolchainVersion(String abi) {
         if (ndkExtension.getToolchain().equals("gcc")) {
-            return ndkExtension.getToolchainVersion();
+            String toolchain = ndkExtension.getToolchain();
+            return (toolchain.equals(NdkExtensionConvention.DEFAULT_TOOLCHAIN))
+                    ? ToolchainConfiguration.getDefaultToolchainVersion(toolchain, abi)
+                    : ndkExtension.getToolchainVersion();
         } else {
-            return supports64Bits() ? "4.9" : "4.8";
+            return is64Bits(abi) ? DEFAULT_LLVM_GCC64_VERSION : DEFAULT_LLVM_GCC32_VERSION;
         }
     }
 
@@ -277,5 +284,12 @@ public class NdkHandler {
      */
     public Collection<String> getSupportedAbis() {
         return supports64Bits() ? ALL_ABI : ABI32;
+    }
+
+    /**
+     * Return whether the specified abi is 64 bits.
+     */
+    public static boolean is64Bits(String abi) {
+        return !ABI32.contains(abi);
     }
 }
