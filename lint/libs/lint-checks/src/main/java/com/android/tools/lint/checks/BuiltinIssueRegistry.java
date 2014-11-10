@@ -73,6 +73,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(DuplicateIdDetector.WITHIN_LAYOUT);
         issues.add(DuplicateResourceDetector.ISSUE);
         issues.add(DuplicateResourceDetector.TYPE_MISMATCH);
+        issues.add(ExportedDetector.ISSUE);
         issues.add(ExtraTextDetector.ISSUE);
         issues.add(FieldGetterDetector.ISSUE);
         issues.add(FragmentDetector.ISSUE);
