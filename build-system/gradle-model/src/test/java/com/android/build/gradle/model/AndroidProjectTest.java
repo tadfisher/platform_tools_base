@@ -49,7 +49,6 @@ import com.android.builder.model.Variant;
 import com.android.ide.common.signing.KeystoreHelper;
 import com.android.io.StreamException;
 import com.android.prefs.AndroidLocation;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -1454,6 +1453,28 @@ public class AndroidProjectTest extends TestCase {
         } catch (BuildException e) {
             assertTrue(e.getCause().getMessage().contains(
                     "Only Android library projects can act as dependencies of other projects."));
+        }
+    }
+
+    public void testCustomSigning() throws Exception {
+        // Load the custom model for the project
+        ProjectData projectData = getModelForProject(FOLDER_TEST_REGULAR, "basic");
+
+        AndroidProject model = projectData.model;
+
+        Collection<Variant> variants = model.getVariants();
+
+        for (Variant variant : variants) {
+            // Release variant doesn't specify the signing config, so it should not be considered
+            // signed.
+            if (variant.getName().equals("release")) {
+                assertFalse(variant.getMainArtifact().isSigned());
+            }
+
+            // customSigning is identical to release, but overrides the signing check.
+            if (variant.getName().equals("customSigning")) {
+                assertTrue(variant.getMainArtifact().isSigned());
+            }
         }
     }
 
