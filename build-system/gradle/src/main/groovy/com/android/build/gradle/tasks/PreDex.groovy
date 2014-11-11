@@ -95,10 +95,11 @@ public class PreDex extends BaseTask {
                 //noinspection GroovyAssignabilityCheck
                 File preDexedFile = getDexFileName(outFolder, change.file)
                 if (preDexedFile.isDirectory()) {
-                    preDexedFile.deleteDir()
+                    logger.info("deleteDir(" + preDexedFile + ") returned: " + preDexedFile.deleteDir())
                 } else {
-                    preDexedFile.delete()
+                    logger.info("delete(" + preDexedFile + ") returned: " + preDexedFile.delete())
                 }
+                // TODO: Remove these entries from dex-cache.xml?
             }
         }
 
