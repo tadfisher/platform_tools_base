@@ -96,6 +96,7 @@ import java.util.jar.JarOutputStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -301,7 +302,7 @@ public class ResourceUsageAnalyzer {
                 JarOutputStream zos = new JarOutputStream(fos);
                 try {
                     // The .ap_ file is also compressed
-                    zos.setLevel(9);
+                    zos.setLevel(Deflater.DEFAULT_COMPRESSION);
 
                     ZipEntry entry = zis.getNextEntry();
                     while (entry != null) {
@@ -313,6 +314,14 @@ public class ResourceUsageAnalyzer {
                             if (entry.getTime() != -1L) {
                                 outEntry.setTime(entry.getTime());
                             }
+                            int method = entry.getMethod();
+                            outEntry.setMethod(method);
+                            if (method == ZipEntry.STORED) {
+                                outEntry.setCompressedSize(entry.getCompressedSize());
+                                outEntry.setSize(entry.getSize());
+                                outEntry.setCrc(entry.getCrc());
+                            }
+
                             zos.putNextEntry(outEntry);
 
                             if (!directory) {
