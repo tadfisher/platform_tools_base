@@ -28,39 +28,31 @@
             <tr><td>defaultConfig</td></tr>
             <tr><td>sourceSets</td></tr>
             <tr><td>buildTypes</td></tr>
+            <tr><td>signingConfigs</td></tr>
             <tr><td>productFlavors</td></tr>
             <tr><td>testOptions</td></tr>
+            <tr><td>aaptOptions</td></tr>
+            <tr><td>lintOptions</td></tr>
+            <tr><td>dexOptions</td></tr>
+            <tr><td>compileOptions</td></tr>
+            <tr><td>packagingOptions</td></tr>
+            <tr><td>jacoco</td></tr>
+            <tr><td>splits</td></tr>
         </table>
         <para>Lorem ipsum.
         </para>
     </section>
 
     <section>
-        <title>Core types</title>
+        <title>DSL types</title>
         <para>Listed below are some of the central types which are used in the Android plugin:</para>
         <table>
             <title>Core types</title>
-            <tr>
-                <td>com.android.build.gradle.BaseExtension</td>
-            </tr>
-            <tr>
-                <td>com.android.build.gradle.api.AndroidSourceSet</td>
-            </tr>
-            <tr>
-                <td>com.android.build.gradle.internal.dsl.ProductFlavorDsl</td>
-            </tr>
-            <tr>
-                <td>com.android.build.gradle.internal.dsl.GroupableProductFlavorDsl</td>
-            </tr>
-            <tr>
-                <td>com.android.build.gradle.internal.dsl.BuildTypeDsl</td>
-            </tr>
-            <tr>
-                <td>com.android.build.gradle.internal.dsl.SigningConfigDsl</td>
-            </tr>
-            <tr>
-                <td>com.android.build.gradle.internal.test.TestOptions</td>
-            </tr>
+            <tr><td>com.android.build.gradle.BaseExtension</td></tr>
+            <tr><td>com.android.build.gradle.api.AndroidSourceSet</td></tr>
+            <tr><td>com.android.build.gradle.internal.dsl.GroupableProductFlavorDsl</td></tr>
+            <tr><td>com.android.build.gradle.internal.dsl.BuildTypeDsl</td></tr>
+            <tr><td>com.android.build.gradle.internal.dsl.SigningConfigDsl</td></tr>
         </table>
     </section>
 </book>
