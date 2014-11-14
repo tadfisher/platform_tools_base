@@ -22,11 +22,16 @@ import static org.junit.Assert.fail;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.BasePlugin;
+import com.android.build.gradle.integration.common.fixture.app.AbstractAndroidTestApp;
+import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
+import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.builder.model.AndroidProject;
 import com.android.io.StreamException;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
@@ -43,6 +48,9 @@ import java.io.OutputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.CodeSource;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -64,13 +72,13 @@ public class GradleTestProject implements TestRule {
 
         private String name;
 
-        private File projectDir;
+        private AndroidTestApp testApp;
 
         /**
          * Create a GradleTestProject.
          */
         public GradleTestProject create()  {
-            return new GradleTestProject(name, projectDir);
+            return new GradleTestProject(name, testApp);
         }
 
         /**
@@ -87,8 +95,31 @@ public class GradleTestProject implements TestRule {
          * Create GradleTestProject from an existing gradle project.
          */
         public Builder fromSample(@NonNull String project) {
-            projectDir = new File(SAMPLE_PROJECT_DIR, project);
+            // Create a new AndroidTestApp with all files in the project.
+            testApp = new EmptyTestApp();
+            File projectDir = new File(SAMPLE_PROJECT_DIR, project);
+            for (File src : Files.fileTreeTraverser().preOrderTraversal(projectDir).filter(
+                    new Predicate<File>() {
+                        @Override
+                        public boolean apply(@Nullable File file) {
+                            return file != null && !file.isDirectory();
+                        }
+                    })) {
+                File relativePath = new File(src.toString().replace(projectDir.toString(), ""));
+                try {
+                    testApp.addFile(
+                            new TestSourceFile(
+                                    relativePath.getParent(),
+                                    src.getName(),
+                                    Files.toByteArray(src)));
+                } catch (Exception e) {
+                    fail(e.toString());
+                }
+            }
             return this;
+        }
+
+        static class EmptyTestApp extends AbstractAndroidTestApp {
         }
     }
 
@@ -117,13 +148,13 @@ public class GradleTestProject implements TestRule {
     private ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
     @Nullable
-    private File projectSourceDir;
+    private AndroidTestApp projectSourceDir;
 
-    public GradleTestProject() {
+    private GradleTestProject() {
         this(null, null);
     }
 
-    private GradleTestProject(@Nullable String name, @Nullable File projectSourceDir) {
+    private GradleTestProject(@Nullable String name, @Nullable AndroidTestApp projectSourceDir) {
         sdkDir = findSdkDir();
         ndkDir = findNdkDir();
         String buildDir = System.getenv("PROJECT_BUILD_DIR");
@@ -155,24 +186,22 @@ public class GradleTestProject implements TestRule {
         }
     }
 
-    private static void copyRecursive(File src, File dest) {
+    private static void addAllFiles(AndroidTestApp app, File src) {
         if (src.isDirectory()) {
-            // If directory does not exists, create it
-            if (!dest.exists()) {
-                assertTrue(dest.mkdir());
-            }
-
             // Recursively copy each file in directory.
             for (String file : src.list()) {
                 File srcFile = new File(src, file);
-                File destFile = new File(dest, file);
-                copyRecursive(srcFile, destFile);
+                //File destFile = new File(dest, file);
+                addAllFiles(app, srcFile);
             }
         } else {
+            String content = null;
             try {
-                Files.copy(src, dest);
-            } catch (Exception ignore) {
+                content = Files.toString(src, Charsets.UTF_8);
+            } catch (IOException e) {
+                fail(e.toString());
             }
+            app.addFile(new TestSourceFile(src.getPath(), src.getName(), content));
         }
     }
 
@@ -200,7 +229,8 @@ public class GradleTestProject implements TestRule {
                 assertTrue(sourceDir.mkdirs());
 
                 if (projectSourceDir != null) {
-                    copyRecursive(projectSourceDir, testDir);
+                    projectSourceDir.writeSources(testDir);
+                    //copyRecursive(projectSourceDir, testDir);
                 } else {
                     Files.write(
                             "buildscript {\n" +
@@ -247,6 +277,29 @@ public class GradleTestProject implements TestRule {
      */
     public File getSourceDir() {
         return sourceDir;
+    }
+
+    /**
+     * Return the output directory from Android plugins.
+     */
+    public File getOutputDir() {
+        return new File(testDir,
+                Joiner.on(File.separator).join("build", AndroidProject.FD_INTERMEDIATES));
+    }
+
+    public File getOutputFile(String path) {
+        return new File(getOutputDir(), path);
+    }
+
+    /**
+     * Return the output APK File from the application plugin for the given dimension.
+     */
+    public File getApk(String ... dimensions) {
+        // TODO: Add overload for tests and splits.
+        List<String> dimensionList = Lists.newArrayListWithExpectedSize(1 + dimensions.length);
+        dimensionList.add(getName());
+        dimensionList.addAll(Arrays.asList(dimensions));
+        return getOutputFile("apk/" + Joiner.on("-").join(dimensionList) + ".apk");
     }
 
     /**
