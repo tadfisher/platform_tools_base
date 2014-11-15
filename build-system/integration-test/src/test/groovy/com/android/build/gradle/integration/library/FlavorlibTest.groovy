@@ -38,7 +38,8 @@ class FlavorlibTest {
     }
 
     @Test
-    void assembleDebug() {
+    void report() {
+        project.execute("androidDependencies", "signingReport")
     }
 
     @Test
