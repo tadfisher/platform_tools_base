@@ -14,27 +14,46 @@
  * limitations under the License.
  */
 
+
+
 package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.google.common.collect.ImmutableList
 import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
 import org.junit.experimental.categories.Category
 
 /**
- * Assemble tests for minify.
+ * Test Jack integration.
  */
-class MinifyTest {
+class JackTest {
     @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
+    static public GradleTestProject basic = GradleTestProject.builder()
+            .withName("basic")
+            .fromSample("regular/basic")
+            .create()
+
+    static public GradleTestProject minify = GradleTestProject.builder()
+            .withName("minify")
             .fromSample("regular/minify")
+            .create()
+
+    static public GradleTestProject multiDex = GradleTestProject.builder()
+            .withName("multiDex")
+            .fromSample("regular/multiDex")
             .create()
 
     @BeforeClass
     static void setup() {
-        project.execute("clean", "assembleDebug");
+        final List<String> JACK_OPTIONS = ImmutableList.of(
+                "-PCUSTOM_JACK=1",
+                "-PCUSTOM_BUILDTOOLS=21.1.0")
+        basic.execute(JACK_OPTIONS, "clean", "assembleDebug")
+        minify.execute(JACK_OPTIONS, "clean", "assembleDebug")
+        multiDex.execute(JACK_OPTIONS, "clean", "assembleDebug")
     }
 
     @Test
@@ -44,7 +63,19 @@ class MinifyTest {
 
     @Test
     @Category(DeviceTests.class)
-    void connectedCheck() {
-        project.execute("connectedCheck");
+    void "basic connectedCheck"() {
+        basic.execute("connectedCheck");
+    }
+
+    @Test
+    @Category(DeviceTests.class)
+    void "minify connectedCheck"() {
+        minify.execute("connectedCheck");
+    }
+
+    @Test
+    @Category(DeviceTests.class)
+    void "multiDex connectedCheck"() {
+        multiDex.execute("connectedCheck");
     }
 }
