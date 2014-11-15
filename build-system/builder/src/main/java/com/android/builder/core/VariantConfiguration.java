@@ -136,6 +136,11 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     private final List<LibraryDependency> mFlatLibraries = Lists.newArrayList();
 
     /**
+     * Variant-specific build Config
+     */
+    private final Map<String, ClassField> mBuildConfigFields = Maps.newTreeMap();
+
+    /**
      * Signing Override to be used instead of any signing config provided by Build Type or
      * Product Flavors.
      */
@@ -1510,6 +1515,17 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     }
 
     /**
+     * Adds a variant-specific BuildConfig field.
+     * @param type the type of the field
+     * @param name the name of the field
+     * @param value the value of the field
+     */
+    public void addBuildConfigField(@NonNull String type, @NonNull String name, @NonNull String value) {
+        ClassField classField = AndroidBuilder.createClassField(type, name, value);
+        mBuildConfigFields.put(name, classField);
+    }
+
+    /**
      * Returns a list of items for the BuildConfig class.
      *
      * Items can be either fields (instance of {@link com.android.builder.model.ClassField})
@@ -1521,9 +1537,21 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     public List<Object> getBuildConfigItems() {
         List<Object> fullList = Lists.newArrayList();
 
+        // keep track of the names already added. This is because we show where the items
+        // come from so we cannot just put everything a map and let the new ones override the
+        // old ones.
         Set<String> usedFieldNames = Sets.newHashSet();
 
-        Collection<ClassField> list = mBuildType.getBuildConfigFields().values();
+        Collection<ClassField> list = mBuildConfigFields.values();
+        if (!list.isEmpty()) {
+            fullList.add("Fields from the variant");
+            for (ClassField f : list) {
+                usedFieldNames.add(f.getName());
+                fullList.add(f);
+            }
+        }
+
+        list = mBuildType.getBuildConfigFields().values();
         if (!list.isEmpty()) {
             fullList.add("Fields from build type: " + mBuildType.getName());
             for (ClassField f : list) {
