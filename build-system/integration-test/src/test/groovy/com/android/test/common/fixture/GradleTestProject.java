@@ -35,6 +35,7 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -111,6 +112,8 @@ public class GradleTestProject implements TestRule {
     private File ndkDir;
 
     private File sdkDir;
+
+    private ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
     @Nullable
     private File projectSourceDir;
@@ -285,27 +288,16 @@ public class GradleTestProject implements TestRule {
      * @param tasks Variadic list of tasks to execute.
      */
     public void execute(String ... tasks) {
-        execute(Collections.<String>emptyList(), null, tasks);
-    }
-
-    /**
-     * Runs gradle on the project.  Throws exception on failure.
-     *
-     * @param stdout Stream to capture the standard output.
-     * @param tasks Variadic list of tasks to execute.
-     */
-    public void execute(OutputStream stdout, String ... tasks) {
-        execute(Collections.<String>emptyList(), stdout, tasks);
+        execute(Collections.<String>emptyList(), tasks);
     }
 
     /**
      * Runs gradle on the project.  Throws exception on failure.
      *
      * @param arguments List of arguments for the gradle command.
-     * @param stdout Stream to capture the standard output.
      * @param tasks Variadic list of tasks to execute.
      */
-    public void execute(List<String> arguments, @Nullable OutputStream stdout, String ... tasks) {
+    public void execute(List<String> arguments, String ... tasks) {
         GradleConnector connector = GradleConnector.newConnector();
 
         ProjectConnection connection = connector
@@ -324,6 +316,13 @@ public class GradleTestProject implements TestRule {
         } finally {
             connection.close();
         }
+    }
+
+    /**
+     * Return the stdout from all execute command.
+     */
+    public ByteArrayOutputStream getStdout() {
+        return stdout;
     }
 
     /**
