@@ -16,35 +16,48 @@
 
 package com.android.build.gradle.internal
 
+import com.android.annotations.NonNull
+import com.android.annotations.Nullable
+import com.google.common.base.Charsets
+import groovy.transform.CompileStatic
 import org.gradle.api.JavaVersion
 
 /**
- * Compilation options
+ * Compilation options.
  */
+@CompileStatic
 class CompileOptions {
+    @Nullable
+    private JavaVersion sourceCompatibility
 
-    private JavaVersion sourceCompatibility = JavaVersion.VERSION_1_6
-    private JavaVersion targetCompatibility = JavaVersion.VERSION_1_6
-    String encoding = "UTF-8"
+    @Nullable
+    private JavaVersion targetCompatibility
 
-    void setSourceCompatibility(JavaVersion sourceCompatibility) {
-        this.sourceCompatibility = sourceCompatibility
-        setExplicitly = true
-    }
+    String encoding = Charsets.UTF_8.name()
 
-    JavaVersion getSourceCompatibility() {
-        return sourceCompatibility
-    }
+    /**
+     * Default Java version that will be used if the source and target compatibility levels will
+     * not be set explicitly.
+     */
+    JavaVersion defaultJavaVersion = JavaVersion.VERSION_1_6
 
-    void setTargetCompatibility(JavaVersion targetCompatibility) {
-        this.targetCompatibility = targetCompatibility
-        setExplicitly = true
-    }
-
-    JavaVersion getTargetCompatibility() {
-        return targetCompatibility
-    }
-
-    boolean setExplicitly = false
     boolean ndkCygwinMode = false
+
+    void setSourceCompatibility(@NonNull JavaVersion sourceCompatibility) {
+        this.sourceCompatibility = sourceCompatibility
+    }
+
+    @NonNull
+    JavaVersion getSourceCompatibility() {
+        sourceCompatibility?: defaultJavaVersion
+    }
+
+    void setTargetCompatibility(@NonNull JavaVersion targetCompatibility) {
+        this.targetCompatibility = targetCompatibility
+    }
+
+    @NonNull
+    JavaVersion getTargetCompatibility() {
+        targetCompatibility?: defaultJavaVersion
+    }
 }
