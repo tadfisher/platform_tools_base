@@ -35,6 +35,8 @@ public class PlaceholderHandler {
     // prefix and suffix string. this will split in 3 groups, the prefix, the placeholder name, and
     // the suffix.
     private static final Pattern PATTERN = Pattern.compile("([^\\$]*)\\$\\{([^\\}]*)\\}(.*)");
+    private static final Pattern LIB_PATTERN = Pattern.compile("([^\\$]*)dollaropen([^\\}]*)close(.*)");
+
 
     /**
      * Interface to provide a value for a placeholder key.
@@ -86,37 +88,60 @@ public class PlaceholderHandler {
 
             Matcher matcher = PATTERN.matcher(xmlAttribute.getValue());
             if (matcher.matches()) {
-                String placeholderValue = valueProvider.getValue(matcher.group(2));
-                if (placeholderValue == null) {
-                    // if this is a library, ignore the failure
-                    MergingReport.Record.Severity severity =
-                            mergeType == ManifestMerger2.MergeType.LIBRARY
-                        ? MergingReport.Record.Severity.INFO
-                        : MergingReport.Record.Severity.ERROR;
-
-                    xmlAttribute.addMessage(mergingReportBuilder, severity,
-                            String.format(
-                                    "Attribute %1$s at %2$s requires a placeholder substitution"
-                                            + " but no value for <%3$s> is provided.",
-                                    xmlAttribute.getId(),
-                                    xmlAttribute.printPosition(),
-                                    matcher.group(2)
-                            ));
-                } else {
-                    // record the attribute set
-                    mergingReportBuilder.getActionRecorder().recordAttributeAction(
-                            xmlAttribute,
-                            PositionImpl.UNKNOWN,
-                            Actions.ActionType.INJECTED,
-                            null /* attributeOperationType */);
-
-                    String attrValue = matcher.group(1) + placeholderValue + matcher.group(3);
-                    xmlAttribute.getXml().setValue(attrValue);
+                checkPattern(matcher, mergeType, valueProvider, mergingReportBuilder, xmlAttribute);
+            } else {
+                matcher = LIB_PATTERN.matcher(xmlAttribute.getValue());
+                if (matcher.matches()) {
+                    checkPattern(matcher, mergeType, valueProvider, mergingReportBuilder, xmlAttribute);
                 }
             }
         }
         for (XmlElement childElement : xmlElement.getMergeableElements()) {
             visit(mergeType, childElement, valueProvider, mergingReportBuilder);
+        }
+    }
+
+    private void checkPattern(
+            @NonNull Matcher matcher,
+            @NonNull ManifestMerger2.MergeType mergeType,
+            @NonNull KeyBasedValueResolver<String> valueProvider,
+            @NonNull MergingReport.Builder mergingReportBuilder,
+            @NonNull XmlAttribute xmlAttribute) {
+
+        if (matcher.matches()) {
+            String placeholderValue = valueProvider.getValue(matcher.group(2));
+            if (placeholderValue == null) {
+                // if this is a library, ignore the failure
+                MergingReport.Record.Severity severity =
+                        mergeType == ManifestMerger2.MergeType.LIBRARY
+                                ? MergingReport.Record.Severity.INFO
+                                : MergingReport.Record.Severity.ERROR;
+
+                xmlAttribute.addMessage(mergingReportBuilder, severity,
+                        String.format(
+                                "Attribute %1$s at %2$s requires a placeholder substitution"
+                                        + " but no value for <%3$s> is provided.",
+                                xmlAttribute.getId(),
+                                xmlAttribute.printPosition(),
+                                matcher.group(2)
+                        ));
+
+                // if this is a library, replace the placeholder with an aapt friendly value
+                if (mergeType == ManifestMerger2.MergeType.LIBRARY) {
+                    placeholderValue = "dollaropen"+matcher.group(2)+"close";
+                }
+            }
+            if (placeholderValue != null) {
+                // record the attribute set
+                mergingReportBuilder.getActionRecorder().recordAttributeAction(
+                        xmlAttribute,
+                        PositionImpl.UNKNOWN,
+                        Actions.ActionType.INJECTED,
+                        null /* attributeOperationType */);
+
+                String attrValue = matcher.group(1) + placeholderValue + matcher.group(3);
+                xmlAttribute.getXml().setValue(attrValue);
+            }
         }
     }
 }
