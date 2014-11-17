@@ -163,4 +163,68 @@ public class PlaceholderHandlerTest extends TestCase {
                 any(XmlLoader.SourceLocation.class), anyInt(), anyInt(),
                 eq(MergingReport.Record.Severity.ERROR), anyString());
     }
+
+    public void testPlaceHolderReplacementWhenNotProvided_inLibrary()
+            throws ParserConfigurationException, SAXException, IOException {
+        String xml = ""
+                + "<manifest\n"
+                + "    xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+                + "    <activity android:name=\"activityOne\"\n"
+                + "         android:attr1=\"${landscapePH}\"/>\n"
+                + "</manifest>";
+
+        XmlDocument refDocument = TestUtils.xmlDocumentFromString(
+                new TestUtils.TestSourceLocation(getClass(), "testPlaceholders#xml"), xml);
+
+        PlaceholderHandler handler = new PlaceholderHandler();
+        handler.visit(ManifestMerger2.MergeType.LIBRARY, refDocument, nullResolver, mBuilder);
+        Optional<XmlElement> activityOne = refDocument.getRootNode()
+                .getNodeByTypeAndKey(ManifestModel.NodeTypes.ACTIVITY, ".activityOne");
+        assertTrue(activityOne.isPresent());
+        assertEquals("dollaropenlandscapePHclose",
+                activityOne.get().getAttribute(
+                        XmlNode.fromXmlName("android:attr1")).get().getValue());
+    }
+
+    public void testPlaceHolderLibraryReplacement()
+            throws ParserConfigurationException, SAXException, IOException {
+        String xml = ""
+                + "<manifest\n"
+                + "    xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+                + "    <activity android:name=\"activityOne\"\n"
+                + "         android:attr1=\"dollaropenlandscapePHclose\""
+                + "         android:attr2=\"prefixdollaropenlandscapePHclose\""
+                + "         android:attr3=\"dollaropenlandscapePHclosesuffix\""
+                + "         android:attr4=\"prefixdollaropenlandscapePHclosesuffix\""
+                + "/>\n"
+                + "</manifest>";
+
+        XmlDocument refDocument = TestUtils.xmlDocumentFromString(
+                new TestUtils.TestSourceLocation(getClass(), "testPlaceholders#xml"), xml);
+
+        PlaceholderHandler handler = new PlaceholderHandler();
+        handler.visit(ManifestMerger2.MergeType.LIBRARY, refDocument,
+                new KeyBasedValueResolver<String>() {
+                    @Override
+                    public String getValue(@NonNull String key) {
+                        return "newValue";
+                    }
+                }, mBuilder);
+        Optional<XmlElement> activityOne = refDocument.getRootNode()
+                .getNodeByTypeAndKey(ManifestModel.NodeTypes.ACTIVITY, ".activityOne");
+        assertTrue(activityOne.isPresent());
+        assertEquals("newValue",
+                activityOne.get().getAttribute(
+                        XmlNode.fromXmlName("android:attr1")).get().getValue());
+        assertEquals("prefixnewValue",
+                activityOne.get().getAttribute(
+                        XmlNode.fromXmlName("android:attr2")).get().getValue());
+        assertEquals("newValuesuffix",
+                activityOne.get().getAttribute(
+                        XmlNode.fromXmlName("android:attr3")).get().getValue());
+        assertEquals("prefixnewValuesuffix",
+                activityOne.get().getAttribute(
+                        XmlNode.fromXmlName("android:attr4")).get().getValue());
+
+    }
 }
