@@ -134,11 +134,10 @@ public abstract class BaseTest extends TestCase {
     }
 
     protected File runTasksOn(
-            @NonNull String testFolder,
             @NonNull String name,
             @NonNull String gradleVersion,
             @NonNull String... tasks) {
-        File project = new File(new File(testDir, testFolder), name)
+        File project = new File(testDir, name)
 
         return runTasksOn(
                 project,
@@ -149,12 +148,11 @@ public abstract class BaseTest extends TestCase {
     }
 
     protected File runTasksOn(
-            @NonNull String testFolder,
             @NonNull String name,
             @NonNull String gradleVersion,
             @NonNull List<String> arguments,
             @NonNull String... tasks) {
-        File project = new File(new File(testDir, testFolder), name)
+        File project = new File(testDir, name)
 
         return runTasksOn(project,
                 gradleVersion,

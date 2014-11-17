@@ -27,7 +27,7 @@ import org.junit.Test
 class FilteredOutBuildTypeTest {
     @ClassRule
     static public GradleTestProject project = GradleTestProject.builder()
-            .fromSample("regular/filteredOutBuildType")
+            .fromTestProject("filteredOutBuildType")
             .create()
 
     @BeforeClass

@@ -108,7 +108,7 @@ public class AutomatedBuildTest extends BuildTest {
 
                 AutomatedBuildTest test = (AutomatedBuildTest) TestSuite.createTest(
                         AutomatedBuildTest.class, testName);
-                test.setProjectInfo(FOLDER_TEST_REGULAR, projectName, gradleVersion, TestType.BUILD);
+                test.setProjectInfo(projectName, gradleVersion, TestType.BUILD);
                 suite.addTest(test);
             }
 
@@ -118,7 +118,7 @@ public class AutomatedBuildTest extends BuildTest {
 
                 AutomatedBuildTest test = (AutomatedBuildTest) TestSuite.createTest(
                         AutomatedBuildTest.class, testName);
-                test.setProjectInfo(FOLDER_TEST_REGULAR, projectName, gradleVersion,
+                test.setProjectInfo(projectName, gradleVersion,
                         TestType.REPORT);
                 suite.addTest(test);
             }
@@ -129,7 +129,7 @@ public class AutomatedBuildTest extends BuildTest {
 
                     AutomatedBuildTest test = (AutomatedBuildTest) TestSuite.createTest(
                             AutomatedBuildTest.class, testName);
-                    test.setProjectInfo(FOLDER_TEST_REGULAR, projectName, gradleVersion, TestType.JACK);
+                    test.setProjectInfo(projectName, gradleVersion, TestType.JACK);
                     suite.addTest(test);
                 }
             }
@@ -139,11 +139,9 @@ public class AutomatedBuildTest extends BuildTest {
     }
 
     private void setProjectInfo(
-            @NonNull String testFolder,
             @NonNull String projectName,
             @NonNull String gradleVersion,
             @NonNull TestType testType) {
-        this.testFolder = testFolder;
         this.projectName = projectName;
         this.gradleVersion = gradleVersion;
         this.testType = testType;
@@ -153,16 +151,16 @@ public class AutomatedBuildTest extends BuildTest {
     protected void runTest() throws Throwable {
         switch (testType) {
             case BUILD:
-                buildProject(testFolder, projectName, gradleVersion);
+                buildProject(projectName, gradleVersion);
                 break;
             case JACK:
-                buildProject(testFolder, projectName, gradleVersion, Lists.newArrayList(
+                buildProject(projectName, gradleVersion, Lists.newArrayList(
                         "-PCUSTOM_JACK=1",
                         "-PCUSTOM_BUILDTOOLS=21.1.0"
                 ));
                 break;
             case REPORT:
-                runTasksOn(testFolder, projectName, gradleVersion,
+                runTasksOn(projectName, gradleVersion,
                         "androidDependencies", "signingReport");
                 break;
         }

@@ -29,7 +29,7 @@ import org.junit.experimental.categories.Category
 class DependenciesTest {
     @ClassRule
     static public GradleTestProject project = GradleTestProject.builder()
-            .fromSample("regular/dependencies")
+            .fromTestProject("dependencies")
             .create()
 
     @BeforeClass

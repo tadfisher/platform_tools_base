@@ -50,23 +50,19 @@ abstract class BuildTest extends BaseTest {
     }
 
     protected File buildProject(
-            @NonNull String testFolder,
             @NonNull String name,
             @NonNull String gradleVersion) {
         return runTasksOn(
-                testFolder,
                 name,
                 gradleVersion,
                 "clean", "assembleDebug", "lint");
     }
 
     protected File buildProject(
-            @NonNull String testFolder,
             @NonNull String name,
             @NonNull String gradleVersion,
             @NonNull List<String> arguments) {
         return runTasksOn(
-                testFolder,
                 name,
                 gradleVersion,
                 arguments,

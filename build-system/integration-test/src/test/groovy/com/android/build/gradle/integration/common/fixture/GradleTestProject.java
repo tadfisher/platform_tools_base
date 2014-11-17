@@ -59,7 +59,7 @@ import java.util.List;
 public class GradleTestProject implements TestRule {
 
     public static class Builder {
-        private static final File SAMPLE_PROJECT_DIR = new File("test-projects");
+        private static final File TEST_PROJECT_DIR = new File("test-projects");
 
         private String name;
 
@@ -85,8 +85,8 @@ public class GradleTestProject implements TestRule {
         /**
          * Create GradleTestProject from an existing gradle project.
          */
-        public Builder fromSample(@NonNull String project) {
-            projectDir = new File(SAMPLE_PROJECT_DIR, project);
+        public Builder fromTestProject(@NonNull String project) {
+            projectDir = new File(TEST_PROJECT_DIR, project);
             return this;
         }
     }

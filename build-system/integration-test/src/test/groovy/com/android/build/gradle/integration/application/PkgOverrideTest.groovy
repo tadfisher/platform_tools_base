@@ -29,7 +29,7 @@ import org.junit.experimental.categories.Category
 class PkgOverrideTest {
     @ClassRule
     static public GradleTestProject project = GradleTestProject.builder()
-            .fromSample("regular/pkgOverride")
+            .fromTestProject("pkgOverride")
             .create()
 
     @BeforeClass

@@ -27,7 +27,7 @@ import org.junit.Test
 class AidlTest {
     @ClassRule
     static public GradleTestProject project = GradleTestProject.builder()
-            .fromSample("regular/aidl")
+            .fromTestProject("aidl")
             .create()
 
     @BeforeClass

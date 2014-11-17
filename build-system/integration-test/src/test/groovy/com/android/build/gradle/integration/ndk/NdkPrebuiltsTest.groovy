@@ -27,7 +27,7 @@ import org.junit.Test
 class NdkPrebuiltsTest {
     @ClassRule
     static public GradleTestProject project = GradleTestProject.builder()
-            .fromSample("regular/ndkPrebuilts")
+            .fromTestProject("ndkPrebuilts")
             .create()
 
     @BeforeClass

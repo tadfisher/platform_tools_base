@@ -27,7 +27,7 @@ import org.junit.Test
 class FilteredOutVariantsTest {
     @ClassRule
     static public GradleTestProject project = GradleTestProject.builder()
-            .fromSample("regular/filteredOutVariants")
+            .fromTestProject("filteredOutVariants")
             .create()
 
     @BeforeClass
