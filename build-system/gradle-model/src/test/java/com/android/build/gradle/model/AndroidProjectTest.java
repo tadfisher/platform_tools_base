@@ -79,10 +79,10 @@ public class AndroidProjectTest extends TestCase {
 
     private static final String GRADLE_VERSION = "2.2";
 
-    private static final String FOLDER_TEST_REGULAR = "regular";
-    private static final String FOLDER_TEST_MANUAL = "manual";
+    private static final String FOLDER_TEST_REGULAR = "samples";
+    private static final String FOLDER_TEST_MANUAL = "test-projects";
 
-    private static final String MODEL_VERSION = "0.14.2";
+    private static final String MODEL_VERSION = "0.14.3";
 
     private static final Map<String, ProjectData> sProjectModelMap = Maps.newHashMap();
 
@@ -1545,7 +1545,7 @@ public class AndroidProjectTest extends TestCase {
      */
     private File getTestDir(@NonNull String testFolder) {
         File rootDir = getRootDir();
-        return new File(new File(rootDir, "tests"), testFolder);
+        return new File(new File(rootDir, "integration-test"), testFolder);
     }
 
     @Nullable
