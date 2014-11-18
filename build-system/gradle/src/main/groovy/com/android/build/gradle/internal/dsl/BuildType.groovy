@@ -18,13 +18,11 @@ package com.android.build.gradle.internal.dsl
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable
 import com.android.annotations.VisibleForTesting
-import com.android.build.gradle.BasePlugin
 import com.android.build.gradle.internal.core.NdkConfig
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.DefaultBuildType
 import com.android.builder.model.BaseConfig
-import com.android.builder.model.BuildType
 import com.android.builder.model.ClassField
 import com.android.builder.model.SigningConfig
 import org.gradle.api.Action
@@ -34,7 +32,7 @@ import org.gradle.internal.reflect.Instantiator
 /**
  * DSL object to configure build types.
  */
-public class BuildTypeDsl extends DefaultBuildType implements Serializable {
+public class BuildType extends DefaultBuildType implements Serializable {
     private static final long serialVersionUID = 1L
 
     @NonNull
@@ -42,22 +40,22 @@ public class BuildTypeDsl extends DefaultBuildType implements Serializable {
     @NonNull
     private final Logger logger
 
-    private final NdkConfigDsl ndkConfig
+    private final NdkOptions ndkConfig
 
     private Boolean useJack
 
-    public BuildTypeDsl(@NonNull String name,
+    public BuildType(@NonNull String name,
                         @NonNull Project project,
                         @NonNull Instantiator instantiator,
                         @NonNull Logger logger) {
         super(name)
         this.project = project
         this.logger = logger
-        ndkConfig = instantiator.newInstance(NdkConfigDsl.class)
+        ndkConfig = instantiator.newInstance(NdkOptions.class)
     }
 
     @VisibleForTesting
-    BuildTypeDsl(@NonNull String name,
+    BuildType(@NonNull String name,
                  @NonNull Project project,
                  @NonNull Logger logger) {
         super(name)
@@ -148,7 +146,7 @@ public class BuildTypeDsl extends DefaultBuildType implements Serializable {
      * full path to the files. They are identical except for enabling optimizations.
      */
     @NonNull
-    public BuildTypeDsl proguardFile(Object proguardFile) {
+    public BuildType proguardFile(Object proguardFile) {
         proguardFiles.add(project.file(proguardFile));
         return this;
     }
@@ -157,7 +155,7 @@ public class BuildTypeDsl extends DefaultBuildType implements Serializable {
      * Adds new ProGuard configuration files.
      */
     @NonNull
-    public BuildTypeDsl proguardFiles(Object... proguardFileArray) {
+    public BuildType proguardFiles(Object... proguardFileArray) {
         proguardFiles.addAll(project.files(proguardFileArray).files);
         return this;
     }
@@ -166,7 +164,7 @@ public class BuildTypeDsl extends DefaultBuildType implements Serializable {
      * Sets the ProGuard configuration files.
      */
     @NonNull
-    public BuildTypeDsl setProguardFiles(Iterable<?> proguardFileIterable) {
+    public BuildType setProguardFiles(Iterable<?> proguardFileIterable) {
         proguardFiles.clear();
         for (Object proguardFile : proguardFileIterable) {
             proguardFiles.add(project.file(proguardFile));
@@ -175,13 +173,13 @@ public class BuildTypeDsl extends DefaultBuildType implements Serializable {
     }
 
     @NonNull
-    public BuildTypeDsl consumerProguardFiles(Object... proguardFileArray) {
+    public BuildType consumerProguardFiles(Object... proguardFileArray) {
         consumerProguardFiles.addAll(project.files(proguardFileArray).files);
         return this;
     }
 
     @NonNull
-    public BuildTypeDsl setConsumerProguardFiles(Iterable<?> proguardFileIterable) {
+    public BuildType setConsumerProguardFiles(Iterable<?> proguardFileIterable) {
         consumerProguardFiles.clear();
         for (Object proguardFile : proguardFileIterable) {
             consumerProguardFiles.add(project.file(proguardFile));
@@ -189,7 +187,7 @@ public class BuildTypeDsl extends DefaultBuildType implements Serializable {
         return this;
     }
 
-    void ndk(Action<NdkConfigDsl> action) {
+    void ndk(Action<NdkOptions> action) {
         action.execute(ndkConfig)
     }
 

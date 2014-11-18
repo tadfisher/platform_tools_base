@@ -37,12 +37,9 @@ import com.android.build.gradle.internal.dependency.LibraryDependencyImpl
 import com.android.build.gradle.internal.dependency.ManifestDependencyImpl
 import com.android.build.gradle.internal.dependency.SymbolFileProviderImpl
 import com.android.build.gradle.internal.dependency.VariantDependencies
-import com.android.build.gradle.internal.dsl.BuildTypeDsl
 import com.android.build.gradle.internal.dsl.BuildTypeFactory
-import com.android.build.gradle.internal.dsl.GroupableProductFlavorDsl
+import com.android.build.gradle.internal.dsl.GroupableProductFlavor
 import com.android.build.gradle.internal.dsl.GroupableProductFlavorFactory
-import com.android.build.gradle.internal.dsl.ProductFlavorDsl
-import com.android.build.gradle.internal.dsl.SigningConfigDsl
 import com.android.build.gradle.internal.dsl.SigningConfigFactory
 import com.android.build.gradle.internal.model.ArtifactMetaDataImpl
 import com.android.build.gradle.internal.model.JavaArtifactImpl
@@ -233,7 +230,7 @@ public abstract class BasePlugin {
 
     private boolean hasCreatedTasks = false
 
-    private ProductFlavorData<ProductFlavorDsl> defaultConfigData
+    private ProductFlavorData<com.android.build.gradle.internal.dsl.ProductFlavor> defaultConfigData
     private final Collection<String> unresolvedDependencies = Sets.newHashSet();
 
     protected DefaultAndroidSourceSet mainSourceSet
@@ -342,11 +339,11 @@ public abstract class BasePlugin {
     }
 
     private void createExtension() {
-        def buildTypeContainer = project.container(BuildTypeDsl,
+        def buildTypeContainer = project.container(com.android.build.gradle.internal.dsl.BuildType,
                 new BuildTypeFactory(instantiator, project, project.getLogger()))
-        def productFlavorContainer = project.container(GroupableProductFlavorDsl,
+        def productFlavorContainer = project.container(GroupableProductFlavor,
                 new GroupableProductFlavorFactory(instantiator, project, project.getLogger()))
-        def signingConfigContainer = project.container(SigningConfigDsl,
+        def signingConfigContainer = project.container(com.android.build.gradle.internal.dsl.SigningConfig,
                 new SigningConfigFactory(instantiator))
 
         extension = project.extensions.create('android', getExtensionClass(),
@@ -359,14 +356,14 @@ public abstract class BasePlugin {
 
         // map the whenObjectAdded callbacks on the containers.
         signingConfigContainer.whenObjectAdded { SigningConfig signingConfig ->
-            variantManager.addSigningConfig((SigningConfigDsl) signingConfig)
+            variantManager.addSigningConfig((com.android.build.gradle.internal.dsl.SigningConfig) signingConfig)
         }
 
         buildTypeContainer.whenObjectAdded { DefaultBuildType buildType ->
-            variantManager.addBuildType((BuildTypeDsl) buildType)
+            variantManager.addBuildType((com.android.build.gradle.internal.dsl.BuildType) buildType)
         }
 
-        productFlavorContainer.whenObjectAdded { GroupableProductFlavorDsl productFlavor ->
+        productFlavorContainer.whenObjectAdded { GroupableProductFlavor productFlavor ->
             variantManager.addProductFlavor(productFlavor)
         }
 
@@ -412,7 +409,7 @@ public abstract class BasePlugin {
         mainSourceSet = (DefaultAndroidSourceSet) extension.sourceSets.create(extension.defaultConfig.name)
         testSourceSet = (DefaultAndroidSourceSet) extension.sourceSets.create(ANDROID_TEST)
 
-        defaultConfigData = new ProductFlavorData<ProductFlavorDsl>(
+        defaultConfigData = new ProductFlavorData<com.android.build.gradle.internal.dsl.ProductFlavor>(
                 extension.defaultConfig, mainSourceSet,
                 testSourceSet, project)
     }
@@ -514,7 +511,7 @@ public abstract class BasePlugin {
                 project.hasProperty(PROPERTY_SIGNING_KEY_ALIAS) &&
                 project.hasProperty(PROPERTY_SIGNING_KEY_PASSWORD)) {
 
-            SigningConfigDsl signingConfigDsl = new SigningConfigDsl("externalOverride")
+            com.android.build.gradle.internal.dsl.SigningConfig signingConfigDsl = new com.android.build.gradle.internal.dsl.SigningConfig("externalOverride")
             Map<String, ?> props = project.getProperties();
 
             signingConfigDsl.setStoreFile(new File((String) props.get(PROPERTY_SIGNING_STORE_FILE)))
@@ -542,7 +539,7 @@ public abstract class BasePlugin {
         }
     }
 
-    ProductFlavorData<ProductFlavorDsl> getDefaultConfigData() {
+    ProductFlavorData<com.android.build.gradle.internal.dsl.ProductFlavor> getDefaultConfigData() {
         return defaultConfigData
     }
 
@@ -1255,7 +1252,7 @@ public abstract class BasePlugin {
         variantOutputData.packageSplitResourcesTask.splits = densityFilters
         variantOutputData.packageSplitResourcesTask.outputBaseName = config.baseName
         variantOutputData.packageSplitResourcesTask.signingConfig =
-                (SigningConfigDsl) config.signingConfig
+                (com.android.build.gradle.internal.dsl.SigningConfig) config.signingConfig
         variantOutputData.packageSplitResourcesTask.outputDirectory =
                 new File("$project.buildDir/${FD_INTERMEDIATES}/splits/${config.dirName}")
         variantOutputData.packageSplitResourcesTask.plugin = this
@@ -1331,7 +1328,7 @@ public abstract class BasePlugin {
         variantOutputData.packageSplitAbiTask.splits = filters
         variantOutputData.packageSplitAbiTask.outputBaseName = config.baseName
         variantOutputData.packageSplitAbiTask.signingConfig =
-                (SigningConfigDsl) config.signingConfig
+                (com.android.build.gradle.internal.dsl.SigningConfig) config.signingConfig
         variantOutputData.packageSplitAbiTask.outputDirectory =
                 new File("$project.buildDir/${FD_INTERMEDIATES}/splits/${config.dirName}")
         variantOutputData.packageSplitAbiTask.plugin = this
@@ -2478,7 +2475,7 @@ public abstract class BasePlugin {
         if (project.hasProperty(PROPERTY_APK_LOCATION)) {
             apkLocation = project.getProperties().get(PROPERTY_APK_LOCATION)
         }
-        SigningConfigDsl sc = (SigningConfigDsl) config.signingConfig
+        com.android.build.gradle.internal.dsl.SigningConfig sc = (com.android.build.gradle.internal.dsl.SigningConfig) config.signingConfig
 
         boolean multiOutput = variantData.outputs.size() > 1
 
