@@ -1,0 +1,8 @@
+Code-Review+1: Eugene Ostroukhov <eostroukhov@google.com>
+Verified+1: Eugene Ostroukhov <eostroukhov@google.com>
+Code-Review+2: Xavier Ducrohet <xav@android.com>
+Submitted-by: Eugene Ostroukhov <eostroukhov@google.com>
+Submitted-at: Tue, 18 Nov 2014 19:49:22 +0000
+Reviewed-on: https://android-review.googlesource.com/115161
+Project: platform/tools/base
+Branch: refs/heads/studio-1.0-dev
