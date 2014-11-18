@@ -29,9 +29,6 @@ import org.junit.Test
 import static org.junit.Assert.assertFalse
 import static org.junit.Assert.fail
 
-/**
- * Created by cmw on 11/14/14.
- */
 class GenerateAnnotationsClassPathTest {
     @ClassRule
     static public GradleTestProject project = GradleTestProject.builder()
