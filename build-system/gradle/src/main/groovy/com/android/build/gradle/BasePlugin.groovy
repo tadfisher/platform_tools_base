@@ -15,7 +15,6 @@
  */
 
 package com.android.build.gradle
-
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable
 import com.android.build.OutputFile
@@ -33,7 +32,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.coverage.JacocoInstrumentTask
 import com.android.build.gradle.internal.coverage.JacocoPlugin
 import com.android.build.gradle.internal.coverage.JacocoReportTask
-import com.android.build.gradle.internal.dependency.DependencyChecker
+import com.android.build.gradle.internal.dependency.DependencyResolver
 import com.android.build.gradle.internal.dependency.LibraryDependencyImpl
 import com.android.build.gradle.internal.dependency.ManifestDependencyImpl
 import com.android.build.gradle.internal.dependency.SymbolFileProviderImpl
@@ -47,7 +46,6 @@ import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.dsl.SigningConfigFactory
 import com.android.build.gradle.internal.model.ArtifactMetaDataImpl
 import com.android.build.gradle.internal.model.JavaArtifactImpl
-import com.android.build.gradle.internal.model.MavenCoordinatesImpl
 import com.android.build.gradle.internal.model.ModelBuilder
 import com.android.build.gradle.internal.publishing.ApkPublishArtifact
 import com.android.build.gradle.internal.tasks.AndroidReportTask
@@ -135,7 +133,6 @@ import com.google.common.collect.ImmutableSet
 import com.google.common.collect.ListMultimap
 import com.google.common.collect.Lists
 import com.google.common.collect.Maps
-import com.google.common.collect.Multimap
 import com.google.common.collect.Sets
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
@@ -143,20 +140,11 @@ import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.ModuleVersionIdentifier
-import org.gradle.api.artifacts.ProjectDependency
-import org.gradle.api.artifacts.ResolvedArtifact
-import org.gradle.api.artifacts.SelfResolvingDependency
-import org.gradle.api.artifacts.result.DependencyResult
-import org.gradle.api.artifacts.result.ResolvedComponentResult
-import org.gradle.api.artifacts.result.ResolvedDependencyResult
-import org.gradle.api.artifacts.result.UnresolvedDependencyResult
 import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.logging.Logger
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.plugins.JavaPlugin
-import org.gradle.api.specs.Specs
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.compile.AbstractCompile
 import org.gradle.api.tasks.compile.JavaCompile
@@ -170,14 +158,11 @@ import proguard.gradle.ProGuardTask
 import java.util.jar.Attributes
 import java.util.jar.Manifest
 
-import static com.android.SdkConstants.EXT_ANDROID_PACKAGE
-import static com.android.SdkConstants.EXT_JAR
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML
 import static com.android.builder.core.BuilderConstants.ANDROID_TEST
 import static com.android.builder.core.BuilderConstants.CONNECTED
 import static com.android.builder.core.BuilderConstants.DEBUG
 import static com.android.builder.core.BuilderConstants.DEVICE
-import static com.android.builder.core.BuilderConstants.EXT_LIB_ARCHIVE
 import static com.android.builder.core.BuilderConstants.FD_ANDROID_RESULTS
 import static com.android.builder.core.BuilderConstants.FD_ANDROID_TESTS
 import static com.android.builder.core.BuilderConstants.FD_FLAVORS
@@ -189,7 +174,6 @@ import static com.android.builder.model.AndroidProject.FD_GENERATED
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS
 import static com.android.builder.model.AndroidProject.PROPERTY_APK_LOCATION
-import static com.android.builder.model.AndroidProject.PROPERTY_BUILD_MODEL_ONLY
 import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_KEY_ALIAS
 import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_KEY_PASSWORD
 import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_STORE_FILE
@@ -221,6 +205,7 @@ public abstract class BasePlugin {
 
     private BaseExtension extension
     private VariantManager variantManager
+    private DependencyResolver dependencyResolver
 
     final Map<LibraryDependencyImpl, PrepareLibraryTask> prepareTaskMap = [:]
     final Map<SigningConfig, ValidateSigningTask> validateSigningTaskMap = [:]
@@ -234,7 +219,6 @@ public abstract class BasePlugin {
     private boolean hasCreatedTasks = false
 
     private ProductFlavorData<ProductFlavor> defaultConfigData
-    private final Collection<String> unresolvedDependencies = Sets.newHashSet();
 
     protected DefaultAndroidSourceSet mainSourceSet
     protected DefaultAndroidSourceSet testSourceSet
@@ -293,6 +277,7 @@ public abstract class BasePlugin {
         androidBuilder = new AndroidBuilder(
                 project == project.rootProject ? project.name : project.path,
                 creator, logger, verbose)
+        dependencyResolver = new DependencyResolver(project, logger)
 
         project.apply plugin: JavaBasePlugin
 
@@ -517,7 +502,7 @@ public abstract class BasePlugin {
     }
 
     Collection<String> getUnresolvedDependencies() {
-        return unresolvedDependencies
+        return dependencyResolver.getUnresolvedDependencies()
     }
 
     ILogger getLogger() {
@@ -3149,31 +3134,13 @@ public abstract class BasePlugin {
     //------------------------------ START DEPENDENCY STUFF ----------------------------------------
     //----------------------------------------------------------------------------------------------
 
-    private void addDependencyToPrepareTask(
-            @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData,
-            @NonNull PrepareDependenciesTask prepareDependenciesTask,
-            @NonNull LibraryDependencyImpl lib) {
-        PrepareLibraryTask prepareLibTask = prepareTaskMap.get(lib)
-        if (prepareLibTask != null) {
-            prepareDependenciesTask.dependsOn prepareLibTask
-            prepareLibTask.dependsOn variantData.preBuildTask
-        }
-
-        for (LibraryDependencyImpl childLib : lib.dependencies) {
-            addDependencyToPrepareTask(variantData, prepareDependenciesTask, childLib)
-        }
-    }
-
     public void resolveDependencies(VariantDependencies variantDeps) {
-        Map<ModuleVersionIdentifier, List<LibraryDependencyImpl>> modules = [:]
-        Map<ModuleVersionIdentifier, List<ResolvedArtifact>> artifacts = [:]
-        Multimap<LibraryDependency, VariantDependencies> reverseMap = ArrayListMultimap.create()
-
-        resolveDependencyForConfig(variantDeps, modules, artifacts, reverseMap)
+        dependencyResolver.resolveDependencies(variantDeps)
 
         Set<Project> projects = project.rootProject.allprojects;
 
-        modules.values().each { List list ->
+        // TODO Move to the end of variant manager.
+        dependencyResolver.modules.values().each { List list ->
 
             if (!list.isEmpty()) {
                 // get the first item only
@@ -3183,7 +3150,7 @@ public abstract class BasePlugin {
                 // Use the reverse map to find all the configurations that included this android
                 // library so that we can make sure they are built.
                 // TODO fix, this is not optimum as we bring in more dependencies than we should.
-                List<VariantDependencies> configDepList = reverseMap.get(androidDependency)
+                List<VariantDependencies> configDepList = dependencyResolver.getReverseMap().get(androidDependency)
                 if (configDepList != null && !configDepList.isEmpty()) {
                     for (VariantDependencies configDependencies: configDepList) {
                         task.dependsOn configDependencies.compileConfiguration.buildDependencies
@@ -3209,6 +3176,25 @@ public abstract class BasePlugin {
             }
         }
     }
+
+
+    private void addDependencyToPrepareTask(
+            @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData,
+            @NonNull PrepareDependenciesTask prepareDependenciesTask,
+            @NonNull LibraryDependencyImpl lib) {
+        PrepareLibraryTask prepareLibTask = prepareTaskMap.get(lib)
+        if (prepareLibTask != null) {
+            prepareDependenciesTask.dependsOn prepareLibTask
+            prepareLibTask.dependsOn variantData.preBuildTask
+        }
+
+        for (LibraryDependencyImpl childLib : lib.dependencies) {
+            addDependencyToPrepareTask(variantData, prepareDependenciesTask, childLib)
+        }
+    }
+
+
+    public void set
 
     /**
      * Handles the library and returns a task to "prepare" the library (ie unarchive it). The task
@@ -3240,229 +3226,29 @@ public abstract class BasePlugin {
         return prepareLibraryTask;
     }
 
-    private void resolveDependencyForConfig(
-            VariantDependencies variantDeps,
-            Map<ModuleVersionIdentifier, List<LibraryDependencyImpl>> modules,
-            Map<ModuleVersionIdentifier, List<ResolvedArtifact>> artifacts,
-            Multimap<LibraryDependency, VariantDependencies> reverseMap) {
+    /**
+     * Creates a PrepareLibrary task for the given Android Library.
+     *
+     * The task will be reused for all variants using the same library.
+     *
+     * @param library the library.
+     * @return the prepare task.
+     */
+    protected PrepareLibraryTask createPrepareLibraryTask(@NonNull LibraryDependencyImpl library) {
+        String bundleName = GUtil
+                .toCamelCase(library.getName().replaceAll("\\:", " "))
 
-        Configuration compileClasspath = variantDeps.compileConfiguration
-        Configuration packageClasspath = variantDeps.packageConfiguration
+        PrepareLibraryTask prepareLibraryTask = project.tasks.create(
+                "prepare${bundleName}Library",
+                PrepareLibraryTask)
 
-        // TODO - shouldn't need to do this - fix this in Gradle
-        ensureConfigured(compileClasspath)
-        ensureConfigured(packageClasspath)
+        prepareLibraryTask.setDescription("Prepare " + library.getName())
+        prepareLibraryTask.conventionMapping.bundle =  { library.getBundle() }
+        prepareLibraryTask.conventionMapping.explodedDir = { library.getBundleFolder() }
 
-        variantDeps.checker = new DependencyChecker(variantDeps, logger)
-
-        Set<String> currentUnresolvedDependencies = Sets.newHashSet()
-
-        // TODO - defer downloading until required -- This is hard to do as we need the info to build the variant config.
-        collectArtifacts(compileClasspath, artifacts)
-        collectArtifacts(packageClasspath, artifacts)
-
-        List<LibraryDependencyImpl> bundles = []
-        Map<File, JarDependency> jars = [:]
-        Map<File, JarDependency> localJars = [:]
-
-        Set<DependencyResult> dependencies = compileClasspath.incoming.resolutionResult.root.dependencies
-        dependencies.each { DependencyResult dep ->
-            if (dep instanceof ResolvedDependencyResult) {
-                addDependency(dep.selected, variantDeps, bundles, jars, modules, artifacts, reverseMap)
-            } else if (dep instanceof UnresolvedDependencyResult) {
-                def attempted = dep.attempted;
-                if (attempted != null) {
-                    currentUnresolvedDependencies.add(attempted.toString())
-                }
-            }
-        }
-
-        // also need to process local jar files, as they are not processed by the
-        // resolvedConfiguration result. This only includes the local jar files for this project.
-        compileClasspath.allDependencies.each { dep ->
-            if (dep instanceof SelfResolvingDependency &&
-                    !(dep instanceof ProjectDependency)) {
-                Set<File> files = ((SelfResolvingDependency) dep).resolve()
-                for (File f : files) {
-                    localJars.put(f, new JarDependency(f, true /*compiled*/, false /*packaged*/,
-                            null /*resolvedCoordinates*/))
-                }
-            }
-        }
-
-        if (!compileClasspath.resolvedConfiguration.hasError()) {
-            // handle package dependencies. We'll refuse aar libs only in package but not
-            // in compile and remove all dependencies already in compile to get package-only jar
-            // files.
-
-            Set<File> compileFiles = compileClasspath.files
-            Set<File> packageFiles = packageClasspath.files
-
-            for (File f : packageFiles) {
-                if (compileFiles.contains(f)) {
-                    // if also in compile
-                    JarDependency jarDep = jars.get(f);
-                    if (jarDep == null) {
-                        jarDep = localJars.get(f);
-                    }
-                    if (jarDep != null) {
-                        jarDep.setPackaged(true)
-                    }
-                    continue
-                }
-
-                if (f.getName().toLowerCase().endsWith(".jar")) {
-                    jars.put(f, new JarDependency(f, false /*compiled*/, true /*packaged*/,
-                            null /*resolveCoordinates*/))
-                } else {
-                    throw new RuntimeException("Package-only dependency '" +
-                            f.absolutePath +
-                            "' is not supported in project " + project.name)
-                }
-            }
-        } else if (!currentUnresolvedDependencies.isEmpty()) {
-            unresolvedDependencies.addAll(currentUnresolvedDependencies)
-        }
-
-        variantDeps.addLibraries(bundles)
-        variantDeps.addJars(jars.values())
-        variantDeps.addLocalJars(localJars.values())
-
-        // TODO - filter bundles out of source set classpath
-
-        configureBuild(variantDeps)
+        return prepareLibraryTask;
     }
 
-    protected void ensureConfigured(Configuration config) {
-        config.allDependencies.withType(ProjectDependency).each { dep ->
-            project.evaluationDependsOn(dep.dependencyProject.path)
-            ensureConfigured(dep.projectConfiguration)
-        }
-    }
-
-    private void collectArtifacts(
-            Configuration configuration,
-            Map<ModuleVersionIdentifier,
-            List<ResolvedArtifact>> artifacts) {
-
-        // To keep backwards-compatibility, we check first if we have the JVM arg. If not, we look for
-        // the project property.
-        boolean buildModelOnly = false;
-        String val = System.getProperty(PROPERTY_BUILD_MODEL_ONLY);
-        if ("true".equalsIgnoreCase(val)) {
-            buildModelOnly = true;
-        } else if (project.hasProperty(PROPERTY_BUILD_MODEL_ONLY)) {
-            Object value = project.getProperties().get(PROPERTY_BUILD_MODEL_ONLY);
-            if (value instanceof String) {
-                buildModelOnly = Boolean.parseBoolean(value);
-            }
-        }
-
-        Set<ResolvedArtifact> allArtifacts
-        if (buildModelOnly) {
-            allArtifacts = configuration.resolvedConfiguration.lenientConfiguration.getArtifacts(Specs.satisfyAll())
-        } else {
-            allArtifacts = configuration.resolvedConfiguration.resolvedArtifacts
-        }
-
-        allArtifacts.each { ResolvedArtifact artifact ->
-            ModuleVersionIdentifier id = artifact.moduleVersion.id
-            List<ResolvedArtifact> moduleArtifacts = artifacts.get(id)
-
-            if (moduleArtifacts == null) {
-                moduleArtifacts = Lists.newArrayList()
-                artifacts.put(id, moduleArtifacts)
-            }
-
-            if (!moduleArtifacts.contains(artifact)) {
-                moduleArtifacts.add(artifact)
-            }
-        }
-    }
-
-    def addDependency(ResolvedComponentResult moduleVersion,
-                      VariantDependencies configDependencies,
-                      Collection<LibraryDependency> bundles,
-                      Map<File, JarDependency> jars,
-                      Map<ModuleVersionIdentifier, List<LibraryDependencyImpl>> modules,
-                      Map<ModuleVersionIdentifier, List<ResolvedArtifact>> artifacts,
-                      Multimap<LibraryDependency, VariantDependencies> reverseMap) {
-
-        ModuleVersionIdentifier id = moduleVersion.moduleVersion
-        if (configDependencies.checker.excluded(id)) {
-            return
-        }
-
-        if (id.name.equals("support-annotations") && id.group.equals("com.android.support")) {
-            configDependencies.annotationsPresent = true
-        }
-
-        List<LibraryDependencyImpl> bundlesForThisModule = modules.get(id)
-        if (bundlesForThisModule == null) {
-            bundlesForThisModule = Lists.newArrayList()
-            modules.put(id, bundlesForThisModule)
-
-            List<LibraryDependency> nestedBundles = Lists.newArrayList()
-
-            Set<DependencyResult> dependencies = moduleVersion.dependencies
-            dependencies.each { DependencyResult dep ->
-                if (dep instanceof ResolvedDependencyResult) {
-                    addDependency(dep.selected, configDependencies, nestedBundles,
-                            jars, modules, artifacts, reverseMap)
-                }
-            }
-
-            List<ResolvedArtifact> moduleArtifacts = artifacts.get(id)
-
-            moduleArtifacts?.each { artifact ->
-                if (artifact.type == EXT_LIB_ARCHIVE) {
-                    String path = "$id.group/$id.name/$id.version"
-                    String name = "$id.group:$id.name:$id.version"
-                    if (artifact.classifier != null) {
-                        path += "/$artifact.classifier"
-                        name += ":$artifact.classifier"
-                    }
-                    //def explodedDir = project.file("$project.rootProject.buildDir/${FD_INTERMEDIATES}/exploded-aar/$path")
-                    def explodedDir = project.file("$project.buildDir/${FD_INTERMEDIATES}/exploded-aar/$path")
-                    LibraryDependencyImpl adep = new LibraryDependencyImpl(
-                            artifact.file, explodedDir, nestedBundles, name, artifact.classifier,
-                            null,
-                            new MavenCoordinatesImpl(artifact))
-                    bundlesForThisModule << adep
-                    reverseMap.put(adep, configDependencies)
-                } else if (artifact.type == EXT_JAR) {
-                    jars.put(artifact.file,
-                            new JarDependency(
-                                    artifact.file,
-                                    true /*compiled*/,
-                                    false /*packaged*/,
-                                    true /*proguarded*/,
-                                    new MavenCoordinatesImpl(artifact)))
-                } else if (artifact.type == EXT_ANDROID_PACKAGE) {
-                    String name = "$id.group:$id.name:$id.version"
-                    if (artifact.classifier != null) {
-                        name += ":$artifact.classifier"
-                    }
-
-                    // cannot throw this yet, since depending on a secondary artifact in an
-                    // Android app will trigger getting the main APK as well.
-//                    throw new GradleException(
-//                            "Dependency ${name} on project ${project.name} resolves to an APK archive which is not supported" +
-//                                    " as a compilation dependency. File: " + artifact.file)
-                }
-            }
-
-            if (bundlesForThisModule.empty && !nestedBundles.empty) {
-                throw new GradleException("Module version $id depends on libraries but is not a library itself")
-            }
-        } else {
-            for (LibraryDependency adep : bundlesForThisModule) {
-                reverseMap.put(adep, configDependencies)
-            }
-        }
-
-        bundles.addAll(bundlesForThisModule)
-    }
 
     private void configureBuild(VariantDependencies configurationDependencies) {
         addDependsOnTaskInOtherProjects(

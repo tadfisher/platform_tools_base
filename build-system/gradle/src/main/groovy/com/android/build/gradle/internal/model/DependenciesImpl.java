@@ -22,7 +22,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.dependency.LibraryDependencyImpl;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.AndroidBuilder;
@@ -79,9 +78,9 @@ public class DependenciesImpl implements Dependencies, Serializable {
         List<JavaLibrary> javaLibraries;
         List<String> projects;
 
-        List<LibraryDependencyImpl> libs = variantDependencies.getLibraries();
+        List<LibraryDependency> libs = variantDependencies.getLibraries();
         libraries = Lists.newArrayListWithCapacity(libs.size());
-        for (LibraryDependencyImpl libImpl : libs) {
+        for (LibraryDependency libImpl : libs) {
             AndroidLibrary clonedLib = getAndroidLibrary(libImpl, gradleProjects);
             libraries.add(clonedLib);
         }

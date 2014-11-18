@@ -15,22 +15,25 @@
  */
 
 package com.android.build.gradle.integration.application
+
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
-import org.junit.BeforeClass
-import org.junit.ClassRule
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+
 /**
  * Check that a project can depend on a jar dependency published by another app project.
  */
 class ExternalTestProjectTest {
 
-    @ClassRule
-    public static GradleTestProject project = GradleTestProject.builder().create()
+    @Rule
+    public GradleTestProject project = GradleTestProject.builder().create()
 
-    private static File app2BuildFile
+    private File app2BuildFile
 
-    @BeforeClass
-    public static void setup() {
+    @Before
+    public void setup() {
         File rootFile = project.getTestDir()
         new File(rootFile, "settings.gradle") << """
 include ':app1'
@@ -68,7 +71,7 @@ artifacts {
         app2BuildFile = new File(app2, "build.gradle")
     }
 
-//    @Test
+    @Test
     public void testExtraJarDependency() {
         app2BuildFile << """
 apply plugin: 'com.android.application'
@@ -86,7 +89,7 @@ dependencies {
         project.execute('clean', 'app2:assembleDebug')
     }
 
-//    @Test
+    @Test
     void testApkDependency() {
         app2BuildFile << """
 apply plugin: 'com.android.application'

@@ -45,7 +45,7 @@ public class VariantDependencies implements DependencyContainer, ConfigurationPr
     private final Configuration publishConfiguration
 
     @NonNull
-    private final List<LibraryDependencyImpl> libraries = []
+    private final List<LibraryDependency> libraries = []
     @NonNull
     private final List<JarDependency> jars = []
     @NonNull
@@ -55,9 +55,9 @@ public class VariantDependencies implements DependencyContainer, ConfigurationPr
      *  Whether we have a direct dependency on com.android.support:support-annotations; this
      * is used to drive whether we extract annotations when building libraries for example
      */
-    boolean annotationsPresent
+    public boolean annotationsPresent
 
-    DependencyChecker checker
+    private DependencyChecker checker
 
     static VariantDependencies compute(@NonNull Project project,
                                        @NonNull String name,
@@ -118,6 +118,14 @@ public class VariantDependencies implements DependencyContainer, ConfigurationPr
         return name
     }
 
+    public void setChecker(DependencyChecker checker) {
+        this.checker = checker
+    }
+
+    public DependencyChecker getChecker() {
+        return checker
+    }
+
     @Override
     @NonNull
     Configuration getCompileConfiguration() {
@@ -141,7 +149,7 @@ public class VariantDependencies implements DependencyContainer, ConfigurationPr
         return publishConfiguration
     }
 
-    void addLibraries(@NonNull List<LibraryDependencyImpl> list) {
+    void addLibraries(@NonNull List<LibraryDependency> list) {
         libraries.addAll(list)
     }
 
@@ -154,7 +162,7 @@ public class VariantDependencies implements DependencyContainer, ConfigurationPr
     }
 
     @NonNull
-    List<LibraryDependencyImpl> getLibraries() {
+    List<LibraryDependency> getLibraries() {
         return libraries
     }
 
