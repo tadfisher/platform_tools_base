@@ -39,10 +39,7 @@ import com.android.sdklib.repository.descriptors.IdDisplay;
 import com.android.sdklib.repository.descriptors.PkgDescExtra;
 import com.android.sdklib.repository.descriptors.PkgType;
 import com.android.sdklib.repository.remote.RemoteSdk;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.TreeMultimap;
+import com.google.common.collect.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -493,7 +490,7 @@ public class LocalSdk {
             }
 
             // Whether we have found a valid pkg or not, this directory has been visited.
-            mVisitedDirs.put(filter, new LocalDirInfo(mFileOp, uniqueDir));
+            markAsVisited(filter, uniqueDir);
 
             if (info != null) {
                 mLocalPackages.put(filter, info);
@@ -605,7 +602,7 @@ public class LocalSdk {
                             throw new IllegalArgumentException(
                                     "Unsupported pkg type " + filter.toString());
                         }
-                        mVisitedDirs.put(filter, new LocalDirInfo(mFileOp, subDir));
+                        markAsVisited(filter, subDir);
                         list.addAll(existing);
                     }
                 }
@@ -613,7 +610,11 @@ public class LocalSdk {
         }
 
         Collections.sort(list);
-        return list.toArray(new LocalPkgInfo[list.size()]);
+        return Iterables.toArray(list, LocalPkgInfo.class);
+    }
+
+    private boolean markAsVisited(PkgType filter, File subDir) {
+        return mVisitedDirs.put(filter, new LocalDirInfo(mFileOp, subDir));
     }
 
     //---------- Package-specific querying --------
@@ -721,11 +722,9 @@ public class LocalSdk {
                 for (int i = 0; i < n; i++) {
                     LocalPkgInfo info = pkgsInfos[i];
                     assert info instanceof LocalPlatformPkgInfo;
-                    if (info instanceof LocalPlatformPkgInfo) {
-                        IAndroidTarget target = ((LocalPlatformPkgInfo) info).getAndroidTarget();
-                        if (target != null) {
-                            mCachedTargets.add(target);
-                        }
+                    IAndroidTarget target = ((LocalPlatformPkgInfo) info).getAndroidTarget();
+                    if (target != null) {
+                        mCachedTargets.add(target);
                     }
                 }
             }
@@ -855,7 +854,7 @@ public class LocalSdk {
      * @return False if directory can/should be skipped.
      *         True if directory should be visited, in which case it's registered in mVisitedDirs.
      */
-    private boolean shouldVisitDir(@NonNull PkgType pkgType, @NonNull File directory) {
+    private boolean checkAndMarkAsVisited(@NonNull PkgType pkgType, @NonNull File directory) {
         if (!mFileOp.isDirectory(directory)) {
             return false;
         }
@@ -863,7 +862,7 @@ public class LocalSdk {
             if (mVisitedDirs.containsEntry(pkgType, new LocalDirInfo.MapComparator(directory))) {
                 return false;
             }
-            mVisitedDirs.put(pkgType, new LocalDirInfo(mFileOp, directory));
+            markAsVisited(pkgType, directory);
         }
         return true;
     }
@@ -871,7 +870,7 @@ public class LocalSdk {
     private void scanBuildTools(File collectionDir, Collection<LocalPkgInfo> outCollection) {
         // The build-tool root folder contains a list of per-revision folders.
         for (File buildToolDir : mFileOp.listFiles(collectionDir)) {
-            if (!shouldVisitDir(PkgType.PKG_BUILD_TOOLS, buildToolDir)) {
+            if (!checkAndMarkAsVisited(PkgType.PKG_BUILD_TOOLS, buildToolDir)) {
                 continue;
             }
 
@@ -890,7 +889,7 @@ public class LocalSdk {
 
     private void scanPlatforms(File collectionDir, Collection<LocalPkgInfo> outCollection) {
         for (File platformDir : mFileOp.listFiles(collectionDir)) {
-            if (!shouldVisitDir(PkgType.PKG_PLATFORM, platformDir)) {
+            if (!checkAndMarkAsVisited(PkgType.PKG_PLATFORM, platformDir)) {
                 continue;
             }
 
@@ -921,7 +920,7 @@ public class LocalSdk {
 
     private void scanAddons(File collectionDir, Collection<LocalPkgInfo> outCollection) {
         for (File addonDir : mFileOp.listFiles(collectionDir)) {
-            if (!shouldVisitDir(PkgType.PKG_ADDON, addonDir)) {
+            if (!checkAndMarkAsVisited(PkgType.PKG_ADDON, addonDir)) {
                 continue;
             }
 
@@ -987,13 +986,13 @@ public class LocalSdk {
         // sys-img/add-on-target/abi
         // sys-img/target/add-on/abi
         for (File platformDir : mFileOp.listFiles(collectionDir)) {
-            if (!shouldVisitDir(type, platformDir)) {
+            if (!checkAndMarkAsVisited(type, platformDir)) {
                 continue;
             }
 
             for (File dir1 : mFileOp.listFiles(platformDir)) {
                 // dir1 might be either a tag or an abi folder.
-                if (!shouldVisitDir(type, dir1)) {
+                if (!checkAndMarkAsVisited(type, dir1)) {
                     continue;
                 }
 
@@ -1007,7 +1006,7 @@ public class LocalSdk {
                     File[] dir1Files = mFileOp.listFiles(dir1);
                     for (File dir2 : dir1Files) {
                         // dir2 should be an abi folder in a tag folder.
-                        if (!shouldVisitDir(type, dir2)) {
+                        if (!checkAndMarkAsVisited(type, dir2)) {
                             continue;
                         }
 
@@ -1059,7 +1058,7 @@ public class LocalSdk {
 
     private void scanSamples(File collectionDir, Collection<LocalPkgInfo> outCollection) {
         for (File platformDir : mFileOp.listFiles(collectionDir)) {
-            if (!shouldVisitDir(PkgType.PKG_SAMPLE, platformDir)) {
+            if (!checkAndMarkAsVisited(PkgType.PKG_SAMPLE, platformDir)) {
                 continue;
             }
 
@@ -1090,7 +1089,7 @@ public class LocalSdk {
     private void scanSources(File collectionDir, Collection<LocalPkgInfo> outCollection) {
         // The build-tool root folder contains a list of per-revision folders.
         for (File platformDir : mFileOp.listFiles(collectionDir)) {
-            if (!shouldVisitDir(PkgType.PKG_SOURCE, platformDir)) {
+            if (!checkAndMarkAsVisited(PkgType.PKG_SOURCE, platformDir)) {
                 continue;
             }
 
@@ -1114,12 +1113,12 @@ public class LocalSdk {
 
     private void scanExtras(File collectionDir, Collection<LocalPkgInfo> outCollection) {
         for (File vendorDir : mFileOp.listFiles(collectionDir)) {
-            if (!shouldVisitDir(PkgType.PKG_EXTRA, vendorDir)) {
+            if (!checkAndMarkAsVisited(PkgType.PKG_EXTRA, vendorDir)) {
                 continue;
             }
 
             for (File extraDir : mFileOp.listFiles(vendorDir)) {
-                if (!shouldVisitDir(PkgType.PKG_EXTRA, extraDir)) {
+                if (!checkAndMarkAsVisited(PkgType.PKG_EXTRA, extraDir)) {
                     continue;
                 }
 
