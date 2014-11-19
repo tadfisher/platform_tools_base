@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.tasks
 
+import com.android.annotations.Nullable
 import com.android.build.gradle.internal.dependency.SymbolFileProviderImpl
 import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.tasks.IncrementalTask
@@ -55,6 +56,10 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     @Input
     Collection<String> resourceConfigs
+
+    @Input @Optional
+    @Nullable
+    String preferredDensity
 
     // ----- PRIVATE TASK API -----
     @Input
@@ -110,6 +115,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                     .setPseudoLocalesEnabled(getPseudoLocalesEnabled())
                     .setResourceConfigs(getResourceConfigs())
                     .setSplits(getSplits())
+                    .setPreferredDensity(getPreferredDensity())
 
         getBuilder().processResources(
                 aaptPackageCommandBuilder,
