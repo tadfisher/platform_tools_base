@@ -18,11 +18,20 @@ package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.utils.ApkHelper
+import com.android.builder.model.AndroidArtifact
+import com.android.builder.model.AndroidArtifactOutput
+import com.android.builder.model.AndroidProject
+import com.android.builder.model.Variant
+import com.google.common.collect.ImmutableMap
+import com.google.common.collect.ImmutableSet
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
 import org.junit.experimental.categories.Category
+
+import static junit.framework.Assert.assertEquals
 
 /**
  * Assemble tests for densitySplit.
@@ -41,6 +50,23 @@ class DensitySplitTest {
     @AfterClass
     static void cleanUp() {
         project = null
+    }
+
+    @Test
+    void testPackaging() {
+        AndroidProject model = project.executeAndReturnModel("assemble");
+        for (Variant variant : model.getVariants()) {
+            AndroidArtifact mainArtifact = variant.getMainArtifact();
+            assertEquals(5, mainArtifact.getOutputs().size())
+
+            Map<String, String> filesToMatch = new HashMap<String, String>();
+            filesToMatch.put("res/drawable-mdpi-v4/other.png", null)
+            for (AndroidArtifactOutput output : mainArtifact.getOutputs()) {
+                ApkHelper.checkArchive(output.mainOutputFile.getOutputFile(),
+                        filesToMatch,
+                        ImmutableSet.<String>of())
+            }
+        }
     }
 
     @Test
