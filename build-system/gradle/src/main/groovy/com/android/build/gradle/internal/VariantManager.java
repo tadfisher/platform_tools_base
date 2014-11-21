@@ -108,6 +108,13 @@ public class VariantManager implements VariantModel {
         this.variantFactory = variantFactory;
     }
 
+
+    @NonNull
+    @Override
+    public ProductFlavor getDefaultConfig() {
+        return extension.getDefaultConfig();
+    }
+
     @Override
     @NonNull
     public Map<String, BuildTypeData> getBuildTypes() {
