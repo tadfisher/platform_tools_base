@@ -3401,10 +3401,10 @@ public abstract class BasePlugin {
 
             moduleArtifacts?.each { artifact ->
                 if (artifact.type == EXT_LIB_ARCHIVE) {
-                    String path = "$id.group/$id.name/$id.version"
+                    String path = "${BasePlugin.normalize(id.group)}/${BasePlugin.normalize(id.name)}/${BasePlugin.normalize(id.version)}"
                     String name = "$id.group:$id.name:$id.version"
                     if (artifact.classifier != null) {
-                        path += "/$artifact.classifier"
+                        path += "/${BasePlugin.normalize(artifact.classifier)}"
                         name += ":$artifact.classifier"
                     }
                     //def explodedDir = project.file("$project.rootProject.buildDir/${FD_INTERMEDIATES}/exploded-aar/$path")
@@ -3449,6 +3449,31 @@ public abstract class BasePlugin {
         }
 
         bundles.addAll(bundlesForThisModule)
+    }
+
+    /**
+     * Normalize a path to remove all illegal characters for all supported operating systems.
+     * {@see http://en.wikipedia.org/wiki/Filename#Comparison%5Fof%5Ffile%5Fname%5Flimitations}
+     *
+     * @param path the proposed path name
+     * @return the normalized path name
+     */
+    static String normalize(String path) {
+        // list of illegal characters
+        String normalizedPath = path.replaceAll("[%<>:\"/?*\\\\]","@");
+        int pathPointer = path.length() - 1;
+        // do not end your path with either a dot or a space.
+        String suffix = "";
+        while((normalizedPath.charAt(pathPointer) == '.'
+                || normalizedPath.charAt(pathPointer) == ' ')
+                && pathPointer > 0) {
+            pathPointer--
+            suffix += "@"
+        }
+        if (pathPointer == 0) {
+            throw new RuntimeException("Invalid directory name " + path);
+        }
+        return normalizedPath.substring(0, pathPointer+1) + suffix;
     }
 
     private void configureBuild(VariantDependencies configurationDependencies) {
