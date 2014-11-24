@@ -19,6 +19,7 @@ package com.android.tools.perflib.heap;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.google.common.base.Objects;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -174,6 +175,10 @@ public class ClassObj extends Instance implements Comparable<ClassObj> {
         }
 
         return 0 == compareTo((ClassObj) o);
+    }
+
+    @Override public int hashCode() {
+        return Objects.hashCode(mClassName);
     }
 
     @VisibleForTesting
