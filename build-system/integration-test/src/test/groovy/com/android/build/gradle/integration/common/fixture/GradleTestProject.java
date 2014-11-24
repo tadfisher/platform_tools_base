@@ -27,6 +27,7 @@ import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.integration.common.fixture.app.AbstractAndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
+import com.android.build.gradle.integration.common.utils.FileHelper;
 import com.android.build.gradle.integration.common.utils.JacocoAgent;
 import com.android.build.gradle.integration.common.utils.SdkHelper;
 import com.android.builder.model.AndroidProject;
@@ -236,18 +237,12 @@ public class GradleTestProject implements TestRule {
      * Add all files in a directory to an AndroidTestApp.
      */
     private static void addAllFiles(AndroidTestApp app, File projectDir) {
-        for (File src : Files.fileTreeTraverser().preOrderTraversal(projectDir).filter(
-                new Predicate<File>() {
-                    @Override
-                    public boolean apply(@Nullable File file) {
-                        return file != null && !file.isDirectory();
-                    }
-                })) {
-            File relativePath = new File(src.toString().replace(projectDir.toString(), ""));
+        for (String filePath : FileHelper.listFiles(projectDir)) {
+            File src = new File(filePath);
             try {
                 app.addFile(
                         new TestSourceFile(
-                                relativePath.getParent(),
+                                src.getParent(),
                                 src.getName(),
                                 Files.toByteArray(src)));
             } catch (Exception e) {

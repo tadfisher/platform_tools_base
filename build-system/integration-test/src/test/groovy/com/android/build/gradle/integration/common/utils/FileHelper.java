@@ -18,17 +18,43 @@ package com.android.build.gradle.integration.common.utils;
 
 import static org.junit.Assert.assertTrue;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.google.common.base.Charsets;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * Helper to help verify content of a file.
  */
 public class FileHelper {
+
+    /**
+     * Return a list of relative path of the files in a directory.
+     */
+    public static List<String> listFiles(@NonNull File base) {
+        assertTrue(base.isDirectory());
+
+        List<String> fileList = Lists.newArrayList();
+        for (File file : Files.fileTreeTraverser().preOrderTraversal(base).filter(
+                new Predicate<File>() {
+                    @Override
+                    public boolean apply(@Nullable File file) {
+                        return file != null && !file.isDirectory();
+                    }
+                })) {
+            fileList.add(file.toString().replace(base.toString(), ""));
+        }
+        return fileList;
+    }
+
     public static void checkContent(File file, String expectedContent) throws IOException {
         checkContent(file, Collections.singleton(expectedContent));
     }
