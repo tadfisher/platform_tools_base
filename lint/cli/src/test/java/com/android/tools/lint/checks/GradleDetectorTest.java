@@ -289,6 +289,17 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 lintProject("gradle/Dependencies.gradle=>build.gradle"));
     }
 
+    public void testAppEngine() throws Exception {
+        mEnabled = Collections.singleton(DEPENDENCY);
+        assertEquals(""
+                + "build.gradle:8: Warning: A newer version of com.google.appengine:gradle-appengine-plugin than 1.9.12 is available: 1.9.17 [GradleDependency]\n"
+                + "    compile 'com.google.appengine:gradle-appengine-plugin:1.9.12'\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 1 warnings\n",
+
+                lintProject("gradle/AppEngine.gradle=>build.gradle"));
+    }
+
     public void testLongHandDependencies() throws Exception {
         mEnabled = Collections.singleton(DEPENDENCY);
         assertEquals(""

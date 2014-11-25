@@ -812,6 +812,9 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         } else if ("org.apache.httpcomponents".equals(dependency.getGroupId()) &&
                 "httpclient".equals(dependency.getArtifactId())) {
             version = getNewerRevision(dependency, new PreciseRevision(4, 3, 5));
+        } else if ("com.google.appengine".equals(dependency.getGroupId()) &&
+                "gradle-appengine-plugin".equals(dependency.getArtifactId())) {
+            version = getNewerRevision(dependency, new PreciseRevision(1, 9, 17));
         }
 
         // Network check for really up to date libraries? Only done in batch mode

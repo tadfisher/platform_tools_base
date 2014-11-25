@@ -1,0 +1,9 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 21
+}
+
+dependencies {
+    compile 'com.google.appengine:gradle-appengine-plugin:1.9.12'
+}
