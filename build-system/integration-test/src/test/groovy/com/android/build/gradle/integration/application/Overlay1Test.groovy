@@ -18,16 +18,24 @@ package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.builder.model.AndroidProject
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
 import org.junit.experimental.categories.Category
 
+import javax.imageio.ImageIO
+import java.awt.image.BufferedImage
+
+import static org.junit.Assert.assertEquals
+import static org.junit.Assert.assertTrue
+
 /**
  * Assemble tests for overlay1.
  */
 class Overlay1Test {
+
     @ClassRule
     static public GradleTestProject project = GradleTestProject.builder()
             .fromSample("overlay1")
@@ -44,6 +52,15 @@ class Overlay1Test {
     }
 
     @Test
+    void "check image color"() {
+        int GREEN = 0xFF00FF00;
+        File drawableOutput = project.
+                file("build/" + AndroidProject.FD_INTERMEDIATES + "/res/debug/drawable");
+        checkImageColor(drawableOutput, "no_overlay.png", GREEN);
+        checkImageColor(drawableOutput, "type_overlay.png", GREEN);
+    }
+
+    @Test
     void lint() {
         project.execute("lint")
     }
@@ -52,5 +69,17 @@ class Overlay1Test {
     @Category(DeviceTests.class)
     void connectedCheck() {
         project.execute("connectedCheck");
+    }
+
+    private static void checkImageColor(File folder, String fileName, int expectedColor)
+            throws IOException {
+        File f = new File(folder, fileName);
+        assertTrue("File '" + f.getAbsolutePath() + "' does not exist.", f.isFile());
+
+        BufferedImage image = ImageIO.read(f);
+        int rgb = image.getRGB(0, 0);
+        assertEquals(String.format("Expected: 0x%08X, actual: 0x%08X for file %s",
+                expectedColor, rgb, f),
+                expectedColor, rgb);
     }
 }
