@@ -32,13 +32,13 @@ import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertTrue
 
 /**
- * Assemble tests for overlay2.
+ * Assemble tests for overlay3.
  */
-class Overlay2Test {
+class Overlay3Test {
 
     @ClassRule
     static public GradleTestProject project = GradleTestProject.builder()
-            .fromSample("overlay2")
+            .fromSample("overlay3")
             .create()
 
     @BeforeClass
@@ -54,14 +54,40 @@ class Overlay2Test {
     @Test
     void "check image color"() {
         int GREEN = 0xFF00FF00;
+        int RED = 0xFFFF0000;
+
         File drawableOutput = project.file(
-                "build/" + AndroidProject.FD_INTERMEDIATES + "/res/one/debug/drawable")
+                "build/" + AndroidProject.FD_INTERMEDIATES + "/res/freebeta/debug/drawable")
 
         checkImageColor(drawableOutput, "no_overlay.png", GREEN);
-        checkImageColor(drawableOutput, "type_overlay.png", GREEN);
-        checkImageColor(drawableOutput, "flavor_overlay.png", GREEN);
-        checkImageColor(drawableOutput, "type_flavor_overlay.png", GREEN);
-        checkImageColor(drawableOutput, "variant_type_flavor_overlay.png", GREEN);
+        checkImageColor(drawableOutput, "debug_overlay.png", GREEN);
+        checkImageColor(drawableOutput, "beta_overlay.png", GREEN);
+        checkImageColor(drawableOutput, "free_overlay.png", GREEN);
+        checkImageColor(drawableOutput, "free_beta_overlay.png", GREEN);
+        checkImageColor(drawableOutput, "free_beta_debug_overlay.png", GREEN);
+        checkImageColor(drawableOutput, "free_normal_overlay.png", RED);
+
+        drawableOutput = project.file(
+                "build/" + AndroidProject.FD_INTERMEDIATES + "/res/freenormal/debug/drawable")
+
+        checkImageColor(drawableOutput, "no_overlay.png", GREEN);
+        checkImageColor(drawableOutput, "debug_overlay.png", GREEN);
+        checkImageColor(drawableOutput, "beta_overlay.png", RED);
+        checkImageColor(drawableOutput, "free_overlay.png", GREEN);
+        checkImageColor(drawableOutput, "free_beta_overlay.png", RED);
+        checkImageColor(drawableOutput, "free_beta_debug_overlay.png", RED);
+        checkImageColor(drawableOutput, "free_normal_overlay.png", GREEN);
+
+        drawableOutput = project.file(
+                "build/" + AndroidProject.FD_INTERMEDIATES + "/res/paidbeta/debug/drawable")
+
+        checkImageColor(drawableOutput, "no_overlay.png", GREEN);
+        checkImageColor(drawableOutput, "debug_overlay.png", GREEN);
+        checkImageColor(drawableOutput, "beta_overlay.png", GREEN);
+        checkImageColor(drawableOutput, "free_overlay.png", RED);
+        checkImageColor(drawableOutput, "free_beta_overlay.png", RED);
+        checkImageColor(drawableOutput, "free_beta_debug_overlay.png", RED);
+        checkImageColor(drawableOutput, "free_normal_overlay.png", RED);
     }
 
     @Test
