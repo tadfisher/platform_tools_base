@@ -37,40 +37,30 @@ import java.util.Set;
  * It also adds support for Ndk support that is not ready to go in the builder library.
  */
 public class GradleVariantConfiguration extends VariantConfiguration<BuildType, ProductFlavor, GroupableProductFlavor> {
-
     private final MergedNdkConfig mMergedNdkConfig = new MergedNdkConfig();
 
     public GradleVariantConfiguration(
             @NonNull ProductFlavor defaultConfig,
             @NonNull SourceProvider defaultSourceProvider,
-            @NonNull BuildType buildType,
-            @Nullable SourceProvider buildTypeSourceProvider,
-            @Nullable SigningConfig signingConfigOverride) {
-        super(defaultConfig, defaultSourceProvider, buildType, buildTypeSourceProvider,
-                signingConfigOverride);
-        computeNdkConfig();
-    }
-
-    public GradleVariantConfiguration(
-            @NonNull ProductFlavor defaultConfig,
-            @NonNull SourceProvider defaultSourceProvider,
+            @NonNull SourceProvider defaultUnitTestSourceProvider,
             @NonNull BuildType buildType,
             @Nullable SourceProvider buildTypeSourceProvider,
             @NonNull Type type, @Nullable SigningConfig signingConfigOverride) {
-        super(defaultConfig, defaultSourceProvider, buildType, buildTypeSourceProvider, type,
-                signingConfigOverride);
+        super(defaultConfig, defaultSourceProvider, defaultUnitTestSourceProvider,
+                buildType, buildTypeSourceProvider, type, signingConfigOverride);
         computeNdkConfig();
     }
 
     public GradleVariantConfiguration(
             @NonNull ProductFlavor defaultConfig,
             @NonNull SourceProvider defaultSourceProvider,
+            @NonNull SourceProvider defaultUnitTestSourceProvider,
             @NonNull BuildType buildType,
             @Nullable SourceProvider buildTypeSourceProvider,
             @NonNull Type type, @Nullable VariantConfiguration testedConfig,
             @Nullable SigningConfig signingConfigOverride) {
-        super(defaultConfig, defaultSourceProvider, buildType, buildTypeSourceProvider, type,
-                testedConfig, signingConfigOverride);
+        super(defaultConfig, defaultSourceProvider, defaultUnitTestSourceProvider,
+                buildType, buildTypeSourceProvider, type, testedConfig, signingConfigOverride);
         computeNdkConfig();
     }
 

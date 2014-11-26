@@ -36,6 +36,7 @@ import com.android.builder.model.SourceProvider;
 import com.android.ide.common.res2.AssetSet;
 import com.android.ide.common.res2.ResourceSet;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -93,8 +94,12 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
 
     @NonNull
     private final D mDefaultConfig;
+
     @NonNull
     private final SourceProvider mDefaultSourceProvider;
+
+    @NonNull
+    private final SourceProvider mDefaultUnitTestSourceProvider;
 
     @NonNull
     private final T mBuildType;
@@ -177,11 +182,12 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     public VariantConfiguration(
             @NonNull D defaultConfig,
             @NonNull SourceProvider defaultSourceProvider,
+            @NonNull SourceProvider defaultUnitTestSourceProvider,
             @NonNull T buildType,
             @Nullable SourceProvider buildTypeSourceProvider,
             @Nullable SigningConfig signingConfigOverride) {
         this(
-                defaultConfig, defaultSourceProvider,
+                defaultConfig, defaultSourceProvider, defaultUnitTestSourceProvider,
                 buildType, buildTypeSourceProvider,
                 Type.DEFAULT, null /*testedConfig*/, signingConfigOverride);
     }
@@ -199,12 +205,13 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     public VariantConfiguration(
             @NonNull D defaultConfig,
             @NonNull SourceProvider defaultSourceProvider,
+            @NonNull SourceProvider defaultUnitTestSourceProvider,
             @NonNull T buildType,
             @Nullable SourceProvider buildTypeSourceProvider,
             @NonNull Type type,
             @Nullable SigningConfig signingConfigOverride) {
         this(
-                defaultConfig, defaultSourceProvider,
+                defaultConfig, defaultSourceProvider, defaultUnitTestSourceProvider,
                 buildType, buildTypeSourceProvider,
                 type, null /*testedConfig*/, signingConfigOverride);
     }
@@ -223,6 +230,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     public VariantConfiguration(
             @NonNull D defaultConfig,
             @NonNull SourceProvider defaultSourceProvider,
+            @NonNull SourceProvider defaultUnitTestSourceProvider,
             @NonNull T buildType,
             @Nullable SourceProvider buildTypeSourceProvider,
             @NonNull Type type,
@@ -230,6 +238,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             @Nullable SigningConfig signingConfigOverride) {
         mDefaultConfig = checkNotNull(defaultConfig);
         mDefaultSourceProvider = checkNotNull(defaultSourceProvider);
+        mDefaultUnitTestSourceProvider = checkNotNull(defaultUnitTestSourceProvider);
         mBuildType = checkNotNull(buildType);
         mBuildTypeSourceProvider = buildTypeSourceProvider;
         mType = checkNotNull(type);
@@ -1122,6 +1131,12 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         }
 
         return providers;
+    }
+
+    @NonNull
+    public List<SourceProvider> getSortedUnitTestSourceProviders() {
+        // TODO: Handle other source folders.
+        return ImmutableList.of(mDefaultUnitTestSourceProvider);
     }
 
     @NonNull

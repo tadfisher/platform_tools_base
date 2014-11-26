@@ -100,6 +100,7 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
     public NdkCompile ndkCompileTask;
 
     public JavaCompile javaCompileTask;
+    public JavaCompile javaCompileTestTask;
     public JackTask jackTask;
     public Task compileTask;
     public JacocoInstrumentTask jacocoInstrumentTask;
@@ -111,6 +112,7 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
     public Task assembleVariantTask;
 
     private Object[] javaSources;
+    private Object[] javaUnitTestSources;
 
     private List<File> extraGeneratedSourceFolders;
 
@@ -283,6 +285,21 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
         }
 
         return javaSources;
+    }
+
+    public Object[] getJavaUnitTestSources() {
+        if (javaUnitTestSources == null) {
+            // Build the list of source folders.
+            List<Object> sourceList = Lists.newArrayList();
+
+            // First the actual source folders.
+            List<SourceProvider> providers = variantConfiguration.getSortedUnitTestSourceProviders();
+            for (SourceProvider provider : providers) {
+                sourceList.add(((AndroidSourceSet) provider).getJava().getSourceFiles());
+            }
+        }
+
+        return javaUnitTestSources;
     }
 
     /**
