@@ -185,6 +185,7 @@ import static com.android.builder.core.BuilderConstants.FD_FLAVORS
 import static com.android.builder.core.BuilderConstants.FD_FLAVORS_ALL
 import static com.android.builder.core.BuilderConstants.FD_REPORTS
 import static com.android.builder.core.BuilderConstants.RELEASE
+import static com.android.builder.core.BuilderConstants.UNIT_TEST_SOURCE_NAME
 import static com.android.builder.core.VariantConfiguration.Type.DEFAULT
 import static com.android.builder.core.VariantConfiguration.Type.TEST
 import static com.android.builder.model.AndroidProject.FD_GENERATED
@@ -239,7 +240,8 @@ public abstract class BasePlugin {
     private final Collection<String> unresolvedDependencies = Sets.newHashSet();
 
     protected DefaultAndroidSourceSet mainSourceSet
-    protected DefaultAndroidSourceSet testSourceSet
+    protected DefaultAndroidSourceSet androidTestSourceSet
+    protected DefaultAndroidSourceSet unitTestSourceSet
 
     protected PrepareSdkTask mainPreBuild
     protected Task uninstallAll
@@ -411,11 +413,12 @@ public abstract class BasePlugin {
 
     private void setBaseExtension(@NonNull BaseExtension extension) {
         mainSourceSet = (DefaultAndroidSourceSet) extension.sourceSets.create(extension.defaultConfig.name)
-        testSourceSet = (DefaultAndroidSourceSet) extension.sourceSets.create(ANDROID_TEST)
+        androidTestSourceSet = (DefaultAndroidSourceSet) extension.sourceSets.create(ANDROID_TEST)
+        unitTestSourceSet = (DefaultAndroidSourceSet) extension.sourceSets.create(UNIT_TEST_SOURCE_NAME)
 
         defaultConfigData = new ProductFlavorData<ProductFlavor>(
-                extension.defaultConfig, mainSourceSet,
-                testSourceSet, project)
+                extension.defaultConfig, mainSourceSet, unitTestSourceSet,
+                androidTestSourceSet, project)
     }
 
     private void checkGradleVersion() {

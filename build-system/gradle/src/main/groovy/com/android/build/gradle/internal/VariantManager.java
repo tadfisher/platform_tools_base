@@ -21,6 +21,7 @@ import static com.android.builder.core.BuilderConstants.ANDROID_TEST;
 import static com.android.builder.core.BuilderConstants.DEBUG;
 import static com.android.builder.core.BuilderConstants.LINT;
 import static com.android.builder.core.BuilderConstants.UI_TEST;
+import static com.android.builder.core.BuilderConstants.UNIT_TEST_SOURCE_NAME;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -151,7 +152,7 @@ public class VariantManager implements VariantModel {
             throw new RuntimeException("BuildType names cannot collide with ProductFlavor names");
         }
 
-        DefaultAndroidSourceSet sourceSet = (DefaultAndroidSourceSet) extension.getSourceSetsContainer().maybeCreate(name);
+        DefaultAndroidSourceSet sourceSet = createSourceSet(name);
 
         BuildTypeData buildTypeData = new BuildTypeData(buildType, sourceSet, project);
         project.getTasks().getByName("assemble").dependsOn(buildTypeData.getAssembleTask());
@@ -173,15 +174,16 @@ public class VariantManager implements VariantModel {
             throw new RuntimeException("ProductFlavor names cannot collide with BuildType names");
         }
 
-        DefaultAndroidSourceSet mainSourceSet = (DefaultAndroidSourceSet) extension.getSourceSetsContainer().maybeCreate(
-                productFlavor.getName());
-        String testName = ANDROID_TEST + StringHelper.capitalize(productFlavor.getName());
-        DefaultAndroidSourceSet testSourceSet = (DefaultAndroidSourceSet) extension.getSourceSetsContainer().maybeCreate(
-                testName);
+        DefaultAndroidSourceSet mainSourceSet = createSourceSet(productFlavor.getName());
+        DefaultAndroidSourceSet androidTestSourceSet = createSourceSet(
+                ANDROID_TEST + StringHelper.capitalize(productFlavor.getName()));
+        DefaultAndroidSourceSet unitTestSourceSet = createSourceSet(
+                UNIT_TEST_SOURCE_NAME + StringHelper.capitalize(productFlavor.getName()));
 
         ProductFlavorData<GroupableProductFlavor> productFlavorData =
                 new ProductFlavorData<GroupableProductFlavor>(
-                        productFlavor, mainSourceSet, testSourceSet, project);
+                        productFlavor, mainSourceSet, unitTestSourceSet, androidTestSourceSet,
+                        project);
 
         productFlavors.put(productFlavor.getName(), productFlavorData);
     }
@@ -484,7 +486,7 @@ public class VariantManager implements VariantModel {
         // handle test variant
         GradleVariantConfiguration testVariantConfig = new GradleVariantConfiguration(
                 defaultConfig,
-                defaultConfigData.getTestSourceSet(),
+                defaultConfigData.getAndroidTestSourceSet(),
                 testData.getBuildType(),
                 null,
                 VariantConfiguration.Type.TEST,
@@ -501,7 +503,7 @@ public class VariantManager implements VariantModel {
             }
             testVariantConfig.addProductFlavor(
                     data.getProductFlavor(),
-                    data.getTestSourceSet(),
+                    data.getAndroidTestSourceSet(),
                     dimensionName);
         }
 
@@ -512,6 +514,13 @@ public class VariantManager implements VariantModel {
         ((TestedVariantData) testedVariantData).setTestVariantData(testVariantData);
 
         return testVariantData;
+    }
+
+    /**
+     * Creates a source set with the given name.
+     */
+    private DefaultAndroidSourceSet createSourceSet(String name) {
+        return (DefaultAndroidSourceSet) extension.getSourceSetsContainer().maybeCreate(name);
     }
 
     /**

@@ -27,7 +27,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Data about a variant that produce a test APK
+ * Data about a variant that produce a test APK.
  */
 public class TestVariantData extends ApkVariantData {
 

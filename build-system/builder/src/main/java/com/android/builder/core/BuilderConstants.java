@@ -41,6 +41,7 @@ public class BuilderConstants {
     public static final String CONNECTED = "connected";
     public static final String DEVICE = "device";
 
+    public static final String UNIT_TEST_SOURCE_NAME = "test";
     public static final String ANDROID_TEST = "androidTest";
     public static final String FD_ANDROID_TESTS = "androidTests";
     public static final String FD_ANDROID_RESULTS = ANDROID_TEST + "-results";

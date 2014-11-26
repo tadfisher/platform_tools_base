@@ -58,7 +58,7 @@ class ProductFlavorContainerImpl implements ProductFlavorContainer, Serializable
 
         // instrument test Source Provider
         SourceProviderContainer testASP = SourceProviderContainerImpl.create(
-                ARTIFACT_ANDROID_TEST, productFlavorData.getTestSourceSet());
+                ARTIFACT_ANDROID_TEST, productFlavorData.getAndroidTestSourceSet());
 
         clonedContainer.add(testASP);
 

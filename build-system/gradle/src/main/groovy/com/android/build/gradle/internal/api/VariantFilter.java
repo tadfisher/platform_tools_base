@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.api.GroupableProductFlavor;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.ProductFlavor;
+import com.google.common.collect.ImmutableList;
 
 import java.util.Collections;
 import java.util.List;
