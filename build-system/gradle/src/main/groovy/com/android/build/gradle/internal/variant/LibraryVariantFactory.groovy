@@ -241,7 +241,7 @@ public class LibraryVariantFactory implements VariantFactory<LibraryVariantData>
         Copy lintCopy = project.tasks.create(
                 "copy${fullName.capitalize()}Lint",
                 Copy)
-        lintCopy.dependsOn basePlugin.lintCompile
+        lintCopy.dependsOn basePlugin.compileLint
         lintCopy.from("$project.buildDir/${FD_INTERMEDIATES}/lint/lint.jar")
         lintCopy.into("$project.buildDir/${FD_INTERMEDIATES}/$DIR_BUNDLES/$dirName")
 

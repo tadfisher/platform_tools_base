@@ -320,7 +320,7 @@ public class VariantManager implements VariantModel {
      */
     public void populateVariantDataList(@Nullable com.android.builder.model.SigningConfig signingOverride) {
         // Add a compile lint task
-        basePlugin.createLintCompileTask();
+        basePlugin.createCompileLintTask();
 
         if (productFlavors.isEmpty()) {
             createVariantDataForProductFlavors(signingOverride,

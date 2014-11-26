@@ -248,7 +248,7 @@ public abstract class BasePlugin {
     protected Task connectedCheck
     protected Copy jacocoAgentTask
 
-    public Task lintCompile
+    public Task compileLint
     protected Task lintAll
     protected Task lintVital
 
@@ -307,7 +307,7 @@ public abstract class BasePlugin {
         project.tasks.assemble.description =
                 "Assembles all variants of all applications and secondary packages."
 
-        // call back on execution. This is called after the whole build is done (not
+        // Call back on execution. This is called after the whole build is done (not
         // after the current project is done).
         // This is will be called for each (android) projects though, so this should support
         // being called 2+ times.
@@ -1584,11 +1584,14 @@ public abstract class BasePlugin {
     }
 
     // TODO - should compile src/lint/java from src/lint/java and jar it into build/lint/lint.jar
-    public void createLintCompileTask() {
-        lintCompile = project.tasks.create("compileLint", Task)
+    public void createCompileLintTask() {
+        compileLint = project.tasks.create("compileLint", Task) {
+            description = "Prepares the lint output directory."
+        }
+
         File outputDir = new File("$project.buildDir/${FD_INTERMEDIATES}/lint")
 
-        lintCompile.doFirst{
+        compileLint.doFirst{
             // create the directory for lint output if it does not exist.
             if (!outputDir.exists()) {
                 boolean mkdirs = outputDir.mkdirs();
@@ -1627,13 +1630,13 @@ public abstract class BasePlugin {
             }
 
             // wire the main lint task dependency.
-            lint.dependsOn lintCompile
+            lint.dependsOn compileLint
             optionalDependsOn(lint, baseVariantData.javaCompileTask, baseVariantData.jackTask)
 
             String variantName = baseVariantData.variantConfiguration.fullName
             def capitalizedVariantName = variantName.capitalize()
             Lint variantLintCheck = project.tasks.create("lint" + capitalizedVariantName, Lint)
-            variantLintCheck.dependsOn lintCompile
+            variantLintCheck.dependsOn compileLint
             optionalDependsOn(variantLintCheck, baseVariantData.javaCompileTask, baseVariantData.jackTask)
 
             // Note that we don't do "lint.dependsOn lintCheck"; the "lint" target will
@@ -1656,7 +1659,7 @@ public abstract class BasePlugin {
             def capitalizedVariantName = variantName.capitalize()
             def taskName = "lintVital" + capitalizedVariantName
             Lint lintReleaseCheck = project.tasks.create(taskName, Lint)
-            // TODO: Make this task depend on lintCompile too (resolve initialization order first)
+            // TODO: Make this task depend on compileLint too (resolve initialization order first)
             optionalDependsOn(lintReleaseCheck, variantData.javaCompileTask)
             lintReleaseCheck.setPlugin(this)
             lintReleaseCheck.setVariantName(variantName)
