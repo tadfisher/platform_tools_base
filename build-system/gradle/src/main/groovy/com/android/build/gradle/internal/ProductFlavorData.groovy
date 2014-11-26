@@ -29,6 +29,7 @@ import org.gradle.api.artifacts.Configuration
  */
 public class ProductFlavorData<T extends DefaultProductFlavor> {
 
+
     public static class ConfigurationProviderImpl implements ConfigurationProvider {
 
         private final Project project
@@ -61,7 +62,8 @@ public class ProductFlavorData<T extends DefaultProductFlavor> {
     final T productFlavor
 
     final DefaultAndroidSourceSet sourceSet
-    final DefaultAndroidSourceSet testSourceSet
+    final DefaultAndroidSourceSet unitTestSourceSet
+    final DefaultAndroidSourceSet androidTestSourceSet
     final ConfigurationProvider mainProvider
     final ConfigurationProvider testProvider
 
@@ -70,13 +72,15 @@ public class ProductFlavorData<T extends DefaultProductFlavor> {
     ProductFlavorData(
             T productFlavor,
             DefaultAndroidSourceSet sourceSet,
-            DefaultAndroidSourceSet testSourceSet,
+            DefaultAndroidSourceSet unitTestSourceSet,
+            DefaultAndroidSourceSet androidTestSourceSet,
             Project project) {
         this.productFlavor = productFlavor
         this.sourceSet = sourceSet
-        this.testSourceSet = testSourceSet
+        this.unitTestSourceSet = unitTestSourceSet
+        this.androidTestSourceSet = androidTestSourceSet
         mainProvider = new ConfigurationProviderImpl(project, sourceSet)
-        testProvider = new ConfigurationProviderImpl(project, testSourceSet)
+        testProvider = new ConfigurationProviderImpl(project, androidTestSourceSet)
 
         if (!BuilderConstants.MAIN.equals(sourceSet.name)) {
             assembleTask = project.tasks.create("assemble${sourceSet.name.capitalize()}")

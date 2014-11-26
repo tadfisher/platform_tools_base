@@ -21,6 +21,7 @@ import static com.android.builder.core.BuilderConstants.ANDROID_TEST;
 import static com.android.builder.core.BuilderConstants.DEBUG;
 import static com.android.builder.core.BuilderConstants.LINT;
 import static com.android.builder.core.BuilderConstants.UI_TEST;
+import static com.android.builder.core.BuilderConstants.UNIT_TEST_SOURCE_NAME;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -47,7 +48,7 @@ import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
-import com.android.builder.core.VariantConfiguration;
+import com.android.builder.core.VariantConfiguration.Type;
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -151,7 +152,7 @@ public class VariantManager implements VariantModel {
             throw new RuntimeException("BuildType names cannot collide with ProductFlavor names");
         }
 
-        DefaultAndroidSourceSet sourceSet = (DefaultAndroidSourceSet) extension.getSourceSetsContainer().maybeCreate(name);
+        DefaultAndroidSourceSet sourceSet = createSourceSet(name);
 
         BuildTypeData buildTypeData = new BuildTypeData(buildType, sourceSet, project);
         project.getTasks().getByName("assemble").dependsOn(buildTypeData.getAssembleTask());
@@ -173,15 +174,16 @@ public class VariantManager implements VariantModel {
             throw new RuntimeException("ProductFlavor names cannot collide with BuildType names");
         }
 
-        DefaultAndroidSourceSet mainSourceSet = (DefaultAndroidSourceSet) extension.getSourceSetsContainer().maybeCreate(
-                productFlavor.getName());
-        String testName = ANDROID_TEST + StringHelper.capitalize(productFlavor.getName());
-        DefaultAndroidSourceSet testSourceSet = (DefaultAndroidSourceSet) extension.getSourceSetsContainer().maybeCreate(
-                testName);
+        DefaultAndroidSourceSet mainSourceSet = createSourceSet(productFlavor.getName());
+        DefaultAndroidSourceSet androidTestSourceSet = createSourceSet(
+                ANDROID_TEST + StringHelper.capitalize(productFlavor.getName()));
+        DefaultAndroidSourceSet unitTestSourceSet = createSourceSet(
+                UNIT_TEST_SOURCE_NAME + StringHelper.capitalize(productFlavor.getName()));
 
         ProductFlavorData<GroupableProductFlavor> productFlavorData =
                 new ProductFlavorData<GroupableProductFlavor>(
-                        productFlavor, mainSourceSet, testSourceSet, project);
+                        productFlavor, mainSourceSet, unitTestSourceSet, androidTestSourceSet,
+                        project);
 
         productFlavors.put(productFlavor.getName(), productFlavorData);
     }
@@ -220,7 +222,8 @@ public class VariantManager implements VariantModel {
         basePlugin.createLintTasks();
 
         // create the test tasks.
-        basePlugin.createCheckTasks(!productFlavors.isEmpty(), false /*isLibrary*/);
+        basePlugin.createCheckTasks(!productFlavors.isEmpty());
+        basePlugin.createConnectedCheckTasks(!productFlavors.isEmpty(), false /*isLibrary*/);
 
         // Create the variant API objects after the tasks have been created!
         createApiObjects();
@@ -231,7 +234,7 @@ public class VariantManager implements VariantModel {
      */
     public void createTasksForVariantData(TaskContainer tasks, BaseVariantData variantData) {
         if (variantData.getVariantConfiguration().getType()
-                == GradleVariantConfiguration.Type.TEST) {
+                == Type.TEST) {
             GradleVariantConfiguration testVariantConfig = variantData.getVariantConfiguration();
             BaseVariantData testedVariantData = (BaseVariantData) ((TestVariantData) variantData)
                     .getTestedVariantData();
@@ -251,7 +254,7 @@ public class VariantManager implements VariantModel {
             testVariantProviders.add(basePlugin.getDefaultConfigData().getTestProvider());
 
             assert(testVariantConfig.getTestedConfig() != null);
-            if (testVariantConfig.getTestedConfig().getType() == VariantConfiguration.Type.LIBRARY) {
+            if (testVariantConfig.getTestedConfig().getType() == Type.LIBRARY) {
                 testVariantProviders.add(testedVariantData.getVariantDependency());
             }
 
@@ -370,18 +373,16 @@ public class VariantManager implements VariantModel {
 
         ProductFlavor defaultConfig = defaultConfigData.getProductFlavor();
         DefaultAndroidSourceSet defaultConfigSourceSet = defaultConfigData.getSourceSet();
+        DefaultAndroidSourceSet defaultConfigUnitTestSourceSet = defaultConfigData.getUnitTestSourceSet();
 
         BuildTypeData buildTypeData = buildTypes.get(buildType.getName());
 
         Set<String> compatibleScreens = basePlugin.getExtension().getSplits().getDensity()
                 .getCompatibleScreens();
 
-        GradleVariantConfiguration variantConfig = new GradleVariantConfiguration(
-                defaultConfig,
-                defaultConfigSourceSet,
-                buildTypeData.getBuildType(),
-                buildTypeData.getSourceSet(),
-                variantFactory.getVariantConfigurationType(),
+        GradleVariantConfiguration variantConfig = new GradleVariantConfiguration(defaultConfig,
+                defaultConfigSourceSet, defaultConfigUnitTestSourceSet, buildTypeData.getBuildType(),
+                buildTypeData.getSourceSet(), variantFactory.getVariantConfigurationType(),
                 signingOverride);
 
         // sourceSetContainer in case we are creating variant specific sourceSets.
@@ -482,14 +483,10 @@ public class VariantManager implements VariantModel {
         List<? extends com.android.build.gradle.api.GroupableProductFlavor> productFlavorList = testedConfig.getProductFlavors();
 
         // handle test variant
-        GradleVariantConfiguration testVariantConfig = new GradleVariantConfiguration(
-                defaultConfig,
-                defaultConfigData.getTestSourceSet(),
-                testData.getBuildType(),
-                null,
-                VariantConfiguration.Type.TEST,
-                testedVariantData.getVariantConfiguration(),
-                signingOverride);
+        GradleVariantConfiguration testVariantConfig = new GradleVariantConfiguration(defaultConfig,
+                defaultConfigData.getAndroidTestSourceSet(), defaultConfigData.getUnitTestSourceSet(),
+                testData.getBuildType(), null, Type.TEST,
+                testedVariantData.getVariantConfiguration(), signingOverride);
 
         for (com.android.build.gradle.api.GroupableProductFlavor productFlavor : productFlavorList) {
             ProductFlavorData<GroupableProductFlavor> data = productFlavors
@@ -501,7 +498,7 @@ public class VariantManager implements VariantModel {
             }
             testVariantConfig.addProductFlavor(
                     data.getProductFlavor(),
-                    data.getTestSourceSet(),
+                    data.getAndroidTestSourceSet(),
                     dimensionName);
         }
 
@@ -512,6 +509,13 @@ public class VariantManager implements VariantModel {
         ((TestedVariantData) testedVariantData).setTestVariantData(testVariantData);
 
         return testVariantData;
+    }
+
+    /**
+     * Creates a source set with the given name.
+     */
+    private DefaultAndroidSourceSet createSourceSet(String name) {
+        return (DefaultAndroidSourceSet) extension.getSourceSetsContainer().maybeCreate(name);
     }
 
     /**

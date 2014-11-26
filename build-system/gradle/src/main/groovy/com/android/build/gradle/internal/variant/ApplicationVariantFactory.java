@@ -185,7 +185,7 @@ public class ApplicationVariantFactory implements VariantFactory<ApplicationVari
             basePlugin.createJackTask(appVariantData, null /*testedVariant*/);
         } else{
             basePlugin.createCompileTask(variantData, null /*testedVariant*/);
-
+            basePlugin.createCompileTestTask(variantData);
             basePlugin.createPostCompilationTasks(appVariantData);
         }
 

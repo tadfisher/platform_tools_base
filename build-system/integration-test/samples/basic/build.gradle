@@ -131,4 +131,8 @@ android {
             variant.outputs.get(0).versionCodeOverride = 13
         }
     }
+
+    configurations.all {
+      println name
+    }
 }

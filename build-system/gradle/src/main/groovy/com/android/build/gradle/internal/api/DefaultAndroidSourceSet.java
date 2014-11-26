@@ -35,8 +35,6 @@ import java.util.Set;
 
 import groovy.lang.Closure;
 
-/**
- */
 public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider {
     @NonNull
     private final String name;

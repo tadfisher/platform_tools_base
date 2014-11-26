@@ -175,6 +175,7 @@ public class VariantConfigurationTest extends TestCase {
     private VariantConfiguration getVariant(SigningConfig signingOverride) {
         VariantConfiguration variant = new VariantConfiguration(
                 mDefaultConfig, new MockSourceProvider("main"),
+                new MockSourceProvider("test"),
                 mBuildType, new MockSourceProvider("debug"),
                 VariantConfiguration.Type.DEFAULT,
                 signingOverride);
@@ -187,6 +188,7 @@ public class VariantConfigurationTest extends TestCase {
     private VariantConfiguration getVariantWithManifestPackage(final String packageName) {
         VariantConfiguration variant = new VariantConfiguration(
                 mDefaultConfig, new MockSourceProvider("main"),
+                new MockSourceProvider("test"),
                 mBuildType, new MockSourceProvider("debug"),
                 VariantConfiguration.Type.DEFAULT,
                 null /*signingConfigOverride*/) {
@@ -203,6 +205,7 @@ public class VariantConfigurationTest extends TestCase {
     private VariantConfiguration getVariantWithManifestVersion(final String versionName) {
         VariantConfiguration variant = new VariantConfiguration(
                 mDefaultConfig, new MockSourceProvider("main"),
+                new MockSourceProvider("test"),
                 mBuildType, new MockSourceProvider("debug"),
                 VariantConfiguration.Type.DEFAULT,
                 null /*signingConfigOverride*/) {

@@ -136,6 +136,7 @@ import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import com.google.common.collect.Multimap
 import com.google.common.collect.Sets
+import groovy.transform.CompileStatic
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.JavaVersion
@@ -158,8 +159,10 @@ import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.specs.Specs
 import org.gradle.api.tasks.Copy
+import org.gradle.api.tasks.StopExecutionException
 import org.gradle.api.tasks.compile.AbstractCompile
 import org.gradle.api.tasks.compile.JavaCompile
+import org.gradle.api.tasks.testing.Test
 import org.gradle.internal.reflect.Instantiator
 import org.gradle.language.jvm.tasks.ProcessResources
 import org.gradle.tooling.BuildException
@@ -185,6 +188,7 @@ import static com.android.builder.core.BuilderConstants.FD_FLAVORS
 import static com.android.builder.core.BuilderConstants.FD_FLAVORS_ALL
 import static com.android.builder.core.BuilderConstants.FD_REPORTS
 import static com.android.builder.core.BuilderConstants.RELEASE
+import static com.android.builder.core.BuilderConstants.UNIT_TEST_SOURCE_NAME
 import static com.android.builder.core.VariantConfiguration.Type.DEFAULT
 import static com.android.builder.core.VariantConfiguration.Type.TEST
 import static com.android.builder.model.AndroidProject.FD_GENERATED
@@ -203,7 +207,8 @@ import static java.io.File.separator
  * Base class for all Android plugins
  */
 public abstract class BasePlugin {
-    public final static String DIR_BUNDLES = "bundles";
+    public static final String DIR_BUNDLES = "bundles";
+    public static final String TEST_TASK_NAME = "test"
 
     private static final String GRADLE_MIN_VERSION = "2.2"
     public static final String GRADLE_TEST_VERSION = "2.2"
@@ -239,7 +244,8 @@ public abstract class BasePlugin {
     private final Collection<String> unresolvedDependencies = Sets.newHashSet();
 
     protected DefaultAndroidSourceSet mainSourceSet
-    protected DefaultAndroidSourceSet testSourceSet
+    protected DefaultAndroidSourceSet androidTestSourceSet
+    protected DefaultAndroidSourceSet unitTestSourceSet
 
     protected PrepareSdkTask mainPreBuild
     protected Task uninstallAll
@@ -411,11 +417,12 @@ public abstract class BasePlugin {
 
     private void setBaseExtension(@NonNull BaseExtension extension) {
         mainSourceSet = (DefaultAndroidSourceSet) extension.sourceSets.create(extension.defaultConfig.name)
-        testSourceSet = (DefaultAndroidSourceSet) extension.sourceSets.create(ANDROID_TEST)
+        androidTestSourceSet = (DefaultAndroidSourceSet) extension.sourceSets.create(ANDROID_TEST)
+        unitTestSourceSet = (DefaultAndroidSourceSet) extension.sourceSets.create(UNIT_TEST_SOURCE_NAME)
 
         defaultConfigData = new ProductFlavorData<ProductFlavor>(
-                extension.defaultConfig, mainSourceSet,
-                testSourceSet, project)
+                extension.defaultConfig, mainSourceSet, unitTestSourceSet,
+                androidTestSourceSet, project)
     }
 
     private void checkGradleVersion() {
@@ -1391,8 +1398,8 @@ public abstract class BasePlugin {
                 "compile${variantData.variantConfiguration.fullName.capitalize()}Java",
                 JavaCompile)
         variantData.javaCompileTask = compileTask
-        variantData.javaCompileTask.dependsOn variantData.sourceGenTask
-        variantData.compileTask.dependsOn variantData.javaCompileTask
+        compileTask.dependsOn variantData.sourceGenTask
+        variantData.compileTask.dependsOn compileTask
 
         compileTask.source = variantData.getJavaSources()
 
@@ -1403,7 +1410,10 @@ public abstract class BasePlugin {
         // dependency.
         if (testedVariantData instanceof ApplicationVariantData) {
             compileTask.conventionMapping.classpath =  {
-                project.files(androidBuilder.getCompileClasspath(config)) + testedVariantData.javaCompileTask.classpath + testedVariantData.javaCompileTask.outputs.files
+                project.files(
+                        androidBuilder.getCompileClasspath(config)) +
+                        testedVariantData.javaCompileTask.classpath +
+                        testedVariantData.javaCompileTask.outputs.files
             }
         } else {
             compileTask.conventionMapping.classpath =  {
@@ -1423,6 +1433,7 @@ public abstract class BasePlugin {
         }
 
         configureLanguageLevel(compileTask)
+        configureBuildGroup(compileTask)
         compileTask.options.encoding = extension.compileOptions.encoding
 
         // setup the boot classpath just before the task actually runs since this will
@@ -1431,6 +1442,38 @@ public abstract class BasePlugin {
             compileTask.options.bootClasspath = androidBuilder.getBootClasspathAsStrings().join(File.pathSeparator)
         }
     }
+
+    @CompileStatic
+    public void createCompileTestTask(
+            @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData) {
+        JavaCompile compileTask = project.tasks.create(
+                // TODO: Figure out the naming scheme for tasks.
+                "compile${variantData.variantConfiguration.fullName.capitalize()}UnitTestJava",
+                JavaCompile)
+
+        compileTask.classpath = project.files(
+                androidBuilder.getCompileClasspath(variantData.variantConfiguration) +
+                        variantData.javaCompileTask.outputs.files)
+
+        compileTask.source variantData.javaUnitTestSources
+
+        compileTask.destinationDir = project.file(
+                ["$project.buildDir",
+                 FD_INTERMEDIATES,
+                 "classes/test",
+                 variantData.variantConfiguration.dirName].join("/"))
+
+        configureBuildGroup compileTask
+        compileTask.dependsOn variantData.compileTask
+
+        // Use mockable JAR.
+        compileTask.doFirst {
+            compileTask.options.bootClasspath = androidBuilder.getBootClasspathAsStrings().join(File.pathSeparator)
+        }
+
+        variantData.javaCompileTestTask = compileTask
+    }
+
     public void createGenerateMicroApkDataTask(
             @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData,
             @NonNull Configuration config) {
@@ -1668,7 +1711,50 @@ public abstract class BasePlugin {
         }
     }
 
-    public void createCheckTasks(boolean hasFlavors, boolean isLibraryTest) {
+    public void createCheckTasks(boolean hasFlavors) {
+        Task check = project.tasks.getByName(JavaBasePlugin.CHECK_TASK_NAME)
+        Task topLevelTest = project.tasks.create(TEST_TASK_NAME)
+        topLevelTest.group = JavaBasePlugin.VERIFICATION_GROUP
+        topLevelTest.description = "Runs all unit tests for all variants."
+        check.dependsOn topLevelTest
+
+        def nonTestVariants =
+                variantManager.variantDataList.findAll { it.variantConfiguration.type != TEST }
+        for (variantData in nonTestVariants) {
+            Test runTestsTask = project.tasks.create(
+                    "${TEST_TASK_NAME}_$variantData.variantConfiguration.fullName",
+                    Test)
+            // We are running in afterEvaluate, so the JavaBasePlugin has already added a
+            // callback to add test classes to the list of source files of the newly created task.
+            // The problem is that we haven't configured the test classes yet (JavaBasePlugin
+            // assumes all Test tasks are fully configured at this point), so we have to remove the
+            // "directory null" entry from source files and add the right value.
+            //
+            // This is an ugly hack, since we assume sourceFiles is an instance of
+            // DefaultConfigurableFileCollection.
+            runTestsTask.inputs.sourceFiles.from.clear()
+            def testCompileTask = variantData.javaCompileTestTask
+
+            runTestsTask.dependsOn testCompileTask
+            runTestsTask.testClassesDir = testCompileTask.destinationDir
+
+            runTestsTask.classpath = project.files(
+                    testCompileTask.classpath,
+                    testCompileTask.outputs.files)
+
+            // Use mockable JAR.
+            runTestsTask.doFirst {
+                runTestsTask.classpath = project.files(
+                        androidBuilder.bootClasspath,
+                        testCompileTask.classpath,
+                        testCompileTask.outputs.files)
+            }
+
+            topLevelTest.dependsOn runTestsTask
+        }
+    }
+
+    public void createConnectedCheckTasks(boolean hasFlavors, boolean isLibraryTest) {
         List<AndroidReportTask> reportTasks = Lists.newArrayListWithExpectedSize(2)
 
         List<DeviceProvider> providers = extension.deviceProviders
@@ -2358,6 +2444,7 @@ public abstract class BasePlugin {
         }
 
         configureLanguageLevel(compileTask)
+        configureBuildGroup(compileTask)
     }
 
     /**
@@ -2400,6 +2487,13 @@ public abstract class BasePlugin {
         compileTask.conventionMapping.targetCompatibility = {
             compileOptions.targetCompatibility.toString()
         }
+    }
+
+    /**
+     * Sets the group of a compilation task.
+     */
+    private static void configureBuildGroup(Task compileTask) {
+        compileTask.group = org.gradle.api.plugins.BasePlugin.BUILD_GROUP
     }
 
     /**
@@ -3003,6 +3097,7 @@ public abstract class BasePlugin {
         // and compile task
         variantData.compileTask = project.tasks.create(
                 "compile${variantData.variantConfiguration.fullName.capitalize()}Sources")
+        configureBuildGroup(variantData.compileTask)
     }
 
     public void createCheckManifestTask(

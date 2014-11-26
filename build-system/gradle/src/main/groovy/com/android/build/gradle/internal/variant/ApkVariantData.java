@@ -22,6 +22,7 @@ import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.tasks.Dex;
 import com.android.build.gradle.tasks.PreDex;
+import com.google.common.base.Objects;
 
 import org.gradle.api.DefaultTask;
 
@@ -69,5 +70,12 @@ public abstract class ApkVariantData extends BaseVariantData<ApkVariantOutputDat
 
     public boolean getZipAlignEnabled() {
         return getVariantConfiguration().getBuildType().isZipAlignEnabled();
+    }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this)
+                .addValue(getName())
+                .toString();
     }
 }

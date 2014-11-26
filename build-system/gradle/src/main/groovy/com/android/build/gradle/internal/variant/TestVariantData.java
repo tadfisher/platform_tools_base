@@ -21,13 +21,14 @@ import com.android.build.OutputFile;
 import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
+import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 
 import java.util.Collections;
 import java.util.List;
 
 /**
- * Data about a variant that produce a test APK
+ * Data about a variant that produce a test APK.
  */
 public class TestVariantData extends ApkVariantData {
 
@@ -69,4 +70,13 @@ public class TestVariantData extends ApkVariantData {
     public boolean getZipAlignEnabled() {
         return false;
     }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this)
+                .addValue(getName())
+                .add("testedVariantData", getTestedVariantData())
+                .toString();
+    }
 }
+
