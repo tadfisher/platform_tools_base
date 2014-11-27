@@ -324,7 +324,6 @@ public class AndroidProjectTest extends TestCase {
         assertEquals(3, javaLibraries.size());
     }
 
-
     /**
      * Returns the root dir for the gradle plugin project
      */

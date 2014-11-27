@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-
-
 package com.android.build.gradle.integration.application
+
+import com.android.annotations.NonNull
+import com.android.annotations.Nullable
+import com.android.build.FilterData
 import com.android.build.OutputFile
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.utils.ModelHelper
 import com.android.builder.model.AndroidArtifact
 import com.android.builder.model.AndroidArtifactOutput
 import com.android.builder.model.AndroidProject
@@ -36,16 +37,15 @@ import static org.junit.Assert.assertNotNull
 import static org.junit.Assert.assertTrue
 
 /**
- * Assemble tests for class densitySplitInL
- .
+ * test driver for combined density and language pure splits test.
  */
-class DensitySplitInLTest {
+class CombinedDensityAndLanguageTest {
 
     static AndroidProject model;
 
     @ClassRule
     static public GradleTestProject project = GradleTestProject.builder()
-            .fromSample("densitySplitInL")
+            .fromSample("combinedDensityAndLanguagePureSplits")
             .create()
 
     @BeforeClass
@@ -60,12 +60,14 @@ class DensitySplitInLTest {
     }
 
     @Test
-    void "check split outputs"() throws Exception {
+    public void "test combined density and language pure splits"() throws Exception {
+
+        // Load the custom model for the project
         Collection<Variant> variants = model.getVariants();
         assertEquals("Variant Count", 2 , variants.size());
 
         // get the main artifact of the debug artifact
-        Variant debugVariant = ModelHelper.getVariant(variants, DEBUG);
+        Variant debugVariant = getVariant(variants, DEBUG);
         assertNotNull("debug Variant null-check", debugVariant);
         AndroidArtifact debugMainArtifact = debugVariant.getMainArtifact();
         assertNotNull("Debug main info null-check", debugMainArtifact);
@@ -76,27 +78,55 @@ class DensitySplitInLTest {
 
         // build a set of expected outputs
         Set<String> expected = Sets.newHashSetWithExpectedSize(5);
-        expected.add(null);
         expected.add("mdpi");
         expected.add("hdpi");
         expected.add("xhdpi");
         expected.add("xxhdpi");
+        expected.add("en");
+        expected.add("fr");
 
         assertEquals(1, debugOutputs.size());
         AndroidArtifactOutput output = debugOutputs.iterator().next();
-        assertEquals(5, output.getOutputs().size());
+        assertEquals(7, output.getOutputs().size());
         for (OutputFile outputFile : output.getOutputs()) {
-            String densityFilter = ModelHelper.getFilter(outputFile, OutputFile.DENSITY);
-            assertEquals(densityFilter == null ? OutputFile.MAIN : OutputFile.SPLIT,
+            String filter = getFilter(outputFile, OutputFile.DENSITY);
+            if (filter == null) {
+                filter = getFilter(outputFile, OutputFile.LANGUAGE);
+            }
+            assertEquals(filter == null  ? OutputFile.MAIN : OutputFile.SPLIT,
                     outputFile.getOutputType());
 
             // with pure splits, all split have the same version code.
             assertEquals(12, output.getVersionCode());
-            expected.remove(densityFilter);
+            if (filter != null) {
+                expected.remove(filter);
+            }
         }
 
         // this checks we didn't miss any expected output.
         assertTrue(expected.isEmpty());
     }
 
+    @Nullable
+    private static String getFilter(OutputFile outputFile, String filterType) {
+        for (FilterData filterData : outputFile.getFilters()) {
+            if (filterData.filterType.equals(filterType)) {
+                return filterData.getIdentifier()
+            }
+        }
+        return null;
+    }
+
+    @Nullable
+    private static Variant getVariant(
+            @NonNull Collection<Variant> items,
+            @NonNull String name) {
+        for (Variant item : items) {
+            if (name.equals(item.getName())) {
+                return item;
+            }
+        }
+
+        return null;
+    }
 }
