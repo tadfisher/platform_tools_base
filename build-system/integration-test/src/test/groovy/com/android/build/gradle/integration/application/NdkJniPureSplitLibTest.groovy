@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+
+
 package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.category.DeviceTests
@@ -36,26 +38,23 @@ import org.junit.experimental.categories.Category
 import static junit.framework.Assert.assertEquals
 
 /**
- * Assemble tests for densitySplit.
+ * Assemble tests for ndkJniPureSplitLib.
  */
-class DensitySplitTest {
-
-    static AndroidProject model;
+class NdkJniPureSplitLibTest {
 
     @ClassRule
     static public GradleTestProject project = GradleTestProject.builder()
-            .fromSample("densitySplit")
+            .fromSample("ndkJniPureSplitLib")
             .create()
 
     @BeforeClass
     static void setup() {
-        model = project.executeAndReturnModel("clean", "assembleDebug");
+        project.execute("clean", ":app:assembleDebug");
     }
 
     @AfterClass
     static void cleanUp() {
         project = null
-        model = null
     }
 
     @Test
@@ -64,37 +63,13 @@ class DensitySplitTest {
     }
 
     @Test
-    void testPackaging() {
-        for (Variant variant : model.getVariants()) {
-            AndroidArtifact mainArtifact = variant.getMainArtifact();
-            if (!variant.getBuildType().equalsIgnoreCase("Debug")) {
-                continue
-            }
-            assertEquals(5, mainArtifact.getOutputs().size())
-
-            Map<String, String> filesToMatch = Collections.singletonMap(
-                    "res/drawable-mdpi-v4/other.png", null)
-            for (AndroidArtifactOutput output : mainArtifact.getOutputs()) {
-                ZipHelper.checkArchive(output.mainOutputFile.getOutputFile(),
-                        filesToMatch,
-                        ImmutableSet.<String>of())
-            }
-        }
-    }
-
-    @Test
     void "check version code"() {
-        Map<String, VersionData> expected = Maps.newHashMapWithExpectedSize(5);
-        ApkHelper.checkVersion(project.getApk("universal", "debug"), 112, "version 112")
-        ApkHelper.checkVersion(project.getApk("mdpi", "debug"), 212, "version 212")
-        ApkHelper.checkVersion(project.getApk("hdpi", "debug"), 312, "version 312")
-        ApkHelper.checkVersion(project.getApk("xhdpi", "debug"), 412, "version 412")
-        ApkHelper.checkVersion(project.getApk("xxhdpi", "debug"), 512, "version 512")
-    }
-
-    @Test
-    @Category(DeviceTests.class)
-    void connectedCheck() {
-        project.execute("connectedCheck");
+        GradleTestProject app = project.getSubproject("app")
+        ApkHelper.checkVersion(app.getApk("free", "debug_armeabi-v7a"), 123)
+        ApkHelper.checkVersion(app.getApk("free", "debug_mips"),        123)
+        ApkHelper.checkVersion(app.getApk("free", "debug_x86"),         123)
+        ApkHelper.checkVersion(app.getApk("paid", "debug_armeabi-v7a"), 123)
+        ApkHelper.checkVersion(app.getApk("paid", "debug_mips"),        123)
+        ApkHelper.checkVersion(app.getApk("paid", "debug_x86"),         123)
     }
 }
