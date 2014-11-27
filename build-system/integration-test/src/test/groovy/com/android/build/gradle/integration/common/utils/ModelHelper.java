@@ -20,9 +20,12 @@ import static org.junit.Assert.assertNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidArtifactOutput;
+import com.android.builder.model.SigningConfig;
+import com.android.builder.model.SourceProviderContainer;
 import com.android.builder.model.Variant;
 
 import junit.framework.Assert;
@@ -109,4 +112,28 @@ public class ModelHelper {
 
         return mainOutputFile.getOutputFile();
     }
+
+    @Nullable
+    public static Variant getVariant(
+            @NonNull Collection<Variant> items,
+            @NonNull String name) {
+        for (Variant item : items) {
+            if (name.equals(item.getName())) {
+                return item;
+            }
+        }
+
+        return null;
+    }
+
+    @Nullable
+    public static String getFilter(@NonNull OutputFile outputFile, @NonNull String filterType) {
+        for (FilterData filterData : outputFile.getFilters()) {
+            if (filterData.getFilterType().equals(filterType)) {
+                return filterData.getIdentifier();
+            }
+        }
+        return null;
+    }
+
 }
