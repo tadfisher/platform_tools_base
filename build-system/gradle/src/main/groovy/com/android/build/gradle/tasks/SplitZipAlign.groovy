@@ -51,6 +51,9 @@ class SplitZipAlign extends DefaultTask {
     @Input
     Set<String> abiFilters;
 
+    @Input
+    Set<String> languageFilters;
+
     @OutputDirectory
     File outputDirectory;
 
@@ -66,6 +69,7 @@ class SplitZipAlign extends DefaultTask {
             ImmutableList.Builder<ApkOutputFile> builder = ImmutableList.builder();
             processFilters(densityFilters, OutputFile.FilterType.DENSITY, builder);
             processFilters(abiFilters, OutputFile.FilterType.ABI, builder);
+            processFilters(languageFilters, OutputFile.FilterType.LANGUAGE, builder);
             mOutputFiles = builder.build();
         }
         return mOutputFiles;
@@ -78,14 +82,12 @@ class SplitZipAlign extends DefaultTask {
             for (String filter : filters) {
                 String fileName = "${project.archivesBaseName}-${outputBaseName}_${filter}.apk"
                 File outputFile = new File(outputDirectory, fileName);
-                if (outputFile.exists()) {
-                    List<FilterData> filtersData = ImmutableList.of(
-                            FilterData.Builder.build(filterType.name(), filter))
-                    builder.add(new ApkOutputFile(
-                            OutputFile.OutputType.SPLIT,
-                            filtersData,
-                            Callables.returning(outputFile)));
-                }
+                List<FilterData> filtersData = ImmutableList.of(
+                        FilterData.Builder.build(filterType.name(), filter))
+                builder.add(new ApkOutputFile(
+                        OutputFile.OutputType.SPLIT,
+                        filtersData,
+                        Callables.returning(outputFile)));
             }
         }
     }
