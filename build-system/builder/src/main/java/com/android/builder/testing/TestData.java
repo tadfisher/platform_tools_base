@@ -48,11 +48,9 @@ public interface TestData {
     @NonNull
     String getInstrumentationRunner();
 
-    @NonNull
-    Boolean getHandleProfiling();
+    boolean getHandleProfiling();
 
-    @NonNull
-    Boolean getFunctionalTest();
+    boolean getFunctionalTest();
 
     /**
      * Returns whether the tested app is enabled for code coverage

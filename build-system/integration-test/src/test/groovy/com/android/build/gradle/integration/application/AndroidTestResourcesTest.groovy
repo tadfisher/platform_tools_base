@@ -71,7 +71,7 @@ class AndroidTestResourcesTest {
                         super.setUp();
                         final HelloWorld a = getActivity();
                         mTextView = (TextView) a.findViewById(
-                                com.example.helloworld.test.R.id.test_layout_1_textview);
+                                com.example.helloworld.androidTest.R.id.test_layout_1_textview);
                     }
 
                     @MediumTest
@@ -93,7 +93,7 @@ class AndroidTestResourcesTest {
      * Use the test app to create an application and a library project.
      */
     @BeforeClass
-    static void setup() {
+    static void setUp() {
         testApp.writeSources(appProject.testDir)
         appProject.getBuildFile() << """
                 apply plugin: 'com.android.application'
@@ -102,7 +102,7 @@ class AndroidTestResourcesTest {
                     buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
                 }
                 """.stripIndent()
-        appProject.execute("assembleDebugTest")
+        appProject.execute("assembleDebugAndroidTest")
 
         testApp.writeSources(libProject.testDir)
         libProject.getBuildFile() << """
@@ -112,7 +112,7 @@ class AndroidTestResourcesTest {
                     buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
                 }
                 """.stripIndent()
-        libProject.execute("assembleDebugTest")
+        libProject.execute("assembleDebugAndroidTest")
     }
 
     @AfterClass
@@ -142,7 +142,7 @@ class AndroidTestResourcesTest {
     private void checkLayoutInR(GradleTestProject fixture) {
         def rFile = fixture.file(Joiner.on(File.separatorChar).join(
                 "build", AndroidProject.FD_GENERATED, "source", "r",
-                "test", "debug", "com", "example", "helloworld", "test",  "R.java"))
+                "androidTest", "debug", "com", "example", "helloworld", "androidTest",  "R.java"))
         assertTrue("Should have generated R file", rFile.exists())
         def rFileContents = rFile.getText("UTF-8")
 
