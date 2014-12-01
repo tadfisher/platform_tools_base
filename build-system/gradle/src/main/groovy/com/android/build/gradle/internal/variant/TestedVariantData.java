@@ -15,15 +15,19 @@
  */
 package com.android.build.gradle.internal.variant;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.core.VariantConfiguration;
 
 /**
  * A tested variant
  */
 public interface TestedVariantData {
 
-    void setTestVariantData(@Nullable TestVariantData testVariantData);
+    void setTestVariantData(
+            @NonNull TestVariantData testVariantData,
+            VariantConfiguration.Type type);
 
     @Nullable
-    TestVariantData getTestVariantData();
+    TestVariantData getTestVariantData(VariantConfiguration.Type type);
 }

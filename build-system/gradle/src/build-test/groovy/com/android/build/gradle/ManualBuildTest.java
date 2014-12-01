@@ -932,7 +932,7 @@ public class ManualBuildTest extends BuildTest {
         runTasksOn(
                 project,
                 BasePlugin.GRADLE_TEST_VERSION,
-                "clean", "assembleDebug", "assembleTest");
+                "clean", "assembleDebug", "assembleAndroidTest");
     }
 
     public void testLegacyMultiDex() throws Exception {

@@ -15,95 +15,32 @@
  */
 
 package com.android.build.gradle
-
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable
 import com.android.build.OutputFile
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.api.BaseVariant
-import com.android.build.gradle.internal.BadPluginException
-import com.android.build.gradle.internal.ConfigurationDependencies
-import com.android.build.gradle.internal.LibraryCache
-import com.android.build.gradle.internal.LoggerWrapper
-import com.android.build.gradle.internal.ProductFlavorData
-import com.android.build.gradle.internal.SdkHandler
-import com.android.build.gradle.internal.VariantManager
+import com.android.build.gradle.internal.*
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.coverage.JacocoInstrumentTask
 import com.android.build.gradle.internal.coverage.JacocoPlugin
 import com.android.build.gradle.internal.coverage.JacocoReportTask
-import com.android.build.gradle.internal.dependency.DependencyChecker
-import com.android.build.gradle.internal.dependency.LibraryDependencyImpl
-import com.android.build.gradle.internal.dependency.ManifestDependencyImpl
-import com.android.build.gradle.internal.dependency.SymbolFileProviderImpl
-import com.android.build.gradle.internal.dependency.VariantDependencies
-import com.android.build.gradle.internal.dsl.BuildType
-import com.android.build.gradle.internal.dsl.BuildTypeFactory
-import com.android.build.gradle.internal.dsl.GroupableProductFlavor
-import com.android.build.gradle.internal.dsl.GroupableProductFlavorFactory
-import com.android.build.gradle.internal.dsl.ProductFlavor
-import com.android.build.gradle.internal.dsl.SigningConfig
-import com.android.build.gradle.internal.dsl.SigningConfigFactory
+import com.android.build.gradle.internal.dependency.*
+import com.android.build.gradle.internal.dsl.*
 import com.android.build.gradle.internal.model.ArtifactMetaDataImpl
 import com.android.build.gradle.internal.model.JavaArtifactImpl
 import com.android.build.gradle.internal.model.MavenCoordinatesImpl
 import com.android.build.gradle.internal.model.ModelBuilder
 import com.android.build.gradle.internal.publishing.ApkPublishArtifact
-import com.android.build.gradle.internal.tasks.AndroidReportTask
-import com.android.build.gradle.internal.tasks.CheckManifest
-import com.android.build.gradle.internal.tasks.DependencyReportTask
-import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestLibraryTask
-import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask
-import com.android.build.gradle.internal.tasks.GenerateApkDataTask
-import com.android.build.gradle.internal.tasks.InstallVariantTask
-import com.android.build.gradle.internal.tasks.OutputFileTask
-import com.android.build.gradle.internal.tasks.PrepareDependenciesTask
-import com.android.build.gradle.internal.tasks.PrepareLibraryTask
-import com.android.build.gradle.internal.tasks.PrepareSdkTask
-import com.android.build.gradle.internal.tasks.SigningReportTask
-import com.android.build.gradle.internal.tasks.TestServerTask
-import com.android.build.gradle.internal.tasks.UninstallTask
-import com.android.build.gradle.internal.tasks.ValidateSigningTask
+import com.android.build.gradle.internal.tasks.*
 import com.android.build.gradle.internal.tasks.multidex.CreateMainDexList
 import com.android.build.gradle.internal.tasks.multidex.CreateManifestKeepList
 import com.android.build.gradle.internal.tasks.multidex.JarMergingTask
 import com.android.build.gradle.internal.tasks.multidex.RetraceMainDexList
 import com.android.build.gradle.internal.test.report.ReportType
-import com.android.build.gradle.internal.variant.ApkVariantData
-import com.android.build.gradle.internal.variant.ApkVariantOutputData
-import com.android.build.gradle.internal.variant.ApplicationVariantData
-import com.android.build.gradle.internal.variant.BaseVariantData
-import com.android.build.gradle.internal.variant.BaseVariantOutputData
-import com.android.build.gradle.internal.variant.DefaultSourceProviderContainer
-import com.android.build.gradle.internal.variant.LibraryVariantData
-import com.android.build.gradle.internal.variant.TestVariantData
-import com.android.build.gradle.internal.variant.TestedVariantData
-import com.android.build.gradle.internal.variant.VariantFactory
-import com.android.build.gradle.tasks.AidlCompile
-import com.android.build.gradle.tasks.CompatibleScreensManifest
-import com.android.build.gradle.tasks.Dex
-import com.android.build.gradle.tasks.GenerateBuildConfig
-import com.android.build.gradle.tasks.GenerateResValues
-import com.android.build.gradle.tasks.GenerateSplitAbiRes
-import com.android.build.gradle.tasks.JackTask
-import com.android.build.gradle.tasks.JillTask
-import com.android.build.gradle.tasks.Lint
-import com.android.build.gradle.tasks.MergeAssets
-import com.android.build.gradle.tasks.MergeManifests
-import com.android.build.gradle.tasks.MergeResources
-import com.android.build.gradle.tasks.NdkCompile
-import com.android.build.gradle.tasks.PackageApplication
-import com.android.build.gradle.tasks.PackageSplitAbi
-import com.android.build.gradle.tasks.PackageSplitRes
-import com.android.build.gradle.tasks.PreDex
-import com.android.build.gradle.tasks.ProcessAndroidResources
-import com.android.build.gradle.tasks.ProcessManifest
-import com.android.build.gradle.tasks.ProcessTestManifest
-import com.android.build.gradle.tasks.RenderscriptCompile
-import com.android.build.gradle.tasks.ShrinkResources
-import com.android.build.gradle.tasks.SplitZipAlign
-import com.android.build.gradle.tasks.ZipAlign
+import com.android.build.gradle.internal.variant.*
+import com.android.build.gradle.tasks.*
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.DefaultBuildType
 import com.android.builder.core.VariantConfiguration
@@ -113,12 +50,7 @@ import com.android.builder.dependency.LibraryDependency
 import com.android.builder.internal.compiler.JackConversionCache
 import com.android.builder.internal.compiler.PreDexCache
 import com.android.builder.internal.testing.SimpleTestCallable
-import com.android.builder.model.AndroidArtifact
-import com.android.builder.model.ApiVersion
-import com.android.builder.model.ArtifactMetaData
-import com.android.builder.model.JavaArtifact
-import com.android.builder.model.SourceProvider
-import com.android.builder.model.SourceProviderContainer
+import com.android.builder.model.*
 import com.android.builder.sdk.SdkInfo
 import com.android.builder.sdk.TargetInfo
 import com.android.builder.testing.ConnectedDeviceProvider
@@ -129,28 +61,16 @@ import com.android.sdklib.AndroidTargetHash
 import com.android.sdklib.SdkVersionInfo
 import com.android.utils.ILogger
 import com.google.common.base.Predicate
-import com.google.common.collect.ArrayListMultimap
-import com.google.common.collect.ImmutableSet
-import com.google.common.collect.ListMultimap
-import com.google.common.collect.Lists
-import com.google.common.collect.Maps
-import com.google.common.collect.Multimap
-import com.google.common.collect.Sets
-import org.gradle.api.DefaultTask
-import org.gradle.api.GradleException
-import org.gradle.api.JavaVersion
-import org.gradle.api.Project
-import org.gradle.api.Task
-import org.gradle.api.UnknownProjectException
-import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.ModuleVersionIdentifier
-import org.gradle.api.artifacts.ProjectDependency
-import org.gradle.api.artifacts.ResolvedArtifact
-import org.gradle.api.artifacts.SelfResolvingDependency
+import com.google.common.collect.*
+import groovy.transform.CompileDynamic
+import groovy.transform.CompileStatic
+import org.gradle.api.*
+import org.gradle.api.artifacts.*
 import org.gradle.api.artifacts.result.DependencyResult
 import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.artifacts.result.UnresolvedDependencyResult
+import org.gradle.api.internal.file.collections.DefaultConfigurableFileCollection
 import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.logging.Logger
@@ -160,6 +80,7 @@ import org.gradle.api.specs.Specs
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.compile.AbstractCompile
 import org.gradle.api.tasks.compile.JavaCompile
+import org.gradle.api.tasks.testing.Test
 import org.gradle.internal.reflect.Instantiator
 import org.gradle.language.jvm.tasks.ProcessResources
 import org.gradle.tooling.BuildException
@@ -171,34 +92,12 @@ import java.util.jar.Attributes
 import java.util.jar.Manifest
 import java.util.regex.Pattern
 
-import static com.android.SdkConstants.EXT_ANDROID_PACKAGE
-import static com.android.SdkConstants.EXT_JAR
-import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML
-import static com.android.builder.core.BuilderConstants.CONNECTED
-import static com.android.builder.core.BuilderConstants.DEBUG
-import static com.android.builder.core.BuilderConstants.DEVICE
-import static com.android.builder.core.BuilderConstants.EXT_LIB_ARCHIVE
-import static com.android.builder.core.BuilderConstants.FD_ANDROID_RESULTS
-import static com.android.builder.core.BuilderConstants.FD_ANDROID_TESTS
-import static com.android.builder.core.BuilderConstants.FD_FLAVORS
-import static com.android.builder.core.BuilderConstants.FD_FLAVORS_ALL
-import static com.android.builder.core.BuilderConstants.FD_REPORTS
-import static com.android.builder.core.BuilderConstants.RELEASE
-import static com.android.builder.core.VariantConfiguration.Type.DEFAULT
-import static com.android.builder.core.VariantConfiguration.Type.ANDROID_TEST
-import static com.android.builder.model.AndroidProject.FD_GENERATED
-import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES
-import static com.android.builder.model.AndroidProject.FD_OUTPUTS
-import static com.android.builder.model.AndroidProject.PROPERTY_APK_LOCATION
-import static com.android.builder.model.AndroidProject.PROPERTY_BUILD_MODEL_ONLY
-import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_KEY_ALIAS
-import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_KEY_PASSWORD
-import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_STORE_FILE
-import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_STORE_PASSWORD
-import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_STORE_TYPE
+import static com.android.SdkConstants.*
+import static com.android.builder.core.BuilderConstants.*
+import static com.android.builder.core.VariantConfiguration.Type.*
+import static com.android.builder.model.AndroidProject.*
 import static com.android.sdklib.BuildToolInfo.PathId.ZIP_ALIGN
 import static java.io.File.separator
-
 /**
  * Base class for all Android plugins
  */
@@ -239,11 +138,12 @@ public abstract class BasePlugin {
     private final Collection<String> unresolvedDependencies = Sets.newHashSet();
 
     protected DefaultAndroidSourceSet mainSourceSet
-    protected DefaultAndroidSourceSet testSourceSet
+    protected DefaultAndroidSourceSet androidTestSourceSet
+    protected DefaultAndroidSourceSet unitTestSourceSet
 
     protected PrepareSdkTask mainPreBuild
     protected Task uninstallAll
-    protected Task assembleTest
+    protected Task assembleAndroidTest
     protected Task deviceCheck
     protected Task connectedCheck
     protected Copy jacocoAgentTask
@@ -411,11 +311,12 @@ public abstract class BasePlugin {
 
     private void setBaseExtension(@NonNull BaseExtension extension) {
         mainSourceSet = (DefaultAndroidSourceSet) extension.sourceSets.create(extension.defaultConfig.name)
-        testSourceSet = (DefaultAndroidSourceSet) extension.sourceSets.create(ANDROID_TEST.prefix)
+        androidTestSourceSet = (DefaultAndroidSourceSet) extension.sourceSets.create(ANDROID_TEST.prefix)
+        unitTestSourceSet = (DefaultAndroidSourceSet) extension.sourceSets.create(UNIT_TEST.prefix)
 
         defaultConfigData = new ProductFlavorData<ProductFlavor>(
                 extension.defaultConfig, mainSourceSet,
-                testSourceSet, project)
+                androidTestSourceSet, unitTestSourceSet, project)
     }
 
     private void checkGradleVersion() {
@@ -526,8 +427,8 @@ public abstract class BasePlugin {
         return project.logger.isEnabled(LogLevel.DEBUG)
     }
 
-    void setAssembleTest(Task assembleTest) {
-        this.assembleTest = assembleTest
+    void setAssembleAndroidTest(Task assembleTest) {
+        this.assembleAndroidTest = assembleTest
     }
 
     AndroidBuilder getAndroidBuilder() {
@@ -1514,11 +1415,11 @@ public abstract class BasePlugin {
     }
 
     /**
-     * Creates the tasks to build the test apk.
+     * Creates the tasks to build the tests.
      *
      * @param variantData the test variant
      */
-    public void createTestApkTasks(@NonNull TestVariantData variantData) {
+    public void createTestVariantTasks(@NonNull TestVariantData variantData) {
 
         BaseVariantData<? extends BaseVariantOutputData> testedVariantData =
                 (BaseVariantData<? extends BaseVariantOutputData>) variantData.getTestedVariantData()
@@ -1576,10 +1477,12 @@ public abstract class BasePlugin {
             createPostCompilationTasks(variantData);
         }
 
-        createPackagingTask(variantData, null /*assembleTask*/, false /*publishApk*/)
+        if (variantData.variantConfiguration.type != UNIT_TEST) {
+            createPackagingTask(variantData, null /*assembleTask*/, false /*publishApk*/)
 
-        if (assembleTest != null) {
-            assembleTest.dependsOn variantOutputData.assembleTask
+            if (assembleAndroidTest != null) {
+                assembleAndroidTest.dependsOn variantOutputData.assembleTask
+            }
         }
     }
 
@@ -1668,6 +1571,64 @@ public abstract class BasePlugin {
         }
     }
 
+    @CompileStatic
+    void createUnitTestTasks() {
+        Task topLevelTest = project.tasks.create(JavaPlugin.TEST_TASK_NAME)
+        topLevelTest.group = JavaBasePlugin.VERIFICATION_GROUP
+
+        variantDataList.findAll{it.variantConfiguration.type == UNIT_TEST}.each { loopVariantData ->
+            // Inner scope copy for the closures.
+            def variantData = loopVariantData
+            def testedVariantConfig = variantData.variantConfiguration.testedConfig
+
+            Test runTestsTask = project.tasks.create(
+                    UNIT_TEST.prefix + testedVariantConfig.fullName.capitalize(),
+                    Test)
+            runTestsTask.group = JavaBasePlugin.VERIFICATION_GROUP
+
+            fixTestTaskSources(runTestsTask)
+
+            runTestsTask.dependsOn variantData.compileTask
+            JavaCompile testCompileTask = variantData.javaCompileTask
+            runTestsTask.testClassesDir = testCompileTask.destinationDir
+
+            runTestsTask.classpath = project.files(
+                    testCompileTask.classpath,
+                    testCompileTask.outputs.files)
+
+            // See https://issues.gradle.org/browse/GRADLE-1682
+            // TODO: Remove
+            runTestsTask.scanForTestClasses = false
+            runTestsTask.include "**/*Test.class"
+
+            // TODO: Use mockable JAR.
+            runTestsTask.doFirst {
+                runTestsTask.classpath = project.files(
+                        androidBuilder.bootClasspath,
+                        runTestsTask.classpath)
+            }
+
+            topLevelTest.dependsOn runTestsTask
+        }
+
+        Task check = project.tasks.getByName(JavaBasePlugin.CHECK_TASK_NAME)
+        check.dependsOn topLevelTest
+    }
+
+    @CompileStatic
+    private static void fixTestTaskSources(Test testTask) {
+        // We are running in afterEvaluate, so the JavaBasePlugin has already added a
+        // callback to add test classes to the list of source files of the newly created task.
+        // The problem is that we haven't configured the test classes yet (JavaBasePlugin
+        // assumes all Test tasks are fully configured at this point), so we have to remove the
+        // "directory null" entry from source files and add the right value.
+        //
+        // This is an ugly hack, since we assume sourceFiles is an instance of
+        // DefaultConfigurableFileCollection.
+        def sourceFiles = (DefaultConfigurableFileCollection) testTask.inputs.sourceFiles
+        sourceFiles.from.clear()
+    }
+
     public void createConnectedCheckTasks(boolean hasFlavors, boolean isLibraryTest) {
         List<AndroidReportTask> reportTasks = Lists.newArrayListWithExpectedSize(2)
 
@@ -1737,7 +1698,7 @@ public abstract class BasePlugin {
         for (int i = 0 ; i < count ; i++) {
             final BaseVariantData<? extends BaseVariantOutputData> baseVariantData = variantManager.getVariantDataList().get(i);
             if (baseVariantData instanceof TestedVariantData) {
-                final TestVariantData testVariantData = ((TestedVariantData) baseVariantData).testVariantData
+                final TestVariantData testVariantData = ((TestedVariantData) baseVariantData).getTestVariantData(ANDROID_TEST)
                 if (testVariantData == null) {
                     continue
                 }
