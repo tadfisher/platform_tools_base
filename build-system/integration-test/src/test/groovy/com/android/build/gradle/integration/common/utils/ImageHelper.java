@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.integration.common.utils;
 
-import static junit.framework.TestCase.*;
+import static org.junit.Assert.*;
 
 import java.awt.image.BufferedImage;
 import java.io.File;

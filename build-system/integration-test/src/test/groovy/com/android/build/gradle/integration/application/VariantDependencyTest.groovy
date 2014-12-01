@@ -217,10 +217,7 @@ class VariantDependencyTest {
 
         assertTrue("${variantName} output check", apk.isFile())
 
-        ZipHelper.checkArchive(
-                apk,
-                Collections.<String, String> singletonMap(checkFilePath, null),
-                Collections.emptySet())
+        ZipHelper.checkFileExists(apk, checkFilePath)
     }
 
     private static void checkApkForMissingContent(
@@ -231,9 +228,6 @@ class VariantDependencyTest {
 
         assertTrue("${variantName} output check", apk.isFile())
 
-        ZipHelper.checkArchive(
-                apk,
-                Collections.emptyMap(),
-                checkFilePath)
+        ZipHelper.checkFileDoesNotExist(apk, checkFilePath)
     }
 }
