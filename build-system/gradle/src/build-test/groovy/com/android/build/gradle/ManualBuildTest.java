@@ -645,9 +645,9 @@ public class ManualBuildTest extends BuildTest {
         runTasksOn(
                 project,
                 BasePlugin.GRADLE_TEST_VERSION,
-                "clean", "assembleDebugTest");
+                "clean", "assembleDebugAndroidTest");
 
-        File testApk = new File(project, "build/" + FD_OUTPUTS + "/apk/androidManifestInTest-debug-test-unaligned.apk");
+        File testApk = new File(project, "build/" + FD_OUTPUTS + "/apk/androidManifestInTest-debug-androidTest-unaligned.apk");
 
         File aapt = new File(sdkDir, "build-tools/19.1.0/aapt");
 

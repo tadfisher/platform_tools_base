@@ -67,15 +67,13 @@ public class TestDataImpl implements TestData {
         return testVariantConfig.getInstrumentationRunner();
     }
 
-    @NonNull
     @Override
-    public Boolean getHandleProfiling() {
+    public boolean getHandleProfiling() {
         return testVariantConfig.getHandleProfiling();
     }
 
-    @NonNull
     @Override
-    public Boolean getFunctionalTest() {
+    public boolean getFunctionalTest() {
         return testVariantConfig.getFunctionalTest();
     }
 
