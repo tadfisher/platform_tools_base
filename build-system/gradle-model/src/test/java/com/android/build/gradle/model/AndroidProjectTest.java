@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.model;
 
-import static com.android.builder.core.BuilderConstants.ANDROID_TEST;
 import static com.android.builder.core.BuilderConstants.DEBUG;
+import static com.android.builder.core.VariantConfiguration.Type.ANDROID_TEST;
 import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST;
 
 import com.android.SdkConstants;
@@ -340,7 +340,7 @@ public class AndroidProjectTest extends TestCase {
             new SourceProviderTester(
                     model.getName(),
                     projectDir,
-                    ANDROID_TEST + StringHelper.capitalize(name),
+                    ANDROID_TEST.getPrefix() + StringHelper.capitalize(name),
                     container.getSourceProvider())
                 .test();
         }
@@ -368,7 +368,7 @@ public class AndroidProjectTest extends TestCase {
         assertNotNull("InstrumentTest source Providers null-check", testSourceProviders);
 
         new SourceProviderTester(model.getName(), projectDir,
-                ANDROID_TEST, testSourceProviders.getSourceProvider())
+                ANDROID_TEST.getPrefix(), testSourceProviders.getSourceProvider())
             .test();
 
         // test the source provider for the build types
@@ -799,7 +799,7 @@ public class AndroidProjectTest extends TestCase {
         assertNotNull("InstrumentTest source Providers null-check", testSourceProviderContainer);
 
         new SourceProviderTester(model.getName(), projectDir,
-                ANDROID_TEST, testSourceProviderContainer.getSourceProvider())
+                ANDROID_TEST.getPrefix(), testSourceProviderContainer.getSourceProvider())
                 .setJavaDir("tests/java")
                 .setResourcesDir("tests/resources")
                 .setAidlDir("tests/aidl")
@@ -892,7 +892,7 @@ public class AndroidProjectTest extends TestCase {
         assertNotNull("InstrumentTest source Providers null-check", testSourceProviderContainer);
 
         new SourceProviderTester(model.getName(), projectDir,
-                ANDROID_TEST, testSourceProviderContainer.getSourceProvider())
+                ANDROID_TEST.getPrefix(), testSourceProviderContainer.getSourceProvider())
                 .test();
 
         Collection<BuildTypeContainer> buildTypes = model.getBuildTypes();
