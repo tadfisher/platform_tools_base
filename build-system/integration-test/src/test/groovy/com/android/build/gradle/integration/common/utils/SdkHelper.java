@@ -50,9 +50,9 @@ public class SdkHelper {
         return null;
     }
 
-    public static File getAapt() {
-        File aapt = new File(findSdkDir(), "build-tools/20.0.0/aapt");
-        assertTrue("Test requires build-tools 20.0.0", aapt.isFile());
+    public static File getAapt(String buildToolVersion) {
+        File aapt = new File(findSdkDir(), "build-tools/" + buildToolVersion +"/aapt");
+        assertTrue("Test requires build-tools " + buildToolVersion, aapt.isFile());
         return aapt;
     }
 }

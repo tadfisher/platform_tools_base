@@ -75,9 +75,9 @@ class DensitySplitTest {
             Map<String, String> filesToMatch = Collections.singletonMap(
                     "res/drawable-mdpi-v4/other.png", null)
             for (AndroidArtifactOutput output : mainArtifact.getOutputs()) {
-                ZipHelper.checkArchive(output.mainOutputFile.getOutputFile(),
-                        filesToMatch,
-                        ImmutableSet.<String>of())
+                ZipHelper.checkFileExists(
+                        output.mainOutputFile.getOutputFile(),
+                        "res/drawable-mdpi-v4/other.png")
             }
         }
     }

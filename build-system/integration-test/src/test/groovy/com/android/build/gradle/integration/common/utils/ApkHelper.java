@@ -58,13 +58,20 @@ public class ApkHelper {
         checkVersion(apk, code, null);
     }
 
+    public static void checkVersionName(
+        @NonNull File apk,
+        @Nullable String name)
+        throws IOException, InterruptedException, LoggedErrorException {
+        checkVersion(apk, null, name);
+    }
+
     public static void checkVersion(
             @NonNull File apk,
             @Nullable Integer code,
             @Nullable String name)
             throws IOException, InterruptedException, LoggedErrorException {
         CommandLineRunner commandLineRunner = new CommandLineRunner(new StdLogger(StdLogger.Level.ERROR));
-        ApkInfoParser parser = new ApkInfoParser(SdkHelper.getAapt(), commandLineRunner);
+        ApkInfoParser parser = new ApkInfoParser(SdkHelper.getAapt("20.0.0"), commandLineRunner);
 
         ApkInfoParser.ApkInfo apkInfo = parser.parseApk(apk);
 
