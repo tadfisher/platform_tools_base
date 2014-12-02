@@ -234,11 +234,11 @@ public class DeviceManager {
         if (mUserDevices != null && (deviceFilter.contains(DeviceFilter.USER))) {
             devices.addAll(mUserDevices);
         }
-        if (mDefaultDevices != null && (deviceFilter.contains(DeviceFilter.DEFAULT))) {
-            devices.addAll(mDefaultDevices);
-        }
         if (mVendorDevices != null && (deviceFilter.contains(DeviceFilter.VENDOR))) {
             devices.addAll(mVendorDevices);
+        }
+        if (mDefaultDevices != null && (deviceFilter.contains(DeviceFilter.DEFAULT))) {
+            devices.addAll(mDefaultDevices);
         }
         if (mSysImgDevices != null && (deviceFilter.contains(DeviceFilter.SYSTEM_IMAGES))) {
             devices.addAll(mSysImgDevices);
