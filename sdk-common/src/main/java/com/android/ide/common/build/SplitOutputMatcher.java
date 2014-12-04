@@ -18,18 +18,24 @@ package com.android.ide.common.build;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.Immutable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.resources.Density;
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
+
+import javax.swing.text.html.Option;
 
 /**
  * Helper class to help with installation of multi-output variants.
@@ -57,6 +63,8 @@ public class SplitOutputMatcher {
             @NonNull List<? extends VariantOutput> outputs,
             @Nullable Set<String> variantAbiFilters,
             int deviceDensity,
+            @Nullable String language,
+            @Nullable String region,
             @NonNull List<String> deviceAbis) {
         Density densityEnum = Density.getEnum(deviceDensity);
 
@@ -108,17 +116,21 @@ public class SplitOutputMatcher {
             // we are dealing with pure splits.
             ImmutableList.Builder<OutputFile> apks = ImmutableList.builder();
             apks.add(mainOutputFile);
-            Optional<OutputFile> abiCompatibleSplitApk = findAbiCompatibleSplitApk(match,
-                    deviceAbis);
-            if (abiCompatibleSplitApk.isPresent()) {
-                apks.add(abiCompatibleSplitApk.get());
-            }
-            Optional<OutputFile> densityCompatibleSplitApk = findDensityCompatibleSplitApk(match,
-                    densityValue);
-            if (densityCompatibleSplitApk.isPresent()) {
-                apks.add(densityCompatibleSplitApk.get());
+            addIfPresent(apks, findAbiCompatibleSplitApk(match, deviceAbis));
+            addIfPresent(apks, findDensityCompatibleSplitApk(match, densityValue));
+            if (language != null) {
+                addIfPresent(apks, findLocaleCompatibleSplitApk(match, language, region));
             }
             return apks.build();
+        }
+    }
+
+    private static void addIfPresent(
+            ImmutableList.Builder<OutputFile> apks,
+            Optional<OutputFile> optionalOutputFile) {
+
+        if (optionalOutputFile.isPresent()) {
+            apks.add(optionalOutputFile.get());
         }
     }
 
@@ -165,6 +177,77 @@ public class SplitOutputMatcher {
             }
         }
         return Optional.absent();
+    }
+
+    private static Optional<OutputFile> findLocaleCompatibleSplitApk(
+            @NonNull VariantOutput variantOutput,
+            @NonNull String deviceLanguage,
+            @Nullable String deviceRegion) {
+
+        List<LocaleApk> languageCompatibleApks =
+                findLanguageCompatibleSplitApks(variantOutput, deviceLanguage);
+
+        @Nullable LocaleApk genericRegionApk = null;
+        for (LocaleApk localeApk : languageCompatibleApks) {
+            if (Objects.equal(deviceRegion, localeApk.mRegion)) {
+                return Optional.of(localeApk.mOutputFile);
+            }
+            if (localeApk.mRegion == null) {
+                genericRegionApk = localeApk;
+            }
+        }
+        // can't find the right region specific split APK, fall back to the generic
+        // language APK.
+        if (genericRegionApk != null) {
+            return Optional.of(genericRegionApk.mOutputFile);
+        }
+
+        return Optional.absent();
+    }
+
+    private static ImmutableList<LocaleApk> findLanguageCompatibleSplitApks(
+            VariantOutput variantOutput,
+            String deviceLanguage) {
+
+        ImmutableList.Builder<LocaleApk> compatibleApks = ImmutableList.builder();
+        for (OutputFile outputFile : variantOutput.getOutputs()) {
+            if (outputFile.getOutputType().equals(OutputFile.SPLIT)) {
+                String languageAndOptionalRegion = getFilter(outputFile, OutputFile.LANGUAGE);
+
+                if (languageAndOptionalRegion != null) {
+                    // this could be greatly improved when switching to JDK 7
+                    @NonNull String splitLanguage;
+                    @Nullable String splitRegion = null;
+                    if (languageAndOptionalRegion.indexOf('_') != -1) {
+                        splitLanguage = languageAndOptionalRegion.substring(0,
+                                languageAndOptionalRegion.indexOf('_'));
+                        splitRegion = languageAndOptionalRegion.substring(
+                                languageAndOptionalRegion.indexOf('_') + 1);
+                    } else {
+                        splitLanguage = languageAndOptionalRegion;
+                    }
+                    if (deviceLanguage.equals(splitLanguage)) {
+                        compatibleApks.add(new LocaleApk(outputFile, splitLanguage, splitRegion));
+                    }
+                }
+            }
+        }
+        return compatibleApks.build();
+    }
+
+    private static class LocaleApk {
+        @NonNull private final OutputFile mOutputFile;
+        @NonNull private final String mLanguage;
+        @Nullable private final String mRegion;
+
+        private LocaleApk(
+                @NonNull OutputFile outputFile,
+                @NonNull String language,
+                @Nullable String region) {
+            mOutputFile = outputFile;
+            mLanguage = language;
+            mRegion = region;
+        }
     }
 
     @Nullable
