@@ -127,14 +127,20 @@ public class BaseComponentModelPlugin extends BasePlugin implements Plugin<Proje
 
     @RuleSource
     static class Rules {
+        @Mutate
+        void configureAndroidModel(
+                AndroidModel androidModel,
+                @Path("androidSigningConfig") NamedDomainObjectContainer<SigningConfig> signingConfigs) {
+            androidModel.signingConfigs = signingConfigs
+        }
 
         @Mutate
         void registerLanguage(LanguageRegistry languages) {
             languages.add(new AndroidSource())
         }
 
-        @Model("android")
-        BaseExtension androidapp(
+        @Model("androidConfig")
+        BaseExtension androidConfig(
                 ServiceRegistry serviceRegistry,
                 NamedDomainObjectContainer<BuildType> buildTypeContainer,
                 NamedDomainObjectContainer<GroupableProductFlavor> productFlavorContainer,
@@ -159,7 +165,7 @@ public class BaseComponentModelPlugin extends BasePlugin implements Plugin<Proje
 
         @Mutate
         void forwardCompileSdkVersion(NdkExtension ndkExtension, BaseExtension baseExtension) {
-            if (ndkExtension.compileSdkVersion.isEmpty()) {
+            if (ndkExtension.compileSdkVersion.isEmpty() && baseExtension.compileSdkVersion != null) {
                 ndkExtension.compileSdkVersion(baseExtension.compileSdkVersion);
             }
         }
@@ -186,9 +192,9 @@ public class BaseComponentModelPlugin extends BasePlugin implements Plugin<Proje
         void createAndroidComponents(
                 AndroidComponentSpec androidSpec,
                 BaseExtension androidExtension,
-                NamedDomainObjectContainer<BuildType> buildTypeContainer,
-                NamedDomainObjectContainer<GroupableProductFlavor> productFlavorContainer,
-                NamedDomainObjectContainer<SigningConfig> signingConfigContainer,
+                @Path("android.buildTypes") NamedDomainObjectContainer<BuildType> buildTypeContainer,
+                @Path("android.productFlavors") NamedDomainObjectContainer<GroupableProductFlavor> productFlavorContainer,
+                @Path("android.signingConfigs") NamedDomainObjectContainer<SigningConfig> signingConfigContainer,
                 AndroidComponentModelSourceSet sources,
                 VariantFactory variantFactory,
                 BasePlugin plugin) {
