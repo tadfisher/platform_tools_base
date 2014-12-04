@@ -59,14 +59,14 @@ class ComponentSourceSetTest {
 apply plugin: "com.android.model.application"
 
 model {
-    android {
+    android.config {
         compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
         buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
     }
     androidNdk {
         moduleName "hello-jni"
     }
-    androidProductFlavors {
+    android.productFlavors {
         flavor1
         flavor2
         flavor3

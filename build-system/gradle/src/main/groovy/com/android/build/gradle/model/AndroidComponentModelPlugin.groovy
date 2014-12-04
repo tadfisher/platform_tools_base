@@ -25,6 +25,7 @@ import com.android.build.gradle.ndk.NdkExtension
 import com.android.build.gradle.ndk.internal.NdkConfiguration
 import com.android.builder.core.BuilderConstants
 import groovy.transform.CompileStatic
+import com.google.common.collect.Lists
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -36,6 +37,7 @@ import org.gradle.language.base.plugins.ComponentModelBasePlugin
 import org.gradle.model.Finalize
 import org.gradle.model.Model
 import org.gradle.model.Mutate
+import org.gradle.model.Path
 import org.gradle.model.RuleSource
 import org.gradle.model.collection.CollectionBuilder
 import org.gradle.model.internal.core.ModelCreators
@@ -81,9 +83,17 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
 
     @RuleSource
     static class Rules {
+        @Model("android")
+        void android(
+                AndroidModel androidModel,
+                @Path("androidBuildTypes") NamedDomainObjectContainer<BuildType> buildTypes,
+                @Path("androidProductFlavors") NamedDomainObjectContainer<GroupableProductFlavor> productFlavors) {
+            androidModel.buildTypes = buildTypes
+            androidModel.productFlavors = productFlavors
+        }
 
-        @Model("androidBuildTypes")
-        NamedDomainObjectContainer<BuildType> createBuildTypes(
+        @Model
+        NamedDomainObjectContainer<BuildType> androidBuildTypes(
                 ServiceRegistry serviceRegistry,
                 Project project) {
             Instantiator instantiator = serviceRegistry.get(Instantiator.class)
@@ -100,8 +110,8 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
             return buildTypeContainer
         }
 
-        @Model("androidProductFlavors")
-        NamedDomainObjectContainer<GroupableProductFlavor> createProductFlavors(
+        @Model
+        NamedDomainObjectContainer<GroupableProductFlavor> androidProductFlavors(
                 ServiceRegistry serviceRegistry,
                 Project project) {
             Instantiator instantiator = serviceRegistry.get(Instantiator.class)
@@ -118,12 +128,12 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
 
         @Model
         List<ProductFlavorCombo> createProductFlavorCombo (
-                NamedDomainObjectContainer<GroupableProductFlavor> productFlavors) {
+                    @Path("android.productFlavors") NamedDomainObjectContainer<GroupableProductFlavor> productFlavors) {
             // TODO: Create custom product flavor container to manually configure flavor dimensions.
-            List<String> flavorDimensionList = productFlavors*.flavorDimension.unique().asList();
+            List<String> flavorDimensionList = productFlavors*.flavorDimension.unique().asList()
             flavorDimensionList.removeAll([null])
 
-            return  ProductFlavorCombo.createCombinations(flavorDimensionList, productFlavors);
+            return ProductFlavorCombo.createCombinations(flavorDimensionList, productFlavors)
         }
 
         @ComponentType
@@ -169,9 +179,15 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
         @ComponentBinaries
         void createBinaries(
                 CollectionBuilder<AndroidBinary> binaries,
-                NamedDomainObjectContainer<BuildType> buildTypes,
-                List<ProductFlavorCombo> flavorCombos,
+                @Path("android.buildTypes") NamedDomainObjectContainer<BuildType> buildTypes,
+                @Path("android.productFlavors") NamedDomainObjectContainer<GroupableProductFlavor> productFlavors,
                 AndroidComponentSpec spec) {
+            // TODO: Create custom product flavor container to manually configure flavor dimensions.
+            List<String> flavorDimensionList = productFlavors*.flavorDimension.unique().asList();
+            flavorDimensionList.removeAll([null])
+
+            def flavorCombos = ProductFlavorCombo.createCombinations(flavorDimensionList, productFlavors);
+
             if (flavorCombos.isEmpty()) {
                 flavorCombos.add(new ProductFlavorCombo());
             }
