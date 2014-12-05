@@ -1,6 +1,7 @@
 apply plugin: 'groovy'
 apply plugin: 'clone-artifacts'
 apply plugin: 'idea'
+apply plugin: 'jacoco'
 
 sourceSets {
     main {
@@ -80,4 +81,10 @@ task javadocJar(type: Jar, dependsOn:groovydoc) {
 // add javadoc jar tasks as artifacts
 artifacts {
     archives javadocJar
+}
+
+jacocoTestReport {
+    group = "Reporting"
+    description = "Generate Jacoco coverage reports after running tests."
+    additionalSourceDirs = files(sourceSets.main.allSource.srcDirs)
 }

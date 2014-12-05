@@ -26,6 +26,7 @@ import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.integration.common.fixture.app.AbstractAndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
+import com.android.build.gradle.integration.common.utils.JacocoAgent;
 import com.android.build.gradle.integration.common.utils.SdkHelper;
 import com.android.builder.model.AndroidProject;
 import com.android.io.StreamException;
@@ -37,10 +38,12 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
+import org.gradle.internal.jacoco.JacocoAgentJar;
 import org.gradle.tooling.BuildLauncher;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
 import org.gradle.tooling.internal.consumer.DefaultGradleConnector;
+import org.jacoco.agent.AgentJar;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -459,8 +462,10 @@ public class GradleTestProject implements TestRule {
             args.add("-u");
             args.addAll(arguments);
 
-            BuildLauncher launcher = connection.newBuild().forTasks(tasks)
-                    .withArguments(args.toArray(new String[args.size()]));
+            BuildLauncher launcher = connection.newBuild()
+                    .forTasks(tasks)
+                    .withArguments(args.toArray(new String[args.size()]))
+                    .setJvmArguments(JacocoAgent.getJvmArg());
             if (stdout != null) {
                 launcher.setStandardOutput(stdout);
             }
