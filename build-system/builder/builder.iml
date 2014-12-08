@@ -20,6 +20,6 @@
     <orderEntry type="library" exported="" name="javawriter" level="project" />
     <orderEntry type="library" exported="" name="bouncy-castle" level="project" />
     <orderEntry type="library" name="mockito" level="project" />
+    <orderEntry type="library" exported="" name="asm-tools" level="project" />
   </component>
 </module>
-
