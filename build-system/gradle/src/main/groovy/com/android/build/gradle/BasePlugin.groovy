@@ -57,6 +57,7 @@ import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestLibra
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask
 import com.android.build.gradle.internal.tasks.InstallVariantTask
+import com.android.build.gradle.internal.tasks.MockableAndroidJarTask
 import com.android.build.gradle.internal.tasks.OutputFileTask
 import com.android.build.gradle.internal.tasks.PrepareDependenciesTask
 import com.android.build.gradle.internal.tasks.PrepareLibraryTask
@@ -259,6 +260,8 @@ public abstract class BasePlugin {
     public Task lintCompile
     protected Task lintAll
     protected Task lintVital
+
+    public MockableAndroidJarTask createMockableJar
 
     protected BasePlugin(Instantiator instantiator, ToolingModelBuilderRegistry registry) {
         this.instantiator = instantiator
@@ -475,6 +478,7 @@ public abstract class BasePlugin {
             }
         }
 
+        createMockableJarTask();
         variantManager.createAndroidTasks(getSigningOverride())
         createReportTasks()
 
@@ -3053,6 +3057,27 @@ public abstract class BasePlugin {
                 variantOutputData.processResourcesTask
 
         return task
+    }
+
+    private void createMockableJarTask() {
+        createMockableJar = project.tasks.create("mockableAndroidJar", MockableAndroidJarTask)
+        createMockableJar.group = org.gradle.api.plugins.BasePlugin.BUILD_GROUP
+
+        createMockableJar.doFirst {
+            ensureTargetSetup()
+            createMockableJar.androidJar = new File(
+                    androidBuilder.target.getPath(IAndroidTarget.ANDROID_JAR))
+        }
+
+        createMockableJar.conventionMapping.outputFile = {
+            // We can't use Gradle's @InputFile functionality, because that would force us
+            // to parse the SDK on every Gradle invocation (even for "clean" or "tasks"). Instead,
+            // we put the version in the output file name, so we only generate one mockable jar
+            // per android version. This works, assuming android.jar for a given version is
+            // "frozen" (which it is, for a published release).
+            project.file(
+                    "$project.buildDir/${FD_INTERMEDIATES}/mockable-${extension.compileSdkVersion}.jar")
+        }
     }
 
     private void createReportTasks() {
