@@ -28,15 +28,14 @@ import com.android.builder.model.Variant
 import com.google.common.base.Charsets
 import com.google.common.collect.Maps
 import com.google.common.io.Files
-import junit.framework.Assert
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
 
-import static junit.framework.Assert.assertEquals
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertNotNull
+import static org.junit.Assert.assertTrue
 
 /**
  * Test for BuildConfig field declared in build type, flavors, and variant and how they
@@ -265,7 +264,7 @@ public final class BuildConfig {
             @NonNull String variantDir) {
         File outputFile = new File(project.getTestDir(),
                 "build/generated/source/buildConfig/$variantDir/com/example/helloworld/BuildConfig.java")
-        Assert.assertTrue("Missing file: " + outputFile, outputFile.isFile());
+        assertTrue("Missing file: " + outputFile, outputFile.isFile());
         assertEquals(expected, Files.asByteSource(outputFile).asCharSource(Charsets.UTF_8).read())
     }
 
