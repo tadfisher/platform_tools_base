@@ -1,3 +1,13 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        jcenter()
+    }
+    dependencies {
+        classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:1.0"
+    }
+}
+
 subprojects { Project project ->
     // only configure leaf projects.
     if (!project.getSubprojects().isEmpty()) return

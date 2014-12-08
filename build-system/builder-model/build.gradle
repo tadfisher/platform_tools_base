@@ -14,6 +14,7 @@ project.ext.pomName = 'Android Builder Model library'
 project.ext.pomDesc = 'Model for the Builder library.'
 
 apply from: "$rootDir/buildSrc/base/publish.gradle"
+apply from: "$rootDir/buildSrc/base/bintray.gradle"
 apply from: "$rootDir/buildSrc/base/javadoc.gradle"
 
 jar.manifest.attributes("Model-Version": "$version")
