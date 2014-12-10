@@ -39,6 +39,7 @@ import com.android.builder.dependency.ManifestDependency
 import com.android.builder.model.AndroidLibrary
 import com.android.builder.model.MavenCoordinates
 import com.android.builder.profile.ExecutionType
+import com.android.ide.common.res2.MergedResourceWriter
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.internal.ConventionMapping
@@ -122,6 +123,11 @@ class LibraryTaskManager extends TaskManager {
                 // the dependencies.
                 createMergeResourcesTask(variantData, false /*process9Patch*/)
             }
+
+            variantData.mergeResourcesTask.conventionMapping.publicFile = { project.file(
+                    "$project.buildDir/${FD_INTERMEDIATES}/$DIR_BUNDLES/${dirName}/${MergedResourceWriter.FN_PUBLIC_TXT}")
+            }
+
             return packageRes;
         }
 
