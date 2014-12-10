@@ -139,4 +139,13 @@ public interface AndroidLibrary extends Library {
      */
     @NonNull
     File getLintJar();
+
+    /**
+     * Returns the location of an optional file that lists the only
+     * resources that should be considered public.
+     *
+     * @return a File for the file. The file may not point to an existing file.
+     */
+    @NonNull
+    File getPublicResources();
 }

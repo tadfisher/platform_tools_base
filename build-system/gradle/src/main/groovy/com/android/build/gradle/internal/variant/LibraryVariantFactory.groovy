@@ -41,6 +41,7 @@ import com.android.builder.dependency.LibraryDependency
 import com.android.builder.dependency.ManifestDependency
 import com.android.builder.model.AndroidLibrary
 import com.android.builder.model.MavenCoordinates
+import com.android.ide.common.res2.MergedResourceWriter
 import com.google.common.collect.Lists
 import org.gradle.api.GradleException
 import org.gradle.api.Project
@@ -176,6 +177,10 @@ public class LibraryVariantFactory implements VariantFactory<LibraryVariantData>
             // generate the R.txt file with all the symbols, including the ones from
             // the dependencies.
             taskManager.createMergeResourcesTask(variantData, false /*process9Patch*/)
+        }
+
+        variantData.mergeResourcesTask.conventionMapping.publicFile = { project.file(
+                "$project.buildDir/${FD_INTERMEDIATES}/$DIR_BUNDLES/${dirName}/${MergedResourceWriter.FN_PUBLIC_TXT}")
         }
 
         // Add a task to merge the assets folders
