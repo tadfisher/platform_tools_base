@@ -16,6 +16,7 @@
 package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.Nullable;
+import com.android.builder.core.VariantConfiguration;
 
 /**
  * A tested variant
@@ -26,4 +27,6 @@ public interface TestedVariantData {
 
     @Nullable
     TestVariantData getTestVariantData();
+
+    VariantConfiguration getVariantConfiguration();
 }
