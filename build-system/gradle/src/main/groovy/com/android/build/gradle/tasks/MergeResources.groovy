@@ -27,14 +27,22 @@ import com.android.ide.common.res2.ResourceSet
 import com.android.sdklib.BuildToolInfo
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.OutputFile
 
 public class MergeResources extends IncrementalTask {
 
     // ----- PUBLIC TASK API -----
 
+    /** Directory to write the merged resources to */
     @OutputDirectory
     File outputDir
+
+    /** Optional file to write any publicly imported resource types and names to */
+    @Optional
+    @OutputFile
+    File publicFile
 
     // ----- PRIVATE TASK API -----
 
@@ -95,7 +103,8 @@ public class MergeResources extends IncrementalTask {
 
             // get the merged set and write it down.
             MergedResourceWriter writer = new MergedResourceWriter(
-                    destinationDir, getProcess9Patch() ? getCruncher() : null)
+                    destinationDir, getProcess9Patch() ? getCruncher() : null,
+                    getPublicFile())
             writer.setInsertSourceMarkers(getInsertSourceMarkers())
 
             merger.mergeData(writer, false /*doCleanUp*/)
@@ -154,7 +163,8 @@ public class MergeResources extends IncrementalTask {
             }
 
             MergedResourceWriter writer = new MergedResourceWriter(
-                    getOutputDir(), getProcess9Patch() ? getCruncher() : null)
+                    getOutputDir(), getProcess9Patch() ? getCruncher() : null,
+                    getPublicFile())
             writer.setInsertSourceMarkers(getInsertSourceMarkers())
             merger.mergeData(writer, false /*doCleanUp*/)
             // No exception? Write the known state.

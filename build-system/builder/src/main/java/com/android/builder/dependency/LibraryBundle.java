@@ -20,6 +20,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
+import com.android.ide.common.res2.MergedResourceWriter;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 
@@ -175,6 +176,12 @@ public abstract class LibraryBundle implements LibraryDependency {
     @NonNull
     public File getLintJar() {
         return new File(mBundleFolder, "lint.jar");
+    }
+
+    @Override
+    @NonNull
+    public File getPublicResources() {
+        return new File(mBundleFolder, MergedResourceWriter.FN_PUBLIC_TXT);
     }
 
     @NonNull

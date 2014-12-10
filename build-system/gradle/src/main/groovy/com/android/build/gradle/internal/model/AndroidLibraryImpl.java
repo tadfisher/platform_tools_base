@@ -60,6 +60,8 @@ public class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, S
     @NonNull
     private final File lintJar;
     @NonNull
+    private final File publicResources;
+    @NonNull
     private final List<AndroidLibrary> dependencies;
 
     AndroidLibraryImpl(
@@ -84,6 +86,7 @@ public class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, S
         renderscriptFolder = libraryDependency.getRenderscriptFolder();
         proguardRules = libraryDependency.getProguardRules();
         lintJar = libraryDependency.getLintJar();
+        publicResources = libraryDependency.getPublicResources();
 
         this.project = project;
         this.variant = variant;
@@ -177,5 +180,11 @@ public class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, S
     @Override
     public File getLintJar() {
         return lintJar;
+    }
+
+    @NonNull
+    @Override
+    public File getPublicResources() {
+        return publicResources;
     }
 }
