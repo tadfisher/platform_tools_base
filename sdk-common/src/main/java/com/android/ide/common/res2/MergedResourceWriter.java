@@ -16,6 +16,8 @@
 
 package com.android.ide.common.res2;
 
+import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.ATTR_TYPE;
 import static com.android.SdkConstants.DOT_9PNG;
 import static com.android.SdkConstants.DOT_PNG;
 import static com.android.SdkConstants.DOT_XML;
@@ -26,6 +28,7 @@ import static com.android.utils.SdkUtils.createPathComment;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.internal.PngCruncher;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
@@ -34,10 +37,12 @@ import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import java.io.File;
@@ -56,11 +61,16 @@ import javax.xml.parsers.DocumentBuilderFactory;
 public class MergedResourceWriter extends MergeWriter<ResourceItem> {
     /** Filename to save the merged file as */
     public static final String FN_VALUES_XML = "values.xml";
+    /** Filename to save the public resource names to */
+    public static final String FN_PUBLIC_TXT = "public.txt";
     /** Prefix in comments which mark the source locations for merge results */
     public static final String FILENAME_PREFIX = "From: ";
 
     @NonNull
     private final PngCruncher mCruncher;
+
+    /** If non-null, points to a File that we should write public.txt to */
+    private final File mPublicFile;
 
     private DocumentBuilderFactory mFactory;
 
@@ -85,12 +95,24 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
     public MergedResourceWriter(@NonNull File rootFolder,
             @NonNull PngCruncher pngRunner,
             boolean crunchPng,
-            boolean process9Patch) {
+            boolean process9Patch,
+            @Nullable File publicFile) {
         super(rootFolder);
         mCruncher = pngRunner;
         mCrunchPng = crunchPng;
         mProcess9Patch = process9Patch;
+        mPublicFile = publicFile;
+    }
 
+    // TODO: Remove this method prior to check-in (avoids tons of changes in unit tests,
+    // potential merging conflicts, until this is ready
+    @VisibleForTesting
+    @Deprecated
+    public MergedResourceWriter(@NonNull File rootFolder,
+            @NonNull PngCruncher pngRunner,
+            boolean crunchPng,
+            boolean process9Patch) {
+        this(rootFolder, pngRunner, crunchPng, process9Patch, null);
     }
 
     /**
@@ -290,6 +312,8 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
 
                     DocumentBuilder builder = mFactory.newDocumentBuilder();
                     Document document = builder.newDocument();
+                    final String publicTag = ResourceType.PUBLIC.getName();
+                    List<Node> publicNodes = null;
 
                     Node rootNode = document.createElement(TAG_RESOURCES);
                     document.appendChild(rootNode);
@@ -297,6 +321,15 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                     Collections.sort(items);
 
                     for (ResourceItem item : items) {
+                        Node nodeValue = item.getValue();
+                        if (nodeValue != null && publicTag.equals(nodeValue.getNodeName())) {
+                            if (publicNodes == null) {
+                                publicNodes = Lists.newArrayList();
+                            }
+                            publicNodes.add(nodeValue);
+                            continue;
+                        }
+
                         // add a carriage return so that the nodes are not all on the same line.
                         // also add an indent of 4 spaces.
                         rootNode.appendChild(document.createTextNode("\n    "));
@@ -314,9 +347,9 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                             rootNode.appendChild(document.createElement(TAG_EAT_COMMENT));
                             rootNode.appendChild(document.createTextNode("\n    "));
                         }
-                        Node adoptedNode = NodeUtils.adoptNode(document, item.getValue());
-                        rootNode.appendChild(adoptedNode);
 
+                        Node adoptedNode = NodeUtils.adoptNode(document, nodeValue);
+                        rootNode.appendChild(adoptedNode);
                     }
 
                     // finish with a carriage return
@@ -326,6 +359,31 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
 
                     String content = XmlUtils.toXml(document, true /*preserveWhitespace*/);
                     Files.write(content, outFile, Charsets.UTF_8);
+
+                    if (publicNodes != null && mPublicFile != null) {
+                        // Generate public.txt:
+                        int size = publicNodes.size();
+                        StringBuilder sb = new StringBuilder(size * 80);
+                        for (Node node : publicNodes) {
+                            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                                Element element = (Element) node;
+                                String name = element.getAttribute(ATTR_NAME);
+                                String type = element.getAttribute(ATTR_TYPE);
+                                if (!name.isEmpty() && !type.isEmpty()) {
+                                    sb.append(type).append(' ').append(name).append('\n');
+                                }
+                            }
+                        }
+                        File parentFile = mPublicFile.getParentFile();
+                        if (!parentFile.exists()) {
+                            boolean mkdirs = parentFile.mkdirs();
+                            if (!mkdirs) {
+                                throw new IOException("Could not create " + parentFile);
+                            }
+                        }
+                        String text = sb.toString();
+                        Files.write(text, mPublicFile, Charsets.UTF_8);
+                    }
                 } catch (Throwable t) {
                     ConsumerException exception = new ConsumerException(t);
                     exception.setFile(currentFile != null ? currentFile.getFile() : outFile);
