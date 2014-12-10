@@ -27,7 +27,10 @@ import com.android.sdklib.devices.Abi;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.repository.descriptors.IdDisplay;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 
@@ -378,7 +381,49 @@ public final class AvdInfo implements Comparable<AvdInfo> {
     public boolean isRunning() {
         // this is a file on Unix, and a directory on Windows.
         File f = new File(mFolderPath, "userdata-qemu.img.lock");   //$NON-NLS-1$
-        return f.exists();
+        String command = null;
+        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
+            f = new File(f, "pid");
+        }
+        if (f.exists()) {
+            BufferedReader reader = null;
+            try {
+                reader = new BufferedReader(new FileReader(f));
+                String pid = reader.readLine();
+                if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
+                    command = "cmd /c \"tasklist /FI \"PID eq " + pid + "\" | findstr " + pid + "\"";
+                } else {
+                    command = "kill -0 " + pid;
+                }
+            } catch (IOException e) {
+                // Shouldn't happen, but if it does be safe and return true;
+                return true;
+            } finally {
+                try {
+                    if (reader != null) {
+                        reader.close();
+                    }
+                }
+                catch (IOException ignore) {
+                    // ignore
+                }
+            }
+            try {
+                Process p = Runtime.getRuntime().exec(command);
+                // If the process ends with non-0 it means the process doesn't exist
+                return p.waitFor() == 0;
+            }
+            catch (IOException e) {
+                // To be safe return true
+                return true;
+            }
+            catch (InterruptedException e) {
+                // To be safe return true
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
