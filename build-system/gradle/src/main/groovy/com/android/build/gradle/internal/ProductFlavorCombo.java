@@ -85,6 +85,11 @@ public class ProductFlavorCombo {
         List <ProductFlavorCombo> result = Lists.newArrayList();
         if (flavorDimensions == null || flavorDimensions.isEmpty()) {
             for (GroupableProductFlavor flavor : productFlavors) {
+                if (flavor.getFlavorDimension() != null && !flavor.getFlavorDimension().isEmpty()) {
+                    throw new RuntimeException(String.format(
+                            "Flavor dimension is not specified, but '%1$s' has dimension '%2$s'.",
+                            flavor.getName(), flavor.getFlavorDimension()));
+                }
                 result.add(new ProductFlavorCombo(ImmutableList.of(flavor)));
             }
         } else {

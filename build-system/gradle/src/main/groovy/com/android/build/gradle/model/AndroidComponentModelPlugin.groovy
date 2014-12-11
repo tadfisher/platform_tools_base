@@ -19,13 +19,9 @@ package com.android.build.gradle.model
 import com.android.build.gradle.internal.ProductFlavorCombo
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.BuildTypeFactory
-import com.android.build.gradle.internal.dsl.GroupableProductFlavor
-import com.android.build.gradle.internal.dsl.GroupableProductFlavorFactory
-import com.android.build.gradle.ndk.NdkExtension
-import com.android.build.gradle.ndk.internal.NdkConfiguration
+import com.android.build.gradle.internal.dsl.ProductFlavorContainer
 import com.android.builder.core.BuilderConstants
 import groovy.transform.CompileStatic
-import com.google.common.collect.Lists
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -87,7 +83,7 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
         void android(
                 AndroidModel androidModel,
                 NamedDomainObjectContainer<BuildType> buildTypes,
-                NamedDomainObjectContainer<GroupableProductFlavor> productFlavors) {
+                ProductFlavorContainer productFlavors) {
             androidModel.buildTypes = buildTypes
             androidModel.productFlavors = productFlavors
         }
@@ -111,12 +107,12 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
         }
 
         @Model
-        NamedDomainObjectContainer<GroupableProductFlavor> androidProductFlavors(
+        ProductFlavorContainer androidProductFlavors(
                 ServiceRegistry serviceRegistry,
                 Project project) {
             Instantiator instantiator = serviceRegistry.get(Instantiator.class)
-            def productFlavorContainer = project.container(GroupableProductFlavor,
-                    new GroupableProductFlavorFactory(instantiator, project, project.getLogger()))
+            def productFlavorContainer = new ProductFlavorContainer(
+                    instantiator, project, project.getLogger())
 
             productFlavorContainer.whenObjectRemoved {
                 throw new UnsupportedOperationException(
@@ -128,12 +124,9 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
 
         @Model
         List<ProductFlavorCombo> createProductFlavorCombo (
-                NamedDomainObjectContainer<GroupableProductFlavor> productFlavors) {
-            // TODO: Create custom product flavor container to manually configure flavor dimensions.
-            List<String> flavorDimensionList = productFlavors*.flavorDimension.unique().asList()
-            flavorDimensionList.removeAll([null])
-
-            return ProductFlavorCombo.createCombinations(flavorDimensionList, productFlavors)
+                ProductFlavorContainer productFlavors) {
+            List<String> flavorDimensionList = productFlavors.flavorDimensions
+            return  ProductFlavorCombo.createCombinations(flavorDimensionList, productFlavors);
         }
 
         @ComponentType
@@ -173,7 +166,7 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
         void createVariantSourceSet(
                 AndroidComponentModelSourceSet sources,
                 NamedDomainObjectContainer<BuildType> buildTypes,
-                NamedDomainObjectContainer<GroupableProductFlavor> flavors,
+                ProductFlavorContainer flavors,
                 List<ProductFlavorCombo> flavorGroups) {
             buildTypes.each { buildType ->
                 sources.maybeCreate(buildType.name)

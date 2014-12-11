@@ -16,22 +16,23 @@
 
 package com.android.build.gradle.integration.component
 
+import aQute.libg.generics.Create
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.ClassRule
+import org.junit.Rule
 import org.junit.Test
 
 /**
  * Test AndroidComponentModelPlugin.
  */
 class AndroidComponentPluginTest {
-    @ClassRule
-    public static GradleTestProject project = GradleTestProject.builder().create();
+    @Rule
+    public GradleTestProject project = GradleTestProject.builder().create();
 
-    @BeforeClass
-    public static void setUp() {
-
+    @Test
+    void assemble() {
         project.buildFile << """
 import com.android.build.gradle.model.AndroidComponentModelPlugin
 apply plugin: AndroidComponentModelPlugin
@@ -46,15 +47,53 @@ model {
     }
 }
 """
-    }
-
-    @AfterClass
-    static void cleanUp() {
-        project = null
+        project.execute("assemble")
     }
 
     @Test
-    void assemble() {
-        project.execute("assemble")
+    void flavors() {
+        project.buildFile << """
+import com.android.build.gradle.model.AndroidComponentModelPlugin
+apply plugin: AndroidComponentModelPlugin
+
+model {
+    androidBuildTypes {
+        custom
+    }
+    androidProductFlavors {
+        flavorDimensions "abi", "price"
+        free {
+            flavorDimension "price"
+        }
+        premium {
+            flavorDimension "price"
+        }
+        x86 {
+            flavorDimension "abi"
+        }
+        arm {
+            flavorDimension "abi"
+        }
+    }
+}
+"""
+        Collection<String> tasks = project.getTasks()
+        def expectedTasks = [
+                "armFreeCustom",
+                "armFreeDebug",
+                "armFreeRelease",
+                "armPremiumCustom",
+                "armPremiumDebug",
+                "armPremiumRelease",
+                "assemble",
+                "x86FreeCustom",
+                "x86FreeDebug",
+                "x86FreeRelease",
+                "x86PremiumCustom",
+                "x86PremiumDebug",
+                "x86PremiumRelease"]
+        expectedTasks.each {
+            assert tasks.contains(it)
+        }
     }
 }
