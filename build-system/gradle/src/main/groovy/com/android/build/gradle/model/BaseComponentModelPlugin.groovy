@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.ProductFlavorData
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.GroupableProductFlavor
+import com.android.build.gradle.internal.dsl.ProductFlavorContainer
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.dsl.SigningConfigFactory
 import com.android.build.gradle.internal.tasks.DependencyReportTask
@@ -148,7 +149,7 @@ public class BaseComponentModelPlugin extends BasePlugin implements Plugin<Proje
         BaseExtension androidapp(
                 ServiceRegistry serviceRegistry,
                 NamedDomainObjectContainer<BuildType> buildTypeContainer,
-                NamedDomainObjectContainer<GroupableProductFlavor> productFlavorContainer,
+                ProductFlavorContainer productFlavorContainer,
                 NamedDomainObjectContainer<SigningConfig> signingConfigContainer,
                 @Path("isApplication") Boolean isApplication,
                 BasePlugin plugin) {
@@ -198,7 +199,7 @@ public class BaseComponentModelPlugin extends BasePlugin implements Plugin<Proje
                 AndroidComponentSpec androidSpec,
                 BaseExtension androidExtension,
                 NamedDomainObjectContainer<BuildType> buildTypeContainer,
-                NamedDomainObjectContainer<GroupableProductFlavor> productFlavorContainer,
+                ProductFlavorContainer productFlavorContainer,
                 NamedDomainObjectContainer<SigningConfig> signingConfigContainer,
                 AndroidComponentModelSourceSet sources,
                 VariantFactory variantFactory,

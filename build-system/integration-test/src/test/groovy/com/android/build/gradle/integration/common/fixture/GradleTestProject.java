@@ -41,6 +41,8 @@ import org.gradle.tooling.BuildLauncher;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
 import org.gradle.tooling.internal.consumer.DefaultGradleConnector;
+import org.gradle.tooling.model.GradleProject;
+import org.gradle.tooling.model.GradleTask;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -52,6 +54,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.CodeSource;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -345,6 +348,23 @@ public class GradleTestProject implements TestRule {
      */
     public File getOutputFile(String path) {
         return new File(getOutputDir(), path);
+    }
+
+    /**
+     * Return a list of task names in the project.
+     */
+    public Collection<String> getTasks() {
+        ProjectConnection connection = getProjectConnection();
+        try {
+            GradleProject project = connection.getModel(GradleProject.class);
+            List<String> tasks = Lists.newArrayList();
+            for (GradleTask task : project.getTasks()) {
+                tasks.add(task.getName());
+            }
+            return tasks;
+        } finally {
+            connection.close();
+        }
     }
 
     /**

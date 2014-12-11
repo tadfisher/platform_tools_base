@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.BuildTypeFactory
 import com.android.build.gradle.internal.dsl.GroupableProductFlavor
 import com.android.build.gradle.internal.dsl.GroupableProductFlavorFactory
+import com.android.build.gradle.internal.dsl.ProductFlavorContainer
 import com.android.builder.core.BuilderConstants
 import groovy.transform.CompileStatic
 import org.gradle.api.NamedDomainObjectContainer
@@ -98,12 +99,12 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
         }
 
         @Model("androidProductFlavors")
-        NamedDomainObjectContainer<GroupableProductFlavor> createProductFlavors(
+        ProductFlavorContainer createProductFlavors(
                 ServiceRegistry serviceRegistry,
                 Project project) {
             Instantiator instantiator = serviceRegistry.get(Instantiator.class)
-            def productFlavorContainer = project.container(GroupableProductFlavor,
-                    new GroupableProductFlavorFactory(instantiator, project, project.getLogger()))
+            def productFlavorContainer = new ProductFlavorContainer(
+                    instantiator, project, project.getLogger())
 
             productFlavorContainer.whenObjectRemoved {
                 throw new UnsupportedOperationException(
@@ -115,11 +116,8 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
 
         @Model
         List<ProductFlavorCombo> createProductFlavorCombo (
-                NamedDomainObjectContainer<GroupableProductFlavor> productFlavors) {
-            // TODO: Create custom product flavor container to manually configure flavor dimensions.
-            List<String> flavorDimensionList = productFlavors*.flavorDimension.unique().asList();
-            flavorDimensionList.removeAll([null])
-
+                ProductFlavorContainer productFlavors) {
+            List<String> flavorDimensionList = productFlavors.flavorDimensions
             return  ProductFlavorCombo.createCombinations(flavorDimensionList, productFlavors);
         }
 
