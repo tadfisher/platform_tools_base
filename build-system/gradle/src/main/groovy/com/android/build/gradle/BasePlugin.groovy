@@ -1744,10 +1744,11 @@ public abstract class BasePlugin {
             runTestsTask.scanForTestClasses = false
             runTestsTask.include "**/*Test.class"
 
-            // TODO: Use mockable JAR.
             runTestsTask.doFirst {
                 runTestsTask.classpath = project.files(
                         androidBuilder.bootClasspath,
+//                        createMockableJar.outputFile,
+//                        androidBuilder.bootClasspath.findAll { it.name != "android.jar"},
                         runTestsTask.classpath)
             }
 
