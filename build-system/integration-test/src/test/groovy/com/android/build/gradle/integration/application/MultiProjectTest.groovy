@@ -15,12 +15,18 @@
  */
 
 package com.android.build.gradle.integration.application
-
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.GradleTestProject.SubProjectData
 import com.android.build.gradle.integration.common.utils.ModelHelper
-import com.android.builder.model.*
-import org.junit.*
+import com.android.builder.model.AndroidArtifact
+import com.android.builder.model.AndroidProject
+import com.android.builder.model.Dependencies
+import com.android.builder.model.JavaLibrary
+import com.android.builder.model.Variant
+import org.junit.AfterClass
+import org.junit.Assert
+import org.junit.BeforeClass
+import org.junit.ClassRule
+import org.junit.Test
 
 /**
  * Assemble tests for multiproject.
@@ -30,11 +36,11 @@ class MultiProjectTest {
     static public GradleTestProject project = GradleTestProject.builder()
             .fromSample("multiproject")
             .create()
-    static Map<String, SubProjectData> models
+    static Map<String, AndroidProject> models
 
     @BeforeClass
     static void setUp() {
-        models = project.getMultiModel();
+        models = project.getAllModels();
     }
 
     @AfterClass
@@ -46,11 +52,10 @@ class MultiProjectTest {
     @Test
     void testModel() {
 
-        SubProjectData baseLibModelData = models.get(":baseLibrary");
-        Assert.assertNotNull("Module app null-check", baseLibModelData);
-        AndroidProject model = baseLibModelData.model;
+        AndroidProject baseLibModel = models.get(":baseLibrary");
+        Assert.assertNotNull("Module app null-check", baseLibModel);
 
-        Collection<Variant> variants = model.getVariants();
+        Collection<Variant> variants = baseLibModel.getVariants();
         Assert.assertEquals("Variant count", 2, variants.size());
 
         Variant variant = ModelHelper.getVariant(variants, "release");
