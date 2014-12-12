@@ -49,6 +49,7 @@ import com.android.build.gradle.internal.model.ArtifactMetaDataImpl
 import com.android.build.gradle.internal.model.JavaArtifactImpl
 import com.android.build.gradle.internal.model.MavenCoordinatesImpl
 import com.android.build.gradle.internal.model.ModelBuilder
+import com.android.build.gradle.internal.model.SyncIssueImpl
 import com.android.build.gradle.internal.publishing.ApkPublishArtifact
 import com.android.build.gradle.internal.tasks.AndroidReportTask
 import com.android.build.gradle.internal.tasks.CheckManifest
@@ -119,6 +120,7 @@ import com.android.builder.model.ArtifactMetaData
 import com.android.builder.model.JavaArtifact
 import com.android.builder.model.SourceProvider
 import com.android.builder.model.SourceProviderContainer
+import com.android.builder.model.SyncIssue
 import com.android.builder.sdk.SdkInfo
 import com.android.builder.sdk.TargetInfo
 import com.android.builder.testing.ConnectedDeviceProvider
@@ -253,7 +255,10 @@ public abstract class BasePlugin {
     private boolean hasCreatedTasks = false
 
     private ProductFlavorData<ProductFlavor> defaultConfigData
+    /** @deprecated use syncIssue instead */
+    @Deprecated
     private final Collection<String> unresolvedDependencies = Sets.newHashSet();
+    private final Collection<SyncIssue> syncIssues = Lists.newArrayList();
 
     protected DefaultAndroidSourceSet mainSourceSet
     protected DefaultAndroidSourceSet androidTestSourceSet
@@ -535,8 +540,13 @@ public abstract class BasePlugin {
         return defaultConfigData
     }
 
+    @Deprecated
     Collection<String> getUnresolvedDependencies() {
         return unresolvedDependencies
+    }
+
+    Collection<SyncIssue> getSyncIssues() {
+        return syncIssues
     }
 
     ILogger getLogger() {
@@ -3420,8 +3430,12 @@ public abstract class BasePlugin {
                             "' is not supported in project " + project.name)
                 }
             }
-        } else if (!currentUnresolvedDependencies.isEmpty()) {
+        } else if (buildModelOnly && !currentUnresolvedDependencies.isEmpty()) {
             unresolvedDependencies.addAll(currentUnresolvedDependencies)
+
+            for (String dep : currentUnresolvedDependencies) {
+                syncIssues.add(getUnresolvedDependencyIssue(dep))
+            }
         }
 
         variantDeps.addLibraries(bundles)
@@ -3431,6 +3445,14 @@ public abstract class BasePlugin {
         // TODO - filter bundles out of source set classpath
 
         configureBuild(variantDeps)
+    }
+
+    private static SyncIssue getUnresolvedDependencyIssue(@NonNull String dependency) {
+        return new SyncIssueImpl(
+                SyncIssue.TYPE_UNRESOLVED_DEPENDENCY,
+                SyncIssue.SEVERIRT_ERROR,
+                dependency,
+                "Unable to resolve dependency '${dependency}'")
     }
 
     protected void ensureConfigured(Configuration config) {
@@ -3450,18 +3472,7 @@ public abstract class BasePlugin {
             Map<ModuleVersionIdentifier,
             List<ResolvedArtifact>> artifacts) {
 
-        // To keep backwards-compatibility, we check first if we have the JVM arg. If not, we look for
-        // the project property.
-        boolean buildModelOnly = false;
-        String val = System.getProperty(PROPERTY_BUILD_MODEL_ONLY);
-        if ("true".equalsIgnoreCase(val)) {
-            buildModelOnly = true;
-        } else if (project.hasProperty(PROPERTY_BUILD_MODEL_ONLY)) {
-            Object value = project.getProperties().get(PROPERTY_BUILD_MODEL_ONLY);
-            if (value instanceof String) {
-                buildModelOnly = Boolean.parseBoolean(value);
-            }
-        }
+        boolean buildModelOnly = isBuildModelOnly()
 
         Set<ResolvedArtifact> allArtifacts
         if (buildModelOnly) {
@@ -3483,6 +3494,27 @@ public abstract class BasePlugin {
                 moduleArtifacts.add(artifact)
             }
         }
+    }
+
+    /**
+     * Returns whether we are just trying to build a model instead of building.
+     * This means we will attempt to resolve dependencies even if some are broken/unsupported
+     * to avoid failing the import in the IDE.
+     */
+    private boolean isBuildModelOnly() {
+        // To keep backwards-compatibility, we check first if we have the JVM arg. If not, we look for
+        // the project property.
+        boolean buildModelOnly = false;
+        String val = System.getProperty(PROPERTY_BUILD_MODEL_ONLY);
+        if ("true".equalsIgnoreCase(val)) {
+            buildModelOnly = true;
+        } else if (project.hasProperty(PROPERTY_BUILD_MODEL_ONLY)) {
+            Object value = project.getProperties().get(PROPERTY_BUILD_MODEL_ONLY);
+            if (value instanceof String) {
+                buildModelOnly = Boolean.parseBoolean(value);
+            }
+        }
+        return buildModelOnly
     }
 
     def addDependency(ResolvedComponentResult moduleVersion,
@@ -3519,6 +3551,8 @@ public abstract class BasePlugin {
 
             List<ResolvedArtifact> moduleArtifacts = artifacts.get(id)
 
+            boolean buildModelOnly = isBuildModelOnly()
+
             moduleArtifacts?.each { artifact ->
                 if (artifact.type == EXT_LIB_ARCHIVE) {
                     String path = "${BasePlugin.normalize(logger, id, id.group)}" +
@@ -3551,13 +3585,38 @@ public abstract class BasePlugin {
                         name += ":$artifact.classifier"
                     }
 
-                    // cannot throw this yet, since depending on a secondary artifact in an
-                    // Android app will trigger getting the main APK as well.
-                    throw new GradleException(
-                            "Dependency ${name} on project ${project.name} resolves to an APK"
-                                    + " archive which is not supported"
-                                    + " as a compilation dependency. File: "
-                                    + artifact.file)
+                    String msg = "Dependency ${name} on project ${project.name} resolves to an APK" +
+                            " archive which is not supported" +
+                            " as a compilation dependency. File: " +
+                            artifact.file
+
+                    if (!buildModelOnly) {
+                        throw new GradleException(msg)
+                    } else {
+                        syncIssues.add(new SyncIssueImpl(
+                                SyncIssue.TYPE_DEPENDENCY_IS_APK,
+                                SyncIssue.SEVERIRT_ERROR,
+                                name,
+                                msg))
+                    }
+                } else if (artifact.type == "apklib") {
+                    String name = "$id.group:$id.name:$id.version"
+                    if (artifact.classifier != null) {
+                        name += ":$artifact.classifier"
+                    }
+
+                    String msg = "Packaging for dependency ${name} is 'apklib' and is not supported. " +
+                            "Only 'aar' libraries are supported."
+
+                    if (!buildModelOnly) {
+                        throw new GradleException(msg)
+                    } else {
+                        syncIssues.add(new SyncIssueImpl(
+                                SyncIssue.TYPE_DEPENDENCY_IS_APKLIB,
+                                SyncIssue.SEVERIRT_ERROR,
+                                name,
+                                msg))
+                    }
                 }
             }
 
