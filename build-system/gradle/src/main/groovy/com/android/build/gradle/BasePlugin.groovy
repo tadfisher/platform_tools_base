@@ -3360,18 +3360,7 @@ public abstract class BasePlugin {
             Map<ModuleVersionIdentifier,
             List<ResolvedArtifact>> artifacts) {
 
-        // To keep backwards-compatibility, we check first if we have the JVM arg. If not, we look for
-        // the project property.
-        boolean buildModelOnly = false;
-        String val = System.getProperty(PROPERTY_BUILD_MODEL_ONLY);
-        if ("true".equalsIgnoreCase(val)) {
-            buildModelOnly = true;
-        } else if (project.hasProperty(PROPERTY_BUILD_MODEL_ONLY)) {
-            Object value = project.getProperties().get(PROPERTY_BUILD_MODEL_ONLY);
-            if (value instanceof String) {
-                buildModelOnly = Boolean.parseBoolean(value);
-            }
-        }
+        boolean buildModelOnly = getBuildModelOnly()
 
         Set<ResolvedArtifact> allArtifacts
         if (buildModelOnly) {
@@ -3393,6 +3382,27 @@ public abstract class BasePlugin {
                 moduleArtifacts.add(artifact)
             }
         }
+    }
+
+    /**
+     * Returns whether we are just trying to build a model instead of building.
+     * This means we will attempt to resolve dependencies even if some are broken/unsupported
+     * to avoid failing the import in the IDE.
+     */
+    private boolean getBuildModelOnly() {
+        // To keep backwards-compatibility, we check first if we have the JVM arg. If not, we look for
+        // the project property.
+        boolean buildModelOnly = false;
+        String val = System.getProperty(PROPERTY_BUILD_MODEL_ONLY);
+        if ("true".equalsIgnoreCase(val)) {
+            buildModelOnly = true;
+        } else if (project.hasProperty(PROPERTY_BUILD_MODEL_ONLY)) {
+            Object value = project.getProperties().get(PROPERTY_BUILD_MODEL_ONLY);
+            if (value instanceof String) {
+                buildModelOnly = Boolean.parseBoolean(value);
+            }
+        }
+        return buildModelOnly
     }
 
     def addDependency(ResolvedComponentResult moduleVersion,
@@ -3456,18 +3466,37 @@ public abstract class BasePlugin {
                                     true /*proguarded*/,
                                     new MavenCoordinatesImpl(artifact)))
                 } else if (artifact.type == EXT_ANDROID_PACKAGE) {
-                    String name = "$id.group:$id.name:$id.version"
-                    if (artifact.classifier != null) {
-                        name += ":$artifact.classifier"
-                    }
+                    if (!getBuildModelOnly()) {
+                        String name = "$id.group:$id.name:$id.version"
+                        if (artifact.classifier != null) {
+                            name += ":$artifact.classifier"
+                        }
 
-                    // cannot throw this yet, since depending on a secondary artifact in an
-                    // Android app will trigger getting the main APK as well.
-                    throw new GradleException(
-                            "Dependency ${name} on project ${project.name} resolves to an APK"
-                                    + " archive which is not supported"
-                                    + " as a compilation dependency. File: "
-                                    + artifact.file)
+                        // cannot throw this yet, since depending on a secondary artifact in an
+                        // Android app will trigger getting the main APK as well.
+                        throw new GradleException(
+                                "Dependency ${name} on project ${project.name} resolves to an APK"
+                                        + " archive which is not supported"
+                                        + " as a compilation dependency. File: "
+                                        + artifact.file)
+                    } else {
+                        // ?
+                    }
+                } else if (artifact.type == "apklib") {
+                    if (!getBuildModelOnly()) {
+                        String name = "$id.group:$id.name:$id.version"
+                        if (artifact.classifier != null) {
+                            name += ":$artifact.classifier"
+                        }
+
+                        // cannot throw this yet, since depending on a secondary artifact in an
+                        // Android app will trigger getting the main APK as well.
+                        throw new GradleException(
+                                "Packaging for dependency ${name} is 'apklib' and is not supported. "
+                                        + "Only 'aar' libraries are supported.")
+                    } else {
+                        // ?
+                    }
                 }
             }
 
