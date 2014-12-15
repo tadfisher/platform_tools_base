@@ -1103,8 +1103,7 @@ public class AndroidBuilder {
             @NonNull DexOptions dexOptions,
             @Nullable List<String> additionalParameters,
             @NonNull File tmpFolder,
-            boolean incremental,
-            boolean optimize) throws IOException, InterruptedException, LoggedErrorException {
+            boolean incremental) throws IOException, InterruptedException, LoggedErrorException {
         checkNotNull(inputs, "inputs cannot be null.");
         checkNotNull(preDexedLibraries, "preDexedLibraries cannot be null.");
         checkNotNull(outDexFolder, "outDexFolder cannot be null.");
@@ -1148,10 +1147,6 @@ public class AndroidBuilder {
         if (incremental) {
             command.add("--incremental");
             command.add("--no-strict");
-        }
-
-        if (!optimize) {
-            command.add("--no-optimize");
         }
 
         if (multidex) {
