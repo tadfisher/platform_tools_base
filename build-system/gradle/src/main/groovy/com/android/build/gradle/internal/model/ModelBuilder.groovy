@@ -97,9 +97,11 @@ public class ModelBuilder implements ToolingModelBuilder {
 
         AaptOptions aaptOptions = AaptOptionsImpl.create(basePlugin.extension.aaptOptions)
 
+        def manifestData = parseManifestData()
+
         //noinspection GroovyVariableNotAssigned
         DefaultAndroidProject androidProject = new DefaultAndroidProject(
-                getModelVersion(),
+                manifestData.modelVersion,
                 project.name,
                 basePlugin.getAndroidBuilder().getTarget().hashString(),
                 bootClasspath,
@@ -113,7 +115,8 @@ public class ModelBuilder implements ToolingModelBuilder {
                 lintOptions,
                 project.getBuildDir(),
                 basePlugin.extension.resourcePrefix,
-                basePlugin instanceof LibraryPlugin)
+                basePlugin instanceof LibraryPlugin,
+                manifestData.modelApiVersion)
                     .setDefaultConfig(ProductFlavorContainerImpl.createProductFlavorContainer(
                         basePlugin.defaultConfigData,
                         basePlugin.getExtraFlavorSourceProviders(basePlugin.defaultConfigData.productFlavor.name)))
@@ -141,24 +144,29 @@ public class ModelBuilder implements ToolingModelBuilder {
     }
 
     @NonNull
-    private static String getModelVersion() {
+    private static Map parseManifestData() {
         Class clazz = AndroidProject.class
         String className = clazz.getSimpleName() + ".class"
         String classPath = clazz.getResource(className).toString()
         if (!classPath.startsWith("jar")) {
             // Class not from JAR, unlikely
-            return "unknown"
+            return [modelVersion: "unknown", modelApiVersion: 0]
         }
         String manifestPath = classPath.substring(0, classPath.lastIndexOf("!") + 1) +
                 "/META-INF/MANIFEST.MF"
         Manifest manifest = new Manifest(new URL(manifestPath).openStream())
         Attributes attr = manifest.getMainAttributes()
-        String version = attr.getValue("Model-Version")
-        if (version != null) {
-            return version
+        String modelVersion = attr.getValue("Model-Version")
+        def modelApiVersion = attr.getValue("Model-Api-Version")
+        if (modelApiVersion) {
+            try {
+                modelApiVersion = modelApiVersion as int
+            } catch (ignored) {
+                modelApiVersion = 0
+            }
         }
-
-        return "unknown"
+        [modelVersion: modelVersion ?: "unknown",
+         modelApiVersion: modelApiVersion]
     }
 
     @NonNull
