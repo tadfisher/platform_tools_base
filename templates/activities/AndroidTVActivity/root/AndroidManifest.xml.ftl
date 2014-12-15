@@ -2,20 +2,22 @@
 
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <uses-feature
         android:name="android.hardware.touchscreen"
         android:required="false" />
 
-    <uses-feature android:name="android.software.leanback"
-        android:required="true" />
-
-    <application>
+    <application
+            <#if isNewProject>
+            android:label="@string/app_name"
+            <#else>
+            android:label="@string/title_${activityToLayout(activityClass)}"
+            </#if>
+            android:theme="@style/Theme.Leanback"
+            android:allowBackup="false">
 
         <activity android:name="${packageName}.${activityClass}"
-            android:icon="@drawable/app_icon_your_company"
-            android:logo="@drawable/app_icon_your_company"
+            android:logo="@drawable/app_icon_quantum"
             android:screenOrientation="landscape"
             <#if isNewProject>
             android:label="@string/app_name"
@@ -33,9 +35,11 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name="PlayerActivity"
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen" />
+
         <activity android:name="${packageName}.${detailsActivity}" />
-        <activity android:name="PlaybackOverlayActivity" />
-        <activity android:name="BrowseErrorActivity" />
 
     </application>
 

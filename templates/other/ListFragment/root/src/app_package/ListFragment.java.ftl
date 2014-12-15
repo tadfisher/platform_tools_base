@@ -33,7 +33,7 @@ import ${packageName}.dummy.DummyContent;
  * with a GridView.
 </#if>
  * <p />
- * Activities containing this fragment MUST implement the {@link OnFragmentInteractionListener}
+ * Activities containing this fragment MUST implement the {@link Callbacks}
  * interface.
  */
 <#if switchGrid == true>
@@ -161,7 +161,7 @@ public class ${className} extends ListFragment {
     public void setEmptyText(CharSequence emptyText) {
         View emptyView = mListView.getEmptyView();
 
-        if (emptyView instanceof TextView) {
+        if (emptyText instanceof TextView) {
             ((TextView) emptyView).setText(emptyText);
         }
     }

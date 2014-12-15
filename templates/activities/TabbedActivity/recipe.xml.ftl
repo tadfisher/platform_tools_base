@@ -1,7 +1,8 @@
 <?xml version="1.0"?>
 <recipe>
 
-    <#if !(hasDependency('com.android.support:appcompat-v7'))><dependency mavenUrl="com.android.support:support-v13:${targetApi}.+"/></#if>
+    <#if appCompat><dependency mavenUrl="com.android.support:appcompat-v7:19.+"/></#if>
+    <#if !appCompat && hasViewPager><dependency mavenUrl="com.android.support:support-v13:19.+"/></#if>
 
     <merge from="AndroidManifest.xml.ftl"
              to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />

@@ -1,7 +1,8 @@
 <?xml version="1.0"?>
 <recipe>
 
-    <#if !(hasDependency('com.android.support:support-v4'))><dependency mavenUrl="com.android.support:support-v4:${targetApi}.+"/></#if>
+    <#if appCompat><dependency mavenUrl="com.android.support:appcompat-v7:19.+"/></#if>
+    <#if !appCompat><dependency mavenUrl="com.android.support:support-v4:19.+"/></#if>
 
     <merge from="AndroidManifest.xml.ftl"
              to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />

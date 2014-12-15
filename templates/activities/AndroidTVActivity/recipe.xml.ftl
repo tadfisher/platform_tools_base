@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <recipe>
 
-    <dependency mavenUrl="com.android.support:appcompat-v7:${targetApi}.+"/>
+    <dependency mavenUrl="com.android.support:appcompat-v7:+"/>
     <dependency mavenUrl="com.squareup.picasso:picasso:2.3.2"/>
 
     <merge from="AndroidManifest.xml.ftl"
@@ -12,9 +12,6 @@
 
     <merge from="res/values/colors.xml.ftl"
              to="${escapeXmlAttribute(resOut)}/values/colors.xml" />
-
-    <merge from="res/values/themes.xml.ftl"
-             to="${escapeXmlAttribute(resOut)}/values/themes.xml" />
 
     <copy from="res/drawable"
                 to="${escapeXmlAttribute(resOut)}/drawable" />
@@ -33,8 +30,8 @@
     <instantiate from="res/layout/activity_details.xml.ftl"
                   to="${escapeXmlAttribute(resOut)}/layout/${detailsLayoutName}.xml" />
 
-    <instantiate from="res/layout/playback_controls.xml.ftl"
-                  to="${escapeXmlAttribute(resOut)}/layout/playback_controls.xml" />
+    <instantiate from="res/layout/activity_player.xml.ftl"
+                  to="${escapeXmlAttribute(resOut)}/layout/activity_player.xml" />
 
     <instantiate from="src/app_package/MainActivity.java.ftl"
                   to="${escapeXmlAttribute(srcOut)}/${activityClass}.java" />
@@ -63,20 +60,11 @@
     <instantiate from="src/app_package/DetailsDescriptionPresenter.java.ftl"
                   to="${escapeXmlAttribute(srcOut)}/DetailsDescriptionPresenter.java" />
 
-    <instantiate from="src/app_package/PlaybackOverlayActivity.java.ftl"
-                  to="${escapeXmlAttribute(srcOut)}/PlaybackOverlayActivity.java" />
-
-    <instantiate from="src/app_package/PlaybackOverlayFragment.java.ftl"
-                  to="${escapeXmlAttribute(srcOut)}/PlaybackOverlayFragment.java" />
+    <instantiate from="src/app_package/PlayerActivity.java.ftl"
+                  to="${escapeXmlAttribute(srcOut)}/PlayerActivity.java" />
 
     <instantiate from="src/app_package/Utils.java.ftl"
                   to="${escapeXmlAttribute(srcOut)}/Utils.java" />
-
-    <instantiate from="src/app_package/ErrorFragment.java.ftl"
-                  to="${escapeXmlAttribute(srcOut)}/ErrorFragment.java" />
-
-    <instantiate from="src/app_package/BrowseErrorActivity.java.ftl"
-                  to="${escapeXmlAttribute(srcOut)}/BrowseErrorActivity.java" />
 
     <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.java" />
     <open file="${escapeXmlAttribute(resOut)}/layout/${layoutName}.xml" />
