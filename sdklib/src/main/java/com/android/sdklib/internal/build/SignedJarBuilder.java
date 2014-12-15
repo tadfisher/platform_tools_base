@@ -161,7 +161,7 @@ public class SignedJarBuilder {
      * @throws IOException
      * @throws NoSuchAlgorithmException
      */
-    public SignedJarBuilder(OutputStream out, PrivateKey key, X509Certificate certificate)
+    public SignedJarBuilder(OutputStream out, File manifestFile, PrivateKey key, X509Certificate certificate)
             throws IOException, NoSuchAlgorithmException {
         mOutputJar = new JarOutputStream(new BufferedOutputStream(out));
         mOutputJar.setLevel(9);
@@ -169,7 +169,11 @@ public class SignedJarBuilder {
         mCertificate = certificate;
 
         if (mKey != null && mCertificate != null) {
+        	if (null != manifestFile && manifestFile.exists()){
+                mManifest = new Manifest(new FileInputStream(manifestFile));
+        	} else {
             mManifest = new Manifest();
+        	}
             Attributes main = mManifest.getMainAttributes();
             main.putValue("Manifest-Version", "1.0");
             main.putValue("Created-By", "1.0 (Android)");

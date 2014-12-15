@@ -443,8 +443,9 @@ public final class ApkBuilder implements IArchiveBuilder {
             }
             mVerboseStream = verboseStream;
 
+            File manifestFile = new File(mDexFile.getParentFile().getParentFile(), "bundle.mf");
             mBuilder = new SignedJarBuilder(
-                    new FileOutputStream(mApkFile, false /* append */), key,
+                    new FileOutputStream(mApkFile, false /* append */), manifestFile, key,
                     certificate);
 
             verbosePrintln("Packaging %s", mApkFile.getName());

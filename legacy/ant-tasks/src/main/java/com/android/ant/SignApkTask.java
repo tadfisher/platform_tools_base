@@ -70,7 +70,7 @@ public class SignApkTask extends SingleInputOutputTask {
         SignedJarBuilder mBuilder = null;
         try {
             mBuilder = new SignedJarBuilder(
-                    new FileOutputStream(getOutput(), false /* append */),
+                    new FileOutputStream(getOutput(), false /* append */),null,
                     key.getPrivateKey(), (X509Certificate) key.getCertificate());
 
             mBuilder.writeZip(new FileInputStream(getInput()), new NullZipFilter());
