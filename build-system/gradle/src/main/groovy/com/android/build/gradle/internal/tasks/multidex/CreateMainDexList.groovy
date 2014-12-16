@@ -53,7 +53,6 @@ public class CreateMainDexList extends BaseTask {
 
     @InputFile
     File getDxJar() {
-        plugin.ensureTargetSetup()
         return builder.getDxJar()
     }
 
@@ -109,7 +108,7 @@ public class CreateMainDexList extends BaseTask {
         command << path.absolutePath
 
         OutputGrabber grabber = new OutputGrabber()
-        plugin.androidBuilder.commandLineRunner.runCmdLine(command, grabber, null)
+        androidBuilder.commandLineRunner.runCmdLine(command, grabber, null)
 
         return Sets.newHashSet(grabber.lines)
     }
