@@ -45,7 +45,7 @@ public class RenderscriptCompile extends NdkTask {
     // ----- PRIVATE TASK API -----
     @Input
     String getBuildToolsVersion() {
-        plugin.extension.buildToolsRevision
+        androidBuilder.getTargetInfo().getBuildTools().getRevision()
     }
 
     @InputFiles

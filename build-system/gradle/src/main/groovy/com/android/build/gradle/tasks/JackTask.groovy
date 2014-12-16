@@ -17,6 +17,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.gradle.BasePlugin
+import com.android.builder.core.AndroidBuilder
 import com.android.sdklib.BuildToolInfo
 import com.android.sdklib.repository.FullRevision
 import com.google.common.base.Charsets
@@ -36,12 +37,15 @@ public class JackTask extends AbstractCompile {
 
     final static FullRevision JACK_MIN_REV = new FullRevision(21, 1, 0)
 
-    BasePlugin plugin
+    AndroidBuilder androidBuilder
+
+    boolean isVerbose
+
+    boolean isDebugLog
 
     @InputFile
     File getJackExe() {
-        plugin.ensureTargetSetup()
-        new File(plugin.androidBuilder.targetInfo.buildTools.getPath(BuildToolInfo.PathId.JACK))
+        new File(androidBuilder.targetInfo.buildTools.getPath(BuildToolInfo.PathId.JACK))
     }
 
     @InputFiles
@@ -73,7 +77,7 @@ public class JackTask extends AbstractCompile {
 
     @TaskAction
     void compile() {
-        FullRevision revision = plugin.androidBuilder.targetInfo.buildTools.revision
+        FullRevision revision = androidBuilder.targetInfo.buildTools.revision
         if (revision.compareTo(JACK_MIN_REV) < 0) {
             throw new RuntimeException("Jack requires Build Tools ${JACK_MIN_REV.toString()} or later")
         }
@@ -91,10 +95,10 @@ public class JackTask extends AbstractCompile {
         command << "-jar"
         command << getJackExe().absolutePath
 
-        if (plugin.isVerbose()) {
+        if (isVerbose) {
             command << "--verbose"
             command << "info"
-        } else if (plugin.isDebugLog()) {
+        } else if (isDebugLog) {
             command << "--verbose"
             command << "debug"
         }
@@ -144,7 +148,7 @@ public class JackTask extends AbstractCompile {
 
         command << computeEcjOptionFile()
 
-        plugin.androidBuilder.commandLineRunner.runCmdLine(command, null)
+        androidBuilder.commandLineRunner.runCmdLine(command, null)
     }
 
     private String computeEcjOptionFile() {
