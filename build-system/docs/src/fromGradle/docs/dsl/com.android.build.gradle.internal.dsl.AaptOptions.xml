@@ -17,6 +17,7 @@
             <thead>
                 <tr><td>Name</td></tr>
             </thead>
+            <tr><td>setIgnoreAssetsPattern</td></tr>
         </table>
     </section>
 </section>

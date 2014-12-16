@@ -26,6 +26,7 @@ dependencies {
     compile localGroovy()
     compile project(':base:builder')
     compile project(':base:lint')
+    compile project(':base:groovy-ast')
     compile "net.sf.proguard:proguard-gradle:${project.ext.proguardVersion}"
 
     testCompile 'junit:junit:3.8.1'
