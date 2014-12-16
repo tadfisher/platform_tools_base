@@ -285,6 +285,7 @@ public abstract class BasePlugin {
         taskManager.createTasks()
 
         project.afterEvaluate {
+            ensureTargetSetup()
             createAndroidTasks(false)
         }
     }
@@ -433,14 +434,10 @@ public abstract class BasePlugin {
     }
 
     public List<File> getBootClasspath() {
-        ensureTargetSetup()
-
         return androidBuilder.getBootClasspath()
     }
 
     public List<String> getBootClasspathAsStrings() {
-        ensureTargetSetup()
-
         return androidBuilder.getBootClasspathAsStrings()
     }
 

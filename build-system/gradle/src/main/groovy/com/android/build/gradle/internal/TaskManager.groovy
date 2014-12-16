@@ -44,7 +44,6 @@ import com.android.build.gradle.internal.tasks.InstallVariantTask
 import com.android.build.gradle.internal.tasks.MockableAndroidJarTask
 import com.android.build.gradle.internal.tasks.OutputFileTask
 import com.android.build.gradle.internal.tasks.PrepareDependenciesTask
-import com.android.build.gradle.internal.tasks.PrepareSdkTask
 import com.android.build.gradle.internal.tasks.SigningReportTask
 import com.android.build.gradle.internal.tasks.TestServerTask
 import com.android.build.gradle.internal.tasks.UninstallTask
@@ -143,6 +142,7 @@ import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS
 import static com.android.builder.model.AndroidProject.PROPERTY_APK_LOCATION
 import static com.android.sdklib.BuildToolInfo.PathId.ZIP_ALIGN
+import static com.google.common.base.Preconditions.checkNotNull
 
 /**
  * Manages tasks creation.
@@ -177,7 +177,7 @@ class TaskManager {
 
     private Logger logger
 
-    private PrepareSdkTask mainPreBuild
+    private Task mainPreBuild
 
     private Task uninstallAll
 
@@ -238,8 +238,7 @@ class TaskManager {
         connectedCheck.description = "Runs all device checks on currently connected devices."
         connectedCheck.group = JavaBasePlugin.VERIFICATION_GROUP
 
-        mainPreBuild = project.tasks.create("preBuild", PrepareSdkTask)
-        mainPreBuild.plugin = plugin
+        mainPreBuild = project.tasks.create("preBuild")
     }
 
     public void createAssembleAndroidTestTask() {
@@ -254,7 +253,6 @@ class TaskManager {
         createMockableJar.description = "Creates a version of android.jar that's suitable for unit tests."
 
         conventionMapping(createMockableJar).map("androidJar") {
-            plugin.ensureTargetSetup()
             new File(androidBuilder.target.getPath(IAndroidTarget.ANDROID_JAR))
         }
 
@@ -294,7 +292,7 @@ class TaskManager {
 
             variantOutputData.manifestProcessorTask = processManifestTask
 
-            processManifestTask.plugin = plugin
+            processManifestTask.androidBuilder = androidBuilder
 
             processManifestTask.dependsOn variantData.prepareDependenciesTask
             if (variantData.generateApkDataTask != null) {
@@ -400,7 +398,7 @@ class TaskManager {
                 "process${variantData.variantConfiguration.fullName.capitalize()}Manifest",
                 ProcessManifest)
         variantOutputData.manifestProcessorTask = processManifest
-        processManifest.plugin = plugin
+        processManifest.androidBuilder = androidBuilder
 
         processManifest.dependsOn variantData.prepareDependenciesTask
         processManifest.variantConfiguration = config
@@ -465,7 +463,7 @@ class TaskManager {
         variantOutputData.manifestProcessorTask = processTestManifestTask
         processTestManifestTask.dependsOn variantData.prepareDependenciesTask
 
-        processTestManifestTask.plugin = plugin
+        processTestManifestTask.androidBuilder = androidBuilder
 
         conventionMapping(processTestManifestTask).map("testApplicationId") {
             config.applicationId
@@ -532,7 +530,7 @@ class TaskManager {
         }
 
         renderscriptTask.dependsOn variantData.prepareDependenciesTask
-        renderscriptTask.plugin = plugin
+        renderscriptTask.androidBuilder = androidBuilder
 
         conventionMapping(renderscriptTask).map("targetApi") {
             int targetApi = mergedFlavor.renderscriptTargetApi != null ?
@@ -601,7 +599,7 @@ class TaskManager {
 
         mergeResourcesTask.dependsOn variantData.prepareDependenciesTask,
                 variantData.resourceGenTask
-        mergeResourcesTask.plugin = plugin
+        mergeResourcesTask.androidBuilder = androidBuilder
         mergeResourcesTask.incrementalFolder = project.file(
                 "$project.buildDir/${FD_INTERMEDIATES}/incremental/${taskNamePrefix}Resources/${variantData.variantConfiguration.dirName}")
 
@@ -646,7 +644,7 @@ class TaskManager {
         variantData.mergeAssetsTask = mergeAssetsTask
 
         mergeAssetsTask.dependsOn variantData.prepareDependenciesTask, variantData.assetGenTask
-        mergeAssetsTask.plugin = plugin
+        mergeAssetsTask.androidBuilder = androidBuilder
         mergeAssetsTask.incrementalFolder =
                 project.file(
                         "$project.buildDir/${FD_INTERMEDIATES}/incremental/mergeAssets/${variantConfig.dirName}")
@@ -684,7 +682,7 @@ class TaskManager {
             generateBuildConfigTask.dependsOn variantData.checkManifestTask
         }
 
-        generateBuildConfigTask.plugin = plugin
+        generateBuildConfigTask.androidBuilder = androidBuilder
 
         conventionMapping(generateBuildConfigTask).map("buildConfigPackageName") {
             variantConfiguration.originalApplicationId
@@ -738,7 +736,7 @@ class TaskManager {
 
         VariantConfiguration variantConfiguration = variantData.variantConfiguration
 
-        generateResValuesTask.plugin = plugin
+        generateResValuesTask.androidBuilder = androidBuilder
 
         conventionMapping(generateResValuesTask).map("items") {
             variantConfiguration.resValues
@@ -782,7 +780,7 @@ class TaskManager {
 
             processResources.dependsOn variantOutputData.manifestProcessorTask,
                     variantData.mergeResourcesTask, variantData.mergeAssetsTask
-            processResources.plugin = plugin
+            processResources.androidBuilder = androidBuilder
 
             if (variantData.getSplitHandlingPolicy() ==
                     BaseVariantData.SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY) {
@@ -908,7 +906,7 @@ class TaskManager {
                 (SigningConfig) config.signingConfig
         variantOutputData.packageSplitResourcesTask.outputDirectory =
                 new File("$project.buildDir/${FD_INTERMEDIATES}/splits/${config.dirName}")
-        variantOutputData.packageSplitResourcesTask.plugin = plugin
+        variantOutputData.packageSplitResourcesTask.androidBuilder = androidBuilder
         variantOutputData.packageSplitResourcesTask.dependsOn variantOutputData.processResourcesTask
 
         SplitZipAlign zipAlign = project.tasks.
@@ -958,7 +956,7 @@ class TaskManager {
         GenerateSplitAbiRes generateSplitAbiRes = project.tasks.
                 create("generate${config.fullName.capitalize()}SplitAbiRes",
                         GenerateSplitAbiRes)
-        generateSplitAbiRes.plugin = plugin
+        generateSplitAbiRes.androidBuilder = androidBuilder
 
         generateSplitAbiRes.outputDirectory =
                 new File("$project.buildDir/${FD_INTERMEDIATES}/abi/${config.dirName}")
@@ -987,7 +985,7 @@ class TaskManager {
                 (SigningConfig) config.signingConfig
         variantOutputData.packageSplitAbiTask.outputDirectory =
                 new File("$project.buildDir/${FD_INTERMEDIATES}/splits/${config.dirName}")
-        variantOutputData.packageSplitAbiTask.plugin = plugin
+        variantOutputData.packageSplitAbiTask.androidBuilder = androidBuilder
         variantOutputData.packageSplitAbiTask.dependsOn generateSplitAbiRes
 
         conventionMapping(variantOutputData.packageSplitAbiTask).map("jniFolders") {
@@ -1075,7 +1073,7 @@ class TaskManager {
         variantData.sourceGenTask.dependsOn compileTask
         variantData.aidlCompileTask.dependsOn variantData.prepareDependenciesTask
 
-        compileTask.plugin = plugin
+        compileTask.androidBuilder = androidBuilder
         compileTask.incrementalFolder =
                 project.file(
                         "$project.buildDir/${FD_INTERMEDIATES}/incremental/aidl/${variantData.variantConfiguration.dirName}")
@@ -1152,7 +1150,7 @@ class TaskManager {
 
         variantData.generateApkDataTask = task
 
-        task.plugin = plugin
+        task.androidBuilder = androidBuilder
         conventionMapping(task).map("resOutputDir") {
             project.file(
                     "$project.buildDir/${FD_GENERATED}/res/microapk/${variantData.variantConfiguration.dirName}")
@@ -1191,7 +1189,8 @@ class TaskManager {
 
         ndkCompile.dependsOn mainPreBuild
 
-        ndkCompile.plugin = plugin
+        ndkCompile.androidBuilder = androidBuilder
+        ndkCompile.ndkDirectory = plugin.getNdkFolder()
         variantData.ndkCompileTask = ndkCompile
         variantData.compileTask.dependsOn variantData.ndkCompileTask
 
@@ -1436,8 +1435,6 @@ class TaskManager {
             runTestsTask.testClassesDir = testCompileTask.destinationDir
 
             conventionMapping(runTestsTask).map("classpath") {
-                plugin.ensureTargetSetup()
-
                 project.files(
                         testCompileTask.classpath,
                         testCompileTask.outputs.files,
@@ -1707,7 +1704,7 @@ class TaskManager {
         testTask.group = JavaBasePlugin.VERIFICATION_GROUP
         testTask.dependsOn testVariantOutputData.assembleTask, testedVariantData.assembleVariantTask
 
-        testTask.plugin = plugin
+        testTask.androidBuilder = androidBuilder
         testTask.testVariantData = testVariantData
         testTask.flavorName = testVariantData.variantConfiguration.flavorName.capitalize()
         testTask.deviceProvider = deviceProvider
@@ -1800,7 +1797,7 @@ class TaskManager {
         String dexTaskName = "dex${config.fullName.capitalize()}"
         Dex dexTask = project.tasks.create(dexTaskName, Dex)
         variantData.dexTask = dexTask
-        dexTask.plugin = plugin
+        dexTask.androidBuilder = androidBuilder
         conventionMapping(dexTask).map("outputFolder") {
             project.file("${project.buildDir}/${FD_INTERMEDIATES}/dex/${config.dirName}")
         }
@@ -1849,7 +1846,7 @@ class TaskManager {
             PreDex preDexTask = project.tasks.create(preDexTaskName, PreDex)
 
             variantData.preDexTask = preDexTask
-            preDexTask.plugin = plugin
+            preDexTask.androidBuilder = androidBuilder
             preDexTask.dexOptions = getExtension().dexOptions
             preDexTask.multiDex = isMultiDexEnabled
 
@@ -1929,7 +1926,7 @@ class TaskManager {
             proguardComponentsTask.configuration(manifestKeepListTask.outputFile)
 
             proguardComponentsTask.libraryjars({
-                plugin.ensureTargetSetup()
+                checkNotNull(androidBuilder.getTargetInfo())
                 File shrinkedAndroid = new File(androidBuilder.getTargetInfo().buildTools.location,
                         "lib${File.separatorChar}shrinkedAndroid.jar")
 
@@ -1961,7 +1958,7 @@ class TaskManager {
             CreateMainDexList createMainDexListTask = project.tasks.create(
                     "create${config.fullName.capitalize()}MainDexClassList",
                     CreateMainDexList)
-            createMainDexListTask.plugin = plugin
+            createMainDexListTask.androidBuilder = androidBuilder
             createMainDexListTask.dependsOn proguardComponentsTask
             //createMainDexListTask.dependsOn { proguardMainDexTask }
 
@@ -2077,7 +2074,7 @@ class TaskManager {
                 "jill${config.fullName.capitalize()}RuntimeLibraries",
                 JillTask)
 
-        jillRuntimeTask.plugin = plugin
+        jillRuntimeTask.androidBuilder = androidBuilder
         jillRuntimeTask.dexOptions = getExtension().dexOptions
 
         conventionMapping(jillRuntimeTask).map("inputLibs") {
@@ -2095,7 +2092,7 @@ class TaskManager {
                 JillTask)
 
         jillPackagedTask.dependsOn variantData.variantDependency.packageConfiguration.buildDependencies
-        jillPackagedTask.plugin = plugin
+        jillPackagedTask.androidBuilder = androidBuilder
         jillPackagedTask.dexOptions = getExtension().dexOptions
 
         conventionMapping(jillPackagedTask).map("inputLibs") {
@@ -2110,6 +2107,9 @@ class TaskManager {
         JackTask compileTask = project.tasks.create(
                 "compile${config.fullName.capitalize()}Java",
                 JackTask)
+        compileTask.isVerbose = plugin.isVerbose()
+        compileTask.isDebugLog = plugin.isDebugLog()
+
         variantData.jackTask = compileTask
         variantData.jackTask.dependsOn variantData.sourceGenTask, jillRuntimeTask, jillPackagedTask
         variantData.compileTask.dependsOn variantData.jackTask
@@ -2117,7 +2117,7 @@ class TaskManager {
         // Add a temporary approximation
         compileTask.dependsOn variantData.variantDependency.compileConfiguration.buildDependencies
 
-        compileTask.plugin = plugin
+        compileTask.androidBuilder = androidBuilder
         conventionMapping(compileTask).
                 map("javaMaxHeapSize") { getExtension().dexOptions.getJavaMaxHeapSize() }
 
@@ -2290,7 +2290,7 @@ class TaskManager {
                 packageApp.dependsOn variantData.ndkCompileTask
             }
 
-            packageApp.plugin = plugin
+            packageApp.androidBuilder = androidBuilder
 
             if (config.minifyEnabled && config.buildType.shrinkResources && !config.useJack) {
                 def shrinkTask = createShrinkResourcesTask(vod)
@@ -2353,7 +2353,7 @@ class TaskManager {
                     validateSigningTask =
                             project.tasks.create("validate${sc.name.capitalize()}Signing",
                                     ValidateSigningTask)
-                    validateSigningTask.plugin = plugin
+                    validateSigningTask.androidBuilder = androidBuilder
                     validateSigningTask.signingConfig = sc
 
                     validateSigningTaskMap.put(sc, validateSigningTask)
@@ -2497,7 +2497,7 @@ class TaskManager {
                             InstallVariantTask)
             installTask.description = "Installs the " + variantData.description
             installTask.group = INSTALL_GROUP
-            installTask.plugin = plugin
+            installTask.projectName = project.name
             installTask.variantData = variantData
             conventionMapping(installTask).map("adbExe") { androidBuilder.sdkInfo?.adb }
             installTask.dependsOn variantData.assembleVariantTask
@@ -2766,7 +2766,7 @@ class TaskManager {
         def task = project.tasks.create(
                 "shrink${variantOutputData.fullName.capitalize()}Resources",
                 ShrinkResources)
-        task.plugin = plugin
+        task.androidBuilder = androidBuilder
         task.variantOutputData = variantOutputData
 
         String outputBaseName = variantOutputData.baseName
@@ -2810,7 +2810,7 @@ class TaskManager {
         variantData.prepareDependenciesTask = prepareDependenciesTask
         prepareDependenciesTask.dependsOn variantData.preBuildTask
 
-        prepareDependenciesTask.plugin = plugin
+        prepareDependenciesTask.androidBuilder = androidBuilder
         prepareDependenciesTask.variant = variantData
 
         // for all libraries required by the configurations of this variant, make this task
