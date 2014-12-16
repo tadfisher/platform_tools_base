@@ -47,11 +47,18 @@ public class SdkHelper {
 
     @NonNull
     public static File getAapt() {
-        return getAapt(FullRevision.parseRevision("21"));
+        return getBuildTool(FullRevision.parseRevision("21"), BuildToolInfo.PathId.AAPT);
     }
 
     @NonNull
-    public static File getAapt(FullRevision fullRevision) {
+    public static File getDexDump() {
+        return getBuildTool(FullRevision.parseRevision("21"), BuildToolInfo.PathId.DEXDUMP);
+    }
+
+    @NonNull
+    public static File getBuildTool(
+            @NonNull FullRevision fullRevision,
+            @NonNull BuildToolInfo.PathId pathId) {
         ILogger logger = new StdLogger(StdLogger.Level.VERBOSE);
         SdkManager sdkManager = SdkManager.createManager(findSdkDir().getAbsolutePath(), logger);
         assert sdkManager != null;
@@ -59,6 +66,6 @@ public class SdkHelper {
         if (buildToolInfo == null) {
             throw new RuntimeException("Test requires build-tools " + fullRevision.toString());
         }
-        return new File(buildToolInfo.getPath(BuildToolInfo.PathId.AAPT));
+        return new File(buildToolInfo.getPath(pathId));
     }
 }
