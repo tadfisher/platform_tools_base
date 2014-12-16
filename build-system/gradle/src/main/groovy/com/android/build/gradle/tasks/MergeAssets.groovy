@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package com.android.build.gradle.tasks
+
+import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.tasks.IncrementalTask
 import com.android.ide.common.res2.AssetMerger
 import com.android.ide.common.res2.AssetSet
@@ -63,7 +65,7 @@ public class MergeAssets extends IncrementalTask {
         try {
             for (AssetSet assetSet : assetSets) {
                 // set needs to be loaded.
-                assetSet.loadFromFiles(plugin.logger)
+                assetSet.loadFromFiles(new LoggerWrapper(logger))
                 merger.addDataSet(assetSet)
             }
 
@@ -115,7 +117,7 @@ public class MergeAssets extends IncrementalTask {
                 } else if (fileValidity.status == FileValidity.FileStatus.VALID_FILE) {
                     if (!fileValidity.dataSet.updateWith(
                             fileValidity.sourceFile, changedFile, entry.getValue(),
-                            plugin.logger)) {
+                            new LoggerWrapper(logger))) {
                         project.logger.info(
                                 String.format("Failed to process %s event! Full task run",
                                         entry.getValue()))

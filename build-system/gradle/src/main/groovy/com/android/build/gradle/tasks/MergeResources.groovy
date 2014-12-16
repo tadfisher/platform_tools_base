@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.tasks
 
+import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.tasks.IncrementalTask
 import com.android.builder.png.QueuedCruncher
 import com.android.ide.common.internal.PngCruncher
@@ -46,7 +47,7 @@ public class MergeResources extends IncrementalTask {
 
     @Input
     String getBuildToolsVersion() {
-        plugin.extension.buildToolsRevision
+        androidBuilder.getTargetInfo().getBuildTools().getRevision()
     }
 
     @Input
@@ -92,7 +93,7 @@ public class MergeResources extends IncrementalTask {
         try {
             for (ResourceSet resourceSet : resourceSets) {
                 // set needs to be loaded.
-                resourceSet.loadFromFiles(plugin.logger)
+                resourceSet.loadFromFiles(new LoggerWrapper(logger))
                 merger.addDataSet(resourceSet)
             }
 
@@ -147,7 +148,7 @@ public class MergeResources extends IncrementalTask {
                 } else if (fileValidity.status == FileValidity.FileStatus.VALID_FILE) {
                     if (!fileValidity.dataSet.updateWith(
                             fileValidity.sourceFile, changedFile, entry.getValue(),
-                            plugin.logger)) {
+                            new LoggerWrapper(logger))) {
                         project.logger.info(
                                 String.format("Failed to process %s event! Full task run",
                                         entry.getValue()))
