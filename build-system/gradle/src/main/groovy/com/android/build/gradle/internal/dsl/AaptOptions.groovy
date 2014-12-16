@@ -17,93 +17,55 @@
 package com.android.build.gradle.internal.dsl
 
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
+
 /**
  * DSL object for configuring aapt options.
  */
+@GradleStyleSetters
 public class AaptOptions implements com.android.builder.model.AaptOptions {
-
-    @Input
-    private String ignoreAssetsPattern
-
-    @Input
-    private List<String> noCompressList
-
-    @Input
-    private boolean useNewCruncher = false;
-
-    @Input
-    private boolean failOnMissingConfigEntry = false;
-
-    public void setIgnoreAssetsPattern(String ignoreAssetsPattern) {
-        this.ignoreAssetsPattern = ignoreAssetsPattern
-    }
-
     /**
-     * Pattern describing assets to be ignore.
+     * Pattern describing assets to be ignored.
      *
      * <p>See <code>aapt --help</code>
      */
-    @Override
-    String getIgnoreAssets() {
-        return ignoreAssetsPattern
-    }
-
-    public void setNoCompress(String noCompress) {
-        noCompressList = Collections.singletonList(noCompress)
-    }
-
-    public void setNoCompress(String... noCompress) {
-        noCompressList = Arrays.asList(noCompress)
-    }
-
-    /**
-     * Extensions of files that will not be stored compressed in the APK.
-     */
-    @Override
-    Collection<String> getNoCompress() {
-        return noCompressList
-    }
-
-    public void useNewCruncher(boolean value) {
-        useNewCruncher = value;
-    }
-
-    public void setUseNewCruncher(boolean value) {
-        useNewCruncher = value;
-    }
+    @Input @Optional
+    String ignoreAssets
 
     /**
      * Whether to use the new cruncher.
      *
      * <p>TODO: Document.
      */
-    public boolean getUseNewCruncher() {
-        return useNewCruncher;
-    }
-
-    public void failOnMissingConfigEntry(boolean value) {
-        failOnMissingConfigEntry = value;
-    }
-
-    public void setFailOnMissingConfigEntry(boolean value) {
-        failOnMissingConfigEntry = value;
-    }
+    @Input
+    boolean useNewCruncher = false;
 
     /**
      * Forces aapt to return an error if it fails to find an entry for a configuration.
      */
-    @Override
-    public boolean getFailOnMissingConfigEntry() {
-        return failOnMissingConfigEntry;
+    @Input
+    boolean failOnMissingConfigEntry = false;
+
+    /**
+     * Extensions of files that will not be stored compressed in the APK.
+     */
+    @Input
+    Collection<String> noCompress = []
+
+    /**
+     * @see #noCompress
+     */
+    void setNoCompress(String... noCompress) {
+        this.@noCompress = noCompress
     }
 
-    // -- DSL Methods. TODO remove once the instantiator does what I expect it to do.
-
-    public void noCompress(String noCompress) {
-        noCompressList = Collections.singletonList(noCompress)
+    /**
+     * Alias for backwards compatibility.
+     *
+     * @see #ignoreAssets
+     */
+    void setIgnoreAssetsPattern(String ignoreAssetsPattern) {
+        this.ignoreAssets = ignoreAssetsPattern
     }
 
-    public void noCompress(String... noCompress) {
-        noCompressList = Arrays.asList(noCompress)
-    }
 }
