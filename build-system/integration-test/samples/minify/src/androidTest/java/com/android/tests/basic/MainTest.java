@@ -7,6 +7,7 @@ import android.widget.TextView;
 public class MainTest extends ActivityInstrumentationTestCase2<Main> {
 
     private TextView mTextView;
+    private StringProvider stringProvider;
 
     /**
      * Creates an {@link ActivityInstrumentationTestCase2} that tests the {@link Main} activity.
@@ -44,6 +45,14 @@ public class MainTest extends ActivityInstrumentationTestCase2<Main> {
         final Main a = getActivity();
         StringProvider sp = a.getStringProvider();
         assertEquals("42", sp.getString(42));
+        assertEquals("com.android.tests.basic.a", StringProvider.class.getName());
+    }
+
+    public void testUseTestClass() {
+        UsedTestClass o = new UsedTestClass();
+        o.doSomething();
+
+        assertEquals("com.android.tests.basic.UsedTestClass", UsedTestClass.class.getName());
     }
 }
 
