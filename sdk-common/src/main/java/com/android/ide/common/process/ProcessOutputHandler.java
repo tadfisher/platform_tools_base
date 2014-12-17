@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 The Android Open Source Project
+ * Copyright (C) 2015 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,28 +14,16 @@
  * limitations under the License.
  */
 
-package com.android.builder.internal.compiler;
+package com.android.ide.common.process;
 
 import com.android.annotations.NonNull;
-import com.google.common.collect.Lists;
-
-import java.io.File;
-import java.util.List;
 
 /**
- * Source Searcher processor, gathering a list of all the files found by the SourceSearcher.
  */
-public class FileGatherer implements SourceSearcher.SourceFileProcessor {
-    @NonNull
-    private final List<File> mFiles = Lists.newArrayList();
-
-    @Override
-    public void processFile(@NonNull File sourceFolder, @NonNull File sourceFile) {
-        mFiles.add(sourceFile);
-    }
+public interface ProcessOutputHandler {
 
     @NonNull
-    public List<File> getFiles() {
-        return mFiles;
-    }
+    ProcessOutput createOutput();
+
+    void handleOutput(@NonNull ProcessOutput processOutput) throws ProcessException;
 }

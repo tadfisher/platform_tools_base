@@ -23,16 +23,18 @@ import static com.android.SdkConstants.FN_RENDERSCRIPT_V8_JAR;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.internal.CommandLineRunner;
 import com.android.ide.common.internal.LoggedErrorException;
 import com.android.ide.common.internal.WaitableExecutor;
+import com.android.ide.common.process.ProcessException;
+import com.android.ide.common.process.ProcessExecutor;
+import com.android.ide.common.process.ProcessInfoBuilder;
+import com.android.ide.common.process.ProcessOutputHandler;
+import com.android.ide.common.process.ProcessResult;
 import com.android.sdklib.BuildToolInfo;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -162,8 +164,10 @@ public class RenderScriptProcessor {
         return new File(lib, "packaged");
     }
 
-    public void build(@NonNull CommandLineRunner launcher)
-            throws IOException, InterruptedException, LoggedErrorException {
+    public void build(
+            @NonNull ProcessExecutor processExecutor,
+            @NonNull ProcessOutputHandler processOutputHandler)
+            throws InterruptedException, ProcessException, LoggedErrorException, IOException {
 
         // gather the files to compile
         FileGatherer fileGatherer = new FileGatherer();
@@ -185,18 +189,20 @@ public class RenderScriptProcessor {
             env.put("LD_LIBRARY_PATH", mBuildToolInfo.getLocation().getAbsolutePath());
         }
 
-        doMainCompilation(renderscriptFiles, launcher, env);
+        doMainCompilation(renderscriptFiles, processExecutor, processOutputHandler, env);
 
         if (mSupportMode) {
-            createSupportFiles(launcher, env);
+            createSupportFiles(processExecutor, processOutputHandler, env);
         }
     }
 
     private void doMainCompilation(
             @NonNull List<File> inputFiles,
-            @NonNull CommandLineRunner launcher,
+            @NonNull ProcessExecutor processExecutor,
+            @NonNull ProcessOutputHandler processOutputHandler,
             @NonNull Map<String, String> env)
-            throws IOException, InterruptedException, LoggedErrorException {
+            throws ProcessException {
+        ProcessInfoBuilder builder = new ProcessInfoBuilder();
 
         String renderscript = mBuildToolInfo.getPath(BuildToolInfo.PathId.LLVM_RS_CC);
         if (renderscript == null || !new File(renderscript).isFile()) {
@@ -211,63 +217,66 @@ public class RenderScriptProcessor {
         File rawFolder = new File(mResOutputDir, SdkConstants.FD_RES_RAW);
 
         // compile all the files in a single pass
-        ArrayList<String> command = Lists.newArrayListWithExpectedSize(26);
-
-        command.add(renderscript);
+        builder.setExecutable(renderscript);
+        builder.addEnvironments(env);
 
         // Due to a device side bug, let's not enable this at this time.
 //        if (mDebugBuild) {
 //            command.add("-g");
 //        }
 
-        command.add("-O");
-        command.add(Integer.toString(mOptimLevel));
+        builder.addArg("-O");
+        builder.addArg(Integer.toString(mOptimLevel));
 
         // add all import paths
-        command.add("-I");
-        command.add(rsPath);
-        command.add("-I");
-        command.add(rsClangPath);
+        builder.addArg("-I");
+        builder.addArg(rsPath);
+        builder.addArg("-I");
+        builder.addArg(rsClangPath);
 
         for (File importPath : mImportFolders) {
             if (importPath.isDirectory()) {
-                command.add("-I");
-                command.add(importPath.getAbsolutePath());
+                builder.addArg("-I");
+                builder.addArg(importPath.getAbsolutePath());
             }
         }
 
         if (mSupportMode) {
-            command.add("-rs-package-name=android.support.v8.renderscript");
+            builder.addArg("-rs-package-name=android.support.v8.renderscript");
         }
 
         // source output
-        command.add("-p");
-        command.add(mSourceOutputDir.getAbsolutePath());
+        builder.addArg("-p");
+        builder.addArg(mSourceOutputDir.getAbsolutePath());
 
         if (mNdkMode) {
-            command.add("-reflect-c++");
+            builder.addArg("-reflect-c++");
         }
 
         // res output
-        command.add("-o");
-        command.add(rawFolder.getAbsolutePath());
+        builder.addArg("-o");
+        builder.addArg(rawFolder.getAbsolutePath());
 
-        command.add("-target-api");
+        builder.addArg("-target-api");
         int targetApi = mTargetApi < 11 ? 11 : mTargetApi;
         targetApi = (mSupportMode && targetApi < 18) ? 18 : targetApi;
-        command.add(Integer.toString(targetApi));
+        builder.addArg(Integer.toString(targetApi));
 
         // input files
         for (File sourceFile : inputFiles) {
-            command.add(sourceFile.getAbsolutePath());
+            builder.addArg(sourceFile.getAbsolutePath());
         }
 
-        launcher.runCmdLine(command, env);
+        ProcessResult result = processExecutor.execute(
+                builder.createProcess(), processOutputHandler);
+        result.rethrowFailure().assertNormalExitValue();
     }
 
-    private void createSupportFiles(@NonNull final CommandLineRunner launcher,
+    private void createSupportFiles(
+            @NonNull final ProcessExecutor processExecutor,
+            @NonNull final ProcessOutputHandler processOutputHandler,
             @NonNull final Map<String, String> env)
-            throws IOException, InterruptedException, LoggedErrorException {
+            throws IOException, InterruptedException, LoggedErrorException, ProcessException {
         // get the generated BC files.
         File rawFolder = new File(mResOutputDir, SdkConstants.FD_RES_RAW);
 
@@ -302,9 +311,22 @@ public class RenderScriptProcessor {
                 mExecutor.execute(new Callable<Void>() {
                     @Override
                     public Void call() throws Exception {
-                        File objFile = createSupportObjFile(bcFile, abi, objName, objAbiFolder,
-                                launcher, env);
-                        createSupportLibFile(objFile, abi, soName, libAbiFolder, launcher, env);
+                        File objFile = createSupportObjFile(
+                                bcFile,
+                                abi,
+                                objName,
+                                objAbiFolder,
+                                processExecutor,
+                                processOutputHandler,
+                                env);
+                        createSupportLibFile(
+                                objFile,
+                                abi,
+                                soName,
+                                libAbiFolder,
+                                processExecutor,
+                                processOutputHandler,
+                                env);
                         return null;
                     }
                 });
@@ -319,32 +341,34 @@ public class RenderScriptProcessor {
             @NonNull Abi abi,
             @NonNull String objName,
             @NonNull File objAbiFolder,
-            @NonNull CommandLineRunner launcher,
-            @NonNull Map<String, String> env)
-            throws IOException, InterruptedException, LoggedErrorException {
+            @NonNull ProcessExecutor processExecutor,
+            @NonNull ProcessOutputHandler processOutputHandler,
+            @NonNull Map<String, String> env) throws ProcessException {
 
-        List<String> args = Lists.newArrayListWithExpectedSize(10);
+        ProcessInfoBuilder builder = new ProcessInfoBuilder();
+        builder.setExecutable(mBuildToolInfo.getPath(BuildToolInfo.PathId.BCC_COMPAT));
+        builder.addEnvironments(env);
 
-        args.add(mBuildToolInfo.getPath(BuildToolInfo.PathId.BCC_COMPAT));
-
-        args.add("-O" + Integer.toString(mOptimLevel));
+        builder.addArg("-O" + Integer.toString(mOptimLevel));
 
         File outFile = new File(objAbiFolder, objName);
-        args.add("-o");
-        args.add(outFile.getAbsolutePath());
+        builder.addArg("-o");
+        builder.addArg(outFile.getAbsolutePath());
 
-        args.add("-fPIC");
-        args.add("-shared");
+        builder.addArg("-fPIC");
+        builder.addArg("-shared");
 
-        args.add("-rt-path");
-        args.add(mLibClCore.get(abi.mDevice).getAbsolutePath());
+        builder.addArg("-rt-path");
+        builder.addArg(mLibClCore.get(abi.mDevice).getAbsolutePath());
 
-        args.add("-mtriple");
-        args.add(abi.mToolchain);
+        builder.addArg("-mtriple");
+        builder.addArg(abi.mToolchain);
 
-        args.add(bcFile.getAbsolutePath());
+        builder.addArg(bcFile.getAbsolutePath());
 
-        launcher.runCmdLine(args, env);
+        processExecutor.execute(
+                builder.createProcess(), processOutputHandler)
+                .rethrowFailure().assertNormalExitValue();
 
         return outFile;
     }
@@ -354,47 +378,49 @@ public class RenderScriptProcessor {
             @NonNull Abi abi,
             @NonNull String soName,
             @NonNull File libAbiFolder,
-            @NonNull CommandLineRunner launcher,
-            @NonNull Map<String, String> env)
-            throws IOException, InterruptedException, LoggedErrorException {
+            @NonNull ProcessExecutor processExecutor,
+            @NonNull ProcessOutputHandler processOutputHandler,
+            @NonNull Map<String, String> env) throws ProcessException {
 
         File intermediatesFolder = new File(mRsLib, "intermediates");
         File intermediatesAbiFolder = new File(intermediatesFolder, abi.mDevice);
         File packagedFolder = new File(mRsLib, "packaged");
         File packagedAbiFolder = new File(packagedFolder, abi.mDevice);
 
-        List<String> args = Lists.newArrayListWithExpectedSize(26);
+        ProcessInfoBuilder builder = new ProcessInfoBuilder();
+        builder.setExecutable(mBuildToolInfo.getPath(abi.mLinker));
+        builder.addEnvironments(env);
 
-        args.add(mBuildToolInfo.getPath(abi.mLinker));
-
-        args.add("--eh-frame-hdr");
-        Collections.addAll(args, abi.mLinkerArgs);
-        args.add("-shared");
-        args.add("-Bsymbolic");
-        args.add("-z");
-        args.add("noexecstack");
-        args.add("-z");
-        args.add("relro");
-        args.add("-z");
-        args.add("now");
+        builder.addArg("--eh-frame-hdr");
+        builder.addArgs(abi.mLinkerArgs);
+        builder.addArg("-shared");
+        builder.addArg("-Bsymbolic");
+        builder.addArg("-z");
+        builder.addArg("noexecstack");
+        builder.addArg("-z");
+        builder.addArg("relro");
+        builder.addArg("-z");
+        builder.addArg("now");
 
         File outFile = new File(libAbiFolder, soName);
-        args.add("-o");
-        args.add(outFile.getAbsolutePath());
+        builder.addArg("-o");
+        builder.addArg(outFile.getAbsolutePath());
 
-        args.add("-L" + intermediatesAbiFolder.getAbsolutePath());
-        args.add("-L" + packagedAbiFolder.getAbsolutePath());
+        builder.addArg("-L" + intermediatesAbiFolder.getAbsolutePath());
+        builder.addArg("-L" + packagedAbiFolder.getAbsolutePath());
 
-        args.add("-soname");
-        args.add(soName);
+        builder.addArg("-soname");
+        builder.addArg(soName);
 
-        args.add(objFile.getAbsolutePath());
-        args.add(new File(intermediatesAbiFolder, "libcompiler_rt.a").getAbsolutePath());
+        builder.addArg(objFile.getAbsolutePath());
+        builder.addArg(new File(intermediatesAbiFolder, "libcompiler_rt.a").getAbsolutePath());
 
-        args.add("-lRSSupport");
-        args.add("-lm");
-        args.add("-lc");
+        builder.addArg("-lRSSupport");
+        builder.addArg("-lm");
+        builder.addArg("-lc");
 
-        launcher.runCmdLine(args, env);
+        processExecutor.execute(
+                builder.createProcess(), processOutputHandler)
+                .rethrowFailure().assertNormalExitValue();
     }
 }
