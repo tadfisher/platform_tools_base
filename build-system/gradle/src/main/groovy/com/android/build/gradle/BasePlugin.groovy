@@ -53,6 +53,8 @@ import com.android.build.gradle.internal.model.MavenCoordinatesImpl
 import com.android.build.gradle.internal.model.ModelBuilder
 import com.android.build.gradle.internal.model.SyncIssueImpl
 import com.android.build.gradle.internal.model.SyncIssueKey
+import com.android.build.gradle.internal.process.GradleJavaProcessExecutor
+import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.build.gradle.internal.publishing.ApkPublishArtifact
 import com.android.build.gradle.internal.tasks.AndroidReportTask
 import com.android.build.gradle.internal.tasks.CheckManifest
@@ -131,6 +133,7 @@ import com.android.builder.testing.ConnectedDeviceProvider
 import com.android.builder.testing.api.DeviceProvider
 import com.android.builder.testing.api.TestServer
 import com.android.ide.common.internal.ExecutorSingleton
+import com.android.ide.common.process.LoggedProcessOutputHandler
 import com.android.sdklib.AndroidTargetHash
 import com.android.sdklib.IAndroidTarget
 import com.android.sdklib.SdkVersionInfo
@@ -327,7 +330,12 @@ public abstract class BasePlugin {
         sdkHandler = new SdkHandler(project, logger)
         androidBuilder = new AndroidBuilder(
                 project == project.rootProject ? project.name : project.path,
-                creator, logger, verbose)
+                creator,
+                new GradleProcessExecutor(project),
+                new GradleJavaProcessExecutor(project),
+                new LoggedProcessOutputHandler(getLogger()),
+                logger,
+                verbose)
 
         project.apply plugin: JavaBasePlugin
 
