@@ -749,7 +749,7 @@ public abstract class BasePlugin {
         VariantConfiguration config = variantData.variantConfiguration
 
         // get single output for now.
-        BaseVariantOutputData variantOutputData = variantData.outputs.get(0)
+        BaseVariantOutputData variantOutputData = variantData.getUniversalOutput()
 
         def processManifest = project.tasks.create(
                 "process${variantData.variantConfiguration.fullName.capitalize()}Manifest",
@@ -809,7 +809,7 @@ public abstract class BasePlugin {
         }
 
         // get single output for now.
-        BaseVariantOutputData variantOutputData = variantData.outputs.get(0)
+        BaseVariantOutputData variantOutputData = variantData.getUniversalOutput()
 
         variantOutputData.manifestProcessorTask = processTestManifestTask
         processTestManifestTask.dependsOn variantData.prepareDependenciesTask
@@ -1014,7 +1014,7 @@ public abstract class BasePlugin {
             // on its creation.
 
             // For test apps there should be a single output, so we get it.
-            BaseVariantOutputData variantOutputData = variantData.outputs.get(0)
+            BaseVariantOutputData variantOutputData = variantData.getUniversalOutput()
 
             generateBuildConfigTask.dependsOn variantOutputData.manifestProcessorTask
         } else {
@@ -1569,7 +1569,7 @@ public abstract class BasePlugin {
                 variantData.getTestedVariantData() as BaseVariantData<? extends BaseVariantOutputData>
 
         // get single output for now (though this may always be the case for tests).
-        BaseVariantOutputData variantOutputData = variantData.outputs.get(0)
+        BaseVariantOutputData variantOutputData = variantData.getUniversalOutput()
         BaseVariantOutputData testedVariantOutputData = testedVariantData.outputs.get(0)
 
         createAnchorTasks(variantData)

@@ -175,6 +175,19 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
         return outputs;
     }
 
+    /**
+     * Returns the universal (no density, abi or language filter present) output.
+     */
+    @NonNull
+    public T getUniversalOutput() {
+        for (T output : outputs) {
+            if (output.getMainOutputFile().getFilters().isEmpty()) {
+                return output;
+            }
+        }
+        throw new RuntimeException("No universal output for this variant");
+    }
+
     @NonNull
     public GradleVariantConfiguration getVariantConfiguration() {
         return variantConfiguration;
