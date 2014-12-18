@@ -89,9 +89,9 @@ public class ModelBuilder implements ToolingModelBuilder {
         // plus the instrumentation test one.
         artifactMetaDataList.add(
                 new ArtifactMetaDataImpl(
-                        ARTIFACT_ANDROID_TEST,
-                        true /*isTest*/,
-                        ArtifactMetaData.TYPE_ANDROID));
+                        name: ARTIFACT_ANDROID_TEST,
+                        test: true,
+                        type: ArtifactMetaData.TYPE_ANDROID));
 
         LintOptions lintOptions = com.android.build.gradle.internal.dsl.LintOptions.create(basePlugin.extension.lintOptions)
 
