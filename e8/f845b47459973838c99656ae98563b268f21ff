@@ -1,0 +1,9 @@
+Code-Review+1: Michal Bendowski <bendowski@google.com>
+Verified+1: Michal Bendowski <bendowski@google.com>
+Code-Review+2: Xavier Ducrohet <xav@google.com>
+Code-Review+2: Tor Norbye <tnorbye@google.com>
+Submitted-by: Michal Bendowski <bendowski@google.com>
+Submitted-at: Fri, 19 Dec 2014 17:29:24 +0000
+Reviewed-on: https://android-review.googlesource.com/118237
+Project: platform/tools/base
+Branch: refs/heads/studio-1.1-dev
