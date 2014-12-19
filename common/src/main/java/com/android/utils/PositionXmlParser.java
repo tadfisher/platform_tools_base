@@ -145,6 +145,7 @@ public class PositionXmlParser {
             factory.setFeature(NAMESPACE_FEATURE, true);
             factory.setFeature(NAMESPACE_PREFIX_FEATURE, true);
             factory.setFeature(PROVIDE_XMLNS_URIS, true);
+            factory.setValidating(false);
             SAXParser parser = factory.newSAXParser();
             DomBuilder handler = new DomBuilder(xml);
             XMLReader xmlReader = parser.getXMLReader();
@@ -534,7 +535,7 @@ public class PositionXmlParser {
                 Attributes attributes) throws SAXException {
             try {
                 flushText();
-                Element element = mDocument.createElement(qName);
+                Element element = mDocument.createElementNS(uri, qName);
                 for (int i = 0; i < attributes.getLength(); i++) {
                     if (attributes.getURI(i) != null && !attributes.getURI(i).isEmpty()) {
                         Attr attr = mDocument.createAttributeNS(attributes.getURI(i),
