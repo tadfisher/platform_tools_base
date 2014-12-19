@@ -39,7 +39,7 @@ class AppWithProvidedLocalJarTest {
 
     @ClassRule
     static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("projectWithProvidedLocalJar")
+            .fromTestProject("projectWithLocalJar")
             .create()
     static AndroidProject model
 

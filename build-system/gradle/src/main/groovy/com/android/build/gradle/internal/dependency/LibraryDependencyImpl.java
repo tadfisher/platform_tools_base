@@ -25,6 +25,7 @@ import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.MavenCoordinates;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.List;
 
 @Immutable
@@ -32,6 +33,9 @@ public class LibraryDependencyImpl extends LibraryBundle {
 
     @NonNull
     private final List<LibraryDependency> dependencies;
+
+    @NonNull
+    private final Collection<JarInfo> jarDependencies;
 
     @Nullable
     private final String variantName;
@@ -45,12 +49,14 @@ public class LibraryDependencyImpl extends LibraryBundle {
     public LibraryDependencyImpl(@NonNull File bundle,
                                  @NonNull File explodedBundle,
                                  @NonNull List<LibraryDependency> dependencies,
+                                 @NonNull Collection<JarInfo> jarDependencies,
                                  @Nullable String name,
                                  @Nullable String variantName,
                                  @Nullable MavenCoordinates requestedCoordinates,
                                  @Nullable MavenCoordinates resolvedCoordinates) {
         super(bundle, explodedBundle, name);
         this.dependencies = dependencies;
+        this.jarDependencies = jarDependencies;
         this.variantName = variantName;
         this.requestedCoordinates = requestedCoordinates;
         this.resolvedCoordinates = resolvedCoordinates;
@@ -66,6 +72,11 @@ public class LibraryDependencyImpl extends LibraryBundle {
     @NonNull
     public List<LibraryDependency> getDependencies() {
         return dependencies;
+    }
+
+    @NonNull
+    public Collection<JarInfo> getJarDependencies() {
+        return jarDependencies;
     }
 
     @Override

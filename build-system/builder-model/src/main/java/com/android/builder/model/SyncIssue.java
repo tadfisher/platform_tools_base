@@ -44,7 +44,10 @@ public interface SyncIssue {
     // data is dependency coordinate/path
     public static final int TYPE_NON_JAR_PACKAGE_DEP      = 5;
 
-    public static final int TYPE_MAX                      = 6; // increment when adding new types.
+    // data is local fileh
+    public static final int TYPE_NON_JAR_LOCAL_DEP        = 6;
+
+    public static final int TYPE_MAX                      = 7; // increment when adding new types.
 
     /**
      * Returns the severity of the issue.

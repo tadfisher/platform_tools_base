@@ -20,7 +20,6 @@ import com.android.build.gradle.integration.common.utils.ApkHelper
 import com.android.build.gradle.integration.common.utils.ModelHelper
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.Dependencies
-import com.android.builder.model.JavaLibrary
 import com.android.builder.model.Variant
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
@@ -28,46 +27,48 @@ import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
 
+import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertTrue
 /**
- * test for package (apk) local jar in app
+ * test for compile jar in app through an aar dependency
  */
 @CompileStatic
-class AppWithPackageLocalJarTest {
+class AppWithCompileIndirectJarTest {
 
     @ClassRule
     static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("projectWithLocalJar")
+            .fromTestProject("projectWithModules")
             .create()
-    static AndroidProject model
+    static Map<String, AndroidProject> models
 
     @BeforeClass
     static void setUp() {
-        project.getBuildFile() << """
-apply plugin: 'com.android.application'
-
-android {
-    compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-    buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-}
+        project.getSubproject('app').getBuildFile() << """
 
 dependencies {
-    apk files('libs/util-1.0.jar')
+    compile project(':library')
 }
 """
 
-        model = project.executeAndReturnModel("clean", "assembleDebug")
+        project.getSubproject('library').getBuildFile() << """
+
+dependencies {
+    compile project(':jar')
+}
+"""
+
+        models = project.executeAndReturnMultiModel("clean", ":app:assembleDebug")
     }
 
     @AfterClass
     static void cleanUp() {
         project = null
-        model = null
+        models = null
     }
 
     @Test
-    void "check packaged local jar is packaged"() {
-        File apk = project.getApk("debug")
+    void "check compiled jar is packaged"() {
+        File apk = project.getSubproject('app').getApk("debug")
 
         assertTrue(ApkHelper.checkForClass(
                 apk,
@@ -75,22 +76,22 @@ dependencies {
     }
 
     @Test
-    void "check packaged local jar is not in the model"() {
-        Variant variant = ModelHelper.getVariant(model.getVariants(), "debug")
+    void "check compiled jar is in the model"() {
+        Variant variant = ModelHelper.getVariant(models.get(':app').getVariants(), "debug")
 
         Dependencies deps = variant.getMainArtifact().getDependencies()
-        Collection<JavaLibrary> javaLibs = deps.getJavaLibraries()
+        Collection<String> projectDeps = deps.getProjects()
 
-        assertTrue("Check there is no dependency", javaLibs.isEmpty())
+        assertEquals("Check there is 1 dependency", 1, projectDeps.size())
     }
 
     @Test
-    void "check packaged local jar is not in the android test dependency"() {
+    void "check package jar is in the android test dependency"() {
         // TODO
     }
 
     @Test
-    void "check packaged local jar is not in the unit test dependency"() {
+    void "check package jar is in the unit test dependency"() {
         // TODO
     }
 }

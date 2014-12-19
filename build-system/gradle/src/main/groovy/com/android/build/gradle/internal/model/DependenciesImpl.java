@@ -93,16 +93,20 @@ public class DependenciesImpl implements Dependencies, Serializable {
         projects = Lists.newArrayList();
 
         for (JarDependency jarDep : jarDeps) {
-            boolean customArtifact = jarDep.getResolvedCoordinates() != null &&
-                    jarDep.getResolvedCoordinates().getClassifier() != null;
+            // don't include package-only dependencies
+            if (jarDep.isCompiled()) {
+                boolean customArtifact = jarDep.getResolvedCoordinates() != null &&
+                        jarDep.getResolvedCoordinates().getClassifier() != null;
 
-            File jarFile = jarDep.getJarFile();
-            Project projectMatch;
-            if (!customArtifact && (projectMatch = getProject(jarFile, gradleProjects)) != null) {
-                projects.add(projectMatch.getPath());
-            } else {
-                javaLibraries.add(
-                        new JavaLibraryImpl(jarFile, null, jarDep.getResolvedCoordinates()));
+                File jarFile = jarDep.getJarFile();
+                Project projectMatch;
+                if (!customArtifact &&
+                        (projectMatch = getProject(jarFile, gradleProjects)) != null) {
+                    projects.add(projectMatch.getPath());
+                } else {
+                    javaLibraries.add(
+                            new JavaLibraryImpl(jarFile, null, jarDep.getResolvedCoordinates()));
+                }
             }
         }
 

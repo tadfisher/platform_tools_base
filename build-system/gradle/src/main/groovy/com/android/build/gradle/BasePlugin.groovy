@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.coverage.JacocoInstrumentTask
 import com.android.build.gradle.internal.coverage.JacocoPlugin
 import com.android.build.gradle.internal.coverage.JacocoReportTask
 import com.android.build.gradle.internal.dependency.DependencyChecker
+import com.android.build.gradle.internal.dependency.JarInfo
 import com.android.build.gradle.internal.dependency.LibraryDependencyImpl
 import com.android.build.gradle.internal.dependency.ManifestDependencyImpl
 import com.android.build.gradle.internal.dependency.SymbolFileProviderImpl
@@ -213,11 +214,13 @@ import static java.io.File.separator
 @CompileStatic
 public abstract class BasePlugin {
 
-    public final static String DIR_BUNDLES = "bundles";
+    protected final static boolean DEBUG_DEPENDENCY = true
+
+    public final static String DIR_BUNDLES = "bundles"
 
     private static final String GRADLE_MIN_VERSION = "2.2"
     public static final String GRADLE_TEST_VERSION = "2.2"
-    public static final Pattern GRADLE_ACCEPTABLE_VERSIONS = Pattern.compile("2\\.[2-9].*");
+    public static final Pattern GRADLE_ACCEPTABLE_VERSIONS = Pattern.compile("2\\.[2-9].*")
     private static final String GRADLE_VERSION_CHECK_OVERRIDE_PROPERTY =
             "com.android.build.gradle.overrideVersionCheck"
 
@@ -253,8 +256,8 @@ public abstract class BasePlugin {
     private ProductFlavorData<ProductFlavor> defaultConfigData
     /** @deprecated use syncIssue instead */
     @Deprecated
-    private final Collection<String> unresolvedDependencies = Sets.newHashSet();
-    private final Map<SyncIssueKey, SyncIssue> syncIssues = Maps.newHashMap();
+    private final Collection<String> unresolvedDependencies = Sets.newHashSet()
+    private final Map<SyncIssueKey, SyncIssue> syncIssues = Maps.newHashMap()
 
     protected DefaultAndroidSourceSet mainSourceSet
     protected DefaultAndroidSourceSet androidTestSourceSet
@@ -3296,13 +3299,15 @@ public abstract class BasePlugin {
     }
 
     public void resolveDependencies(VariantDependencies variantDeps) {
-        Map<ModuleVersionIdentifier, List<LibraryDependencyImpl>> modules = [:]
+        Map<ModuleVersionIdentifier, List<LibraryDependencyImpl>> libraries = [:]
+        Map<ModuleVersionIdentifier, List<JarInfo>> jars = [:]
+
         Map<ModuleVersionIdentifier, List<ResolvedArtifact>> artifacts = [:]
         Multimap<LibraryDependency, VariantDependencies> reverseMap = ArrayListMultimap.create()
 
-        resolveDependencyForConfig(variantDeps, modules, artifacts, reverseMap)
+        resolveDependencyForConfig(variantDeps, libraries, jars, artifacts, reverseMap)
 
-        modules.values().each { List list ->
+        libraries.values().each { List list ->
 
             if (!list.isEmpty()) {
                 // get the first item only
@@ -3371,7 +3376,8 @@ public abstract class BasePlugin {
 
     private void resolveDependencyForConfig(
             VariantDependencies variantDeps,
-            Map<ModuleVersionIdentifier, List<LibraryDependencyImpl>> modules,
+            Map<ModuleVersionIdentifier, List<LibraryDependencyImpl>> foundLibraries,
+            Map<ModuleVersionIdentifier, List<JarInfo>> foundJars,
             Map<ModuleVersionIdentifier, List<ResolvedArtifact>> artifacts,
             Multimap<LibraryDependency, VariantDependencies> reverseMap) {
 
@@ -3390,57 +3396,148 @@ public abstract class BasePlugin {
         collectArtifacts(compileClasspath, artifacts)
         collectArtifacts(packageClasspath, artifacts)
 
-        List<LibraryDependency> bundles = []
-        Map<File, JarDependency> jars = [:]
+        // --- Handle the external/module dependencies ---
+
+        // first get the compile dependencies. Note that in both case the libraries and the
+        // jars are a graph. The list only contains the first level of dependencies, and
+        // they themselves contain transitive dependencies (libraries can contain both, jars only
+        // contains jars)
+        List<LibraryDependencyImpl> compiledAndroidLibraries = []
+        List<JarInfo> compiledJars = []
 
         def dependencies = compileClasspath.incoming.resolutionResult.root.dependencies
         dependencies.each { dep ->
             if (dep instanceof ResolvedDependencyResult) {
-                addDependency((dep as ResolvedDependencyResult).selected, variantDeps, bundles, jars, modules, artifacts, reverseMap)
+                addDependency(
+                        (dep as ResolvedDependencyResult).selected,
+                        variantDeps,
+                        compiledAndroidLibraries,
+                        compiledJars,
+                        foundLibraries,
+                        foundJars,
+                        artifacts,
+                        reverseMap,
+                        0)
             } else if (dep instanceof UnresolvedDependencyResult) {
-                def attempted = (dep as UnresolvedDependencyResult).attempted;
+                def attempted = (dep as UnresolvedDependencyResult).attempted
                 if (attempted != null) {
                     currentUnresolvedDependencies.add(attempted.toString())
                 }
             }
         }
 
+        // then the packaged ones.
+        List<LibraryDependencyImpl> packagedAndroidLibraries = []
+        List<JarInfo> packagedJars = []
+        dependencies = packageClasspath.incoming.resolutionResult.root.dependencies
+        dependencies.each { dep ->
+            if (dep instanceof ResolvedDependencyResult) {
+                addDependency(
+                        (dep as ResolvedDependencyResult).selected,
+                        variantDeps,
+                        packagedAndroidLibraries,
+                        packagedJars,
+                        foundLibraries,
+                        foundJars,
+                        artifacts,
+                        reverseMap,
+                        0)
+            } else if (dep instanceof UnresolvedDependencyResult) {
+                def attempted = (dep as UnresolvedDependencyResult).attempted
+                if (attempted != null) {
+                    currentUnresolvedDependencies.add(attempted.toString())
+                }
+            }
+        }
+
+        // now look through both result:
+        // 1. All Android libraries must be in both lists.
+        // 2. merge jar dependencies with a single list where items have packaged/compiled properties.
+
+        // since we reuse the same instance of a JarInfo for identical module, we can use an
+        // Identity set.
+        Set<JarInfo> jarInfoSet = Sets.newIdentityHashSet()
+
+        gatherJarDependencies(jarInfoSet, compiledJars, true /*compiled*/, false /*packaged*/)
+        gatherJarDependencies(jarInfoSet, packagedJars, false /*compiled*/, true /*packaged*/)
+        gatherJarDependenciesFromLibraries(jarInfoSet, compiledAndroidLibraries, true, true)
+
+        List<JarDependency> jars = Lists.newArrayListWithCapacity(jarInfoSet.size())
+        for (JarInfo jarInfo : jarInfoSet) {
+            jars.add(jarInfo.createJarDependency())
+        }
+
+        // --- Handle the local dependencies ---
+
         // also need to process local jar files, as they are not processed by the
         // resolvedConfiguration result. This only includes the local jar files for this project.
-        Set<File> localCompileJars = []
-        Set<File> localPackageJars = []
-
+        Set<File> localCompiledJars = []
         compileClasspath.allDependencies.each { dep ->
             if (dep instanceof SelfResolvingDependency &&
                     !(dep instanceof ProjectDependency)) {
                 Set<File> files = ((SelfResolvingDependency) dep).resolve()
                 for (File f : files) {
-                    localCompileJars.add(f)
+                    // only accept local jar, no other types.
+                    if (!f.getName().toLowerCase().endsWith(DOT_JAR)) {
+                        String msg = "Project ${project.name}: Only Jar-type local " +
+                                "dependencies are supported. Cannot handle: ${f.absolutePath}"
+                        if (!buildModelForIde) {
+                            throw new RuntimeException(msg)
+                        } else {
+                            SyncIssue syncIssue = new SyncIssueImpl(
+                                    SyncIssue.TYPE_NON_JAR_LOCAL_DEP,
+                                    SyncIssue.SEVERITY_ERROR,
+                                    f.absolutePath,
+                                    msg)
+                            syncIssues.put(SyncIssueKey.from(syncIssue), syncIssue)
+                        }
+                    } else {
+                        localCompiledJars.add(f)
+                    }
                 }
             }
         }
 
+        Set<File> localPackagedJars = []
         packageClasspath.allDependencies.each { dep ->
             if (dep instanceof SelfResolvingDependency &&
                     !(dep instanceof ProjectDependency)) {
                 Set<File> files = ((SelfResolvingDependency) dep).resolve()
                 for (File f : files) {
-                    localPackageJars.add(f)
+                    // only accept local jar, no other types.
+                    if (!f.getName().toLowerCase().endsWith(DOT_JAR)) {
+                        String msg = "Project ${project.name}: Only Jar-type local " +
+                                "dependencies are supported. Cannot handle: ${f.absolutePath}"
+                        if (!buildModelForIde) {
+                            throw new RuntimeException(msg)
+                        } else {
+                            SyncIssue syncIssue = new SyncIssueImpl(
+                                    SyncIssue.TYPE_NON_JAR_LOCAL_DEP,
+                                    SyncIssue.SEVERITY_ERROR,
+                                    f.absolutePath,
+                                    msg)
+                            syncIssues.put(SyncIssueKey.from(syncIssue), syncIssue)
+                        }
+                    } else {
+                        localPackagedJars.add(f)
+                    }
                 }
             }
         }
 
+        // loop through both the compiled and packaged jar to compute the list
+        // of jars that are: compile-only, package-only, or both.
         Map<File, JarDependency> localJars = Maps.newHashMap()
-        for (File file : localCompileJars) {
+        for (File file : localCompiledJars) {
             localJars.put(file, new JarDependency(
                     file,
                     true /*compiled*/,
-                    localPackageJars.contains(file) /*packaged*/,
+                    localPackagedJars.contains(file) /*packaged*/,
                     null /*resolvedCoordinates*/))
         }
 
-        for (File file : localPackageJars) {
-            if (!localCompileJars.contains(file)) {
+        for (File file : localPackagedJars) {
+            if (!localCompiledJars.contains(file)) {
                 localJars.put(file, new JarDependency(
                         file,
                         false /*compiled*/,
@@ -3488,13 +3585,51 @@ public abstract class BasePlugin {
             }
         }
 
-        variantDeps.addLibraries(bundles as List<LibraryDependencyImpl>)
-        variantDeps.addJars(jars.values())
+        variantDeps.addLibraries(compiledAndroidLibraries)
+        variantDeps.addJars(jars)
         variantDeps.addLocalJars(localJars.values())
 
         // TODO - filter bundles out of source set classpath
 
         configureBuild(variantDeps)
+    }
+
+    private void gatherJarDependencies(
+            Set<JarInfo> outJarInfos,
+            Collection<JarInfo> inJarInfos,
+            boolean compiled,
+            boolean packaged) {
+        for (JarInfo jarInfo : inJarInfos) {
+            if (!outJarInfos.contains(jarInfo)) {
+                println "ADDING " + jarInfo.getJarFile().name
+                outJarInfos.add(jarInfo)
+            }
+
+            if (compiled) {
+                jarInfo.setCompiled(true)
+            }
+            if (packaged) {
+                jarInfo.setPackaged(true)
+            }
+
+            gatherJarDependencies(outJarInfos, jarInfo.getDependencies(), compiled, packaged)
+        }
+    }
+
+    private void gatherJarDependenciesFromLibraries(
+            Set<JarInfo> outJarInfos,
+            Collection<LibraryDependencyImpl> inLibraryDependencies,
+            boolean compiled,
+            boolean packaged) {
+        for (LibraryDependencyImpl libDependency : inLibraryDependencies) {
+            gatherJarDependencies(outJarInfos, libDependency.getJarDependencies(), compiled, packaged)
+
+            gatherJarDependenciesFromLibraries(
+                    outJarInfos,
+                    libDependency.getDependencies() as Collection<LibraryDependencyImpl>,
+                    compiled,
+                    packaged)
+        }
     }
 
     private static SyncIssue getUnresolvedDependencyIssue(@NonNull String dependency) {
@@ -3560,13 +3695,24 @@ public abstract class BasePlugin {
         return flagValue
     }
 
-    def addDependency(ResolvedComponentResult moduleVersion,
-                      VariantDependencies configDependencies,
-                      Collection<LibraryDependency> bundles,
-                      Map<File, JarDependency> jars,
-                      Map<ModuleVersionIdentifier, List<LibraryDependencyImpl>> modules,
-                      Map<ModuleVersionIdentifier, List<ResolvedArtifact>> artifacts,
-                      Multimap<LibraryDependency, VariantDependencies> reverseMap) {
+    private void printIndent(int indent, String message) {
+        for (int i = 0 ; i < indent ; i++) {
+            print "\t"
+        }
+
+        println message
+    }
+
+    private void addDependency(
+            ResolvedComponentResult moduleVersion,
+            VariantDependencies configDependencies,
+            Collection<LibraryDependencyImpl> outLibraries,
+            List<JarInfo> outJars,
+            Map<ModuleVersionIdentifier, List<LibraryDependencyImpl>> alreadyFoundLibraries,
+            Map<ModuleVersionIdentifier, List<JarInfo>> alreadyFoundJars,
+            Map<ModuleVersionIdentifier, List<ResolvedArtifact>> artifacts,
+            Multimap<LibraryDependency, VariantDependencies> reverseMap,
+            int indent) {
 
         ModuleVersionIdentifier id = moduleVersion.moduleVersion
         if (configDependencies.checker.excluded(id)) {
@@ -3577,26 +3723,63 @@ public abstract class BasePlugin {
             configDependencies.annotationsPresent = true
         }
 
-        List<LibraryDependencyImpl> bundlesForThisModule = modules.get(id)
-        if (bundlesForThisModule == null) {
-            bundlesForThisModule = Lists.newArrayList()
-            modules.put(id, bundlesForThisModule)
+        List<LibraryDependencyImpl> libsForThisModule = alreadyFoundLibraries.get(id)
+        List<JarInfo> jarsForThisModule = alreadyFoundJars.get(id)
 
-            List<LibraryDependency> nestedBundles = Lists.newArrayList()
+        if (libsForThisModule != null) {
+            if (DEBUG_DEPENDENCY) printIndent indent, "FOUND LIB: " + id.name
+            outLibraries.addAll(libsForThisModule)
+
+            for (LibraryDependencyImpl lib : libsForThisModule) {
+                reverseMap.put(lib, configDependencies)
+            }
+
+        } else if (jarsForThisModule != null) {
+            if (DEBUG_DEPENDENCY) printIndent indent,  "FOUND JAR: " + id.name
+            outJars.addAll(jarsForThisModule)
+        }
+        else {
+            if (DEBUG_DEPENDENCY) printIndent indent, "NOT FOUND: " + id.name
+            // new module! Might be a jar or a library
+
+            // get the nested components first.
+            List<LibraryDependencyImpl> nestedLibraries = Lists.newArrayList()
+            List<JarInfo> nestedJars = Lists.newArrayList()
 
             Set<ResolvedDependencyResult> dependencies =
                     moduleVersion.dependencies as Set<ResolvedDependencyResult>
             dependencies.each { dep ->
                 if (dep instanceof ResolvedDependencyResult) {
-                    addDependency(dep.selected, configDependencies, nestedBundles,
-                            jars, modules, artifacts, reverseMap)
+                    addDependency(
+                            dep.selected,
+                            configDependencies,
+                            nestedLibraries,
+                            nestedJars,
+                            alreadyFoundLibraries,
+                            alreadyFoundJars,
+                            artifacts,
+                            reverseMap,
+                            indent+1)
                 }
             }
 
+            if (DEBUG_DEPENDENCY) {
+                printIndent indent, "BACK2: " + id.name
+                printIndent indent, "NESTED LIBS: " + nestedLibraries.size();
+                printIndent indent, "NESTED JARS: " + nestedJars.size();
+            }
+
+            // now loop on all the artifact for this modules.
             List<ResolvedArtifact> moduleArtifacts = artifacts.get(id)
 
             moduleArtifacts?.each { artifact ->
                 if (artifact.type == EXT_LIB_ARCHIVE) {
+                    if (DEBUG_DEPENDENCY) printIndent indent, "TYPE: AAR"
+                    if (libsForThisModule == null) {
+                        libsForThisModule = Lists.newArrayList()
+                        alreadyFoundLibraries.put(id, libsForThisModule)
+                    }
+
                     String path = "${normalize(logger, id, id.group)}" +
                             "/${normalize(logger, id, id.name)}" +
                             "/${normalize(logger, id, id.version)}"
@@ -3606,21 +3789,43 @@ public abstract class BasePlugin {
                         name += ":$artifact.classifier"
                     }
                     //def explodedDir = project.file("$project.rootProject.buildDir/${FD_INTERMEDIATES}/exploded-aar/$path")
-                    def explodedDir = project.file("$project.buildDir/${FD_INTERMEDIATES}/exploded-aar/$path")
-                    LibraryDependencyImpl adep = new LibraryDependencyImpl(
-                            artifact.file, explodedDir, nestedBundles, name, artifact.classifier,
-                            null,
+                    File explodedDir = project.file(
+                            "$project.buildDir/${FD_INTERMEDIATES}/exploded-aar/$path")
+                    LibraryDependencyImpl libraryDependency = new LibraryDependencyImpl(
+                            artifact.file,
+                            explodedDir,
+                            nestedLibraries as List<LibraryDependency>,
+                            nestedJars,
+                            name,
+                            artifact.classifier,
+                            null /*requestedCoordinates*/,
                             new MavenCoordinatesImpl(artifact))
-                    bundlesForThisModule << adep
-                    reverseMap.put(adep, configDependencies)
+
+                    libsForThisModule.add(libraryDependency)
+                    outLibraries.add(libraryDependency)
+                    reverseMap.put(libraryDependency, configDependencies)
+
                 } else if (artifact.type == EXT_JAR) {
-                    jars.put(artifact.file,
-                            new JarDependency(
-                                    artifact.file,
-                                    true /*compiled*/,
-                                    false /*packaged*/,
-                                    true /*proguarded*/,
-                                    new MavenCoordinatesImpl(artifact)))
+                    if (DEBUG_DEPENDENCY) printIndent indent, "TYPE: JAR"
+                    // check this jar does not have a dependency on an library, as this would not work.
+                    if (!nestedLibraries.isEmpty()) {
+                        // TODO: error
+                        throw new GradleException("Module version $id depends on libraries but is a jar")
+                    }
+
+                    if (jarsForThisModule == null) {
+                        jarsForThisModule = Lists.newArrayList()
+                        alreadyFoundJars.put(id, jarsForThisModule)
+                    }
+
+                    JarInfo jarInfo = new JarInfo(
+                            artifact.file,
+                            new MavenCoordinatesImpl(artifact),
+                            nestedJars)
+
+                    jarsForThisModule.add(jarInfo);
+                    outJars.add(jarInfo)
+
                 } else if (artifact.type == EXT_ANDROID_PACKAGE) {
                     String name = "$id.group:$id.name:$id.version"
                     if (artifact.classifier != null) {
@@ -3664,16 +3869,9 @@ public abstract class BasePlugin {
                 }
             }
 
-            if (bundlesForThisModule.empty && !nestedBundles.empty) {
-                throw new GradleException("Module version $id depends on libraries but is not a library itself")
-            }
-        } else {
-            for (adep in bundlesForThisModule) {
-                reverseMap.put(adep as LibraryDependency, configDependencies)
-            }
-        }
+            if (DEBUG_DEPENDENCY) printIndent indent, "DONE: " + id.name
 
-        bundles.addAll(bundlesForThisModule)
+        }
     }
 
     /**

@@ -39,7 +39,7 @@ class LibWithPackageLocalJarTest {
 
     @ClassRule
     static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("projectWithProvidedLocalJar")
+            .fromTestProject("projectWithLocalJar")
             .create()
     static AndroidProject model
 
@@ -85,9 +85,11 @@ dependencies {
 
     @Test
     void "check packaged local jar is not in the android test dependency"() {
+        // TODO
     }
 
     @Test
     void "check packaged local jar is not in the unit test dependency"() {
+        // TODO
     }
 }
