@@ -115,7 +115,7 @@ public class PositionXmlParser {
             throws ParserConfigurationException, SAXException, IOException {
         String xml = getXmlString(data);
         xml = XmlUtils.stripBom(xml);
-        return parse(xml, new InputSource(new StringReader(xml)), true);
+        return parse(xml, new InputSource(new StringReader(xml)), true, true);
     }
 
     /**
@@ -134,17 +134,19 @@ public class PositionXmlParser {
     public Document parse(@NonNull String xml)
             throws ParserConfigurationException, SAXException, IOException {
         xml = XmlUtils.stripBom(xml);
-        return parse(xml, new InputSource(new StringReader(xml)), true);
+        return parse(xml, new InputSource(new StringReader(xml)), true, true);
     }
 
     @NonNull
-    private Document parse(@NonNull String xml, @NonNull InputSource input, boolean checkBom)
+    private Document parse(@NonNull String xml, @NonNull InputSource input, boolean checkBom,
+                boolean validateXml)
             throws ParserConfigurationException, SAXException, IOException {
         try {
             SAXParserFactory factory = SAXParserFactory.newInstance();
             factory.setFeature(NAMESPACE_FEATURE, true);
             factory.setFeature(NAMESPACE_PREFIX_FEATURE, true);
             factory.setFeature(PROVIDE_XMLNS_URIS, true);
+            factory.setValidating(validateXml);
             SAXParser parser = factory.newSAXParser();
             DomBuilder handler = new DomBuilder(xml);
             XMLReader xmlReader = parser.getXMLReader();
@@ -160,7 +162,7 @@ public class PositionXmlParser {
                 // (see http://en.wikipedia.org/wiki/Byte_order_mark) so here we'll
                 // just skip those up to the XML prolog beginning character, <
                 xml = xml.replaceFirst("^([\\W]+)<","<");  //$NON-NLS-1$ //$NON-NLS-2$
-                return parse(xml, new InputSource(new StringReader(xml)), false);
+                return parse(xml, new InputSource(new StringReader(xml)), false, validateXml);
             }
             throw e;
         }
@@ -534,7 +536,7 @@ public class PositionXmlParser {
                 Attributes attributes) throws SAXException {
             try {
                 flushText();
-                Element element = mDocument.createElement(qName);
+                Element element = mDocument.createElementNS(uri, qName);
                 for (int i = 0; i < attributes.getLength(); i++) {
                     if (attributes.getURI(i) != null && !attributes.getURI(i).isEmpty()) {
                         Attr attr = mDocument.createAttributeNS(attributes.getURI(i),
