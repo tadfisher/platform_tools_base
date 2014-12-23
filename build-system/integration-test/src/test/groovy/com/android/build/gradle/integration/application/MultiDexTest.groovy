@@ -26,7 +26,9 @@ import org.junit.ClassRule
 import org.junit.Test
 import org.junit.experimental.categories.Category
 
+import static com.android.build.gradle.integration.common.truth.ZipFileSubjectFactory.zipFile
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES
+import static com.google.common.truth.Truth.assert_
 
 /**
  * Assemble tests for multiDex.
@@ -60,7 +62,7 @@ class MultiDexTest {
         File classesDex = project.file("build/" + FD_INTERMEDIATES + "/dex/ics/debug/classes.dex")
         File apk = project.getApk("ics", "debug")
 
-        ZipHelper.checkContent(apk, "classes.dex", Files.toByteArray(classesDex))
+        assert_().about(zipFile()).that(apk).containsEntry("classes.dex", Files.toByteArray(classesDex))
     }
 
     @Test

@@ -37,6 +37,8 @@ import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
 
+import static com.android.build.gradle.integration.common.truth.ZipFileSubjectFactory.zipFile
+import static com.google.common.truth.Truth.assert_
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertFalse
 import static org.junit.Assert.assertNotNull
@@ -218,7 +220,7 @@ class VariantDependencyTest {
 
         assertTrue("${variantName} output check", apk.isFile())
 
-        ZipHelper.checkFileExists(apk, checkFilePath)
+        assert_().about(zipFile()).that(apk).contains(checkFilePath)
     }
 
     private static void checkApkForMissingContent(

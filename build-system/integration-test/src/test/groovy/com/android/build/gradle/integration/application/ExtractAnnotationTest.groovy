@@ -26,6 +26,9 @@ import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
 
+import static com.android.build.gradle.integration.common.truth.ZipFileSubjectFactory.zipFile
+import static com.google.common.truth.Truth.assert_
+
 /**
  * Integration test for extracting annotations.
  */
@@ -127,10 +130,11 @@ class ExtractAnnotationTest {
                 + "  </item>\n"
                 + "</root>")
 
-        ZipHelper.checkContent(file, "com/android/tests/extractannotations/annotations.xml", expectedContent)
+
+        assert_().about(zipFile()).that(file)
+                .containsEntry("com/android/tests/extractannotations/annotations.xml", expectedContent)
 
         // check the resulting .aar file to ensure annotations.zip inclusion.
-        File archiveFile = project.getAar("debug")
-        ZipHelper.checkFileExists(archiveFile, "annotations.zip")
+        assert_().about(zipFile()).that(project.getAar("debug")).contains("annotations.zip")
     }
 }
