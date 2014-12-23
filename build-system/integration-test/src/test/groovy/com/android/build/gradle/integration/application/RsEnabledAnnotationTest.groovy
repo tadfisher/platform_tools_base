@@ -21,11 +21,13 @@
 package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.utils.ZipHelper
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
+
+import static com.android.build.gradle.integration.common.truth.ZipFileSubjectFactory.zipFile
+import static com.google.common.truth.Truth.assert_
 
 /**
  * Integration test for extracting RS enabled annotations.
@@ -50,7 +52,6 @@ class RsEnabledAnnotationTest {
     @Test
     void "check extract annotation"() {
         // check the resulting .aar file to ensure annotations.zip inclusion.
-        File archiveFile = project.getAar("debug")
-        ZipHelper.checkFileExists(archiveFile, "annotations.zip")
+        assert_().about(zipFile()).that(project.getAar("debug")).contains("annotations.zip")
     }
 }
