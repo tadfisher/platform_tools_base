@@ -89,6 +89,8 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
         String getJarPath();
         /** Description of the library. */
         String getDescription();
+        /** If the library has resources */
+        boolean hasResources();
     }
 
     /**

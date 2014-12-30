@@ -26,6 +26,7 @@ import com.android.builder.model.AaptOptions;
 import com.android.resources.Density;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
@@ -279,6 +280,16 @@ public class AaptPackageCommandBuilder {
         // inputs
         command.add("-I");
         command.add(target.getPath(IAndroidTarget.ANDROID_JAR));
+
+        IOptionalLibrary[] libraries = target.getOptionalLibraries();
+        if (libraries != null) {
+            for (IOptionalLibrary library : libraries) {
+                if(library.hasResources()) {
+                    command.add("-I");
+                    command.add(library.getJarPath());
+                }
+            }
+        }
 
         command.add("-M");
         command.add(mManifestFile.getAbsolutePath());

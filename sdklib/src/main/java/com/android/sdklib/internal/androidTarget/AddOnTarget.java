@@ -35,6 +35,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import java.util.jar.JarFile;
+import java.io.IOException;
+import java.util.ArrayList;
+
 /**
  * Represents an add-on target in the SDK.
  * An add-on extends a standard {@link PlatformTarget}.
@@ -46,12 +50,14 @@ public final class AddOnTarget implements IAndroidTarget {
         private final String mJarPath;
         private final String mName;
         private final String mDescription;
+        private final boolean mHasResources;
 
         OptionalLibrary(String jarName, String jarPath, String name, String description) {
             mJarName = jarName;
             mJarPath = jarPath;
             mName = name;
             mDescription = description;
+            mHasResources = hasResourcesInLibrary(jarPath);
         }
 
         @Override
@@ -72,6 +78,31 @@ public final class AddOnTarget implements IAndroidTarget {
         @Override
         public String getDescription() {
             return mDescription;
+        }
+
+        @Override
+        public boolean hasResources() {
+            return mHasResources;
+        }
+
+        private static boolean hasResourcesInLibrary(String path) {
+            try {
+
+                File f = new File(path);
+                if(!f.exists()) {
+                    return false;
+                }
+
+                JarFile jarFile = new JarFile(f);
+
+                if(jarFile.getJarEntry("resources.arsc") != null) {
+                    return true;
+                }
+
+                return false;
+            } catch( IOException e ) {
+                return false;
+            }
         }
     }
 
