@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 The Android Open Source Project
+ * Copyright (C) 2014 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,10 @@
 
 package com.android.build.gradle.model;
 
-import org.gradle.api.internal.file.DefaultSourceDirectorySet;
-import org.gradle.api.internal.file.FileResolver;
-import org.gradle.language.base.FunctionalSourceSet;
-import org.gradle.language.base.LanguageSourceSet;
-import org.gradle.language.base.internal.AbstractLanguageSourceSet;
-import org.gradle.language.base.sources.BaseLanguageSourceSet;
-
-import javax.inject.Inject;
+import org.gradle.platform.base.TransformationFileType;
 
 /**
- * Implementation of LanguageSourceSet for Android's sources.
+ * Output of an Android LanguageTransform.
  */
-public class AndroidLanguageSourceSet extends BaseLanguageSourceSet implements LanguageSourceSet {
+public class AndroidObject implements TransformationFileType {
 }
