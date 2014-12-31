@@ -19,7 +19,9 @@ package com.android.tools.lint.detector.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.ResourceFolderType;
+import com.android.tools.lint.client.api.JavaParser;
 import com.android.tools.lint.client.api.JavaParser.ResolvedClass;
+import com.android.tools.lint.client.api.JavaParser.ResolvedMethod;
 import com.android.tools.lint.client.api.LintDriver;
 import com.google.common.annotations.Beta;
 
@@ -40,6 +42,7 @@ import java.util.Map;
 
 import lombok.ast.AstVisitor;
 import lombok.ast.ClassDeclaration;
+import lombok.ast.ConstructorInvocation;
 import lombok.ast.MethodInvocation;
 import lombok.ast.Node;
 
@@ -163,6 +166,15 @@ public abstract class Detector {
                 @NonNull JavaContext context,
                 @Nullable AstVisitor visitor,
                 @NonNull MethodInvocation node);
+
+        @Nullable
+        List<String> getApplicableConstructorTypes();
+
+        void visitConstructor(
+                @NonNull JavaContext context,
+                @Nullable AstVisitor visitor,
+                @NonNull ConstructorInvocation node,
+                @NonNull ResolvedMethod constructor);
 
         /**
          * Returns whether this detector cares about Android resource references
@@ -664,6 +676,19 @@ public abstract class Detector {
 
     public void checkClass(@NonNull JavaContext context, @NonNull ClassDeclaration node,
             @NonNull ResolvedClass resolvedClass) {
+    }
+
+    @Nullable @SuppressWarnings("javadoc")
+    public List<String> getApplicableConstructorTypes() {
+        return null;
+    }
+
+    @SuppressWarnings("javadoc")
+    public void visitConstructor(
+            @NonNull JavaContext context,
+            @Nullable AstVisitor visitor,
+            @NonNull ConstructorInvocation node,
+            @NonNull ResolvedMethod constructor) {
     }
 
     // ---- Dummy implementations to make implementing a ClassScanner easier: ----
