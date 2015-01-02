@@ -21,6 +21,7 @@ import static com.android.SdkConstants.CLASS_CONTEXT;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.JavaParser.ResolvedClass;
+import com.android.tools.lint.client.api.JavaParser.ResolvedField;
 import com.android.tools.lint.client.api.JavaParser.ResolvedMethod;
 import com.android.tools.lint.client.api.JavaParser.ResolvedNode;
 import com.android.tools.lint.client.api.JavaParser.ResolvedVariable;
@@ -34,6 +35,7 @@ import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.google.common.collect.Lists;
 
 import java.util.Arrays;
 import java.util.List;
@@ -366,12 +368,12 @@ public class CleanupDetector extends Detector implements JavaScanner {
 
     private static class CommitVisitor extends ForwardingAstVisitor {
         private final JavaContext mContext;
-        private final ResolvedVariable mVariable;
+        private final List<ResolvedVariable> mVariables;
         private boolean mContainsCommit;
 
         public CommitVisitor(JavaContext context, @NonNull ResolvedVariable variable) {
             mContext = context;
-            mVariable = variable;
+            mVariables = Lists.newArrayList(variable);
         }
 
         public boolean containsClose() {
@@ -399,12 +401,49 @@ public class CleanupDetector extends Detector implements JavaScanner {
             }
         }
 
+        @Override
+        public boolean visitVariableDefinitionEntry(VariableDefinitionEntry node) {
+            Expression initializer = node.astInitializer();
+            if (initializer instanceof VariableReference) {
+                ResolvedNode resolved = mContext.resolve(initializer);
+                //noinspection SuspiciousMethodCalls
+                if (resolved != null && mVariables.contains(resolved)) {
+                    ResolvedNode resolvedVariable = mContext.resolve(node);
+                    if (resolvedVariable instanceof ResolvedVariable) {
+                        ResolvedVariable variable = (ResolvedVariable) resolvedVariable;
+                        mVariables.add(variable);
+                    }
+                }
+            }
+            return super.visitVariableDefinitionEntry(node);
+        }
+
+        @Override
+        public boolean visitBinaryExpression(BinaryExpression node) {
+            if (node.astOperator() == BinaryOperator.ASSIGN) {
+                Expression rhs = node.astRight();
+                if (rhs instanceof VariableReference) {
+                    ResolvedNode resolved = mContext.resolve(rhs);
+                    //noinspection SuspiciousMethodCalls
+                    if (resolved != null && mVariables.contains(resolved)) {
+                        ResolvedNode resolvedLhs = mContext.resolve(node.astLeft());
+                        if (resolvedLhs instanceof ResolvedVariable) {
+                            ResolvedVariable variable = (ResolvedVariable) resolvedLhs;
+                            mVariables.add(variable);
+                        }
+                    }
+                }
+            }
+            return super.visitBinaryExpression(node);
+        }
+
         private boolean isCommitTransaction(@NonNull MethodInvocation call) {
             if (isTransactionCommitMethodCall(mContext, call)) {
                 Expression operand = call.astOperand();
                 if (operand != null) {
                     ResolvedNode resolved = mContext.resolve(operand);
-                    if (resolved != null && resolved.equals(mVariable)) {
+                    //noinspection SuspiciousMethodCalls
+                    if (resolved != null && mVariables.contains(resolved)) {
                         return true;
                     }
                 }
@@ -413,7 +452,8 @@ public class CleanupDetector extends Detector implements JavaScanner {
                 if (arguments.size() == 2) {
                     Expression first = arguments.first();
                     ResolvedNode resolved = mContext.resolve(first);
-                    if (resolved != null && resolved.equals(mVariable)) {
+                    //noinspection SuspiciousMethodCalls
+                    if (resolved != null && mVariables.contains(resolved)) {
                         return true;
                     }
                 }
@@ -425,8 +465,7 @@ public class CleanupDetector extends Detector implements JavaScanner {
     private static class RecycleVisitor extends ForwardingAstVisitor {
         private final JavaContext mContext;
         private final String mRecycleType;
-        private final ResolvedVariable mVariable;
-        private final String mVariableName;
+        private final List<ResolvedVariable> mVariables;
         private final String mRecycleName;
         private boolean mContainsRecycle;
         private boolean mEscapes;
@@ -434,10 +473,9 @@ public class CleanupDetector extends Detector implements JavaScanner {
         public RecycleVisitor(JavaContext context, @NonNull ResolvedVariable variable,
                 @NonNull String recycleType, @NonNull String recycleName) {
             mContext = context;
-            mVariable = variable;
+            mVariables = Lists.newArrayList(variable);
             mRecycleName = recycleName;
             mRecycleType = recycleType;
-            mVariableName = variable.getName();
         }
 
         public boolean containsRecycle() {
@@ -465,23 +503,21 @@ public class CleanupDetector extends Detector implements JavaScanner {
             if (!mEscapes) {
                 for (Expression expression : call.astArguments()) {
                     if (expression instanceof VariableReference) {
-                        VariableReference reference = (VariableReference) expression;
-                        if (mVariableName.equals((reference.astIdentifier().astValue()))) {
-                            ResolvedNode resolved = mContext.resolve(expression);
-                            if (resolved != null && resolved.equals(mVariable)) {
-                                mEscapes = true;
+                        ResolvedNode resolved = mContext.resolve(expression);
+                        //noinspection SuspiciousMethodCalls
+                        if (resolved != null && mVariables.contains(resolved)) {
+                            mEscapes = true;
 
-                                // Special case: MotionEvent.obtain(MotionEvent): passing in an
-                                // event here does not recycle the event, and we also know it
-                                // doesn't escape
-                                if (OBTAIN.equals(call.astName().astValue())) {
-                                    ResolvedNode r = mContext.resolve(call);
-                                    if (r instanceof ResolvedMethod) {
-                                        ResolvedMethod method = (ResolvedMethod) r;
-                                        ResolvedClass cls = method.getContainingClass();
-                                        if (cls.matches(MOTION_EVENT_CLS)) {
-                                            mEscapes = false;
-                                        }
+                            // Special case: MotionEvent.obtain(MotionEvent): passing in an
+                            // event here does not recycle the event, and we also know it
+                            // doesn't escape
+                            if (OBTAIN.equals(call.astName().astValue())) {
+                                ResolvedNode r = mContext.resolve(call);
+                                if (r instanceof ResolvedMethod) {
+                                    ResolvedMethod method = (ResolvedMethod) r;
+                                    ResolvedClass cls = method.getContainingClass();
+                                    if (cls.matches(MOTION_EVENT_CLS)) {
+                                        mEscapes = false;
                                     }
                                 }
                             }
@@ -499,13 +535,39 @@ public class CleanupDetector extends Detector implements JavaScanner {
         }
 
         @Override
+        public boolean visitVariableDefinitionEntry(VariableDefinitionEntry node) {
+            Expression initializer = node.astInitializer();
+            if (initializer instanceof VariableReference) {
+                ResolvedNode resolved = mContext.resolve(initializer);
+                //noinspection SuspiciousMethodCalls
+                if (resolved != null && mVariables.contains(resolved)) {
+                    ResolvedNode resolvedVariable = mContext.resolve(node);
+                    if (resolvedVariable instanceof ResolvedVariable) {
+                        ResolvedVariable variable = (ResolvedVariable) resolvedVariable;
+                        mVariables.add(variable);
+                    } else if (resolvedVariable instanceof ResolvedField) {
+                        mEscapes = true;
+                    }
+                }
+            }
+            return super.visitVariableDefinitionEntry(node);
+        }
+
+        @Override
         public boolean visitBinaryExpression(BinaryExpression node) {
             if (node.astOperator() == BinaryOperator.ASSIGN) {
                 Expression rhs = node.astRight();
-                if (rhs.toString().contains(mVariableName)) {
+                if (rhs instanceof VariableReference) {
                     ResolvedNode resolved = mContext.resolve(rhs);
-                    if (resolved != null && resolved.equals(mVariable)) {
-                        mEscapes = true;
+                    //noinspection SuspiciousMethodCalls
+                    if (resolved != null && mVariables.contains(resolved)) {
+                        ResolvedNode resolvedLhs = mContext.resolve(node.astLeft());
+                        if (resolvedLhs instanceof ResolvedVariable) {
+                            ResolvedVariable variable = (ResolvedVariable) resolvedLhs;
+                            mVariables.add(variable);
+                        } else if (resolvedLhs instanceof ResolvedField) {
+                            mEscapes = true;
+                        }
                     }
                 }
             }
@@ -526,7 +588,8 @@ public class CleanupDetector extends Detector implements JavaScanner {
                     Expression operand = call.astOperand();
                     if (operand != null) {
                         resolved = mContext.resolve(operand);
-                        if (resolved != null && resolved.equals(mVariable)) {
+                        //noinspection SuspiciousMethodCalls
+                        if (resolved != null && mVariables.contains(resolved)) {
                             return true;
                         }
                     }
