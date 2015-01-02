@@ -70,6 +70,7 @@ import org.eclipse.jdt.internal.compiler.batch.FileSystem;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
+import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
 import org.eclipse.jdt.internal.compiler.impl.BooleanConstant;
 import org.eclipse.jdt.internal.compiler.impl.ByteConstant;
 import org.eclipse.jdt.internal.compiler.impl.CharConstant;
@@ -123,6 +124,7 @@ public class EcjParser extends JavaParser {
     private Map<File, ICompilationUnit> mSourceUnits;
     private Map<ICompilationUnit, CompilationUnitDeclaration> mCompiled;
     private Parser mParser;
+    private INameEnvironment mEnvironment;
 
     public EcjParser(@NonNull LintCliClient client, @Nullable Project project) {
         mClient = client;
@@ -214,7 +216,7 @@ public class EcjParser extends JavaParser {
         List<String> classPath = computeClassPath(contexts);
         mCompiled = Maps.newHashMapWithExpectedSize(mSourceUnits.size());
         try {
-            parse(createCompilerOptions(), sources, classPath, mCompiled, mClient);
+            mEnvironment = parse(createCompilerOptions(), sources, classPath, mCompiled, mClient);
         } catch (Throwable t) {
             mClient.log(t, "ECJ compiler crashed");
         }
@@ -240,7 +242,7 @@ public class EcjParser extends JavaParser {
     }
 
     /** Parse the given source units and class path and store it into the given output map */
-    public static void parse(
+    public static INameEnvironment parse(
             CompilerOptions options,
             @NonNull List<ICompilationUnit> sourceUnits,
             @NonNull List<String> classPath,
@@ -303,11 +305,14 @@ public class EcjParser extends JavaParser {
             } else {
                 t.printStackTrace();
             }
-        } finally {
+
             if (environment != null) {
                 environment.cleanup();
+                environment = null;
             }
         }
+
+        return environment;
     }
 
     @NonNull
@@ -468,6 +473,14 @@ public class EcjParser extends JavaParser {
                 mSourceUnits.remove(context.file);
                 mCompiled.remove(sourceUnit);
             }
+        }
+    }
+
+    @Override
+    public void dispose() {
+        if (mEnvironment != null) {
+            mEnvironment.cleanup();
+            mEnvironment = null;
         }
     }
 
