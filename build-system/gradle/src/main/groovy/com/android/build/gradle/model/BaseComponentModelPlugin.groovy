@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.tasks.DependencyReportTask
 import com.android.build.gradle.internal.tasks.PrepareSdkTask
 import com.android.build.gradle.internal.tasks.SigningReportTask
 import com.android.build.gradle.internal.variant.BaseVariantData
+import com.android.build.gradle.internal.variant.BaseVariantOutputData
 import com.android.build.gradle.internal.variant.TestVariantData
 import com.android.build.gradle.internal.variant.VariantFactory
 import com.android.build.gradle.ndk.NdkExtension
@@ -119,6 +120,20 @@ public class BaseComponentModelPlugin extends BasePlugin implements Plugin<Proje
                         ModelReference.of("androidBasePlugin", BasePlugin.class), this)
                                 .simpleDescriptor("Android BaseComponentModelPlugin.")
                                 .build())
+    }
+
+    @Override
+    protected Collection<Object> getNdkTasks(
+            BaseVariantData<? extends BaseVariantOutputData> variantData) {
+        NdkComponentModelPlugin ndkPlugin = project.plugins.getPlugin(NdkComponentModelPlugin.class)
+        return ndkPlugin.getBinaries(variantData.getVariantConfiguration())
+    }
+
+    @Override
+    protected Collection<File> getNdkFolder(
+            BaseVariantData<? extends BaseVariantOutputData> variantData) {
+        NdkComponentModelPlugin ndkPlugin = project.plugins.getPlugin(NdkComponentModelPlugin.class)
+        return ndkPlugin.getOutputDirectories(variantData.getVariantConfiguration())
     }
 
     @RuleSource
