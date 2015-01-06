@@ -21,6 +21,7 @@ import com.android.annotations.Nullable
 import com.android.build.OutputFile
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.api.BaseVariant
+import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.internal.BadPluginException
 import com.android.build.gradle.internal.ConfigurationDependencies
 import com.android.build.gradle.internal.LibraryCache
@@ -1368,12 +1369,7 @@ public abstract class BasePlugin {
         VariantConfiguration config = variantData.variantConfiguration
         // for now only the project's compilation output.
         Set<File> set = Sets.newHashSet()
-        if (extension.getUseNewNativePlugin()) {
-            NdkComponentModelPlugin ndkPlugin = project.plugins.getPlugin(NdkComponentModelPlugin.class)
-            set.addAll(ndkPlugin.getOutputDirectories(config))
-        } else {
-            set.addAll(variantData.ndkCompileTask.soFolder)
-        }
+        set.addAll(getNdkFolder(variantData))
         set.addAll(variantData.renderscriptCompileTask.libOutputDir)
         set.addAll(config.libraryJniFolders)
         set.addAll(config.jniLibsList)
@@ -2587,13 +2583,7 @@ public abstract class BasePlugin {
                 packageApp.dependsOn variantOutputData.packageSplitAbiTask
             }
 
-            // Add dependencies on NDK tasks if NDK plugin is applied.
-            if (extension.getUseNewNativePlugin()) {
-                NdkComponentModelPlugin ndkPlugin = project.plugins.getPlugin(NdkComponentModelPlugin.class)
-                packageApp.dependsOn ndkPlugin.getBinaries(config)
-            } else {
-                packageApp.dependsOn variantData.ndkCompileTask
-            }
+            packageApp.dependsOn getNdkTasks(variantData)
 
             if (extension.ndkLib != null) {
                 project.evaluationDependsOn(extension.ndkLib.targetProjectName)
@@ -3318,6 +3308,15 @@ public abstract class BasePlugin {
         return files.toArray()
     }
 
+    protected Collection<Object> getNdkTasks(
+            BaseVariantData<? extends BaseVariantOutputData> variantData) {
+        return Collections.singleton(variantData.ndkCompileTask)
+    }
+
+    protected Collection<File> getNdkFolder(
+            BaseVariantData<? extends BaseVariantOutputData> variantData) {
+        return Collections.singleton(variantData.ndkCompileTask.soFolder)
+    }
 
     //----------------------------------------------------------------------------------------------
     //------------------------------ START DEPENDENCY STUFF ----------------------------------------
