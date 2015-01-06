@@ -968,7 +968,8 @@ public abstract class BasePlugin {
         mergeResourcesTask.incrementalFolder = project.file(
                 "$project.buildDir/${FD_INTERMEDIATES}/incremental/${taskNamePrefix}Resources/${variantData.variantConfiguration.dirName}")
 
-        mergeResourcesTask.process9Patch = process9Patch
+        mergeResourcesTask.process9Patch = process9Patch;
+        mergeResourcesTask.crunchPng = extension.aaptOptions.getCruncherEnabled();
 
         conventionMapping(mergeResourcesTask).map("useNewCruncher") { extension.aaptOptions.useNewCruncher }
 
