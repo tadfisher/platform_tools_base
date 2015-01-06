@@ -26,6 +26,7 @@ import static com.android.SdkConstants.ATTR_PACKAGE;
 import static com.android.SdkConstants.ATTR_TARGET_SDK_VERSION;
 import static com.android.SdkConstants.ATTR_VERSION_CODE;
 import static com.android.SdkConstants.ATTR_VERSION_NAME;
+import static com.android.SdkConstants.DRAWABLE_PREFIX;
 import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
 import static com.android.SdkConstants.TAG_ACTIVITY;
 import static com.android.SdkConstants.TAG_APPLICATION;
@@ -353,6 +354,20 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
             Severity.WARNING,
             IMPLEMENTATION);
 
+    /** Wrong order of elements in the manifest */
+    public static final Issue MIPMAP = Issue.create(
+            "MipmapIcons", //$NON-NLS-1$
+            "Use Mipmap Launcher Icons",
+            "Launcher icons should be provided as mipmap resources rather than drawable " +
+            "resources to ensure that the icons do not appear fuzzy due to upscaling.\n" +
+            "\n" +
+            "To fix this, move your launcher icons from `drawable-`dpi to `mipmap-`dpi " +
+            "and change references from @drawable/ and R.drawable to @mipmap/ and R.mipmap.",
+            Category.ICONS,
+            5,
+            Severity.WARNING,
+            IMPLEMENTATION);
+
     /** Permission name of mock location permission */
     public static final String MOCK_LOCATION_PERMISSION =
             "android.permission.ACCESS_MOCK_LOCATION";   //$NON-NLS-1$
@@ -611,6 +626,8 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
                         }
                     }
                 }
+
+                checkMipmapIcon(context, element);
             }
 
             return;
@@ -776,6 +793,7 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
             }
             if (element.hasAttributeNS(ANDROID_URI, ATTR_ICON)
                     || context.getDriver().isSuppressed(context, APPLICATION_ICON, element)) {
+                checkMipmapIcon(context, element);
                 mSeenAppIcon = true;
             } else {
                 recordLocation = true;
@@ -810,6 +828,45 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
                 }
             }
         }
+    }
+
+    private static void checkMipmapIcon(@NonNull XmlContext context, @NonNull Element element) {
+        Attr attribute = element.getAttributeNodeNS(ANDROID_URI, ATTR_ICON);
+        if (attribute == null) {
+            return;
+        }
+        String icon = attribute.getValue();
+        if (icon.startsWith(DRAWABLE_PREFIX)) {
+            if (TAG_ACTIVITY.equals(element.getTagName()) && !isLaunchableActivity(element)) {
+                return;
+            }
+
+            if (context.isEnabled(MIPMAP)) {
+                context.report(MIPMAP, element, context.getLocation(attribute),
+                        "Should use `@mipmap` instead of `@drawable` for launcher icons");
+            }
+        }
+    }
+
+    @SuppressWarnings("SpellCheckingInspection")
+    private static boolean isLaunchableActivity(@NonNull Element element) {
+        if (!TAG_ACTIVITY.equals(element.getTagName())) {
+            return false;
+        }
+
+        // Checks whether a broadcast receiver receives a standard Android action
+        for (Element child : LintUtils.getChildren(element)) {
+            if (child.getTagName().equals(TAG_INTENT_FILTER)) {
+                for (Element innerChild : LintUtils.getChildren(child)) {
+                    if (innerChild.getTagName().equals("category")) { //$NON-NLS-1$
+                        String categoryString = innerChild.getAttributeNS(ANDROID_URI, ATTR_NAME);
+                        return "android.intent.category.LAUNCHER".equals(categoryString);
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     /** Returns true iff the given manifest file is the main manifest file */
