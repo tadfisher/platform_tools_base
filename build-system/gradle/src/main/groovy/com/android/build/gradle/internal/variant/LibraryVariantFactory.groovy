@@ -160,7 +160,7 @@ public class LibraryVariantFactory implements VariantFactory<LibraryVariantData>
                 "package",
                 "$project.buildDir/${FD_INTERMEDIATES}/$DIR_BUNDLES/${dirName}/res",
                 false /*includeDependencies*/,
-                false /*process9Patch*/)
+                false /*crunchPng*/)
 
         if (variantData.variantDependency.androidDependencies.isEmpty()) {
             // if there is no android dependencies, then we should use the packageRes task above
@@ -170,7 +170,7 @@ public class LibraryVariantFactory implements VariantFactory<LibraryVariantData>
             // Add a task to merge the resource folders, including the libraries, in order to
             // generate the R.txt file with all the symbols, including the ones from
             // the dependencies.
-            basePlugin.createMergeResourcesTask(variantData, false /*process9Patch*/)
+            basePlugin.createMergeResourcesTask(variantData, false /*crunchPng*/)
         }
 
         // Add a task to merge the assets folders

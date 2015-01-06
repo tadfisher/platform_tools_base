@@ -95,6 +95,7 @@ class AndroidManifestInTestTest {
         boolean foundPermission = false
         boolean foundMetadata = false
         for (String line : aaptOutput) {
+            System.out.println(line);
             if (line.contains("foo.permission-group.COST_MONEY")) {
                 foundPermission = true
             }

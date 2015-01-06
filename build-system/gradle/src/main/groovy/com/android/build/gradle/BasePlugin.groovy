@@ -943,13 +943,13 @@ public abstract class BasePlugin {
 
     public void createMergeResourcesTask(
             @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData,
-            final boolean process9Patch) {
+            final boolean crunchPng) {
         MergeResources mergeResourcesTask = basicCreateMergeResourcesTask(
                 variantData,
                 "merge",
                 "$project.buildDir/${FD_INTERMEDIATES}/res/${variantData.variantConfiguration.dirName}",
                 true /*includeDependencies*/,
-                process9Patch)
+                crunchPng)
         variantData.mergeResourcesTask = mergeResourcesTask
     }
 
@@ -958,7 +958,7 @@ public abstract class BasePlugin {
             @NonNull String taskNamePrefix,
             @NonNull String outputLocation,
             final boolean includeDependencies,
-            final boolean process9Patch) {
+            final boolean crunchPng) {
         MergeResources mergeResourcesTask = project.tasks.create(
                 "$taskNamePrefix${variantData.variantConfiguration.fullName.capitalize()}Resources",
                 MergeResources)
@@ -968,7 +968,8 @@ public abstract class BasePlugin {
         mergeResourcesTask.incrementalFolder = project.file(
                 "$project.buildDir/${FD_INTERMEDIATES}/incremental/${taskNamePrefix}Resources/${variantData.variantConfiguration.dirName}")
 
-        mergeResourcesTask.process9Patch = process9Patch
+        mergeResourcesTask.crunchPng =
+                extension.aaptOptions.getCruncherEnabled() ? crunchPng : false;
 
         conventionMapping(mergeResourcesTask).map("useNewCruncher") { extension.aaptOptions.useNewCruncher }
 
@@ -1603,7 +1604,7 @@ public abstract class BasePlugin {
         createRenderscriptTask(variantData)
 
         // Add a task to merge the resource folders
-        createMergeResourcesTask(variantData, true /*process9Patch*/)
+        createMergeResourcesTask(variantData, true /*crunchPng*/)
 
         // Add a task to merge the assets folders
         createMergeAssetsTask(variantData, null /*default location*/, true /*includeDependencies*/)
