@@ -165,7 +165,7 @@ public class ApplicationVariantFactory implements VariantFactory<ApplicationVari
         basePlugin.createRenderscriptTask(variantData);
 
         // Add a task to merge the resource folders
-        basePlugin.createMergeResourcesTask(variantData, true /*process9Patch*/);
+        basePlugin.createMergeResourcesTask(variantData, true /*crunchPng*/);
 
         // Add a task to merge the asset folders
         basePlugin.createMergeAssetsTask(variantData, null /*default location*/, true /*includeDependencies*/);
