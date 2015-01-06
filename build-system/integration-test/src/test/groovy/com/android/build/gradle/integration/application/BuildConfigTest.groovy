@@ -112,23 +112,23 @@ class BuildConfigTest {
 """/**
  * Automatically generated file. DO NOT MODIFY
  */
-package com.example.helloworld;
+package com.example.helloworld
 
 public final class BuildConfig {
-  public static final boolean DEBUG = Boolean.parseBoolean("true");
-  public static final String APPLICATION_ID = "com.example.helloworld";
-  public static final String BUILD_TYPE = "debug";
-  public static final String FLAVOR = "flavor1";
-  public static final int VERSION_CODE = 1;
-  public static final String VERSION_NAME = "";
+  public static final boolean DEBUG = Boolean.parseBoolean("true")
+  public static final String APPLICATION_ID = "com.example.helloworld"
+  public static final String BUILD_TYPE = "debug"
+  public static final String FLAVOR = "flavor1"
+  public static final int VERSION_CODE = 1
+  public static final String VERSION_NAME = ""
   // Fields from the variant
-  public static final int VALUE_VARIANT = 1000;
+  public static final int VALUE_VARIANT = 1000
   // Fields from build type: debug
-  public static final int VALUE_DEBUG = 100;
+  public static final int VALUE_DEBUG = 100
   // Fields from product flavor: flavor1
-  public static final int VALUE_FLAVOR = 10;
+  public static final int VALUE_FLAVOR = 10
   // Fields from default config.
-  public static final int VALUE_DEFAULT = 1;
+  public static final int VALUE_DEFAULT = 1
 }
 """
         doCheckBuildConfig(expected, 'flavor1/debug')
@@ -150,23 +150,23 @@ public final class BuildConfig {
 """/**
  * Automatically generated file. DO NOT MODIFY
  */
-package com.example.helloworld;
+package com.example.helloworld
 
 public final class BuildConfig {
-  public static final boolean DEBUG = Boolean.parseBoolean("true");
-  public static final String APPLICATION_ID = "com.example.helloworld";
-  public static final String BUILD_TYPE = "debug";
-  public static final String FLAVOR = "flavor2";
-  public static final int VERSION_CODE = 1;
-  public static final String VERSION_NAME = "";
+  public static final boolean DEBUG = Boolean.parseBoolean("true")
+  public static final String APPLICATION_ID = "com.example.helloworld"
+  public static final String BUILD_TYPE = "debug"
+  public static final String FLAVOR = "flavor2"
+  public static final int VERSION_CODE = 1
+  public static final String VERSION_NAME = ""
   // Fields from the variant
-  public static final int VALUE_VARIANT = 1000;
+  public static final int VALUE_VARIANT = 1000
   // Fields from build type: debug
-  public static final int VALUE_DEBUG = 100;
+  public static final int VALUE_DEBUG = 100
   // Fields from product flavor: flavor2
-  public static final int VALUE_FLAVOR = 20;
+  public static final int VALUE_FLAVOR = 20
   // Fields from default config.
-  public static final int VALUE_DEFAULT = 1;
+  public static final int VALUE_DEFAULT = 1
 }
 """
         doCheckBuildConfig(expected, 'flavor2/debug')
@@ -188,21 +188,21 @@ public final class BuildConfig {
                 """/**
  * Automatically generated file. DO NOT MODIFY
  */
-package com.example.helloworld;
+package com.example.helloworld
 
 public final class BuildConfig {
-  public static final boolean DEBUG = false;
-  public static final String APPLICATION_ID = "com.example.helloworld";
-  public static final String BUILD_TYPE = "release";
-  public static final String FLAVOR = "flavor1";
-  public static final int VERSION_CODE = 1;
-  public static final String VERSION_NAME = "";
+  public static final boolean DEBUG = false
+  public static final String APPLICATION_ID = "com.example.helloworld"
+  public static final String BUILD_TYPE = "release"
+  public static final String FLAVOR = "flavor1"
+  public static final int VERSION_CODE = 1
+  public static final String VERSION_NAME = ""
   // Fields from product flavor: flavor1
-  public static final int VALUE_DEBUG = 10;
-  public static final int VALUE_FLAVOR = 10;
-  public static final int VALUE_VARIANT = 10;
+  public static final int VALUE_DEBUG = 10
+  public static final int VALUE_FLAVOR = 10
+  public static final int VALUE_VARIANT = 10
   // Fields from default config.
-  public static final int VALUE_DEFAULT = 1;
+  public static final int VALUE_DEFAULT = 1
 }
 """
         doCheckBuildConfig(expected, 'flavor1/release')
@@ -224,21 +224,21 @@ public final class BuildConfig {
                 """/**
  * Automatically generated file. DO NOT MODIFY
  */
-package com.example.helloworld;
+package com.example.helloworld
 
 public final class BuildConfig {
-  public static final boolean DEBUG = false;
-  public static final String APPLICATION_ID = "com.example.helloworld";
-  public static final String BUILD_TYPE = "release";
-  public static final String FLAVOR = "flavor2";
-  public static final int VERSION_CODE = 1;
-  public static final String VERSION_NAME = "";
+  public static final boolean DEBUG = false
+  public static final String APPLICATION_ID = "com.example.helloworld"
+  public static final String BUILD_TYPE = "release"
+  public static final String FLAVOR = "flavor2"
+  public static final int VERSION_CODE = 1
+  public static final String VERSION_NAME = ""
   // Fields from product flavor: flavor2
-  public static final int VALUE_DEBUG = 20;
-  public static final int VALUE_FLAVOR = 20;
-  public static final int VALUE_VARIANT = 20;
+  public static final int VALUE_DEBUG = 20
+  public static final int VALUE_FLAVOR = 20
+  public static final int VALUE_VARIANT = 20
   // Fields from default config.
-  public static final int VALUE_DEFAULT = 1;
+  public static final int VALUE_DEFAULT = 1
 }
 """
         doCheckBuildConfig(expected, 'flavor2/release')
@@ -264,7 +264,7 @@ public final class BuildConfig {
             @NonNull String variantDir) {
         File outputFile = new File(project.getTestDir(),
                 "build/generated/source/buildConfig/$variantDir/com/example/helloworld/BuildConfig.java")
-        Assert.assertTrue("Missing file: " + outputFile, outputFile.isFile());
+        Assert.assertTrue("Missing file: " + outputFile, outputFile.isFile())
         assertEquals(expected, Files.asByteSource(outputFile).asCharSource(Charsets.UTF_8).read())
     }
 
