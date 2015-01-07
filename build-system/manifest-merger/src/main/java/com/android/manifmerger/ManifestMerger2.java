@@ -38,11 +38,15 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.StringTokenizer;
 
 /**
  * merges android manifest files, idempotent.
@@ -782,7 +786,7 @@ public class ManifestMerger2 {
      * </ol>
      *
      */
-    public static final class Invoker<T extends Invoker<T>>{
+    public static class Invoker<T extends Invoker<T>>{
 
         protected final File mMainManifestFile;
 
