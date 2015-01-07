@@ -102,6 +102,11 @@ public class CleanupDetector extends Detector implements JavaScanner {
     private static final String BEGIN_TRANSACTION = "beginTransaction";               //$NON-NLS-1$
     private static final String COMMIT = "commit";                                    //$NON-NLS-1$
     private static final String COMMIT_ALLOWING_LOSS = "commitAllowingStateLoss";     //$NON-NLS-1$
+    private static final String QUERY = "query";                                      //$NON-NLS-1$
+    private static final String RAW_QUERY = "rawQuery";                               //$NON-NLS-1$
+    private static final String QUERY_WITH_FACTORY = "queryWithFactory";              //$NON-NLS-1$
+    private static final String RAW_QUERY_WITH_FACTORY = "rawQueryWithFactory";       //$NON-NLS-1$
+    private static final String CLOSE = "close";                                      //$NON-NLS-1$
 
     private static final String MOTION_EVENT_CLS = "android.view.MotionEvent";        //$NON-NLS-1$
     private static final String RESOURCES_CLS = "android.content.res.Resources";      //$NON-NLS-1$
@@ -126,6 +131,8 @@ public class CleanupDetector extends Detector implements JavaScanner {
             = "android.content.ContentProviderClient";
 
     public static final String CONTENT_RESOLVER_CLS = "android.content.ContentResolver";
+    public static final String SQLITE_DATABASE_CLS = "android.database.sqlite.SQLiteDatabase";
+    public static final String CURSOR_CLS = "android.database.Cursor";
 
     /** Constructs a new {@link CleanupDetector} */
     public CleanupDetector() {
@@ -147,7 +154,10 @@ public class CleanupDetector extends Detector implements JavaScanner {
                 OBTAIN_TYPED_ARRAY,
 
                 // Release check
-                ACQUIRE_CPC
+                ACQUIRE_CPC,
+
+                // Cursor close check
+                QUERY, RAW_QUERY, QUERY_WITH_FACTORY, RAW_QUERY_WITH_FACTORY
         );
     }
 
@@ -204,6 +214,12 @@ public class CleanupDetector extends Detector implements JavaScanner {
         } else if (ACQUIRE_CPC.equals(name) && containingClass.isSubclassOf(
                 CONTENT_RESOLVER_CLS, false)) {
             checkRecycled(context, node, CONTENT_PROVIDER_CLIENT_CLS, RELEASE);
+        } else if ((QUERY.equals(name)
+                || RAW_QUERY.equals(name)
+                || QUERY_WITH_FACTORY.equals(name)
+                || RAW_QUERY_WITH_FACTORY.equals(name))
+                && containingClass.isSubclassOf(SQLITE_DATABASE_CLS, false)) {
+            checkRecycled(context, node, CURSOR_CLS, CLOSE);
         }
     }
 

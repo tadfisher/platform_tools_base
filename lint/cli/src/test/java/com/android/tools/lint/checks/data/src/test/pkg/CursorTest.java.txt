@@ -1,0 +1,66 @@
+package test.pkg;
+
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+
+@SuppressWarnings("UnusedDeclaration")
+public class CursorTest {
+    public void error1(SQLiteDatabase db, long route_id) {
+        Cursor cursor = db.query("TABLE_TRIPS",
+                new String[]{"KEY_TRIP_ID"},
+                "ROUTE_ID=?",
+                new String[]{Long.toString(route_id)},
+                null, null, null);
+    }
+
+    public int error2(SQLiteDatabase db, long route_id, String table, String whereClause, String id) {
+        int total_deletions = 0;
+        Cursor cursor = db.query("TABLE_TRIPS",
+                new String[]{"KEY_TRIP_ID"},
+                "ROUTE_ID=?",
+                new String[]{Long.toString(route_id)},
+                null, null, null);
+
+        while (cursor.moveToNext()) {
+            total_deletions += db.delete(table, whereClause + "=?",
+                    new String[]{Long.toString(cursor.getLong(0))});
+        }
+
+        // Not closed!
+        //cursor.close();
+
+        total_deletions += db.delete(table, id + "=?", new String[]{Long.toString(route_id)});
+
+        return total_deletions;
+    }
+
+    public int ok(SQLiteDatabase db, long route_id, String table, String whereClause, String id) {
+        int total_deletions = 0;
+        Cursor cursor = db.query("TABLE_TRIPS",
+                new String[]{
+                        "KEY_TRIP_ID"},
+                "ROUTE_ID" + "=?",
+                new String[]{Long.toString(route_id)},
+                null, null, null);
+
+        while (cursor.moveToNext()) {
+            total_deletions += db.delete(table, whereClause + "=?",
+                    new String[]{Long.toString(cursor.getLong(0))});
+        }
+        cursor.close();
+
+        return total_deletions;
+    }
+
+    public Cursor getCursor(SQLiteDatabase db) {
+        @SuppressWarnings("UnnecessaryLocalVariable")
+        Cursor cursor = db.query("TABLE_TRIPS",
+                new String[]{
+                        "KEY_TRIP_ID"},
+                "ROUTE_ID" + "=?",
+                new String[]{Long.toString(5)},
+                null, null, null);
+
+        return cursor;
+    }
+}

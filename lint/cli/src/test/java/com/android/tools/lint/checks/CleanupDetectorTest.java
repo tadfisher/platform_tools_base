@@ -197,4 +197,22 @@ public class CleanupDetectorTest extends AbstractCheckTest {
                         "src/test/pkg/ContentProviderClientTest.java.txt=>src/test/pkg/ContentProviderClientTest.java"
                 ));
     }
+
+    public void testDatabaseCursor() throws Exception {
+        assertEquals(
+                "src/test/pkg/CursorTest.java:9: Warning: This Cursor should be freed up after use with #close() [Recycle]\n" +
+                "        Cursor cursor = db.query(\"TABLE_TRIPS\",\n" +
+                "                           ~~~~~\n" +
+                "src/test/pkg/CursorTest.java:18: Warning: This Cursor should be freed up after use with #close() [Recycle]\n" +
+                "        Cursor cursor = db.query(\"TABLE_TRIPS\",\n" +
+                "                           ~~~~~\n" +
+                "0 errors, 2 warnings\n",
+
+                lintProject(
+                        "apicheck/classpath=>.classpath",
+                        "apicheck/minsdk4.xml=>AndroidManifest.xml",
+                        "project.properties19=>project.properties",
+                        "src/test/pkg/CursorTest.java.txt=>src/test/pkg/CursorTest.java"
+                ));
+    }
 }
