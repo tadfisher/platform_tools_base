@@ -1730,7 +1730,6 @@ public abstract class BasePlugin {
     void createUnitTestTasks() {
         Task topLevelTest = project.tasks.create(JavaPlugin.TEST_TASK_NAME)
         topLevelTest.group = JavaBasePlugin.VERIFICATION_GROUP
-        topLevelTest.dependsOn createMockableJar
 
         variantDataList.findAll{it.variantConfiguration.type == UNIT_TEST}.each { loopVariantData ->
             // Inner scope copy for the closures.
@@ -1770,6 +1769,7 @@ public abstract class BasePlugin {
             runTestsTask.scanForTestClasses = false
             runTestsTask.include "**/*Test.class"
 
+            runTestsTask.dependsOn createMockableJar
             topLevelTest.dependsOn runTestsTask
         }
 

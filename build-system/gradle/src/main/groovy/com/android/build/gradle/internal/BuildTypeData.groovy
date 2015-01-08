@@ -27,15 +27,20 @@ class BuildTypeData implements ConfigurationProvider {
 
     final BuildType buildType
     final DefaultAndroidSourceSet sourceSet
+    final DefaultAndroidSourceSet unitTestSourceSet
     private final Project project
 
     final Task assembleTask
 
-    BuildTypeData(BuildType buildType, DefaultAndroidSourceSet sourceSet, Project project) {
-
+    BuildTypeData(
+            @NonNull BuildType buildType,
+            @NonNull Project project,
+            @NonNull DefaultAndroidSourceSet sourceSet,
+            @NonNull DefaultAndroidSourceSet unitTestSourceSet) {
         this.buildType = buildType
         this.sourceSet = sourceSet
         this.project = project
+        this.unitTestSourceSet = unitTestSourceSet
 
         assembleTask = project.tasks.create("assemble${buildType.name.capitalize()}")
         assembleTask.description = "Assembles all ${buildType.name.capitalize()} builds"
