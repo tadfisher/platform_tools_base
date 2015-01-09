@@ -1,0 +1,117 @@
+<?xml version="1.0"?>
+<template
+    format="3"
+    revision="1"
+    name="Google Ads Activity"
+    minApi="7"
+    minBuildApi="14"
+    description="Creates a new blank activity, with an action bar and a contained Fragment.">
+
+    <category value="Activity" />
+    <formfactor value="Mobile" />
+
+    <parameter
+        id="activityClass"
+        name="Activity Name"
+        type="string"
+        constraints="class|unique|nonempty"
+        suggest="${layoutToActivity(layoutName)}"
+        default="AdsActivity"
+        help="The name of the activity class to create" />
+
+    <parameter
+        id="layoutName"
+        name="Layout Name"
+        type="string"
+        constraints="layout|unique|nonempty"
+        suggest="${activityToLayout(activityClass)}"
+        default="activity_ads"
+        help="The name of the layout to create for the activity" />
+
+    <parameter
+        id="fragmentLayoutName"
+        name="Fragment Layout Name"
+        type="string"
+        constraints="layout|unique|nonempty"
+        suggest="fragment_${classToResource(activityClass)}"
+        default="fragment_ads"
+        help="The name of the layout to create for the activity's content fragment"/>
+
+    <parameter
+        id="activityTitle"
+        name="Title"
+        type="string"
+        constraints="nonempty"
+        default="AdsActivity"
+        suggest="${activityClass}"
+        help="The name of the activity. For launcher activities, the application title." />
+
+    <parameter
+        id="adNetwork"
+        name="Ad Network"
+        type="enum"
+        default="admob"
+        help="AdMob or DFP (DoubleClick For Publishers). AdMob is used and trusted by lorem app developers than any other ad platform worldwide. DoubleClick For Publishers is primarily designed for large publishers of lorem." >
+        <option id="admob">AdMob</option>
+        <option id="dfp">DoubleClick For Publishers</option>
+    </parameter>
+
+    <parameter
+        id="adFormat"
+        name="Ad Format"
+        type="enum"
+        default="banner"
+        help="Banner or Interstitial." >
+        <option id="banner">Banner</option>
+        <option id="interstitial">Interstitial</option>
+    </parameter>
+
+    <parameter
+        id="useTestAds"
+        name="Use Test Ads"
+        type="boolean"
+        default="false">
+    </parameter>
+
+    <parameter
+        id="adUnitId"
+        name="Ad Unit ID"
+        type="string"
+        default=""
+        help="The unique identifier for an ad unit. If you choose not to use test ads, please specify the ad unit ID here." />
+
+    <parameter
+        id="isLauncher"
+        name="Launcher Activity"
+        type="boolean"
+        default="false"
+        help="If true, this activity will have a CATEGORY_LAUNCHER intent filter, making it visible in the launcher" />
+
+    <parameter
+        id="parentActivityClass"
+        name="Hierarchical Parent"
+        type="string"
+        constraints="activity|exists|empty"
+        default=""
+        help="The hierarchical parent activity, used to provide a default implementation for the 'Up' button" />
+
+    <parameter
+        id="packageName"
+        name="Package name"
+        type="string"
+        constraints="package"
+        default="com.mycompany.myapp" />
+
+    <!-- 128x128 thumbnails relative to template.xml -->
+    <thumbs>
+        <!-- default thumbnail is required -->
+        <thumb>template_blank_activity_fragment.png</thumb>
+        <!-- attributes act as selectors based on chosen parameters -->
+        <thumb adFormat="banner">banner_512x512.png</thumb>
+        <thumb adFormat="interstitial">interstitial_512x512.png</thumb>
+    </thumbs>
+
+    <globals file="globals.xml.ftl" />
+    <execute file="recipe.xml.ftl" />
+
+</template>
