@@ -112,6 +112,7 @@ import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.execution.TaskExecutionGraph
 import org.gradle.api.internal.ConventionMapping
+import org.gradle.api.logging.LogLevel
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.plugins.BasePluginConvention
@@ -175,10 +176,15 @@ class TaskManager {
 
     private DependencyManager dependencyManager
 
+    private SdkHandler sdkHandler
+
+    private BaseExtension extension
+
     private Logger logger
 
     private Task mainPreBuild
 
+    // Tasks
     private Task uninstallAll
 
     private Task assembleAndroidTest
@@ -196,20 +202,30 @@ class TaskManager {
     public MockableAndroidJarTask createMockableJar
 
     public TaskManager(
-            BasePlugin plugin,
             Project project,
             TaskContainer tasks,
-            AndroidBuilder androidBuilder) {
-        this.plugin = plugin
+            AndroidBuilder androidBuilder,
+            BaseExtension extension,
+            SdkHandler sdkHandler) {
         this.project = project
         this.tasks = tasks
         this.androidBuilder = androidBuilder
+        this.sdkHandler = sdkHandler
+        this.extension = extension
         logger = Logging.getLogger(this.class)
         dependencyManager = new DependencyManager(project)
     }
 
+    private boolean isVerbose() {
+        return project.logger.isEnabled(LogLevel.INFO)
+    }
+
+    private boolean isDebugLog() {
+        return project.logger.isEnabled(LogLevel.DEBUG)
+    }
+
     private BaseExtension getExtension() {
-        return plugin.extension
+        return extension
     }
 
     public void resolveDependencies(VariantDependencies variantDeps) {
@@ -1190,7 +1206,7 @@ class TaskManager {
         ndkCompile.dependsOn mainPreBuild
 
         ndkCompile.androidBuilder = androidBuilder
-        ndkCompile.ndkDirectory = plugin.getNdkFolder()
+        ndkCompile.ndkDirectory = sdkHandler.getNdkFolder()
         variantData.ndkCompileTask = ndkCompile
         variantData.compileTask.dependsOn variantData.ndkCompileTask
 
@@ -1342,18 +1358,20 @@ class TaskManager {
 
     // Add tasks for running lint on individual variants. We've already added a
     // lint task earlier which runs on all variants.
-    public void createLintTasks() {
+    public void createLintTasks(
+            List<BaseVariantData<? extends BaseVariantOutputData>> variantDataList) {
         Lint lint = project.tasks.create("lint", Lint)
         lint.description = "Runs lint on all variants."
         lint.group = JavaBasePlugin.VERIFICATION_GROUP
-        lint.setPlugin(plugin)
+        lint.setLintOptions(getExtension().lintOptions)
+        lint.setSdkHome(sdkHandler.getSdkFolder())
         project.tasks.getByName(JavaBasePlugin.CHECK_TASK_NAME).dependsOn lint
         lintAll = lint
 
-        int count = plugin.getVariantDataList().size()
+        int count = variantDataList.size()
         for (int i = 0; i < count; i++) {
             final BaseVariantData<? extends BaseVariantOutputData> baseVariantData =
-                    plugin.getVariantDataList().get(i)
+                    variantDataList.get(i)
             if (!isLintVariant(baseVariantData)) {
                 continue;
             }
@@ -1373,7 +1391,8 @@ class TaskManager {
             // on its own run through all variants (and compare results), it doesn't delegate
             // to the individual tasks (since it needs to coordinate data collection and
             // reporting)
-            variantLintCheck.setPlugin(plugin)
+            variantLintCheck.setLintOptions(getExtension().lintOptions)
+            variantLintCheck.setSdkHome(sdkHandler.getSdkFolder())
             variantLintCheck.setVariantName(variantName)
             variantLintCheck.description = "Runs lint on the " + capitalizedVariantName + " build"
             variantLintCheck.group = JavaBasePlugin.VERIFICATION_GROUP
@@ -1391,7 +1410,8 @@ class TaskManager {
             Lint lintReleaseCheck = project.tasks.create(taskName, Lint)
             // TODO: Make this task depend on lintCompile too (resolve initialization order first)
             optionalDependsOn(lintReleaseCheck, variantData.javaCompileTask)
-            lintReleaseCheck.setPlugin(plugin)
+            lintReleaseCheck.setLintOptions(getExtension().lintOptions)
+            lintReleaseCheck.setSdkHome(sdkHandler.getSdkFolder())
             lintReleaseCheck.setVariantName(variantName)
             lintReleaseCheck.setFatalOnly(true)
             lintReleaseCheck.description = "Runs lint on just the fatal issues in the " +
@@ -1407,11 +1427,12 @@ class TaskManager {
         }
     }
 
-    void createUnitTestTasks() {
+    void createUnitTestTasks(
+            List<BaseVariantData<? extends BaseVariantOutputData>> variantDataList) {
         Task topLevelTest = project.tasks.create(JavaPlugin.TEST_TASK_NAME)
         topLevelTest.group = JavaBasePlugin.VERIFICATION_GROUP
 
-        plugin.variantDataList.findAll { it.variantConfiguration.type == UNIT_TEST }.each {
+        variantDataList.findAll { it.variantConfiguration.type == UNIT_TEST }.each {
             TestVariantData variantData = it as TestVariantData
             BaseVariantData testedVariantData = variantData.testedVariantData as BaseVariantData
 
@@ -1468,7 +1489,10 @@ class TaskManager {
         testTask.inputs.sourceFiles.from.clear()
     }
 
-    public void createConnectedCheckTasks(boolean hasFlavors, boolean isLibraryTest) {
+    public void createConnectedCheckTasks(
+            List<BaseVariantData<? extends BaseVariantOutputData>> variantDataList,
+            boolean hasFlavors,
+            boolean isLibraryTest) {
         List<AndroidReportTask> reportTasks = Lists.newArrayListWithExpectedSize(2)
 
         List<DeviceProvider> providers = getExtension().deviceProviders
@@ -1537,9 +1561,9 @@ class TaskManager {
         // Now look for the tested variant and create the check tasks for them.
         // don't use an auto loop as we can't reuse baseVariantData or the closure lower
         // gets broken.
-        int count = plugin.getVariantDataList().size();
+        int count = variantDataList.size();
         for (int i = 0; i < count; i++) {
-            final BaseVariantData<? extends BaseVariantOutputData> baseVariantData = plugin.getVariantDataList().get(i);
+            final BaseVariantData<? extends BaseVariantOutputData> baseVariantData = variantDataList.get(i);
             if (baseVariantData instanceof TestedVariantData) {
                 final TestVariantData testVariantData = ((TestedVariantData) baseVariantData).
                         getTestVariantData(ANDROID_TEST)
@@ -1568,7 +1592,7 @@ class TaskManager {
                                 taskClass,
                                 testVariantData,
                                 baseVariantData as BaseVariantData,
-                                new ConnectedDeviceProvider(plugin.getSdkInfo().adb),
+                                new ConnectedDeviceProvider(androidBuilder.getSdkInfo().adb),
                                 CONNECTED
                         )
 
@@ -1723,7 +1747,7 @@ class TaskManager {
         }
 
         conventionMapping(testTask).map("adbExec") {
-            return plugin.getSdkInfo().getAdb()
+            return androidBuilder.getSdkInfo().getAdb()
         }
 
         conventionMapping(testTask).map("reportsDir") {
@@ -2078,7 +2102,7 @@ class TaskManager {
         jillRuntimeTask.dexOptions = getExtension().dexOptions
 
         conventionMapping(jillRuntimeTask).map("inputLibs") {
-            plugin.getBootClasspath()
+            androidBuilder.getBootClasspath()
         }
         conventionMapping(jillRuntimeTask).map("outputFolder") {
             project.file(
@@ -2107,8 +2131,8 @@ class TaskManager {
         JackTask compileTask = project.tasks.create(
                 "compile${config.fullName.capitalize()}Java",
                 JackTask)
-        compileTask.isVerbose = plugin.isVerbose()
-        compileTask.isDebugLog = plugin.isDebugLog()
+        compileTask.isVerbose = isVerbose()
+        compileTask.isDebugLog = isDebugLog()
 
         variantData.jackTask = compileTask
         variantData.jackTask.dependsOn variantData.sourceGenTask, jillRuntimeTask, jillPackagedTask
@@ -2516,7 +2540,7 @@ class TaskManager {
         uninstallTask.description = "Uninstalls the " + variantData.description
         uninstallTask.group = INSTALL_GROUP
         uninstallTask.variant = variantData
-        conventionMapping(uninstallTask).map("adbExe") { plugin.getSdkInfo()?.adb }
+        conventionMapping(uninstallTask).map("adbExe") { androidBuilder.getSdkInfo()?.adb }
 
         variantData.uninstallTask = uninstallTask
         uninstallAll.dependsOn uninstallTask
@@ -2785,15 +2809,16 @@ class TaskManager {
         return task
     }
 
-    public void createReportTasks() {
+    public void createReportTasks(
+            List<BaseVariantData<? extends BaseVariantOutputData>> variantDataList) {
         def dependencyReportTask = project.tasks.create("androidDependencies", DependencyReportTask)
         dependencyReportTask.setDescription("Displays the Android dependencies of the project")
-        dependencyReportTask.setVariants(plugin.getVariantDataList())
+        dependencyReportTask.setVariants(variantDataList)
         dependencyReportTask.setGroup(ANDROID_GROUP)
 
         def signingReportTask = project.tasks.create("signingReport", SigningReportTask)
         signingReportTask.setDescription("Displays the signing info for each variant")
-        signingReportTask.setVariants(plugin.getVariantDataList())
+        signingReportTask.setVariants(variantDataList)
         signingReportTask.setGroup(ANDROID_GROUP)
     }
 
