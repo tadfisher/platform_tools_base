@@ -21,6 +21,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -119,6 +120,54 @@ public class PlaceholderHandlerTest extends TestCase {
                         PositionImpl.UNKNOWN,
                         Actions.ActionType.INJECTED,
                         null);
+            }
+        }
+    }
+
+    public void testSeveralPlaceholders() throws ParserConfigurationException, SAXException, IOException {
+
+        String xml = ""
+                + "<manifest\n"
+                + "    xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+                + "    <activity android:name=\"activityOne\"\n"
+                + "         android:attr1=\"${first}.${second}\"/>\n"
+                + "</manifest>";
+
+        XmlDocument refDocument = TestUtils.xmlDocumentFromString(
+                new TestUtils.TestSourceLocation(getClass(), "testPlaceholders#xml"), xml);
+
+        PlaceholderHandler handler = new PlaceholderHandler();
+        handler.visit(
+                ManifestMerger2.MergeType.APPLICATION,
+                refDocument, new KeyBasedValueResolver<String>() {
+                    @Override
+                    public String getValue(@NonNull String key) {
+                        if (key.equals("first")) {
+                            return "firstValue";
+                        } else {
+                            return "secondValue";
+                        }
+                    }
+                }, mBuilder);
+
+        Optional<XmlElement> activityOne = refDocument.getRootNode()
+                .getNodeByTypeAndKey(ManifestModel.NodeTypes.ACTIVITY, ".activityOne");
+        assertTrue(activityOne.isPresent());
+        assertEquals(2, activityOne.get().getAttributes().size());
+        // check substitution.
+        assertEquals("firstValue.secondValue",
+                activityOne.get().getAttribute(
+                        XmlNode.fromXmlName("android:attr1")).get().getValue());
+
+        for (XmlAttribute xmlAttribute : activityOne.get().getAttributes()) {
+            // any attribute other than android:name should have been injected.
+            if (!xmlAttribute.getName().toString().contains("name")) {
+                verify(mActionRecorder, times(2)).recordAttributeAction(
+                        xmlAttribute,
+                        PositionImpl.UNKNOWN,
+                        Actions.ActionType.INJECTED,
+                        null);
+
             }
         }
     }
