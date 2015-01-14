@@ -99,6 +99,7 @@ import com.android.builder.testing.ConnectedDeviceProvider
 import com.android.builder.testing.api.DeviceProvider
 import com.android.builder.testing.api.TestServer
 import com.android.sdklib.AndroidTargetHash
+import com.android.sdklib.BuildToolInfo
 import com.android.sdklib.IAndroidTarget
 import com.android.sdklib.SdkVersionInfo
 import com.google.common.collect.ImmutableSet
@@ -2501,6 +2502,11 @@ class TaskManager {
             installTask.plugin = plugin
             installTask.variantData = variantData
             conventionMapping(installTask).map("adbExe") { androidBuilder.sdkInfo?.adb }
+            conventionMapping(installTask).map("splitSelectExe") {
+                String path = androidBuilder.targetInfo?.buildTools?.getPath(
+                        BuildToolInfo.PathId.SPLIT_SELECT);
+                path != null ? new File(path) : null;
+            }
             installTask.dependsOn variantData.assembleVariantTask
             variantData.installTask = installTask
         }
