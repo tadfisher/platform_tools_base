@@ -22,8 +22,10 @@ import com.android.build.gradle.internal.dsl.GroupableProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import groovy.transform.CompileStatic
 import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.Project
 import org.gradle.api.internal.DefaultDomainObjectSet
 import org.gradle.api.internal.project.ProjectInternal
+import org.gradle.api.logging.Logging
 import org.gradle.internal.reflect.Instantiator
 
 /**
@@ -36,12 +38,15 @@ public class LibraryExtension extends BaseExtension {
     private final DefaultDomainObjectSet<LibraryVariant> libraryVariantList =
         new DefaultDomainObjectSet<LibraryVariant>(LibraryVariant.class)
 
+    private Project project
+
     LibraryExtension(LibraryPlugin plugin, ProjectInternal project, Instantiator instantiator,
             NamedDomainObjectContainer<BuildType> buildTypes,
             NamedDomainObjectContainer<GroupableProductFlavor> productFlavors,
             NamedDomainObjectContainer<SigningConfig> signingConfigs,
             boolean isLibrary) {
         super(plugin, project, instantiator, buildTypes, productFlavors, signingConfigs, isLibrary)
+        this.project = project
     }
 
     /**
@@ -65,7 +70,10 @@ public class LibraryExtension extends BaseExtension {
 
     public void packageBuildConfig(boolean value) {
         if (!value) {
-            plugin.displayDeprecationWarning("Support for not packaging BuildConfig is deprecated and will be removed in 1.0")
+            BasePlugin.displayDeprecationWarning(
+                    Logging.getLogger(""),
+                    project,
+                    "Support for not packaging BuildConfig is deprecated and will be removed in 1.0")
         }
 
         packageBuildConfig = value

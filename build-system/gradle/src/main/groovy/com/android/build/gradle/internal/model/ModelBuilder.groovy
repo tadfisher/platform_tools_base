@@ -89,7 +89,7 @@ public class ModelBuilder implements ToolingModelBuilder {
         List<File> frameworkSource = Collections.emptyList();
 
         // List of extra artifacts, with all test variants added.
-        List<ArtifactMetaData> artifactMetaDataList = basePlugin.extraArtifacts.collect()
+        List<ArtifactMetaData> artifactMetaDataList = basePlugin.extraModelInfo.extraArtifacts.collect()
 
         VariantType.testingTypes
                 .collect { new ArtifactMetaDataImpl(it.artifactName, true, it.artifactType) }
@@ -108,8 +108,8 @@ public class ModelBuilder implements ToolingModelBuilder {
                 cloneSigningConfigs(signingConfigs),
                 aaptOptions,
                 artifactMetaDataList,
-                basePlugin.unresolvedDependencies,
-                Lists.newArrayList(basePlugin.syncIssues.values()),
+                basePlugin.extraModelInfo.unresolvedDependencies,
+                Lists.newArrayList(basePlugin.extraModelInfo.syncIssues.values()),
                 basePlugin.extension.compileOptions,
                 lintOptions,
                 project.getBuildDir(),
@@ -117,17 +117,17 @@ public class ModelBuilder implements ToolingModelBuilder {
                 basePlugin instanceof LibraryPlugin)
                     .setDefaultConfig(ProductFlavorContainerImpl.createProductFlavorContainer(
                         basePlugin.defaultConfigData,
-                        basePlugin.getExtraFlavorSourceProviders(basePlugin.defaultConfigData.productFlavor.name)))
+                        basePlugin.extraModelInfo.getExtraFlavorSourceProviders(basePlugin.defaultConfigData.productFlavor.name)))
 
         for (BuildTypeData btData : basePlugin.variantManager.buildTypes.values()) {
             androidProject.addBuildType(BuildTypeContainerImpl.createBTC(
                     btData,
-                    basePlugin.getExtraBuildTypeSourceProviders(btData.buildType.name)))
+                    basePlugin.extraModelInfo.getExtraBuildTypeSourceProviders(btData.buildType.name)))
         }
         for (ProductFlavorData pfData : basePlugin.variantManager.productFlavors.values()) {
             androidProject.addProductFlavors(ProductFlavorContainerImpl.createProductFlavorContainer(
                     pfData,
-                    basePlugin.getExtraFlavorSourceProviders(pfData.productFlavor.name)))
+                    basePlugin.extraModelInfo.getExtraFlavorSourceProviders(pfData.productFlavor.name)))
         }
 
         Set<Project> gradleProjects = project.getRootProject().getAllprojects();
@@ -172,10 +172,10 @@ public class ModelBuilder implements ToolingModelBuilder {
         String variantName = variantData.variantConfiguration.fullName
 
         List<AndroidArtifact> extraAndroidArtifacts = Lists.newArrayList(
-                basePlugin.getExtraAndroidArtifacts(variantName))
+                basePlugin.extraModelInfo.getExtraAndroidArtifacts(variantName))
         // Make sure all extra artifacts are serializable.
         List<JavaArtifact> extraJavaArtifacts =
-                basePlugin.getExtraJavaArtifacts(variantName).collect(JavaArtifactImpl.&clone)
+                basePlugin.extraModelInfo.getExtraJavaArtifacts(variantName).collect(JavaArtifactImpl.&clone)
 
         if (variantData instanceof TestedVariantData) {
             for (variantType in VariantType.testingTypes) {
@@ -332,7 +332,7 @@ public class ModelBuilder implements ToolingModelBuilder {
             multiFlavorSourceProvider = variantData.variantConfiguration.multiFlavorSourceProvider
         } else {
             SourceProviderContainer container = getSourceProviderContainer(
-                    basePlugin.getExtraVariantSourceProviders(
+                    basePlugin.extraModelInfo.getExtraVariantSourceProviders(
                             variantData.getVariantConfiguration().getFullName()),
                     name)
             if (container != null) {

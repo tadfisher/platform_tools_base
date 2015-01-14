@@ -41,6 +41,7 @@ import com.android.builder.testing.api.TestServer
 import com.android.sdklib.repository.FullRevision
 import com.android.utils.ILogger
 import com.google.common.collect.Lists
+import groovy.transform.CompileStatic
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.artifacts.Configuration
@@ -459,21 +460,21 @@ public abstract class BaseExtension {
     public void registerArtifactType(@NonNull String name,
                                      boolean isTest,
                                      int artifactType) {
-        plugin.registerArtifactType(name, isTest, artifactType)
+        plugin.extraModelInfo.registerArtifactType(name, isTest, artifactType)
     }
 
     public void registerBuildTypeSourceProvider(
             @NonNull String name,
             @NonNull BuildType buildType,
             @NonNull SourceProvider sourceProvider) {
-        plugin.registerBuildTypeSourceProvider(name, buildType, sourceProvider)
+        plugin.extraModelInfo.registerBuildTypeSourceProvider(name, buildType, sourceProvider)
     }
 
     public void registerProductFlavorSourceProvider(
             @NonNull String name,
             @NonNull ProductFlavor productFlavor,
             @NonNull SourceProvider sourceProvider) {
-        plugin.registerProductFlavorSourceProvider(name, productFlavor, sourceProvider)
+        plugin.extraModelInfo.registerProductFlavorSourceProvider(name, productFlavor, sourceProvider)
     }
 
     public void registerJavaArtifact(
@@ -484,7 +485,7 @@ public abstract class BaseExtension {
             @NonNull Configuration configuration,
             @NonNull File classesFolder,
             @Nullable SourceProvider sourceProvider) {
-        plugin.registerJavaArtifact(name, variant, assembleTaskName, javaCompileTaskName,
+        plugin.extraModelInfo.registerJavaArtifact(name, variant, assembleTaskName, javaCompileTaskName,
                 configuration, classesFolder, sourceProvider)
     }
 
@@ -492,7 +493,7 @@ public abstract class BaseExtension {
             @NonNull String name,
             @NonNull String flavorName,
             @NonNull SourceProvider sourceProvider) {
-        plugin.registerMultiFlavorSourceProvider(name, flavorName, sourceProvider)
+        plugin.extraModelInfo.registerMultiFlavorSourceProvider(name, flavorName, sourceProvider)
     }
 
     @NonNull
