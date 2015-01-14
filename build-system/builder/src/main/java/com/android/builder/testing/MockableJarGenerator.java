@@ -57,6 +57,8 @@ public class MockableJarGenerator {
             Type.INT_TYPE, Type.BYTE_TYPE, Type.BOOLEAN_TYPE, Type.CHAR_TYPE, Type.SHORT_TYPE);
 
     private final boolean returnDefaultValues;
+    private final ImmutableSet<String> prefixesToSkip = ImmutableSet.of(
+            "java.", "javax.", "org.xml.", "org.w3c.");
 
     public MockableJarGenerator(boolean returnDefaultValues) {
         this.returnDefaultValues = returnDefaultValues;
@@ -78,7 +80,9 @@ public class MockableJarGenerator {
                 InputStream inputStream = androidJar.getInputStream(entry);
 
                 if (entry.getName().endsWith(".class")) {
-                    rewriteClass(entry, inputStream, outputStream);
+                    if (!skipClass(entry.getName().replace("/", "."))) {
+                        rewriteClass(entry, inputStream, outputStream);
+                    }
                 } else {
                     outputStream.putNextEntry(entry);
                     ByteStreams.copy(inputStream, outputStream);
@@ -96,6 +100,15 @@ public class MockableJarGenerator {
         }
     }
 
+    private boolean skipClass(String className) {
+        for (String prefix : prefixesToSkip) {
+            if (className.startsWith(prefix)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * Writes a modified *.class file to the output JAR file.
      */
@@ -110,7 +123,7 @@ public class MockableJarGenerator {
 
         modifyClass(classNode);
 
-        ClassWriter classWriter = new ClassWriter(EMPTY_FLAGS);
+        ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
         classNode.accept(classWriter);
 
         outputStream.putNextEntry(new ZipEntry(entry.getName()));
@@ -128,14 +141,14 @@ public class MockableJarGenerator {
         List<MethodNode> methodNodes = classNode.methods;
         for (MethodNode methodNode : methodNodes) {
             methodNode.access &= ~Opcodes.ACC_FINAL;
-            fixMethodBody(methodNode);
+            fixMethodBody(methodNode, classNode);
         }
     }
 
     /**
      * Rewrites the method bytecode to remove the "Stub!" exception.
      */
-    private void fixMethodBody(MethodNode methodNode) {
+    private void fixMethodBody(MethodNode methodNode, ClassNode classNode) {
         if ((methodNode.access & Opcodes.ACC_NATIVE) != 0
                 || (methodNode.access & Opcodes.ACC_ABSTRACT) != 0) {
             // Abstract and native method don't have bodies to rewrite.
@@ -155,7 +168,9 @@ public class MockableJarGenerator {
                         if (returnDefaultValues) {
                             instructions.insert(instruction, new InsnNode(Opcodes.RETURN));
                         } else {
-                            instructions.insert(instruction, throwExceptionsList(methodNode));
+                            instructions.insert(
+                                    instruction,
+                                    throwExceptionsList(methodNode, classNode));
                         }
                         // Start removing all following instructions.
                         deadCode = true;
@@ -182,12 +197,12 @@ public class MockableJarGenerator {
 
                 instructions.add(new InsnNode(returnType.getOpcode(Opcodes.IRETURN)));
             } else {
-                instructions.insert(throwExceptionsList(methodNode));
+                instructions.insert(throwExceptionsList(methodNode, classNode));
             }
         }
     }
 
-    private static InsnList throwExceptionsList(MethodNode methodNode) {
+    private static InsnList throwExceptionsList(MethodNode methodNode, ClassNode classNode) {
         try {
             String runtimeException = Type.getInternalName(RuntimeException.class);
             Constructor<RuntimeException> constructor =
@@ -197,12 +212,25 @@ public class MockableJarGenerator {
             instructions.add(
                     new TypeInsnNode(Opcodes.NEW, runtimeException));
             instructions.add(new InsnNode(Opcodes.DUP));
-            instructions.add(new LdcInsnNode("Method " + methodNode.name + " not mocked."));
+            StringBuilder errorMessage = new StringBuilder();
+            if (methodNode.name.equals("<clinit>")) {
+                errorMessage.append("Constructor for ");
+                errorMessage.append(classNode.name);
+            } else {
+                errorMessage.append("Method ");
+                errorMessage.append(methodNode.name);
+            }
+            errorMessage.append(" not mocked. "
+                    + "Set android.testOptions.unitTests.returnDefaultValues=true in build.gradle "
+                    + "to make no-op constructors and return zero from all methods.");
+
+            instructions.add(new LdcInsnNode(errorMessage.toString()));
             instructions.add(new MethodInsnNode(
                     Opcodes.INVOKESPECIAL,
                     runtimeException,
                     CONSTRUCTOR,
-                    Type.getType(constructor).getDescriptor()));
+                    Type.getType(constructor).getDescriptor(),
+                    false));
             instructions.add(new InsnNode(Opcodes.ATHROW));
 
             return instructions;

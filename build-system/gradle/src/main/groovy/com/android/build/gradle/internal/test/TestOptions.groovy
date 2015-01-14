@@ -25,4 +25,17 @@ class TestOptions {
 
     /** Name of the reports directory. */
     String reportDir
+
+    /** Options for controlling unit tests execution. */
+    UnitTests unitTests = new UnitTests()
+
+    /** Options for controlling unit tests execution. */
+    static class UnitTests {
+
+        /**
+         * Whether unmocked methods from android.jar should throw exceptions or return default
+         * values (i.e. zero or null).
+         */
+        boolean returnDefaultValues
+    }
 }
