@@ -432,7 +432,13 @@ public class AndroidBuilder {
 
     @NonNull
     public ProcessResult executeProcess(@NonNull ProcessInfo processInfo) {
-        return mProcessExecutor.execute(processInfo, mProcessOutputHandler);
+        return executeProcess(processInfo, mProcessOutputHandler);
+    }
+
+    @NonNull
+    public ProcessResult executeProcess(@NonNull ProcessInfo processInfo,
+            @NonNull ProcessOutputHandler handler) {
+        return mProcessExecutor.execute(processInfo, handler);
     }
 
     @NonNull
