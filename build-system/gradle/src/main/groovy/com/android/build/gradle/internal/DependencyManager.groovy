@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal
 
 import com.android.annotations.NonNull
+import com.android.annotations.Nullable
 import com.android.build.gradle.internal.dependency.DependencyChecker
 import com.android.build.gradle.internal.dependency.JarInfo
 import com.android.build.gradle.internal.dependency.LibInfo
@@ -118,7 +119,9 @@ class DependencyManager {
         }
     }
 
-    public void resolveDependencies(VariantDependencies variantDeps) {
+    public void resolveDependencies(
+            @NonNull VariantDependencies variantDeps,
+            @Nullable VariantDependencies testedVariantDeps) {
         Multimap<LibraryDependency, VariantDependencies> reverseMap = ArrayListMultimap.create()
 
         resolveDependencyForConfig(variantDeps, reverseMap)
@@ -152,6 +155,10 @@ class DependencyManager {
                 prepareLibraryTask.dependsOn parentProject.getPath() + ":assemble${configName.capitalize()}"
             }
 */
+        }
+
+        if (testedVariantDeps != null) {
+            
         }
     }
 
