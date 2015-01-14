@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.test
 
+import org.gradle.api.internal.tasks.options.Option
+
 /**
  * Options for running tests.
  */
@@ -25,4 +27,20 @@ class TestOptions {
 
     /** Name of the reports directory. */
     String reportDir
+
+    /** Options for controlling unit tests execution. */
+    UnitTests unitTests = new UnitTests()
+
+    /** Options for controlling unit tests execution. */
+    static class UnitTests {
+
+        /**
+         * Whether unmocked methods from android.jar should throw exceptions or return default
+         * values (i.e. zero or null).
+         */
+        boolean returnDefaultValues
+
+        @Option(option = "debug-jvm", description = "Enable debugging for the process. The process is started suspended and listening on port 5005. [INCUBATING]")
+        boolean debug
+    }
 }
