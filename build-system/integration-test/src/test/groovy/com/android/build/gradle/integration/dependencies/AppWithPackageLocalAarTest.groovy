@@ -24,8 +24,7 @@ import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
 
-import static org.junit.Assert.assertEquals
-import static org.junit.Assert.assertNotNull
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 /**
  * test for package (apk) local aar in app
  */
@@ -66,13 +65,13 @@ dependencies {
     void "check model failed to load"() {
         Collection<SyncIssue> issues = model.getSyncIssues()
 
-        assertNotNull(issues)
-        assertEquals(1, issues.size())
+        assertThat(issues).isNotNull()
+        assertThat(issues).hasSize(1)
 
         SyncIssue issue = issues.iterator().next()
-        assertNotNull(issue)
-        assertEquals(SyncIssue.SEVERITY_ERROR, issue.getSeverity())
-        assertEquals(SyncIssue.TYPE_NON_JAR_LOCAL_DEP, issue.getType())
-        assertEquals("baseLib-1.0.aar", new File(issue.getData()).getName())
+        assertThat(issue).isNotNull()
+        assertThat(issue).hasSeverity(SyncIssue.SEVERITY_ERROR)
+        assertThat(issue).hasType(SyncIssue.TYPE_NON_JAR_LOCAL_DEP)
+        assertThat(new File(issue.getData()).getName()).is('baseLib-1.0.aar')
     }
 }
