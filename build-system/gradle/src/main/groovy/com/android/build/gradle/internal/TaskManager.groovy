@@ -212,8 +212,10 @@ class TaskManager {
         return plugin.extension
     }
 
-    public void resolveDependencies(VariantDependencies variantDeps) {
-        dependencyManager.resolveDependencies(variantDeps)
+    public void resolveDependencies(
+            @NonNull VariantDependencies variantDeps,
+            @Nullable VariantDependencies testedVariantDeps) {
+        dependencyManager.resolveDependencies(variantDeps, testedVariantDeps)
     }
 
     @Deprecated
@@ -612,8 +614,9 @@ class TaskManager {
                 map("useNewCruncher") { getExtension().aaptOptions.useNewCruncher }
 
         conventionMapping(mergeResourcesTask).map("inputResourceSets") {
-            def generatedResFolders = [variantData.renderscriptCompileTask.getResOutputDir(),
-                                       variantData.generateResValuesTask.getResOutputDir()]
+            List<File> generatedResFolders = Lists.newArrayList(
+                    variantData.renderscriptCompileTask.getResOutputDir(),
+                    variantData.generateResValuesTask.getResOutputDir())
             if (variantData.extraGeneratedResFolders != null) {
                 generatedResFolders += variantData.extraGeneratedResFolders
             }
