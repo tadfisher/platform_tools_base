@@ -34,7 +34,7 @@ public class JarDependency {
     private final File mJarFile;
 
     private final boolean mCompiled;
-    private final boolean mPackaged;
+    private boolean mPackaged;
     private final boolean mProguarded;
 
     @Nullable
@@ -72,6 +72,10 @@ public class JarDependency {
 
     public boolean isPackaged() {
         return mPackaged;
+    }
+
+    public void setPackaged(boolean packaged) {
+        mPackaged = packaged;
     }
 
     public boolean isProguarded() {

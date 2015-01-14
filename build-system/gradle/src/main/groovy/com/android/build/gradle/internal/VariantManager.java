@@ -44,7 +44,6 @@ import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.variant.ApplicationVariantFactory;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
-import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
@@ -273,7 +272,7 @@ public class VariantManager implements VariantModel {
                             new ConfigurationProvider[testVariantProviders.size()]));
             variantData.setVariantDependency(variantDep);
 
-            taskManager.resolveDependencies(variantDep);
+            taskManager.resolveDependencies(variantDep, testedVariantData.getVariantDependency());
             testVariantConfig.setDependencies(variantDep);
             switch (variantType) {
                 case ANDROID_TEST:
@@ -477,7 +476,7 @@ public class VariantManager implements VariantModel {
                     variantDep.getPackageConfiguration().getName(), COM_ANDROID_SUPPORT_MULTIDEX);
         }
 
-        taskManager.resolveDependencies(variantDep);
+        taskManager.resolveDependencies(variantDep, null);
         variantConfig.setDependencies(variantDep);
 
         return variantData;
