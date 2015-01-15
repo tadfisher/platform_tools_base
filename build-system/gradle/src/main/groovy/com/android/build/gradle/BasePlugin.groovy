@@ -122,12 +122,6 @@ public abstract class BasePlugin {
 
     private boolean hasCreatedTasks = false
 
-    private ProductFlavorData<ProductFlavor> defaultConfigData
-
-    protected DefaultAndroidSourceSet mainSourceSet
-    protected DefaultAndroidSourceSet androidTestSourceSet
-    protected DefaultAndroidSourceSet unitTestSourceSet
-
     protected BasePlugin(Instantiator instantiator, ToolingModelBuilderRegistry registry) {
         this.instantiator = instantiator
         this.registry = registry
@@ -183,9 +177,6 @@ public abstract class BasePlugin {
         project.apply plugin: JacocoPlugin
         jacocoPlugin = project.plugins.getPlugin(JacocoPlugin)
 
-        // Register a builder for the custom tooling model
-        registry.register(new ModelBuilder());
-
         project.tasks.getByName("assemble").description =
                 "Assembles all variants of all applications and secondary packages."
 
@@ -236,12 +227,22 @@ public abstract class BasePlugin {
                 this, (ProjectInternal) project, instantiator,
                 buildTypeContainer, productFlavorContainer, signingConfigContainer,
                 this instanceof LibraryPlugin)
-        setBaseExtension(extension)
 
         DependencyManager dependencyManager = new DependencyManager(project, extraModelInfo)
-        taskManager = new TaskManager(project, project.tasks, androidBuilder, extension, sdkHandler, dependencyManager)
+        taskManager = new TaskManager(
+                project,
+                project.tasks,
+                androidBuilder,
+                extension,
+                sdkHandler,
+                dependencyManager,
+                registry)
 
         variantManager = new VariantManager(project, this, extension, getVariantFactory(), taskManager)
+
+        // Register a builder for the custom tooling model
+        ModelBuilder modelBuilder = new ModelBuilder(this, androidBuilder, variantManager, extension, extraModelInfo);
+        registry.register(modelBuilder);
 
         // map the whenObjectAdded callbacks on the containers.
         signingConfigContainer.whenObjectAdded { SigningConfig signingConfig ->
@@ -280,16 +281,6 @@ public abstract class BasePlugin {
             ensureTargetSetup()
             createAndroidTasks(false)
         }
-    }
-
-    private void setBaseExtension(@NonNull BaseExtension extension) {
-        mainSourceSet = (DefaultAndroidSourceSet) extension.sourceSets.create(extension.defaultConfig.name)
-        androidTestSourceSet = (DefaultAndroidSourceSet) extension.sourceSets.create(ANDROID_TEST.prefix)
-        unitTestSourceSet = (DefaultAndroidSourceSet) extension.sourceSets.create(UNIT_TEST.prefix)
-
-        defaultConfigData = new ProductFlavorData<ProductFlavor>(
-                extension.defaultConfig, mainSourceSet,
-                androidTestSourceSet, unitTestSourceSet, project)
     }
 
     private void checkGradleVersion() {
@@ -376,10 +367,6 @@ public abstract class BasePlugin {
                     "Once these methods are called, it is not possible to\n" +
                     "continue configuring the model.")
         }
-    }
-
-    ProductFlavorData<ProductFlavor> getDefaultConfigData() {
-        return defaultConfigData
     }
 
     ILogger getLogger() {
