@@ -303,10 +303,13 @@ public class BaseComponentModelPlugin extends BasePlugin implements Plugin<Proje
             }
 
             // create the lint tasks.
-            taskManager.createLintTasks();
+            taskManager.createLintTasks(variantManager.variantDataList);
 
             // create the test tasks.
-            taskManager.createConnectedCheckTasks(!variantManager.productFlavors.isEmpty(), false /*isLibrary*/);
+            taskManager.createConnectedCheckTasks(
+                    variantManager.variantDataList,
+                    !variantManager.productFlavors.isEmpty() /*hasFlavors*/,
+                    false /*isLibrary*/);
 
             // Create the variant API objects after the tasks have been created!
             variantManager.createApiObjects();
