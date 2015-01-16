@@ -16,6 +16,8 @@
 
 package com.android.build.gradle
 
+import com.android.build.gradle.internal.ApplicationTaskManager
+import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.variant.ApplicationVariantFactory
 import com.android.build.gradle.internal.variant.VariantFactory
 import org.gradle.api.Plugin
@@ -37,6 +39,11 @@ class AppPlugin extends BasePlugin implements Plugin<Project> {
     @Override
     protected Class<? extends BaseExtension> getExtensionClass() {
         return AppExtension.class
+    }
+
+    @Override
+    protected Class<? extends TaskManager> getTaskManagerClass() {
+        return ApplicationTaskManager.class
     }
 
     @Override
