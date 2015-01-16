@@ -16,27 +16,22 @@
 
 package com.android.build.gradle
 
-import com.android.annotations.NonNull
 import com.android.build.gradle.internal.BadPluginException
 import com.android.build.gradle.internal.DependencyManager
 import com.android.build.gradle.internal.ExtraModelInfo
 import com.android.build.gradle.internal.LibraryCache
 import com.android.build.gradle.internal.LoggerWrapper
-import com.android.build.gradle.internal.ProductFlavorData
 import com.android.build.gradle.internal.SdkHandler
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.VariantManager
-import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.coverage.JacocoPlugin
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.BuildTypeFactory
 import com.android.build.gradle.internal.dsl.GroupableProductFlavor
 import com.android.build.gradle.internal.dsl.GroupableProductFlavorFactory
-import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.dsl.SigningConfigFactory
 import com.android.build.gradle.internal.model.ModelBuilder
-import com.android.build.gradle.internal.model.SyncIssueKey
 import com.android.build.gradle.internal.process.GradleJavaProcessExecutor
 import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.build.gradle.internal.variant.BaseVariantData
@@ -50,7 +45,6 @@ import com.android.builder.dependency.DependencyContainer
 import com.android.builder.dependency.JarDependency
 import com.android.builder.internal.compiler.JackConversionCache
 import com.android.builder.internal.compiler.PreDexCache
-import com.android.builder.model.SyncIssue
 import com.android.builder.sdk.SdkInfo
 import com.android.builder.sdk.TargetInfo
 import com.android.ide.common.internal.ExecutorSingleton
@@ -78,8 +72,6 @@ import java.util.regex.Pattern
 
 import static com.android.builder.core.BuilderConstants.DEBUG
 import static com.android.builder.core.BuilderConstants.RELEASE
-import static com.android.builder.core.VariantType.ANDROID_TEST
-import static com.android.builder.core.VariantType.UNIT_TEST
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES
 import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_KEY_ALIAS
 import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_KEY_PASSWORD
@@ -135,6 +127,11 @@ public abstract class BasePlugin {
 
     protected abstract Class<? extends BaseExtension> getExtensionClass()
     protected abstract VariantFactory getVariantFactory()
+
+    /**
+     * Return the implementation class of TaskManager.
+     */
+    protected abstract Class<? extends TaskManager> getTaskManagerClass()
 
     public Instantiator getInstantiator() {
         return instantiator
@@ -229,7 +226,7 @@ public abstract class BasePlugin {
                 this instanceof LibraryPlugin)
 
         DependencyManager dependencyManager = new DependencyManager(project, extraModelInfo)
-        taskManager = new TaskManager(
+        taskManager = getTaskManagerClass().newInstance(
                 project,
                 project.tasks,
                 androidBuilder,
