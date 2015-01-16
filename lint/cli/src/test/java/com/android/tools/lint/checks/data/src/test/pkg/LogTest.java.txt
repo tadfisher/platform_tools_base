@@ -1,0 +1,76 @@
+package test.pkg;
+
+import android.annotation.SuppressLint;
+import android.util.Log;
+
+@SuppressWarnings("UnusedDeclaration")
+public class LogTest {
+    private static final String TAG1 = "MyTag1";
+    private static final String TAG2 = "MyTag2";
+    private static final String TAG22 = "1234567890123456789012";
+    private static final String TAG23 = "12345678901234567890123";
+    private static final String TAG24 = "123456789012345678901234";
+    private static final String LONG_TAG = "MyReallyReallyReallyReallyReallyLongTag";
+
+    public void checkConditional() {
+        Log.d(TAG1, "message"); // error: unconditional
+        Log.i(TAG1, "message"); // error: unconditional
+        Log.e(TAG1, "message"); // ok: only flagging debug/info messages
+        Log.w(TAG1, "message"); // ok: only flagging debug/info messages
+        Log.wtf(TAG1, "message"); // ok: only flagging debug/info messages
+        if (Log.isLoggable(TAG1, 0)) {
+            Log.d(TAG1, "message"); // ok: conditional
+        }
+    }
+
+    public void checkWrongTag(String tag) {
+        if (Log.isLoggable(TAG1, 0)) {
+            Log.d(TAG2, "message"); // warn: mismatched tags!
+        }
+        if (Log.isLoggable("my_tag", 0)) {
+            Log.d("other_tag", "message"); // warn: mismatched tags!
+        }
+        if (Log.isLoggable("my_tag", 0)) {
+            Log.d("my_tag", "message"); // ok: strings equal
+        }
+        if (Log.isLoggable(TAG1, 0)) {
+            Log.d(LogTest.TAG1, "message"); // OK: same tag; different access syntax
+        }
+        if (Log.isLoggable(tag, 0)) {
+            Log.d(tag, "message"); // ok: same variable
+        }
+    }
+
+    public void checkLongTag(boolean shouldLog) {
+        if (shouldLog) {
+            // String literal tags
+            Log.d("short_tag", "message"); // ok: short
+            Log.d("really_really_really_really_really_long_tag", "message"); // error: too long
+
+            // Resolved field tags
+            Log.d(TAG1, "message"); // ok: short
+            Log.d(TAG22, "message"); // ok: short
+            Log.d(TAG23, "message"); // ok: threshold
+            Log.d(TAG24, "message"); // error: too long
+            Log.d(LONG_TAG, "message"); // error: way too long
+
+            // Locally variable tags
+            final String LOCAL_TAG = "MyReallyReallyReallyReallyReallyLongTag";
+            Log.d(LOCAL_TAG, "message"); // error: too long
+
+            // Concatenated tags
+            Log.d(TAG22 + TAG1, "message"); // error: too long
+            Log.d(TAG22 + "MyTag", "message"); // error: too long
+        }
+    }
+
+    @SuppressLint("all")
+    public void suppressed1() {
+        Log.d(TAG1, "message"); // ok: suppressed
+    }
+
+    @SuppressLint("LogConditional")
+    public void suppressed2() {
+        Log.d(TAG1, "message"); // ok: suppressed
+    }
+}
