@@ -41,9 +41,6 @@ public interface ApkVariantOutput extends BaseVariantOutput {
     @Nullable
     ZipAlign getZipAlign();
 
-    @NonNull
-    ZipAlign createZipAlignTask(@NonNull String taskName, @NonNull File inputFile, @NonNull File outputFile);
-
     /**
      * Sets the version code override. This version code will only affect this output.
      *

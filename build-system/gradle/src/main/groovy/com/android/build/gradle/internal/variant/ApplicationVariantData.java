@@ -17,7 +17,7 @@ package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.BasePlugin;
+import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.builder.core.VariantType;
 import com.google.common.collect.Maps;
@@ -34,9 +34,9 @@ public class ApplicationVariantData extends ApkVariantData implements TestedVari
     private Set<String> compatibleScreens = null;
 
     public ApplicationVariantData(
-            @NonNull BasePlugin basePlugin,
+            @NonNull BaseExtension baseExtension,
             @NonNull GradleVariantConfiguration config) {
-        super(basePlugin, config);
+        super(baseExtension, config);
         testVariants = Maps.newEnumMap(VariantType.class);
     }
 
