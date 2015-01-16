@@ -147,7 +147,7 @@ import static com.google.common.base.Preconditions.checkNotNull
  * Manages tasks creation.
  */
 @CompileStatic
-class TaskManager {
+abstract class TaskManager {
 
     public static final String FILE_JACOCO_AGENT = 'jacocoagent.jar'
 
@@ -164,19 +164,17 @@ class TaskManager {
 
     final Map<SigningConfig, ValidateSigningTask> validateSigningTaskMap = [:]
 
-    private BasePlugin plugin
-
-    private Project project
+    protected Project project
 
     private TaskContainer tasks
 
-    private AndroidBuilder androidBuilder
+    protected AndroidBuilder androidBuilder
 
     private DependencyManager dependencyManager
 
-    private SdkHandler sdkHandler
+    protected SdkHandler sdkHandler
 
-    private BaseExtension extension
+    protected BaseExtension extension
 
     private Logger logger
 
@@ -195,7 +193,7 @@ class TaskManager {
 
     public Task lintCompile
 
-    private Task lintAll
+    protected Task lintAll
 
     public MockableAndroidJarTask createMockableJar
 
@@ -222,6 +220,10 @@ class TaskManager {
     private boolean isDebugLog() {
         return project.logger.isEnabled(LogLevel.DEBUG)
     }
+
+    abstract public void createTasksForVariantData(
+            @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData,
+            @Nullable Task assembleTask)
 
     private BaseExtension getExtension() {
         return extension

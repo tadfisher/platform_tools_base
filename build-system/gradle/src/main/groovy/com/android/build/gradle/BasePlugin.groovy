@@ -142,6 +142,11 @@ public abstract class BasePlugin {
     protected abstract Class<? extends BaseExtension> getExtensionClass()
     protected abstract VariantFactory getVariantFactory()
 
+    /**
+     * Return the implementation class of TaskManager.
+     */
+    protected abstract Class<? extends TaskManager> getTaskManagerClass()
+
     public Instantiator getInstantiator() {
         return instantiator
     }
@@ -239,7 +244,7 @@ public abstract class BasePlugin {
         setBaseExtension(extension)
 
         DependencyManager dependencyManager = new DependencyManager(project, extraModelInfo)
-        taskManager = new TaskManager(project, project.tasks, androidBuilder, extension, sdkHandler, dependencyManager)
+        taskManager = getTaskManagerClass().newInstance(project, project.tasks, androidBuilder, extension, sdkHandler, dependencyManager)
 
         variantManager = new VariantManager(project, this, extension, getVariantFactory(), taskManager)
 
