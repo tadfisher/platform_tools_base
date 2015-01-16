@@ -337,18 +337,9 @@ public class ResourceResolver extends RenderResources {
                 }
 
                 // Now look for the item in the theme, starting with the current one.
-                ResourceValue item = findItemInTheme(resource.name, forceFrameworkOnly || resource.framework);
-                if (item == null && mLogger != null) {
-                    mLogger.warning(LayoutLog.TAG_RESOURCES_RESOLVE_THEME_ATTR,
-                            String.format("Couldn't find theme resource %1$s for the current theme",
-                                    reference),
-                            new ResourceValue(ResourceType.ATTR, reference, resource.framework));
-                }
-
-                return item;
+                return findItemInTheme(resource.name, forceFrameworkOnly || resource.framework);
             } else {
-                return findResValue(resource.type, resource.name,
-                        forceFrameworkOnly || resource.framework);
+                return findResValue(resource, forceFrameworkOnly);
             }
         }
 
@@ -418,16 +409,17 @@ public class ResourceResolver extends RenderResources {
     // ---- Private helper methods.
 
     /**
-     * Searches for, and returns a {@link ResourceValue} by its name, and type.
-     * @param resType the type of the resource
-     * @param resName  the name of the resource
-     * @param frameworkOnly if <code>true</code>, the method does not search in the
+     * Searches for, and returns a {@link ResourceValue} by its parsed reference.
+     * @param resource the parsed resource
+     * @param forceFramework if <code>true</code>, the method does not search in the
      * project resources
      */
-    private ResourceValue findResValue(ResourceType resType, String resName,
-            boolean frameworkOnly) {
+    private ResourceValue findResValue(ResourceUrl resource, boolean forceFramework) {
         // map of ResourceValue for the given type
         Map<String, ResourceValue> typeMap;
+        ResourceType resType = resource.type;
+        String resName = resource.name;
+        boolean frameworkOnly = forceFramework || resource.framework;
 
         // if allowed, search in the project resources first.
         if (!frameworkOnly) {
@@ -435,6 +427,11 @@ public class ResourceResolver extends RenderResources {
             ResourceValue item = typeMap.get(resName);
             if (item != null) {
                 return item;
+            }
+            // If it's an id in the form of @+id, it may not have been created yet. A match in
+            // framework namespace would prevent the new id from being created.
+            if (resource.create) {
+                return null;
             }
         }
 
