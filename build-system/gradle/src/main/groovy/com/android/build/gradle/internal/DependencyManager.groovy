@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.tasks.PrepareDependenciesTask
 import com.android.build.gradle.internal.tasks.PrepareLibraryTask
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.BaseVariantOutputData
+import com.android.builder.dependency.DependencyContainer
 import com.android.builder.dependency.JarDependency
 import com.android.builder.dependency.LibraryDependency
 import com.android.builder.model.MavenCoordinates
@@ -85,6 +86,38 @@ class DependencyManager {
         this.project = project
         this.extraModelInfo = extraModelInfo
         logger = new LoggerWrapper(Logging.getLogger(this.class))
+    }
+
+    /**
+     * Returns the list of packaged local jars.
+     * @param dependencyContainer
+     * @return
+     */
+    public static Object[] getPackagedLocalJarFileList(DependencyContainer dependencyContainer) {
+        Set<File> files = Sets.newHashSet()
+        for (JarDependency jarDependency : dependencyContainer.localDependencies) {
+            if (jarDependency.isPackaged()) {
+                files.add(jarDependency.jarFile)
+            }
+        }
+
+        return files.toArray()
+    }
+
+    /**
+     * Returns the list of compiled local jars.
+     * @param dependencyContainer
+     * @return
+     */
+    public static Object[] getCompiledLocalJarFileList(DependencyContainer dependencyContainer) {
+        Set<File> files = Sets.newHashSet()
+        for (JarDependency jarDependency : dependencyContainer.localDependencies) {
+            if (jarDependency.isCompiled()) {
+                files.add(jarDependency.jarFile)
+            }
+        }
+
+        return files.toArray()
     }
 
     public void addDependencyToPrepareTask(
