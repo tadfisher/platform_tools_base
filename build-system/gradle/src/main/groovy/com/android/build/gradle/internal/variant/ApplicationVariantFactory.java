@@ -20,7 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
-import com.android.build.gradle.BasePlugin;
+import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.TaskManager;
@@ -31,11 +31,13 @@ import com.android.build.gradle.internal.api.ApplicationVariantImpl;
 import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.model.FilterDataImpl;
+import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import org.gradle.api.Task;
+import org.gradle.internal.reflect.Instantiator;
 
 import java.util.Collections;
 import java.util.List;
@@ -46,14 +48,22 @@ import java.util.Set;
 public class ApplicationVariantFactory implements VariantFactory<ApplicationVariantData> {
 
     @NonNull
-    private final BasePlugin basePlugin;
+    Instantiator instantiator;
+    @NonNull
+    private final BaseExtension extension;
+    @NonNull
+    private final AndroidBuilder androidBuilder;
     @NonNull
     private final TaskManager taskManager;
 
     public ApplicationVariantFactory(
-            @NonNull BasePlugin basePlugin,
+            @NonNull Instantiator instantiator,
+            @NonNull AndroidBuilder androidBuilder,
+            @NonNull BaseExtension extension,
             @NonNull TaskManager taskManager) {
-        this.basePlugin = basePlugin;
+        this.instantiator = instantiator;
+        this.androidBuilder = androidBuilder;
+        this.extension = extension;
         this.taskManager = taskManager;
     }
 
@@ -64,7 +74,7 @@ public class ApplicationVariantFactory implements VariantFactory<ApplicationVari
             @NonNull Set<String> densities,
             @NonNull Set<String> abis,
             @NonNull Set<String> compatibleScreens) {
-        ApplicationVariantData variant = new ApplicationVariantData(basePlugin, variantConfiguration);
+        ApplicationVariantData variant = new ApplicationVariantData(extension, variantConfiguration);
 
         if (!densities.isEmpty()) {
             variant.setCompatibleScreens(compatibleScreens);
@@ -102,17 +112,20 @@ public class ApplicationVariantFactory implements VariantFactory<ApplicationVari
             @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider) {
         // create the base variant object.
-        ApplicationVariantImpl variant = basePlugin.getInstantiator().newInstance(
-                ApplicationVariantImpl.class, variantData, basePlugin, readOnlyObjectProvider);
+        ApplicationVariantImpl variant = instantiator.newInstance(
+                ApplicationVariantImpl.class,
+                variantData,
+                androidBuilder,
+                readOnlyObjectProvider);
 
         // now create the output objects
-        createApkOutputApiObjects(basePlugin, variantData, variant);
+        createApkOutputApiObjects(instantiator, variantData, variant);
 
         return variant;
     }
 
     public static void createApkOutputApiObjects(
-            @NonNull BasePlugin basePlugin,
+            @NonNull Instantiator instantiator,
             @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData,
             @NonNull ApkVariantImpl variant) {
         List<? extends BaseVariantOutputData> outputList = variantData.getOutputs();
@@ -121,7 +134,7 @@ public class ApplicationVariantFactory implements VariantFactory<ApplicationVari
         for (BaseVariantOutputData variantOutputData : outputList) {
             ApkVariantOutputData apkOutput = (ApkVariantOutputData) variantOutputData;
 
-            ApkVariantOutputImpl output = basePlugin.getInstantiator().newInstance(
+            ApkVariantOutputImpl output = instantiator.newInstance(
                     ApkVariantOutputImpl.class, apkOutput);
 
             apiOutputList.add(output);

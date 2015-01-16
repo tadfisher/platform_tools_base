@@ -20,8 +20,6 @@ import com.android.annotations.NonNull
 import com.android.annotations.Nullable
 import com.android.build.OutputFile
 import com.android.build.gradle.BaseExtension
-import com.android.build.gradle.BasePlugin
-import com.android.build.gradle.LibraryPlugin
 import com.android.build.gradle.api.ApkOutputFile
 import com.android.build.gradle.internal.BuildTypeData
 import com.android.build.gradle.internal.ExtraModelInfo
@@ -69,7 +67,6 @@ import static com.android.builder.model.AndroidProject.ARTIFACT_MAIN
  */
 @CompileStatic
 public class ModelBuilder implements ToolingModelBuilder {
-    BasePlugin basePlugin
 
     AndroidBuilder androidBuilder
 
@@ -79,17 +76,19 @@ public class ModelBuilder implements ToolingModelBuilder {
 
     VariantManager variantManager
 
+    boolean isLibrary
+
     ModelBuilder(
-            BasePlugin basePlugin,
             AndroidBuilder androidBuilder,
             VariantManager variantManager,
             BaseExtension extension,
-            ExtraModelInfo extraModelInfo) {
-        this.basePlugin = basePlugin
+            ExtraModelInfo extraModelInfo,
+            boolean isLibrary) {
         this.androidBuilder = androidBuilder
         this.extension = extension
         this.extraModelInfo = extraModelInfo
         this.variantManager = variantManager
+        this.isLibrary = isLibrary
     }
 
     @Override
@@ -138,7 +137,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                 lintOptions,
                 project.getBuildDir(),
                 extension.resourcePrefix,
-                basePlugin instanceof LibraryPlugin)
+                isLibrary)
 
         androidProject.setDefaultConfig(ProductFlavorContainerImpl.createProductFlavorContainer(
                 variantManager.defaultConfig,
