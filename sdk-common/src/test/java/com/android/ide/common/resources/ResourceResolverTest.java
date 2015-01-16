@@ -45,6 +45,12 @@ public class ResourceResolverTest extends TestCase {
                         + "    <color name=\"bright_foreground_dark\">@android:color/background_light</color>\n"
                         + "    <color name=\"bright_foreground_light\">@android:color/background_dark</color>\n"
                         + "</resources>\n",
+
+                        "values/ids.xml",  ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<resources>\n"
+                        + "    <item name=\"some_framework_id\" type=\"id\" />\n"
+                        + "</resources>\n",
                 });
 
         TestResourceRepository projectRepository = TestResourceRepository.create(false,
@@ -110,28 +116,7 @@ public class ResourceResolverTest extends TestCase {
                 "MyTheme", true);
         assertNotNull(resolver);
 
-        LayoutLog logger = new LayoutLog() {
-            @Override
-            public void warning(String tag, String message, Object data) {
-                fail(message);
-            }
-
-            @Override
-            public void fidelityWarning(String tag, String message, Throwable throwable,
-                    Object data) {
-                fail(message);
-            }
-
-            @Override
-            public void error(String tag, String message, Object data) {
-                fail(message);
-            }
-
-            @Override
-            public void error(String tag, String message, Throwable throwable, Object data) {
-                fail(message);
-            }
-        };
+        TestLayoutLog logger = new TestLayoutLog();
         resolver.setLogger(logger);
 
         assertEquals("MyTheme", resolver.getThemeName());
@@ -150,6 +135,7 @@ public class ResourceResolverTest extends TestCase {
                 resolver.findResValue("@android:color/bright_foreground_dark", true).getValue());
         assertEquals("#ffffffff",
                 resolver.findResValue("@android:color/background_light", true).getValue());
+        assertNull(resolver.findResValue("?attr/non_existent_style", false)); // shouldn't log an error.
 
         // getTheme
         StyleResourceValue myTheme = resolver.getTheme("MyTheme", false);
@@ -231,11 +217,20 @@ public class ResourceResolverTest extends TestCase {
                 resolver.findResValue("@string/show_all_apps", false)).getValue());
         assertEquals("#ffffffff", resolver.resolveResValue(
                 resolver.findResValue("@android:color/bright_foreground_dark", false)).getValue());
+        // resource not found error is acceptable.
+        logger.setFail(false);
+        assertFalse(resolver.resolveValue(null, "id", "@+id/some_framework_id", false).isFramework());
+        logger.setFail(true);
 
         // resolveValue
         assertEquals("#ffffffff",
                 resolver.resolveValue(ResourceType.STRING, "bright_foreground_dark",
                         "@android:color/background_light", true).getValue());
+        // error expected.
+        logger.setFail(false);
+        assertNull(resolver.resolveValue(ResourceType.STRING, "bright_foreground_dark",
+                "@color/background_light", false));
+        logger.setFail(true);
 
         // themeExtends
         assertTrue(resolver.themeExtends("@android:style/Theme", "@android:style/Theme"));
@@ -553,5 +548,43 @@ public class ResourceResolverTest extends TestCase {
 
         projectRepository.dispose();
 
+    }
+
+    private static class TestLayoutLog extends LayoutLog {
+
+        private boolean mFail = true;
+
+        @Override
+        public void warning(String tag, String message, Object data) {
+            if (mFail) {
+                fail(message);
+            }
+        }
+
+        @Override
+        public void fidelityWarning(String tag, String message, Throwable throwable,
+                Object data) {
+            if (mFail) {
+                fail(message);
+            }
+        }
+
+        @Override
+        public void error(String tag, String message, Object data) {
+            if (mFail) {
+                fail(message);
+            }
+        }
+
+        @Override
+        public void error(String tag, String message, Throwable throwable, Object data) {
+            if (mFail) {
+                fail(message);
+            }
+        }
+
+        void setFail(boolean fail) {
+            mFail = fail;
+        }
     }
 }
