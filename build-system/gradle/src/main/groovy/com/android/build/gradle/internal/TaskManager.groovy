@@ -20,7 +20,6 @@ import com.android.annotations.NonNull
 import com.android.annotations.Nullable
 import com.android.build.OutputFile
 import com.android.build.gradle.BaseExtension
-import com.android.build.gradle.BasePlugin
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
@@ -840,7 +839,7 @@ abstract class TaskManager {
 
                 if (config.buildType.isMinifyEnabled()) {
                     if (config.buildType.shrinkResources && config.useJack) {
-                        BasePlugin.displayWarning(logger, project,
+                        LoggingUtil.displayWarning(logger, project,
                                 "WARNING: shrinkResources does not yet work with useJack=true")
                     }
                     conventionMapping(processResources).map("proguardOutputFile") {
@@ -848,7 +847,7 @@ abstract class TaskManager {
                                 "$project.buildDir/${FD_INTERMEDIATES}/proguard-rules/${config.dirName}/aapt_rules.txt")
                     }
                 } else if (config.buildType.shrinkResources) {
-                    BasePlugin.displayWarning(logger, project,
+                    LoggingUtil.displayWarning(logger, project,
                             "WARNING: To shrink resources you must also enable ProGuard")
                 }
             }
@@ -2703,7 +2702,7 @@ abstract class TaskManager {
 
             // injar: the local dependencies
             Closure inJars = {
-                Arrays.asList(BasePlugin.getPackagedLocalJarFileList(variantData.variantDependency))
+                Arrays.asList(DependencyManager.getPackagedLocalJarFileList(variantData.variantDependency))
             }
 
             proguardTask.injars(inJars, filter: '!META-INF/MANIFEST.MF')
@@ -2714,7 +2713,7 @@ abstract class TaskManager {
                 // get all the compiled jar.
                 Set<File> compiledJars = androidBuilder.getCompileClasspath(variantConfig)
                 // and remove local jar that are also packaged
-                Object[] localJars = BasePlugin.getPackagedLocalJarFileList(variantData.variantDependency)
+                Object[] localJars = DependencyManager.getPackagedLocalJarFileList(variantData.variantDependency)
 
                 compiledJars.findAll({ !localJars.contains(it) })
             }
