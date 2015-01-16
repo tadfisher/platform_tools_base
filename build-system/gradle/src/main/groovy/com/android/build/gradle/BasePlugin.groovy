@@ -16,6 +16,7 @@
 
 package com.android.build.gradle
 
+import com.android.annotations.VisibleForTesting
 import com.android.build.gradle.internal.BadPluginException
 import com.android.build.gradle.internal.DependencyManager
 import com.android.build.gradle.internal.ExtraModelInfo
@@ -34,32 +35,24 @@ import com.android.build.gradle.internal.dsl.SigningConfigFactory
 import com.android.build.gradle.internal.model.ModelBuilder
 import com.android.build.gradle.internal.process.GradleJavaProcessExecutor
 import com.android.build.gradle.internal.process.GradleProcessExecutor
-import com.android.build.gradle.internal.variant.BaseVariantData
-import com.android.build.gradle.internal.variant.BaseVariantOutputData
 import com.android.build.gradle.internal.variant.VariantFactory
 import com.android.build.gradle.tasks.JillTask
 import com.android.build.gradle.tasks.PreDex
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.DefaultBuildType
-import com.android.builder.dependency.DependencyContainer
-import com.android.builder.dependency.JarDependency
 import com.android.builder.internal.compiler.JackConversionCache
 import com.android.builder.internal.compiler.PreDexCache
-import com.android.builder.sdk.SdkInfo
 import com.android.builder.sdk.TargetInfo
 import com.android.ide.common.internal.ExecutorSingleton
 import com.android.ide.common.process.LoggedProcessOutputHandler
 import com.android.utils.ILogger
-import com.google.common.collect.Sets
 import groovy.transform.CompileStatic
-import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.execution.TaskExecutionGraph
 import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.api.logging.LogLevel
-import org.gradle.api.logging.Logger
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.tasks.TaskContainer
@@ -93,21 +86,25 @@ public abstract class BasePlugin {
     private static final String GRADLE_VERSION_CHECK_OVERRIDE_PROPERTY =
             "com.android.build.gradle.overrideVersionCheck"
 
-    public static File TEST_SDK_DIR;
+    protected BaseExtension extension
 
-    protected Instantiator instantiator
-    protected ToolingModelBuilderRegistry registry
+    protected VariantManager variantManager
 
-    protected JacocoPlugin jacocoPlugin
-
-    private BaseExtension extension
-    private VariantManager variantManager
-    private TaskManager taskManager
+    protected TaskManager taskManager
 
     protected Project project
-    private LoggerWrapper loggerWrapper
+
     protected SdkHandler sdkHandler
-    private AndroidBuilder androidBuilder
+
+    protected AndroidBuilder androidBuilder
+
+    protected Instantiator instantiator
+
+    private ToolingModelBuilderRegistry registry
+
+    private JacocoPlugin jacocoPlugin
+
+    private LoggerWrapper loggerWrapper
 
     private ExtraModelInfo extraModelInfo
 
@@ -144,24 +141,22 @@ public abstract class BasePlugin {
         return false;
     }
 
-    public Instantiator getInstantiator() {
-        return instantiator
-    }
-
-    public VariantManager getVariantManager() {
+    @VisibleForTesting
+    VariantManager getVariantManager() {
         return variantManager
     }
 
-    BaseExtension getExtension() {
-        return extension
+    protected ILogger getLogger() {
+        if (loggerWrapper == null) {
+            loggerWrapper = new LoggerWrapper(project.logger)
+        }
+
+        return loggerWrapper
     }
+
 
     protected void apply(Project project) {
         this.project = project
-        doApply()
-    }
-
-    protected void doApply() {
         configureProject()
         createExtension()
         createTasks()
@@ -232,8 +227,9 @@ public abstract class BasePlugin {
                 new SigningConfigFactory(instantiator))
 
         extension = project.extensions.create('android', getExtensionClass(),
-                this, (ProjectInternal) project, instantiator,
-                buildTypeContainer, productFlavorContainer, signingConfigContainer, isLibrary())
+                (ProjectInternal) project, instantiator, androidBuilder, sdkHandler,
+                buildTypeContainer, productFlavorContainer, signingConfigContainer,
+                extraModelInfo, isLibrary())
 
         DependencyManager dependencyManager = new DependencyManager(project, extraModelInfo)
         taskManager = createTaskManager(
@@ -245,11 +241,21 @@ public abstract class BasePlugin {
                 dependencyManager,
                 registry)
 
-        variantManager = new VariantManager(project, this, extension, getVariantFactory(), taskManager)
+        variantManager = new VariantManager(
+                project,
+                androidBuilder,
+                extension,
+                getVariantFactory(),
+                taskManager,
+                instantiator)
 
         // Register a builder for the custom tooling model
         ModelBuilder modelBuilder = new ModelBuilder(
-                androidBuilder, variantManager, extension, extraModelInfo, isLibrary());
+                androidBuilder,
+                variantManager,
+                extension,
+                extraModelInfo,
+                isLibrary())
         registry.register(modelBuilder);
 
         // map the whenObjectAdded callbacks on the containers.
@@ -312,6 +318,7 @@ public abstract class BasePlugin {
         }
     }
 
+    @VisibleForTesting
     final void createAndroidTasks(boolean force) {
         // get current plugins and look for the default Java plugin.
         if (project.plugins.hasPlugin(JavaPlugin.class)) {
@@ -323,7 +330,9 @@ public abstract class BasePlugin {
         // Unless TEST_SDK_DIR is set in which case this is unit tests and we don't return.
         // This is because project don't get evaluated in the unit test setup.
         // See AppPluginDslTest
-        if (!force && (!project.state.executed || project.state.failure != null) && TEST_SDK_DIR == null) {
+        if (!force
+                && (!project.state.executed || project.state.failure != null)
+                && SdkHandler.sTestSdkFolder == null) {
             return
         }
 
@@ -331,6 +340,8 @@ public abstract class BasePlugin {
             return
         }
         hasCreatedTasks = true
+
+        extension.disableWrite()
 
         // setup SDK repositories.
         for (File file : sdkHandler.sdkLoader.repositories) {
@@ -366,65 +377,11 @@ public abstract class BasePlugin {
         return null
     }
 
-    void checkTasksAlreadyCreated() {
-        if (hasCreatedTasks) {
-            throw new GradleException(
-                    "Android tasks have already been created.\n" +
-                    "This happens when calling android.applicationVariants,\n" +
-                    "android.libraryVariants or android.testVariants.\n" +
-                    "Once these methods are called, it is not possible to\n" +
-                    "continue configuring the model.")
-        }
-    }
-
-    ILogger getLogger() {
-        if (loggerWrapper == null) {
-            loggerWrapper = new LoggerWrapper(project.logger)
-        }
-
-        return loggerWrapper
-    }
-
-    boolean isVerbose() {
+    private boolean isVerbose() {
         return project.logger.isEnabled(LogLevel.INFO)
     }
 
-    AndroidBuilder getAndroidBuilder() {
-        return androidBuilder
-    }
-
-    public File getSdkFolder() {
-        return sdkHandler.getSdkFolder()
-    }
-
-    public File getNdkFolder() {
-        return sdkHandler.getNdkFolder()
-    }
-
-    public SdkInfo getSdkInfo() {
-        return sdkHandler.getSdkInfo()
-    }
-
-    public List<File> getBootClasspath() {
-        return androidBuilder.getBootClasspath()
-    }
-
-    public List<String> getBootClasspathAsStrings() {
-        return androidBuilder.getBootClasspathAsStrings()
-    }
-
-    public TaskManager getTaskManager() {
-        return taskManager
-    }
-
-    public List<BaseVariantData<? extends BaseVariantOutputData>> getVariantDataList() {
-        if (variantManager.getVariantDataList().isEmpty()) {
-            variantManager.populateVariantDataList(getSigningOverride())
-        }
-        return variantManager.getVariantDataList();
-    }
-
-    public void ensureTargetSetup() {
+    private void ensureTargetSetup() {
         // check if the target has been set.
         TargetInfo targetInfo = androidBuilder.getTargetInfo()
         if (targetInfo == null) {
@@ -433,38 +390,6 @@ public abstract class BasePlugin {
                     extension.buildToolsRevision,
                     androidBuilder)
         }
-    }
-
-    /**
-     * Returns the list of packaged local jars.
-     * @param dependencyContainer
-     * @return
-     */
-    public static Object[] getPackagedLocalJarFileList(DependencyContainer dependencyContainer) {
-        Set<File> files = Sets.newHashSet()
-        for (JarDependency jarDependency : dependencyContainer.localDependencies) {
-            if (jarDependency.isPackaged()) {
-                files.add(jarDependency.jarFile)
-            }
-        }
-
-        return files.toArray()
-    }
-
-    /**
-     * Returns the list of compiled local jars.
-     * @param dependencyContainer
-     * @return
-     */
-    public static Object[] getCompiledLocalJarFileList(DependencyContainer dependencyContainer) {
-        Set<File> files = Sets.newHashSet()
-        for (JarDependency jarDependency : dependencyContainer.localDependencies) {
-            if (jarDependency.isCompiled()) {
-                files.add(jarDependency.jarFile)
-            }
-        }
-
-        return files.toArray()
     }
 
     private static String getLocalVersion() {
@@ -488,46 +413,5 @@ public abstract class BasePlugin {
         } catch (Throwable t) {
             return null;
         }
-    }
-
-    public Project getProject() {
-        return project
-    }
-
-    public ExtraModelInfo getExtraModelInfo() {
-        return extraModelInfo
-    }
-
-    public static void displayWarning(ILogger logger, Project project, String message) {
-        logger.warning(createWarning(project.path, message))
-    }
-
-    public static void displayWarning(Logger logger, Project project, String message) {
-        logger.warn(createWarning(project.path, message))
-    }
-
-    public void displayDeprecationWarning(String message) {
-        displayWarning(logger, project, message)
-    }
-
-    public static void displayDeprecationWarning(Logger logger, Project project, String message) {
-        displayWarning(logger, project, message)
-    }
-
-    private static String createWarning(String projectName, String message) {
-        return "WARNING [Project: $projectName] $message"
-    }
-
-    /**
-     * Returns a plugin that is an instance of BasePlugin.  Returns null if a BasePlugin cannot
-     * be found.
-     */
-    public static BasePlugin findBasePlugin(Project project) {
-        BasePlugin plugin = project.plugins.findPlugin(AppPlugin)
-        if (plugin != null) {
-            return plugin
-        }
-        plugin = project.plugins.findPlugin(LibraryPlugin)
-        return plugin
     }
 }

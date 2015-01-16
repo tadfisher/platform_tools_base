@@ -20,8 +20,6 @@ import com.android.annotations.NonNull
 import com.android.annotations.Nullable
 import com.android.build.OutputFile
 import com.android.build.gradle.BaseExtension
-import com.android.build.gradle.BasePlugin
-import com.android.build.gradle.LibraryPlugin
 import com.android.build.gradle.api.ApkOutputFile
 import com.android.build.gradle.internal.BuildTypeData
 import com.android.build.gradle.internal.ExtraModelInfo
@@ -69,6 +67,7 @@ import static com.android.builder.model.AndroidProject.ARTIFACT_MAIN
  */
 @CompileStatic
 public class ModelBuilder implements ToolingModelBuilder {
+
     AndroidBuilder androidBuilder
 
     BaseExtension extension
