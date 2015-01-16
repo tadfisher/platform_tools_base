@@ -44,6 +44,7 @@ public interface IDevice extends IShellEnabledDevice {
     public static final String PROP_DEVICE_DENSITY = "ro.sf.lcd_density";
     public static final String PROP_DEVICE_LANGUAGE = "persist.sys.language";
     public static final String PROP_DEVICE_REGION = "persist.sys.country";
+    public static final String PROP_DEVICE_LOCALE = "persist.sys.locale";
 
     public static final String PROP_DEBUGGABLE = "ro.debuggable";
 

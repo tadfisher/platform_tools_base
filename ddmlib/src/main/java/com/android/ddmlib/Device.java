@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -1209,11 +1210,21 @@ final class Device implements IDevice {
 
     @Override
     public String getLanguage() {
+        final String locale = getProperty(IDevice.PROP_DEVICE_LOCALE);
+        if (!locale.isEmpty()) {
+            return Locale.forLanguageTag(locale).getLanguage();
+        }
+
         return getProperty(IDevice.PROP_DEVICE_LANGUAGE);
     }
 
     @Override
     public String getRegion() {
+        final String locale = getProperty(IDevice.PROP_DEVICE_LOCALE);
+        if (!locale.isEmpty()) {
+            return Locale.forLanguageTag(locale).getCountry();
+        }
+
         return getProperty(IDevice.PROP_DEVICE_REGION);
     }
 }
