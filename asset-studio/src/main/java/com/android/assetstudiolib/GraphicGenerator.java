@@ -60,6 +60,9 @@ public abstract class GraphicGenerator {
 
         /** The density to generate the icon with */
         public Density density = Density.XHIGH;
+
+        /** Signals if dealing with a launcher icon */
+        public boolean isLauncherIcon = false;
     }
 
     /** Shapes that can be used for icon backgrounds */
@@ -69,7 +72,17 @@ public abstract class GraphicGenerator {
         /** Circular background */
         CIRCLE("circle"),
         /** Square background */
-        SQUARE("square");
+        SQUARE("square"),
+        /** Vertical rectangular background */
+        VRECT("vrect"),
+        /** Horizontal rectangular background */
+        HRECT("hrect"),
+        /** Square background with Dog-ear effect */
+        SQUARE_DOG("square_dogear"),
+        /** Vertical rectangular background with Dog-ear effect */
+        VRECT_DOG("vrect_dogear"),
+        /** Horizontal rectangular background with Dog-ear effect */
+        HRECT_DOG("hrect_dogear");
 
         /** Id, used in filenames to identify associated stencils */
         public final String id;
@@ -131,7 +144,12 @@ public abstract class GraphicGenerator {
      * notification icons we add in -v9 or -v11.
      */
     protected String getIconFolder(Options options) {
-        return "res/drawable-" + options.density.getResourceValue(); //$NON-NLS-1$
+        String density = options.density.getResourceValue();
+        if (options.isLauncherIcon) {
+            return "res/mipmap-" + density; //$NON-NLS-1$
+        } else {
+            return "res/drawable-" + density;
+        }
     }
 
     /**
@@ -164,10 +182,13 @@ public abstract class GraphicGenerator {
             if (!density.isValidValueForDevice()) {
                 continue;
             }
-            if (density == Density.LOW || !density.isRecommended() ||
-                density == Density.XXXHIGH) {
+            if (density == Density.LOW || !density.isRecommended()) {
                 // TODO don't manually check and instead gracefully handle missing stencils.
                 // Not yet supported -- missing stencil image
+                continue;
+            }
+            if (density == Density.XXXHIGH && !options.isLauncherIcon) {
+                // Do not generate XXXHdpi when not a launcher icon
                 continue;
             }
             options.density = density;
