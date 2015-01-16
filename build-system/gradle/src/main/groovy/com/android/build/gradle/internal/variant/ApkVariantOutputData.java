@@ -81,22 +81,22 @@ public class ApkVariantOutputData extends BaseVariantOutputData {
         return outputs.build();
     }
 
-    @NonNull
-    public ZipAlign createZipAlignTask(@NonNull String taskName, @NonNull File inputFile,
-            @NonNull File outputFile) {
-        //noinspection VariableNotUsedInsideIf
-        if (zipAlignTask != null) {
-            throw new RuntimeException(String.format(
-                    "ZipAlign task for variant '%s' already exists.", variantData.getName()));
-        }
-
-        zipAlignTask = variantData.basePlugin.getTaskManager().createZipAlignTask(taskName, inputFile, outputFile);
-
-        // setup dependencies
-        assembleTask.dependsOn(zipAlignTask);
-
-        return zipAlignTask;
-    }
+    //@NonNull
+    //public ZipAlign createZipAlignTask(@NonNull String taskName, @NonNull File inputFile,
+    //        @NonNull File outputFile) {
+    //    //noinspection VariableNotUsedInsideIf
+    //    if (zipAlignTask != null) {
+    //        throw new RuntimeException(String.format(
+    //                "ZipAlign task for variant '%s' already exists.", variantData.getName()));
+    //    }
+    //
+    //    zipAlignTask = variantData.basePlugin.getTaskManager().createZipAlignTask(taskName, inputFile, outputFile);
+    //
+    //    // setup dependencies
+    //    assembleTask.dependsOn(zipAlignTask);
+    //
+    //    return zipAlignTask;
+    //}
 
     @Override
     public int getVersionCode() {

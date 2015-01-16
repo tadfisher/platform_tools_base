@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.variant
 
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable
+import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.BasePlugin
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.api.BaseVariant
@@ -30,28 +31,34 @@ import com.android.build.gradle.internal.api.LibraryVariantImpl
 import com.android.build.gradle.internal.api.LibraryVariantOutputImpl
 import com.android.build.gradle.internal.api.ReadOnlyObjectProvider
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
+import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.VariantType
 import com.google.common.collect.Lists
 import org.gradle.api.GradleException
 import org.gradle.api.Task
+import org.gradle.internal.reflect.Instantiator
 
 /**
  */
 public class LibraryVariantFactory implements VariantFactory<LibraryVariantData> {
 
     @NonNull
-    private final BasePlugin basePlugin
+    Instantiator instantiator
     @NonNull
     private final LibraryExtension extension
+    @NonNull
+    private final AndroidBuilder androidBuilder;
     @NonNull
     private final TaskManager taskManager
 
     public LibraryVariantFactory(
-            @NonNull BasePlugin basePlugin,
+            @NonNull Instantiator instantiator,
+            @NonNull AndroidBuilder androidBuilder,
             @NonNull LibraryExtension extension,
             @NonNull TaskManager taskManager) {
-        this.extension = extension
-        this.basePlugin = basePlugin
+        this.instantiator = instantiator;
+        this.androidBuilder = androidBuilder;
+        this.extension = extension;
         this.taskManager = taskManager
     }
 
@@ -62,7 +69,7 @@ public class LibraryVariantFactory implements VariantFactory<LibraryVariantData>
             @NonNull Set<String> densities,
             @NonNull Set<String> abis,
             @NonNull Set<String> compatibleScreens) {
-        return new LibraryVariantData(basePlugin, variantConfiguration)
+        return new LibraryVariantData(extension, variantConfiguration)
     }
 
     @Override
@@ -70,8 +77,8 @@ public class LibraryVariantFactory implements VariantFactory<LibraryVariantData>
     public BaseVariant createVariantApi(
             @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider) {
-        LibraryVariantImpl variant = basePlugin.getInstantiator().newInstance(
-                LibraryVariantImpl.class, variantData, basePlugin, readOnlyObjectProvider)
+        LibraryVariantImpl variant = instantiator.newInstance(
+                LibraryVariantImpl.class, variantData, androidBuilder, readOnlyObjectProvider)
 
         // now create the output objects
         List<? extends BaseVariantOutputData> outputList = variantData.getOutputs();
@@ -80,7 +87,7 @@ public class LibraryVariantFactory implements VariantFactory<LibraryVariantData>
         for (BaseVariantOutputData variantOutputData : outputList) {
             LibVariantOutputData libOutput = (LibVariantOutputData) variantOutputData;
 
-            LibraryVariantOutputImpl output = basePlugin.getInstantiator().newInstance(
+            LibraryVariantOutputImpl output = instantiator.newInstance(
                     LibraryVariantOutputImpl.class, libOutput);
 
             apiOutputList.add(output);

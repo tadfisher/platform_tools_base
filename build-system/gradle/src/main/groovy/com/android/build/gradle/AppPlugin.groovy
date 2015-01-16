@@ -53,6 +53,6 @@ class AppPlugin extends BasePlugin implements Plugin<Project> {
 
     @Override
     protected VariantFactory getVariantFactory() {
-        return new ApplicationVariantFactory(this, this.taskManager)
+        return new ApplicationVariantFactory(instantiator, androidBuilder, extension, taskManager);
     }
 }

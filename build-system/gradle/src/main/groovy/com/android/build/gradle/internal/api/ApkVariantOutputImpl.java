@@ -59,12 +59,12 @@ public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVa
         return variantOutputData.zipAlignTask;
     }
 
-    @NonNull
-    @Override
-    public ZipAlign createZipAlignTask(@NonNull String taskName, @NonNull File inputFile,
-            @NonNull File outputFile) {
-        return variantOutputData.createZipAlignTask(taskName, inputFile, outputFile);
-    }
+    //@NonNull
+    //@Override
+    //public ZipAlign createZipAlignTask(@NonNull String taskName, @NonNull File inputFile,
+    //        @NonNull File outputFile) {
+    //    return variantOutputData.createZipAlignTask(taskName, inputFile, outputFile);
+    //}
 
     @Override
     public void setVersionCodeOverride(int versionCodeOverride) {

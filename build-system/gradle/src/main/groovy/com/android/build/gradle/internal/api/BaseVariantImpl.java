@@ -29,6 +29,7 @@ import com.android.build.gradle.tasks.MergeAssets;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.NdkCompile;
 import com.android.build.gradle.tasks.RenderscriptCompile;
+import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SourceProvider;
@@ -51,7 +52,7 @@ import java.util.List;
 abstract class BaseVariantImpl implements BaseVariant {
 
     @NonNull
-    protected BasePlugin plugin;
+    protected AndroidBuilder androidBuilder;
 
     @NonNull
     protected ReadOnlyObjectProvider readOnlyObjectProvider;
@@ -59,9 +60,9 @@ abstract class BaseVariantImpl implements BaseVariant {
     protected List<BaseVariantOutput> outputs = Lists.newArrayListWithExpectedSize(1);
 
     BaseVariantImpl(
-            @NonNull BasePlugin plugin,
+            @NonNull AndroidBuilder androidBuilder,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider) {
-        this.plugin = plugin;
+        this.androidBuilder = androidBuilder;
         this.readOnlyObjectProvider = readOnlyObjectProvider;
     }
 

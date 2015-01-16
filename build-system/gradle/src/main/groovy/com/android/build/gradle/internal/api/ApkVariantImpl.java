@@ -22,6 +22,7 @@ import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.api.ApkVariant;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.tasks.Dex;
+import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.SigningConfig;
 
 import org.gradle.api.DefaultTask;
@@ -37,9 +38,9 @@ import java.util.Collection;
  */
 public abstract class ApkVariantImpl extends BaseVariantImpl implements ApkVariant {
 
-    protected ApkVariantImpl(@NonNull BasePlugin plugin,
+    protected ApkVariantImpl(@NonNull AndroidBuilder androidBuilder,
             @NonNull ReadOnlyObjectProvider immutableObjectProvider) {
-        super(plugin, immutableObjectProvider);
+        super(androidBuilder, immutableObjectProvider);
     }
 
     @NonNull
@@ -80,14 +81,14 @@ public abstract class ApkVariantImpl extends BaseVariantImpl implements ApkVaria
     @Override
     @NonNull
     public Collection<File> getCompileLibraries() {
-        return plugin.getAndroidBuilder().getCompileClasspath(
+        return androidBuilder.getCompileClasspath(
                 getVariantData().getVariantConfiguration());
     }
 
     @Override
     @NonNull
     public Collection<File> getApkLibraries() {
-        return plugin.getAndroidBuilder().getPackagedJars(getVariantData().getVariantConfiguration());
+        return androidBuilder.getPackagedJars(getVariantData().getVariantConfiguration());
     }
 
     @Override
