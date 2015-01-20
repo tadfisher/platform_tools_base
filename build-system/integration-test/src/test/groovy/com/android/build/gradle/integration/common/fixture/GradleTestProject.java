@@ -23,7 +23,6 @@ import static org.junit.Assert.fail;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.integration.common.fixture.app.AbstractAndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
@@ -639,7 +638,7 @@ public class GradleTestProject implements TestRule {
         ((DefaultGradleConnector) connector).daemonMaxIdleTime(10, TimeUnit.SECONDS);
 
         return connector
-                .useGradleVersion(BasePlugin.GRADLE_TEST_VERSION)
+                .useGradleVersion("2.2")
                 .forProjectDirectory(testDir)
                 .connect();
     }
