@@ -16,7 +16,10 @@
 
 package com.android.assetstudiolib;
 
+import com.android.SdkConstants;
+import com.android.annotations.NonNull;
 import com.android.resources.Density;
+import com.android.resources.ResourceFolderType;
 import com.android.utils.SdkUtils;
 import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
@@ -26,7 +29,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.JarURLConnection;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.security.ProtectionDomain;
@@ -60,6 +62,8 @@ public abstract class GraphicGenerator {
 
         /** The density to generate the icon with */
         public Density density = Density.XHIGH;
+
+        public boolean mipmap;
     }
 
     /** Shapes that can be used for icon backgrounds */
@@ -131,7 +135,17 @@ public abstract class GraphicGenerator {
      * notification icons we add in -v9 or -v11.
      */
     protected String getIconFolder(Options options) {
-        return "res/drawable-" + options.density.getResourceValue(); //$NON-NLS-1$
+        StringBuilder sb = new StringBuilder(50);
+        sb.append(SdkConstants.FD_RES);
+        sb.append('/');
+        if (options.mipmap) {
+            sb.append(ResourceFolderType.MIPMAP.getName());
+        } else {
+            sb.append(ResourceFolderType.DRAWABLE.getName());
+        }
+        sb.append('-');
+        sb.append(options.density.getResourceValue());
+        return sb.toString();
     }
 
     /**
@@ -164,10 +178,9 @@ public abstract class GraphicGenerator {
             if (!density.isValidValueForDevice()) {
                 continue;
             }
-            if (density == Density.LOW || !density.isRecommended() ||
-                density == Density.XXXHIGH) {
-                // TODO don't manually check and instead gracefully handle missing stencils.
+            if (!includeDensity(density)) {
                 // Not yet supported -- missing stencil image
+                // TODO don't manually check and instead gracefully handle missing stencils.
                 continue;
             }
             options.density = density;
@@ -185,6 +198,10 @@ public abstract class GraphicGenerator {
                 imageMap.put(getIconPath(options, name), image);
             }
         }
+    }
+
+    protected boolean includeDensity(@NonNull Density density) {
+        return density.isRecommended() && density != Density.LOW && density != Density.XXXHIGH;
     }
 
     /**
