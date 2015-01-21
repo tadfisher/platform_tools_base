@@ -15,7 +15,6 @@
  */
 
 package com.android.build.gradle.internal.model
-
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable
 import com.android.build.OutputFile
@@ -59,7 +58,6 @@ import java.util.jar.Attributes
 import java.util.jar.Manifest
 
 import static com.android.builder.model.AndroidProject.ARTIFACT_MAIN
-
 /**
  * Builder for the custom Android model.
  */
@@ -194,7 +192,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                                 gradleProjects))
                         break
                     case VariantType.UNIT_TEST:
-                        extraJavaArtifacts.add(createJavaArtifact(
+                        extraJavaArtifacts.add(createUnitTestsJavaArtifact(
                                 variantType,
                                 testVariantData,
                                 basePlugin,
@@ -234,19 +232,27 @@ public class ModelBuilder implements ToolingModelBuilder {
         return variant
     }
 
-    private static JavaArtifactImpl createJavaArtifact(
+    private static JavaArtifactImpl createUnitTestsJavaArtifact(
             @NonNull VariantType variantType,
             @NonNull BaseVariantData variantData,
             @NonNull BasePlugin basePlugin,
             @NonNull Set<Project> gradleProjects) {
         def sourceProviders = determineSourceProviders(variantType.artifactName, variantData, basePlugin)
+        def dependencies = DependenciesImpl.cloneDependencies(variantData, basePlugin, gradleProjects)
+
+        // Add the mockable JAR path. It will get created when "generating sources" for unit tests.
+        dependencies.javaLibraries.add(
+                new JavaLibraryImpl(
+                        basePlugin.taskManager.createMockableJar.outputFile,
+                        null,
+                        null))
 
         return new JavaArtifactImpl(
                 variantType.artifactName,
                 variantData.assembleVariantTask.name,
                 variantData.compileTask.name,
                 variantData.javaCompileTask.destinationDir,
-                DependenciesImpl.cloneDependencies(variantData, basePlugin, gradleProjects),
+                dependencies,
                 sourceProviders.variantSourceProvider,
                 sourceProviders.multiFlavorSourceProvider)
     }
