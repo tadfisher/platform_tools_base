@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.integration.common.truth;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.integration.common.utils.ApkHelper;
@@ -29,7 +31,6 @@ import com.android.utils.StdLogger;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.ListSubject;
 import com.google.common.truth.Subject;
-import com.google.common.truth.Truth;
 
 import junit.framework.Assert;
 
@@ -63,7 +64,7 @@ public class ApkSubject extends Subject<ApkSubject, File> {
             Assert.fail(String.format("locales not found in badging output for %s", apk));
         }
 
-        return Truth.assertThat(locales);
+        return assertThat(locales);
     }
 
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
