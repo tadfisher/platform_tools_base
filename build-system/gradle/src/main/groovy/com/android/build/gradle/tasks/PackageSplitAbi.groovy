@@ -89,8 +89,7 @@ class PackageSplitAbi extends BaseTask {
                 }
             } else {
                 // the project has not been built yet so we extrapolate what the package step result
-                // might look like. So far, we only handle density splits, eventually we will need
-                // to disambiguate.
+                // might look like.
                 for (String split : splits) {
                     ApkOutputFile apkOutput = new ApkOutputFile(
                             OutputFile.OutputType.SPLIT,

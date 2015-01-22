@@ -16,8 +16,11 @@
 
 package com.android.build.gradle.integration.common.truth;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
+import com.android.annotations.concurrency.Immutable;
 import com.android.build.gradle.integration.common.utils.ApkHelper;
 import com.android.build.gradle.integration.common.utils.SdkHelper;
 import com.android.builder.core.ApkInfoParser;
@@ -26,7 +29,11 @@ import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.utils.StdLogger;
+import com.google.common.collect.ImmutableList;
+import com.google.common.io.Closeables;
+import com.google.common.truth.CollectionSubject;
 import com.google.common.truth.FailureStrategy;
+import com.google.common.truth.IterableSubject;
 import com.google.common.truth.ListSubject;
 import com.google.common.truth.Subject;
 import com.google.common.truth.Truth;
@@ -35,9 +42,15 @@ import junit.framework.Assert;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
+import java.util.zip.ZipFile;
 
 /**
  * Truth support for apk files.
@@ -63,7 +76,7 @@ public class ApkSubject extends Subject<ApkSubject, File> {
             Assert.fail(String.format("locales not found in badging output for %s", apk));
         }
 
-        return Truth.assertThat(locales);
+        return assertThat(locales);
     }
 
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
@@ -77,6 +90,47 @@ public class ApkSubject extends Subject<ApkSubject, File> {
         if (checkForClass(className)) {
             failWithRawMessage("'%s' unexpectedly contains '%s'", getDisplaySubject(), className);
         }
+    }
+
+    @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
+    public void containsEntry(String entryName) throws IOException {
+        ZipFile zipFile = new ZipFile(getSubject());
+        try {
+            ZipEntry zipEntry = zipFile.getEntry(entryName);
+            if (zipEntry == null) {
+                failWithRawMessage("%s does not contain '%s'", getDisplaySubject(), entryName);
+            }
+        } finally {
+            zipFile.close();
+        }
+    }
+
+    /**
+     * Returns a {@link IterableSubject} of all the APK entries which name matches the passed
+     * regular expression.
+     *
+     * @param conformingTo a regular expression to match entries we are interested in.
+     * @return a {@link IterableSubject} propositions for matching entries.
+     * @throws IOException of the zip file cann be opened.
+     */
+    public IterableSubject<? extends IterableSubject<?, String, List<String>>, String, List<String>>
+        entries(String conformingTo) throws IOException {
+
+        ImmutableList.Builder<String> entries = ImmutableList.builder();
+        Pattern pattern = Pattern.compile(conformingTo);
+        ZipFile zipFile = new ZipFile(getSubject());
+        try {
+            Enumeration<? extends ZipEntry> zipFileEntries = zipFile.entries();
+            while (zipFileEntries.hasMoreElements()) {
+                ZipEntry zipEntry = zipFileEntries.nextElement();
+                if (pattern.matcher(zipEntry.getName()).matches()) {
+                    entries.add(zipEntry.getName());
+                }
+            }
+        } finally {
+            zipFile.close();
+        }
+        return assertThat(entries.build());
     }
 
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")

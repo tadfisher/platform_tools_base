@@ -21,6 +21,7 @@ import com.android.build.FilterData
 import com.android.build.OutputFile
 import com.android.build.gradle.api.ApkOutputFile
 import com.android.build.gradle.internal.dsl.SigningConfig
+import com.android.build.gradle.internal.model.FilterDataImpl
 import com.android.build.gradle.internal.tasks.BaseTask
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Callables
@@ -61,6 +62,7 @@ class PackageSplitRes extends BaseTask {
     @NonNull
     public synchronized  ImmutableList<ApkOutputFile> getOutputSplitFiles() {
 
+        // ABI splits are treated in PackageSplitAbi task.
         if (mOutputFiles == null) {
             ImmutableList.Builder<ApkOutputFile> builder = ImmutableList.builder();
             if (outputDirectory.exists() && outputDirectory.listFiles().length > 0) {
@@ -69,10 +71,12 @@ class PackageSplitRes extends BaseTask {
                     String filePath = "${project.archivesBaseName}-${outputBaseName}_${density}";
                     for (File potentialFile : potentialFiles) {
                         // density related APKs have a suffix.
+                        // see https://cs.corp.google.com/#android/frameworks/base/tools/aapt/
+                        // AaptConfig.cpp&sq=package:android&q=AaptConfig&l=238
                        if (potentialFile.getName().startsWith(filePath)) {
                            builder.add(new ApkOutputFile(
                                    OutputFile.OutputType.SPLIT,
-                                   ImmutableList.<FilterData> of(FilterData.Builder.build(
+                                   ImmutableList.<FilterData> of(FilterDataImpl.Builder.build(
                                            OutputFile.DENSITY,
                                            density)),
                                    Callables.returning(potentialFile)));
@@ -115,7 +119,7 @@ class PackageSplitRes extends BaseTask {
             ApkOutputFile apkOutput = new ApkOutputFile(
                     OutputFile.OutputType.SPLIT,
                     ImmutableList.<FilterData>of(
-                            FilterData.Builder.build(filterType.name(), filter)),
+                            FilterDataImpl.Builder.build(filterType.name(), filter)),
                     Callables.returning(
                             new File(outputDirectory, getOuputFileNameForSplit(filter))))
             builder.add(apkOutput)
@@ -124,6 +128,6 @@ class PackageSplitRes extends BaseTask {
 
     private String getOuputFileNameForSplit(String split) {
         String apkName = "${project.archivesBaseName}-${outputBaseName}_${split}"
-        apkName = apkName + (signingConfig == null ? "-unsigned.apk" : "-unaligned.apk")
+        return apkName + (signingConfig == null ? "-unsigned.apk" : "-unaligned.apk")
     }
 }

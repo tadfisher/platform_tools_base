@@ -951,7 +951,7 @@ class TaskManager {
         VariantConfiguration config = variantData.variantConfiguration
         Set<String> filters = new HashSet<String>();
         for (String abi : getExtension().getSplits().getAbiFilters()) {
-            if (abi != null) {
+            if (abi != OutputFile.NO_FILTER) {
                 filters.add(abi);
             }
         }
@@ -2351,7 +2351,17 @@ class TaskManager {
                 getOptionalDir(variantData.processJavaResourcesTask.destinationDir)
             }
             conventionMapping(packageApp).map("jniFolders") {
-                getJniFolders(variantData);
+                Set<String> filters = new HashSet<>();
+                for (String abi : getExtension().getSplits().getAbiFilters()) {
+                    if (abi != OutputFile.NO_FILTER) {
+                        filters.add(abi);
+                    }
+                }
+                if (filters.isEmpty()) {
+                    return getJniFolders(variantData);
+                } else {
+                    return Collections.emptySet();
+                }
             }
             conventionMapping(packageApp).map("abiFilters") {
                 if (variantOutputData.getMainOutputFile().getFilter(OutputFile.ABI) != null) {
