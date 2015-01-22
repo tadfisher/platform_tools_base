@@ -53,15 +53,12 @@ public class ArrayInstance extends Instance {
 
     @Override
     public final void accept(@NonNull Visitor visitor) {
-        if (visitor.visitEnter(this)) {
-            if (mType == Type.OBJECT) {
-                for (Object value : getValues()) {
-                    if (value instanceof Instance) {
-                        ((Instance) value).accept(visitor);
-                    }
+        if (mType == Type.OBJECT) {
+            for (Object value : getValues()) {
+                if (value instanceof Instance) {
+                    visitor.visit((Instance) value);
                 }
             }
-            visitor.visitLeave(this);
         }
     }
 

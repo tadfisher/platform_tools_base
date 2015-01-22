@@ -16,9 +16,9 @@
 
 package com.android.tools.perflib.heap;
 
+import com.android.annotations.NonNull;
+
 public interface Visitor {
 
-    public boolean visitEnter(Instance instance);
-
-    public void visitLeave(Instance instance);
+    public void visit(@NonNull Instance instance);
 }

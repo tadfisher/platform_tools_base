@@ -153,13 +153,10 @@ public class ClassObj extends Instance implements Comparable<ClassObj> {
 
     @Override
     public final void accept(@NonNull Visitor visitor) {
-        if (visitor.visitEnter(this)) {
-            for (Object value : getStaticFieldValues().values()) {
-                if (value instanceof Instance) {
-                    ((Instance) value).accept(visitor);
-                }
+        for (Object value : getStaticFieldValues().values()) {
+            if (value instanceof Instance) {
+                visitor.visit((Instance) value);
             }
-            visitor.visitLeave(this);
         }
     }
 
