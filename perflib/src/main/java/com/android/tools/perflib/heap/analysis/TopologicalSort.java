@@ -18,11 +18,14 @@ package com.android.tools.perflib.heap.analysis;
 
 import com.android.annotations.NonNull;
 import com.android.tools.perflib.heap.Instance;
+import com.android.tools.perflib.heap.RootObj;
 import com.android.tools.perflib.heap.Snapshot;
 import com.android.tools.perflib.heap.Visitor;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.List;
 
 import gnu.trove.TLongHashSet;
@@ -30,7 +33,7 @@ import gnu.trove.TLongHashSet;
 public class TopologicalSort {
 
     @NonNull
-    public static ImmutableList<Instance> compute(@NonNull Iterable<? extends Instance> roots) {
+    public static ImmutableList<Instance> compute(@NonNull Iterable<RootObj> roots) {
         TopologicalSortVisitor visitor = new TopologicalSortVisitor();
         for (Instance root : roots) {
             root.accept(visitor);
@@ -52,24 +55,43 @@ public class TopologicalSort {
     }
 
 
+    /**
+     * Non-recursive topological sort visitor, managing its own stack.
+     *
+     * Recursive DFS runs the risk of overflowing the call stack. Instead, we use the classic
+     * iterative three-color marking algorithm in order to correctly compute the finishing time for
+     * each node. Nodes in decreasing order of their finishing time satisfy the topological order
+     * property, i.e. any node appears before its successors.
+     */
     private static class TopologicalSortVisitor implements Visitor {
 
+        // Marks nodes that have been reached and pushed on the stack.
         private final TLongHashSet mVisited = new TLongHashSet();
 
-        private final List<Instance> mPostorder = Lists.newArrayList();
+        // Marks nodes that have been visited, i.e. their descendants have been reached.
+        private final TLongHashSet mSeen = new TLongHashSet();
+
+        private final Deque<Instance> mStack = new ArrayDeque<Instance>();
+
+        private final List<Instance> mInstances = Lists.newArrayList();
 
         @Override
-        public boolean visitEnter(Instance instance) {
-            return mVisited.add(instance.getId());
-        }
-
-        @Override
-        public void visitLeave(Instance instance) {
-            mPostorder.add(instance);
+        public void visit(@NonNull Instance instance) {
+            if (mSeen.add(instance.getId())) {
+                mStack.push(instance);
+            }
         }
 
         ImmutableList<Instance> getOrderedInstances() {
-            return ImmutableList.copyOf(Lists.reverse(mPostorder));
+            while (!mStack.isEmpty()) {
+                Instance node = mStack.peek();
+                if (mVisited.add(node.getId())) {
+                    node.accept(this);
+                } else {
+                    mInstances.add(mStack.pop());
+                }
+            }
+            return ImmutableList.copyOf(Lists.reverse(mInstances));
         }
     }
 }

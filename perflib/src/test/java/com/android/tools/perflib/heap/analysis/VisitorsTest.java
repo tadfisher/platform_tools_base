@@ -21,6 +21,7 @@ import com.android.tools.perflib.heap.ArrayInstance;
 import com.android.tools.perflib.heap.ClassInstance;
 import com.android.tools.perflib.heap.ClassObj;
 import com.android.tools.perflib.heap.Field;
+import com.android.tools.perflib.heap.Instance;
 import com.android.tools.perflib.heap.RootObj;
 import com.android.tools.perflib.heap.RootType;
 import com.android.tools.perflib.heap.Snapshot;
@@ -30,6 +31,7 @@ import com.google.common.collect.Maps;
 
 import junit.framework.TestCase;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -134,5 +136,26 @@ public class VisitorsTest extends TestCase {
         assertEquals(6, snapshot.findReference(1).getCompositeSize());
         assertEquals(6, snapshot.findReference(2).getCompositeSize());
         assertEquals(6, snapshot.findReference(3).getCompositeSize());
+    }
+
+    public void testTopSortSimpleGraph() {
+        Snapshot snapshot = new SnapshotBuilder(6)
+                .addReferences(1, 2, 3)
+                .addReferences(2, 4, 6)
+                .addReferences(3, 4, 5)
+                .addReferences(4, 6)
+                .addRoot(1)
+                .getSnapshot();
+
+        List<Instance> topSort = TopologicalSort.compute(snapshot.getGCRoots());
+        assertEquals(6, topSort.size());
+        // Make sure finishing times are computed correctly. A visitor simply collecting nodes as
+        // they are expanded will not yield the correct order.
+        assertEquals(snapshot.findReference(1), topSort.get(0));
+        assertEquals(snapshot.findReference(2), topSort.get(1));
+        assertEquals(snapshot.findReference(3), topSort.get(2));
+        assertEquals(snapshot.findReference(4), topSort.get(3));
+        assertEquals(snapshot.findReference(6), topSort.get(4));
+        assertEquals(snapshot.findReference(5), topSort.get(5));
     }
 }
