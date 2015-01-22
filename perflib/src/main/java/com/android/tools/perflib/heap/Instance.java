@@ -19,11 +19,14 @@ package com.android.tools.perflib.heap;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.perflib.heap.io.HprofBuffer;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.UnsignedBytes;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.List;
 import java.util.Set;
 
@@ -81,7 +84,7 @@ public abstract class Instance {
 
     public final int getCompositeSize() {
         CollectingVisitor visitor = new CollectingVisitor();
-        this.accept(visitor);
+        visitor.visit(this);
 
         int size = 0;
         for (Instance instance : visitor.getVisited()) {
@@ -209,22 +212,26 @@ public abstract class Instance {
         return mHeap.mSnapshot.mBuffer;
     }
 
+
     public static class CollectingVisitor implements Visitor {
 
         private final Set<Instance> mVisited = Sets.newHashSet();
 
-        @Override
-        public boolean visitEnter(Instance instance) {
-            //  If we're in the set then we and our children have been visited
-            return mVisited.add(instance);
-        }
+        private final Deque<Instance> mStack = new ArrayDeque<Instance>();
 
         @Override
-        public void visitLeave(Instance instance) {
+        public void visit(@NonNull Instance instance) {
+            if (mVisited.add(instance)) {
+                mStack.push(instance);
+            }
         }
 
-        public Set<Instance> getVisited() {
-            return mVisited;
+        public ImmutableList<Instance> getVisited() {
+            while (!mStack.isEmpty()) {
+                Instance node = mStack.pop();
+                node.accept(this);
+            }
+            return ImmutableList.copyOf(mVisited);
         }
-      }
+    }
 }
