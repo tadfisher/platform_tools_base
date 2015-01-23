@@ -23,6 +23,7 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.OutputFiles
 import org.gradle.api.tasks.TaskAction
 
 /**
@@ -46,8 +47,17 @@ class GenerateSplitAbiRes extends BaseTask {
     @Input
     Set<String> splits
 
-    @OutputDirectory
+    @Input
     File outputDirectory
+
+    @OutputFiles
+    List<File> getOutputFiles() {
+        List<File> outputFiles = new ArrayList<>();
+        for (String split : getSplits()) {
+            outputFiles.add(getOutputFileForSplit(split))
+        }
+        return outputFiles;
+    }
 
     @Input
     boolean debuggable
@@ -59,7 +69,7 @@ class GenerateSplitAbiRes extends BaseTask {
     protected void doFullTaskAction() {
 
         for (String split : getSplits()) {
-            String resPackageFileName = new File(getOutputDirectory(), "resources-${getOutputBaseName()}-${split}.ap_")
+            String resPackageFileName = getOutputFileForSplit(split).getAbsolutePath()
 
             File tmpDirectory = new File(getOutputDirectory(), "${getOutputBaseName()}")
             tmpDirectory.mkdirs()
@@ -93,5 +103,9 @@ class GenerateSplitAbiRes extends BaseTask {
 
             getBuilder().processResources(aaptPackageCommandBuilder, false /* enforceUniquePackageName */)
         }
+    }
+
+    private File getOutputFileForSplit(String split) {
+        return new File(getOutputDirectory(), "resources-${getOutputBaseName()}-${split}.ap_")
     }
 }
