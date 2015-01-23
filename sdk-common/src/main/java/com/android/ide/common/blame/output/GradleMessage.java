@@ -20,6 +20,12 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.blame.SourceFragmentPositionRange;
 import com.google.common.base.Objects;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
+
+import java.lang.reflect.Type;
 
 /**
  * Message produced by tools invoked when building an Android project.
@@ -134,6 +140,21 @@ public class GradleMessage {
                 }
             }
             return null;
+        }
+    }
+
+    public static class Serializer implements JsonSerializer<GradleMessage> {
+
+        @Override
+        public JsonElement serialize(GradleMessage gradleMessage, Type type,
+                JsonSerializationContext jsonSerializationContext) {
+            JsonObject result = new JsonObject();
+            result.addProperty("kind", gradleMessage.getKind().toString());
+            result.addProperty("text", gradleMessage.getText());
+            result.addProperty("sourcePath", gradleMessage.getSourcePath());
+            result.add("position", jsonSerializationContext.serialize(gradleMessage.getPosition()));
+            result.addProperty("original", gradleMessage.getOriginal());
+            return result;
         }
     }
 }
