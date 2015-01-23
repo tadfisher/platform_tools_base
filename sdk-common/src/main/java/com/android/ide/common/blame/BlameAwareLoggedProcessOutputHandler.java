@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 The Android Open Source Project
+ * Copyright (C) 2015 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.builder.internal;
+package com.android.ide.common.blame;
 
 import com.android.annotations.NonNull;
+import com.android.ide.common.process.LoggedProcessOutputHandler;
+import com.android.utils.ILogger;
 
-import java.util.Locale;
-
-/**
- */
-public class StringHelper {
-
-    @NonNull
-    public static String capitalize(@NonNull String string) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(string.substring(0, 1).toUpperCase(Locale.US)).append(string.substring(1));
-
-        return sb.toString();
+public class BlameAwareLoggedProcessOutputHandler extends LoggedProcessOutputHandler {
+    public BlameAwareLoggedProcessOutputHandler(@NonNull ILogger logger) {
+        super(new BlameRewritingLogger(logger));
     }
 }

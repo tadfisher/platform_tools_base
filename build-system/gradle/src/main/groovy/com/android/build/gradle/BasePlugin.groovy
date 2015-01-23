@@ -53,6 +53,7 @@ import com.android.builder.internal.compiler.PreDexCache
 import com.android.builder.model.SyncIssue
 import com.android.builder.sdk.SdkInfo
 import com.android.builder.sdk.TargetInfo
+import com.android.ide.common.blame.BlameAwareLoggedProcessOutputHandler
 import com.android.ide.common.internal.ExecutorSingleton
 import com.android.ide.common.process.LoggedProcessOutputHandler
 import com.android.utils.ILogger
@@ -174,7 +175,7 @@ public abstract class BasePlugin {
                 creator,
                 new GradleProcessExecutor(project),
                 new GradleJavaProcessExecutor(project),
-                new LoggedProcessOutputHandler(getLogger()),
+                new BlameAwareLoggedProcessOutputHandler(getLogger()),
                 logger,
                 verbose)
 
