@@ -17,6 +17,15 @@
 package com.android.ide.common.blame;
 
 import com.google.common.base.Objects;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
+
+import java.lang.reflect.Type;
 
 public class SourceFragmentPositionRange {
 
@@ -136,5 +145,56 @@ public class SourceFragmentPositionRange {
 
     public int getEndOffset() {
         return mEndOffset;
+    }
+
+
+    public static class Serializer implements JsonSerializer<SourceFragmentPositionRange> {
+
+        @Override
+        public JsonElement serialize(SourceFragmentPositionRange position, Type type,
+                JsonSerializationContext jsonSerializationContext) {
+            JsonObject result = new JsonObject();
+            if (position.getStartLine() != -1) {
+                result.addProperty("startLine", position.getStartLine());
+            }
+            if (position.getStartColumn() != -1) {
+                result.addProperty("startColumn", position.getStartColumn());
+            }
+            if (position.getStartOffset() != -1) {
+                result.addProperty("startOffset", position.getStartOffset());
+            }
+            if (position.getEndLine() != -1 && position.getEndLine() != position.getStartLine()) {
+                result.addProperty("endLine", position.getEndLine());
+            }
+            if (position.getEndColumn() != -1 && position.getEndColumn() != position
+                    .getStartColumn()) {
+                result.addProperty("endColumn", position.getEndColumn());
+            }
+            if (position.getEndOffset() != -1 && position.getEndOffset() != position
+                    .getStartOffset()) {
+                result.addProperty("endOffset", position.getEndOffset());
+            }
+            return result;
+        }
+    }
+
+    public static class Deserializer implements JsonDeserializer<SourceFragmentPositionRange> {
+
+        @Override
+        public SourceFragmentPositionRange deserialize(JsonElement jsonElement, Type type,
+                JsonDeserializationContext jsonDeserializationContext) throws
+                JsonParseException {
+            JsonObject object = jsonElement.getAsJsonObject();
+            int startLine = object.has("startLine") ? object.get("startLine").getAsInt() : -1;
+            int startColumn = object.has("startColumn") ? object.get("startColumn").getAsInt() : -1;
+            int startOffset = object.has("startOffset") ? object.get("startOffset").getAsInt() : -1;
+            int endLine = object.has("endLine") ? object.get("endLine").getAsInt() : startLine;
+            int endColumn = object.has("endColumn") ? object.get("endColumn").getAsInt()
+                    : startColumn;
+            int endOffset = object.has("endOffset") ? object.get("endOffset").getAsInt()
+                    : startOffset;
+            return new SourceFragmentPositionRange(startLine, startColumn, startOffset, endLine,
+                    endColumn, endOffset);
+        }
     }
 }
