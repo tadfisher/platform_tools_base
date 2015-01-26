@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.SourceSetSourceProviderWrapper
 import com.android.build.gradle.internal.coverage.JacocoExtension
 import com.android.build.gradle.internal.dsl.AaptOptions
+import com.android.build.gradle.internal.dsl.AdbOptions
 import com.android.build.gradle.internal.dsl.AndroidSourceSetFactory
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DexOptions
@@ -104,6 +105,9 @@ public abstract class BaseExtension {
     /** Signing configs used by this project. */
     final NamedDomainObjectContainer<SigningConfig> signingConfigs
 
+    /** Adb options */
+    final AdbOptions adbOptions;
+
     /** A prefix to be used when creating new resources. Used by Studio */
     String resourcePrefix
 
@@ -152,6 +156,7 @@ public abstract class BaseExtension {
         compileOptions = instantiator.newInstance(CompileOptions)
         packagingOptions = instantiator.newInstance(PackagingOptions)
         jacoco = instantiator.newInstance(JacocoExtension)
+        adbOptions = instantiator.newInstance(AdbOptions)
         splits = instantiator.newInstance(Splits, instantiator)
 
         sourceSetsContainer = project.container(AndroidSourceSet,
@@ -358,6 +363,14 @@ public abstract class BaseExtension {
     void jacoco(Action<JacocoExtension> action) {
         plugin.checkTasksAlreadyCreated()
         action.execute(jacoco)
+    }
+
+    /**
+     * Configures adb options.
+     */
+    void adbOptions(Action<AdbOptions> action) {
+        plugin.checkTasksAlreadyCreated()
+        action.execute(adbOptions)
     }
 
     /**
