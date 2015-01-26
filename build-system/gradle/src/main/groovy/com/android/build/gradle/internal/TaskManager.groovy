@@ -2515,6 +2515,7 @@ class TaskManager {
             installTask.group = INSTALL_GROUP
             installTask.projectName = project.name
             installTask.variantData = variantData
+            installTask.timeOutInMs = getExtension().getAdbOptions().getTimeOutInMs();
             conventionMapping(installTask).map("adbExe") { sdkHandler.sdkInfo?.adb }
             installTask.dependsOn variantData.assembleVariantTask
             variantData.installTask = installTask

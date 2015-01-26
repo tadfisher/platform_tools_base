@@ -28,6 +28,7 @@ import com.android.ddmlib.IDevice
 import com.android.ide.common.build.SplitOutputMatcher
 import com.google.common.base.Joiner
 import org.gradle.api.GradleException
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.TaskAction
 
@@ -41,7 +42,8 @@ public class InstallVariantTask extends BaseTask {
 
     String projectName
 
-    int timeOut = 0
+    @Input
+    int timeOutInMs = 0
 
     BaseVariantData<? extends BaseVariantOutputData> variantData
     InstallVariantTask() {
@@ -92,10 +94,10 @@ public class InstallVariantTask extends BaseTask {
                         logger.lifecycle("Installing APK '${Joiner.on(", ").join(apkFiles*.getName())}'" +
                                 " on '${device.getName()}'")
                         if (outputFiles.size() > 1 || device.getApiLevel() >= 21) {
-                            device.installPackages(apkFiles, getTimeOut(), getILogger());
+                            device.installPackages(apkFiles, getTimeOutInMs(), getILogger());
                             successfulInstallCount++
                         } else {
-                            device.installPackage(apkFiles.get(0), getTimeOut(), getILogger())
+                            device.installPackage(apkFiles.get(0), getTimeOutInMs(), getILogger())
                             successfulInstallCount++
                         }
                     }
