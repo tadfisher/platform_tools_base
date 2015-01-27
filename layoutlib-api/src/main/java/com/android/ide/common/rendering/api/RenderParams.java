@@ -22,7 +22,6 @@ import com.android.resources.ScreenSize;
 /**
  * Base class for rendering parameters. This include the generic parameters but not what needs
  * to be rendered or additional parameters.
- *
  */
 public abstract class RenderParams {
 
@@ -31,6 +30,7 @@ public abstract class RenderParams {
     private final Object mProjectKey;
     private final HardwareConfig mHardwareConfig;
     private final RenderResources mRenderResources;
+    private final AssetRepository mAssetRepository;
     private final IProjectCallback mProjectCallback;
     private final int mMinSdkVersion;
     private final int mTargetSdkVersion;
@@ -50,7 +50,6 @@ public abstract class RenderParams {
     private boolean mSupportsRtl;
 
     /**
-     *
      * @param projectKey An Object identifying the project. This is used for the cache mechanism.
      * @param hardwareConfig the {@link HardwareConfig}.
      * @param renderResources a {@link RenderResources} object providing access to the resources.
@@ -64,12 +63,14 @@ public abstract class RenderParams {
             Object projectKey,
             HardwareConfig hardwareConfig,
             RenderResources renderResources,
+            AssetRepository assetRepository,
             IProjectCallback projectCallback,
             int minSdkVersion, int targetSdkVersion,
             LayoutLog log) {
         mProjectKey = projectKey;
         mHardwareConfig = hardwareConfig;
         mRenderResources = renderResources;
+        mAssetRepository = assetRepository;
         mProjectCallback = projectCallback;
         mMinSdkVersion = minSdkVersion;
         mTargetSdkVersion = targetSdkVersion;
@@ -85,6 +86,7 @@ public abstract class RenderParams {
         mProjectKey = params.mProjectKey;
         mHardwareConfig = params.mHardwareConfig;
         mRenderResources = params.mRenderResources;
+        mAssetRepository = params.mAssetRepository;
         mProjectCallback = params.mProjectCallback;
         mMinSdkVersion = params.mMinSdkVersion;
         mTargetSdkVersion = params.mTargetSdkVersion;
@@ -196,6 +198,10 @@ public abstract class RenderParams {
 
     public RenderResources getResources() {
         return mRenderResources;
+    }
+
+    public AssetRepository getAssets() {
+        return mAssetRepository;
     }
 
     public IProjectCallback getProjectCallback() {

@@ -44,11 +44,12 @@ public class DrawableParams extends RenderParams {
             Object projectKey,
             HardwareConfig hardwareConfig,
             RenderResources renderResources,
+            AssetRepository assetRepository,
             IProjectCallback projectCallback,
             int minSdkVersion, int targetSdkVersion,
             LayoutLog log) {
-        super(projectKey, hardwareConfig,
-                renderResources, projectCallback, minSdkVersion, targetSdkVersion, log);
+        super(projectKey, hardwareConfig, renderResources, assetRepository,
+                projectCallback, minSdkVersion, targetSdkVersion, log);
         mDrawable = drawable;
     }
 
