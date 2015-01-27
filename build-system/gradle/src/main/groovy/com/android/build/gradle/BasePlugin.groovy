@@ -67,6 +67,8 @@ import org.gradle.internal.reflect.Instantiator
 import org.gradle.tooling.BuildException
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 
+import java.security.MessageDigest
+import java.util.Calendar
 import java.util.jar.Attributes
 import java.util.jar.Manifest
 import java.util.regex.Pattern
@@ -115,6 +117,11 @@ public abstract class BasePlugin {
 
     private boolean hasCreatedTasks = false
 
+    // set the creation date of this plugin. Remember than month is zero based (0 is January).
+    private static final GregorianCalendar inceptionDate = new GregorianCalendar(2015, 0, 26)
+    // retirement age for the plugin in days from the inceptionDate, -1 for eternal.
+    private static final int retirementAge = 40
+
     protected BasePlugin(Instantiator instantiator, ToolingModelBuilderRegistry registry) {
         this.instantiator = instantiator
         this.registry = registry
@@ -123,6 +130,46 @@ public abstract class BasePlugin {
             creator = "Android Gradle " + pluginVersion
         } else  {
             creator = "Android Gradle"
+        }
+        verifyRetirementAge()
+    }
+
+    /**
+     * Verify that this plugin execution is within its public time range.
+     */
+    private static void verifyRetirementAge() {
+        if (retirementAge == -1) {
+            return;
+        }
+        Calendar now = GregorianCalendar.getInstance()
+        int days = now.minus(inceptionDate)
+        if (days > retirementAge) {
+            // this plugin is too old.
+            String dailyOverride = System.getenv("ANDROID_DAILY_OVERRIDE")
+            MessageDigest cript = MessageDigest.getInstance("SHA-1")
+            cript.reset()
+            // encode the day, not the current time.
+            cript.update(
+                    "${now.get(Calendar.YEAR)}:${now.get(Calendar.MONTH)}:${now.get(Calendar.DATE)}"
+                            .getBytes("utf8"))
+            String overrideValue = new BigInteger(1, cript.digest()).toString(16)
+            if (dailyOverride == null) {
+                String message = """
+                    Plugin is too old, please update to a more recent version,
+                    or set ANDROID_DAILY_OVERRIDE environment variable to
+                    \"${overrideValue}\""""
+                System.err.println(message)
+                throw new RuntimeException(message)
+            } else {
+                if (!dailyOverride.equals(overrideValue)) {
+                    String message = """
+                    Plugin is too old and ANDROID_DAILY_OVERRIDE value is
+                    also outdated, please use daily value :
+                    \"${overrideValue}\""""
+                    System.err.println(message)
+                    throw new RuntimeException(message)
+                }
+            }
         }
     }
 
