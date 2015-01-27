@@ -81,11 +81,12 @@ public class SessionParams extends RenderParams {
             Object projectKey,
             HardwareConfig hardwareConfig,
             RenderResources renderResources,
+            AssetRepository assetRepository,
             IProjectCallback projectCallback,
             int minSdkVersion, int targetSdkVersion,
             LayoutLog log) {
-        this(layoutDescription, renderingMode, projectKey, hardwareConfig,
-                renderResources, projectCallback, minSdkVersion, targetSdkVersion, log, 0);
+        this(layoutDescription, renderingMode, projectKey, hardwareConfig, renderResources,
+                assetRepository, projectCallback, minSdkVersion, targetSdkVersion, log, 0);
     }
 
     /**
@@ -109,11 +110,12 @@ public class SessionParams extends RenderParams {
             Object projectKey,
             HardwareConfig hardwareConfig,
             RenderResources renderResources,
+            AssetRepository assetRepository,
             IProjectCallback projectCallback,
             int minSdkVersion, int targetSdkVersion,
             LayoutLog log, int simulatedPlatformVersion) {
-        super(projectKey, hardwareConfig, renderResources, projectCallback,
-                minSdkVersion, targetSdkVersion, log);
+        super(projectKey, hardwareConfig, renderResources, assetRepository,
+                projectCallback, minSdkVersion, targetSdkVersion, log);
 
         mLayoutDescription = layoutDescription;
         mRenderingMode = renderingMode;
