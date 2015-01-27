@@ -18,6 +18,7 @@ package com.android.build.gradle.internal;
 
 import static com.android.builder.model.AndroidProject.PROPERTY_BUILD_MODEL_ONLY;
 import static com.android.builder.model.AndroidProject.PROPERTY_BUILD_MODEL_ONLY_ADVANCED;
+import static com.android.builder.model.AndroidProject.PROPERTY_INVOKED_FROM_IDE;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -35,6 +36,7 @@ import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.SourceProviderContainer;
 import com.android.builder.model.SyncIssue;
+import com.android.ide.common.blame.BlameRewritingLogger;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
@@ -58,6 +60,8 @@ public class ExtraModelInfo {
 
     private ModelQueryMode modelQueryMode;
 
+    private BlameRewritingLogger.ErrorFormatMode errorFormatMode;
+
     private final Map<SyncIssueKey, SyncIssue> syncIssues = Maps.newHashMap();
 
     private final Map<String, ArtifactMetaData> extraArtifactMap = Maps.newHashMap();
@@ -76,6 +80,7 @@ public class ExtraModelInfo {
 
     public ExtraModelInfo(Project project) {
         modelQueryMode = computeModelQueryMode(project);
+        errorFormatMode = computeErrorFormatMode(project);
     }
 
     public Map<SyncIssueKey, SyncIssue> getSyncIssues() {
@@ -84,6 +89,10 @@ public class ExtraModelInfo {
 
     public ModelQueryMode getModelQueryMode() {
         return modelQueryMode;
+    }
+
+    public BlameRewritingLogger.ErrorFormatMode getErrorFormatMode() {
+        return errorFormatMode;
     }
 
     public void handleSyncError(String data, int type, String msg) {
@@ -221,6 +230,14 @@ public class ExtraModelInfo {
         }
 
         return ModelQueryMode.STANDARD;
+    }
+    
+    private static BlameRewritingLogger.ErrorFormatMode computeErrorFormatMode(@NonNull Project project) {
+        if (isPropertyTrue(project, PROPERTY_INVOKED_FROM_IDE)) {
+            return BlameRewritingLogger.ErrorFormatMode.MACHINE_PARSABLE;
+        } else {
+            return BlameRewritingLogger.ErrorFormatMode.HUMAN_READABLE;
+        }
     }
 
     private static boolean isPropertyTrue(
