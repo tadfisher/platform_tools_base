@@ -46,6 +46,8 @@ import org.gradle.tooling.BuildLauncher;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
 import org.gradle.tooling.internal.consumer.DefaultGradleConnector;
+import org.gradle.tooling.model.GradleProject;
+import org.gradle.tooling.model.GradleTask;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -422,6 +424,21 @@ public class GradleTestProject implements TestRule {
             fail(e.getLocalizedMessage());
         }
         return null;
+    }
+
+    public List<String> getTaskList() {
+        ProjectConnection connection = getProjectConnection();
+        try {
+            GradleProject project = connection.getModel(GradleProject.class);
+            List<String> tasks = Lists.newArrayList();
+            for (GradleTask gradleTask : project.getTasks()) {
+                tasks.add(gradleTask.getName());
+            }
+            return tasks;
+        } finally {
+            connection.close();
+        }
+
     }
 
     /**
