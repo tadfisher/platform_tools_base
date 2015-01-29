@@ -181,6 +181,8 @@ abstract class TaskManager {
 
     private Logger logger
 
+    protected boolean isNdkTaskNeeded = true
+
     // Tasks
     private Task mainPreBuild
 
@@ -234,6 +236,23 @@ abstract class TaskManager {
     abstract public void createTasksForVariantData(
             @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData,
             @Nullable Task assembleTask)
+
+    /**
+     * Returns a collection of buildables that creates native object.
+     *
+     * A buildable is considered to be any object that can be used as the argument to
+     * Task.dependsOn.  This could be a Task or a BuildableModelElement (e.g. BinarySpec).
+     */
+    protected Collection<Object> getNdkBuildable(BaseVariantData variantData) {
+        return Collections.singleton(variantData.ndkCompileTask)
+    }
+
+    /**
+     * Returns the directories of the NDK buildables.
+     */
+    protected Collection<File> getNdkOutputDirectories(BaseVariantData variantData) {
+        return Collections.singleton(variantData.ndkCompileTask.soFolder)
+    }
 
     private BaseExtension getExtension() {
         return extension
@@ -1037,11 +1056,7 @@ abstract class TaskManager {
         VariantConfiguration config = variantData.variantConfiguration
         // for now only the project's compilation output.
         Set<File> set = Sets.newHashSet()
-        if (getExtension().getUseNewNativePlugin()) {
-            throw new RuntimeException("useNewNativePlugin is currently not supported.")
-        } else {
-            set.addAll(variantData.ndkCompileTask.soFolder)
-        }
+        set.addAll(getNdkOutputDirectories(variantData))
         set.addAll(variantData.renderscriptCompileTask.libOutputDir)
         set.addAll(config.libraryJniFolders)
         set.addAll(config.jniLibsList)
@@ -1325,7 +1340,7 @@ abstract class TaskManager {
         createAidlTask(variantData, null /*parcelableDir*/)
 
         // Add NDK tasks
-        if (!getExtension().getUseNewNativePlugin()) {
+        if (isNdkTaskNeeded) {
             createNdkTasks(variantData)
         }
 
@@ -2316,12 +2331,7 @@ abstract class TaskManager {
                 packageApp.dependsOn variantOutputData.packageSplitAbiTask
             }
 
-            // Add dependencies on NDK tasks if NDK plugin is applied.
-            if (getExtension().getUseNewNativePlugin()) {
-                throw new RuntimeException("useNewNativePlugin is currently not supported.")
-            } else {
-                packageApp.dependsOn variantData.ndkCompileTask
-            }
+            packageApp.dependsOn getNdkBuildable(variantData)
 
             packageApp.androidBuilder = androidBuilder
 
