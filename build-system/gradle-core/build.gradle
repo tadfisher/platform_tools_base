@@ -19,8 +19,45 @@ sourceSets {
 
 ext.proguardVersion = "5.1"
 
+class Download extends DefaultTask {
+    @Input
+    String url
+
+    @OutputFile
+    File dest
+
+    @TaskAction
+    void download() {
+        File dir = dest.getParentFile()
+        dir.mkdirs()
+        if (!dest.exists()) {
+            new URL(url).withInputStream{ i -> dest.withOutputStream{ it << i }}
+        }
+    }
+}
+
+String gradleVersion = "2.2"
+task downloadGradle(type: Download) {
+    dest = file("$buildDir/gradle/gradle-$gradleVersion-bin.zip")
+    url = new URL("https://services.gradle.org/distributions/gradle-$gradleVersion-bin.zip")
+}
+
+task extractGradleLibs(type: Copy) {
+    from zipTree(downloadGradle.dest)
+    into file("$buildDir/gradle")
+    dependsOn downloadGradle
+}
+
+compileJava.dependsOn extractGradleLibs
+
+task setupGradleInIde {
+    dependsOn extractGradleLibs
+}
+
+
 dependencies {
-    compile gradleApi()
+    compile fileTree(dir: "$buildDir/gradle/gradle-$gradleVersion/lib", include: "*.jar")
+    compile fileTree(dir: "$buildDir/gradle/gradle-$gradleVersion/lib/plugins", include: "*.jar")
     compile localGroovy()
     compile project(':base:builder')
     compile project(':base:lint')
