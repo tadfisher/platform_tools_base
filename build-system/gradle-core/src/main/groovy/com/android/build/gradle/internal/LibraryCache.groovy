@@ -20,6 +20,8 @@ import com.android.annotations.NonNull
 import com.android.annotations.concurrency.GuardedBy
 import com.google.common.collect.Maps
 import org.gradle.api.Project
+import org.gradle.api.file.FileCopyDetails
+import org.gradle.api.file.RelativePath
 
 import java.util.concurrent.CountDownLatch
 
@@ -91,6 +93,9 @@ public class LibraryCache {
         project.copy {
             from project.zipTree(bundle)
             into folderOut
+            filesMatching('**/*.jar') { FileCopyDetails details ->
+                details.relativePath = new RelativePath(false, 'jars').plus(details.relativePath)
+            }
         }
     }
 

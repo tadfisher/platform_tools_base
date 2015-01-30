@@ -15,7 +15,6 @@
  */
 
 package com.android.build.gradle.internal
-
 import com.android.SdkConstants
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable
@@ -50,10 +49,10 @@ import org.gradle.tooling.BuildException
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 
 import static com.android.SdkConstants.FN_ANNOTATIONS_ZIP
+import static com.android.SdkConstants.FN_CLASSES_JAR
 import static com.android.SdkConstants.LIBS_FOLDER
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS
-
 /**
  * TaskManager for creating tasks in an Android library project.
  */
@@ -351,6 +350,17 @@ class LibraryTaskManager extends TaskManager {
             @Override
             List<ManifestDependency> getManifestDependencies() {
                 return variantConfig.directLibraries
+            }
+
+            @Override
+            @NonNull
+            public File getJarFile() {
+                return new File(getFolder(), FN_CLASSES_JAR);
+            }
+
+            @NonNull
+            protected File getLocalJarFolder() {
+                return new File(getFolder(), LIBS_FOLDER);
             }
 
             @Override

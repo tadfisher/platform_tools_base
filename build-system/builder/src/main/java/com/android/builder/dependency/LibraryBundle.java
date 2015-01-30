@@ -104,7 +104,7 @@ public abstract class LibraryBundle implements LibraryDependency {
     @Override
     @NonNull
     public File getJarFile() {
-        return new File(mBundleFolder, SdkConstants.FN_CLASSES_JAR);
+        return new File(mBundleFolder, "jars/" + SdkConstants.FN_CLASSES_JAR);
     }
 
     @Override
@@ -123,7 +123,7 @@ public abstract class LibraryBundle implements LibraryDependency {
     @Override
     public List<File> getLocalJars() {
         List<File> localJars = Lists.newArrayList();
-        File[] jarList = new File(mBundleFolder, SdkConstants.LIBS_FOLDER).listFiles();
+        File[] jarList = getLocalJarFolder().listFiles();
         if (jarList != null) {
             for (File jars : jarList) {
                 if (jars.isFile() && jars.getName().endsWith(".jar")) {
@@ -195,5 +195,10 @@ public abstract class LibraryBundle implements LibraryDependency {
     @Override
     public int hashCode() {
         return mName != null ? mName.hashCode() : 0;
+    }
+
+    @NonNull
+    protected File getLocalJarFolder() {
+        return new File(new File(mBundleFolder, "jars"), SdkConstants.LIBS_FOLDER);
     }
 }
