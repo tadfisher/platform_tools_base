@@ -41,7 +41,6 @@ import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask
 import com.android.build.gradle.internal.tasks.InstallVariantTask
 import com.android.build.gradle.internal.tasks.MockableAndroidJarTask
-import com.android.build.gradle.internal.tasks.OutputFileTask
 import com.android.build.gradle.internal.tasks.PrepareDependenciesTask
 import com.android.build.gradle.internal.tasks.SigningReportTask
 import com.android.build.gradle.internal.tasks.TestServerTask
@@ -99,6 +98,7 @@ import com.android.sdklib.AndroidTargetHash
 import com.android.sdklib.BuildToolInfo
 import com.android.sdklib.IAndroidTarget
 import com.android.sdklib.SdkVersionInfo
+import com.google.common.base.Supplier
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Lists
 import com.google.common.collect.Sets
@@ -2418,7 +2418,7 @@ abstract class TaskManager {
             }
 
             Task appTask = packageApp
-            OutputFileTask outputFileTask = packageApp
+            Supplier<File> outputFileTask = packageApp
 
             if (signedApk) {
                 if (variantData.zipAlignEnabled) {
@@ -2504,7 +2504,7 @@ abstract class TaskManager {
                             getExtension().defaultPublishConfig.equals(outputName) ? "default"
                                     : variantData.variantDependency.publishConfiguration.name
 
-                    for (OutputFileTask outputFileProvider : variantOutputData.getOutputTasks()) {
+                    for (Supplier<File> outputFileProvider : variantOutputData.getOutputFileSuppliers()) {
                         project.artifacts.add(configurationName, new ApkPublishArtifact(
                                 projectBaseName,
                                 null,
