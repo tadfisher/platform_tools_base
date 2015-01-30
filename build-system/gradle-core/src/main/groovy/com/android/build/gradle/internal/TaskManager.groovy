@@ -202,6 +202,9 @@ abstract class TaskManager {
 
     public MockableAndroidJarTask createMockableJar
 
+    // A task for hiding other task on the task list.
+    @Nullable private Task hiddenTask
+
     public TaskManager(
             Project project,
             TaskContainer tasks,
@@ -1123,6 +1126,8 @@ abstract class TaskManager {
                 JavaCompile)
         variantData.javaCompileTask = compileTask
         variantData.compileTask.dependsOn variantData.javaCompileTask
+        hideTask(variantData.compileTask)
+
         optionalDependsOn(variantData.javaCompileTask, variantData.sourceGenTask)
 
         compileTask.source = variantData.getJavaSources()
@@ -1271,6 +1276,9 @@ abstract class TaskManager {
         createCompileTask(variantData, testedVariantData)
         variantData.assembleVariantTask = createAssembleTask(variantData)
         variantData.assembleVariantTask.dependsOn variantData.compileTask
+
+        // This hides the assemble unit test task from the task list.
+        variantData.assembleVariantTask.group = null
     }
 
     /**
@@ -2963,5 +2971,27 @@ abstract class TaskManager {
         }
 
         return null
+    }
+
+    /**
+     * Hide a task from Gradle's task list.
+     *
+     * A task will not be shown on the task list if:
+     * 1) it has an empty group, and
+     * 2) another task depends on it.
+     *
+     * This method removes the group from the task and creates a dummy task to depends on it.  The
+     * dummy task is hidden because it depends on itself.
+     */
+    private void hideTask(Task task) {
+        if (hiddenTask == null) {
+            // Creates a task that does not show on the task list.
+            hiddenTask = project.tasks.create("hiddenAndroidTask");
+            hiddenTask.dependsOn hiddenTask
+            hiddenTask.description = "A dummy task for hiding other tasks."
+            hiddenTask.enabled = false
+        }
+        task.group = null
+        hiddenTask.dependsOn task
     }
 }
