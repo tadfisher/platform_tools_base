@@ -15,7 +15,6 @@
  */
 
 package com.android.build.gradle.internal
-
 import com.android.SdkConstants
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable
@@ -53,7 +52,6 @@ import static com.android.SdkConstants.FN_ANNOTATIONS_ZIP
 import static com.android.SdkConstants.LIBS_FOLDER
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS
-
 /**
  * TaskManager for creating tasks in an Android library project.
  */
@@ -363,6 +361,12 @@ class LibraryTaskManager extends TaskManager {
             @Nullable
             MavenCoordinates getResolvedCoordinates() {
                 return null
+            }
+
+            @Override
+            @NonNull
+            protected File getJarsRootFolder() {
+                return getFolder();
             }
         };
     }

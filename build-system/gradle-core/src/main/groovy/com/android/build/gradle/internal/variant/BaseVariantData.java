@@ -17,7 +17,6 @@ package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.gradle.BaseExtension;
@@ -218,9 +217,8 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
         return variantConfiguration.getType();
     }
 
-    @VisibleForTesting
     @NonNull
-    String getName() {
+    public String getName() {
         return variantConfiguration.getFullName();
     }
 
