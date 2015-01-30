@@ -1,5 +1,5 @@
 ext {
-    buildToolsVersion = System.env.CUSTOM_BUILDTOOLS != null ? System.env.CUSTOM_BUILDTOOLS : '21.0.1'
+    buildToolsVersion = System.env.CUSTOM_BUILDTOOLS != null ? System.env.CUSTOM_BUILDTOOLS : '20.0.0'
 }
 
 buildscript {
@@ -32,6 +32,9 @@ android {
         // This actual the app version code. Giving ourselves 1,000,000 values
         versionCode = 123
 
+    }
+    aaptOptions {
+        useNewCruncher true
     }
 
     splits {
