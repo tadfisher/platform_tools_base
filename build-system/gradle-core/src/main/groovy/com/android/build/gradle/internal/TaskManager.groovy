@@ -2495,33 +2495,22 @@ abstract class TaskManager {
             variantOutputData.assembleTask.dependsOn appTask
 
             if (publishApk) {
-                if (getExtension().defaultPublishConfig.equals(outputName)) {
-                    // add the artifact that will be published
-                    project.artifacts.add("default", new ApkPublishArtifact(
-                            projectBaseName,
-                            null,
-                            outputFileTask))
-                }
+                // if this variant is the default publish config or we also should publish non
+                // defaults, proceed with declaring our artifacts.
+                if (getExtension().defaultPublishConfig.equals(outputName)
+                        || getExtension().publishNonDefault) {
 
-                // also publish the artifact with its full config name
-                if (getExtension().publishNonDefault) {
-                    // classifier cannot just be the publishing config as we need
-                    // to add the filters if needed.
-                    String classifier = variantData.variantDependency.publishConfiguration.name
-                    if (variantOutputData.getMainOutputFile().getFilter(OutputFile.DENSITY) != null) {
-                        classifier =
-                                "${classifier}-${variantOutputData.getMainOutputFile().getFilter(OutputFile.DENSITY)}"
-                    }
-                    if (variantOutputData.getMainOutputFile().getFilter(OutputFile.ABI) != null) {
-                        classifier =
-                                "${classifier}-${variantOutputData.getMainOutputFile().getFilter(OutputFile.ABI)}"
-                    }
+                    String configurationName =
+                            getExtension().defaultPublishConfig.equals(outputName) ? "default"
+                                    : variantData.variantDependency.publishConfiguration.name
 
-                    project.artifacts.add(variantData.variantDependency.publishConfiguration.name,
-                            new ApkPublishArtifact(
-                                    projectBaseName,
-                                    classifier,
-                                    outputFileTask))
+                    for (OutputFileTask outputFileProvider : variantOutputData.getOutputTasks()) {
+                        project.artifacts.add(configurationName, new ApkPublishArtifact(
+                                projectBaseName,
+                                null,
+                                outputFileProvider,
+                                outputFileTask))
+                    }
                 }
             }
         }
