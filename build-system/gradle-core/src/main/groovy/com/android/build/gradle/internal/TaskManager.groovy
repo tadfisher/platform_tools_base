@@ -41,7 +41,6 @@ import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask
 import com.android.build.gradle.internal.tasks.InstallVariantTask
 import com.android.build.gradle.internal.tasks.MockableAndroidJarTask
-import com.android.build.gradle.internal.tasks.OutputFileTask
 import com.android.build.gradle.internal.tasks.PrepareDependenciesTask
 import com.android.build.gradle.internal.tasks.SigningReportTask
 import com.android.build.gradle.internal.tasks.TestServerTask
@@ -2414,7 +2413,6 @@ abstract class TaskManager {
             }
 
             Task appTask = packageApp
-            OutputFileTask outputFileTask = packageApp
 
             if (signedApk) {
                 if (variantData.zipAlignEnabled) {
@@ -2443,8 +2441,6 @@ abstract class TaskManager {
                     }
 
                     appTask = zipAlignTask
-
-                    outputFileTask = zipAlignTask
                 }
             }
 
@@ -2480,9 +2476,16 @@ abstract class TaskManager {
             if (publishApk) {
                 // if this variant is the default publish config or we also should publish non
                 // defaults, proceed with declaring our artifacts.
-                if (getExtension().defaultPublishConfig.equals(outputName)) {
-                    for (OutputFileTask outputFileProvider : variantOutputData.getOutputTasks()) {
-                        project.artifacts.add("default", new ApkPublishArtifact(
+                if (getExtension().defaultPublishConfig.equals(outputName)
+                        || getExtension().publishNonDefault) {
+
+                    String configurationName =
+                            getExtension().defaultPublishConfig.equals(outputName) ? "default"
+                                    : variantData.variantDependency.publishConfiguration.name
+
+                    for (Supplier<File> outputFileProvider : 
+                            variantOutputData.getOutputFileSuppliers()) {
+                        project.artifacts.add(configurationName, new ApkPublishArtifact(
                                 projectBaseName,
                                 null,
                                 outputFileProvider,
@@ -2491,7 +2494,8 @@ abstract class TaskManager {
                 }
 
                 if (getExtension().publishNonDefault) {
-                    for (OutputFileTask outputFileProvider : variantOutputData.getOutputTasks()) {
+                    for (Supplier<File> outputFileProvider : 
+                            variantOutputData.getOutputFileSuppliers()) {
                         project.artifacts.add(
                                 variantData.variantDependency.publishConfiguration.name,
                                 new ApkPublishArtifact(
