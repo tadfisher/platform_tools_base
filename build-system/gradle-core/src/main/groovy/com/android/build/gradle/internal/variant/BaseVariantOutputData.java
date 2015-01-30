@@ -22,6 +22,7 @@ import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.api.ApkOutputFile;
 import com.android.build.gradle.internal.StringHelper;
+import com.android.build.gradle.internal.publishing.ApkPublishArtifact;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.PackageSplitAbi;
 import com.android.build.gradle.tasks.PackageSplitRes;
@@ -29,9 +30,11 @@ import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.google.common.collect.ImmutableList;
 
 import org.gradle.api.Task;
+import org.gradle.api.artifacts.Configuration;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 /**
