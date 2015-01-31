@@ -4,4 +4,12 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="${relativePackage}.${activityClass}"
-    tools:ignore="MergeRootFrame" />
+    tools:ignore="MergeRootFrame">
+
+    <fragment
+        android:id="@+id/fragment"
+        android:name="${packageName}.${fragmentClass}"
+        tools:layout="@layout/${fragmentLayoutName}"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+</FrameLayout>
