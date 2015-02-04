@@ -30,6 +30,7 @@ import com.android.builder.model.SourceProvider;
 
 import org.gradle.api.Task;
 import org.gradle.api.tasks.Copy;
+import org.gradle.api.tasks.compile.AbstractCompile;
 import org.gradle.api.tasks.compile.JavaCompile;
 
 import java.io.File;
@@ -170,7 +171,7 @@ public interface BaseVariant {
      * Returns the Java Compilation task.
      */
     @NonNull
-    JavaCompile getJavaCompile();
+    AbstractCompile getJavaCompile();
 
     /**
      * Returns the NDK Compilation task.
