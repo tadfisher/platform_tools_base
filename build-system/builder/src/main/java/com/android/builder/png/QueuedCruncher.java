@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * implementation of {@link com.android.ide.common.internal.PngCruncher} that queues request and
@@ -76,7 +77,6 @@ public class QueuedCruncher implements PngCruncher {
     // list of outstanding jobs.
     @NonNull private final ConcurrentLinkedQueue<Job<AaptProcess>> mOutstandingJobs =
             new ConcurrentLinkedQueue<Job<AaptProcess>>();
-
 
     private QueuedCruncher(
             @NonNull String aaptLocation,
