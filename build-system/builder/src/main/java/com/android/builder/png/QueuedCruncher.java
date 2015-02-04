@@ -76,7 +76,7 @@ public class QueuedCruncher implements PngCruncher {
     // list of outstanding jobs.
     @NonNull private final ConcurrentLinkedQueue<Job<AaptProcess>> mOutstandingJobs =
             new ConcurrentLinkedQueue<Job<AaptProcess>>();
-
+    
 
     private QueuedCruncher(
             @NonNull String aaptLocation,
