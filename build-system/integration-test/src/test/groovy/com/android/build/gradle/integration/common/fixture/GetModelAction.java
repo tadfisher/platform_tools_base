@@ -34,8 +34,11 @@ public class GetModelAction implements BuildAction<Map<String, AndroidProject>> 
 
     @Override
     public Map<String, AndroidProject> execute(BuildController buildController) {
+        long t1 = System.currentTimeMillis();
         GradleBuild gradleBuild = buildController.getBuildModel();
         DomainObjectSet<? extends BasicGradleProject> projects = gradleBuild.getProjects();
+
+        long t2 = System.currentTimeMillis();
 
         Map<String, AndroidProject> modelMap = Maps.newHashMapWithExpectedSize(projects.size());
 
@@ -45,6 +48,11 @@ public class GetModelAction implements BuildAction<Map<String, AndroidProject>> 
                 modelMap.put(project.getPath(), model);
             }
         }
+
+        long t3 = System.currentTimeMillis();
+
+        System.out.println("GET PROJECTS: " + (t2 - t1) + "ms");
+        System.out.println("GET MODELS: " + (t3 - t2) + "ms");
 
         return modelMap;
     }
