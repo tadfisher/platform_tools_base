@@ -71,7 +71,6 @@ import static com.android.builder.core.BuilderConstants.DEBUG
 import static com.android.builder.core.BuilderConstants.RELEASE
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES
 import static java.io.File.separator
-
 /**
  * Base class for all Android plugins
  */
