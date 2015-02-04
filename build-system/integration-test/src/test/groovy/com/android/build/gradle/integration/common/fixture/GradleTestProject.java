@@ -94,7 +94,7 @@ public class GradleTestProject implements TestRule {
         private String name;
 
         @Nullable
-        private AndroidTestApp testApp = null;
+        private TestProject testProject = null;
 
         boolean captureStdOut = false;
 
@@ -102,7 +102,7 @@ public class GradleTestProject implements TestRule {
          * Create a GradleTestProject.
          */
         public GradleTestProject create()  {
-            return new GradleTestProject(name, testApp, captureStdOut);
+            return new GradleTestProject(name, testProject, captureStdOut);
         }
 
         /**
@@ -121,10 +121,10 @@ public class GradleTestProject implements TestRule {
         }
 
         /**
-         * Create GradleTestProject from an AndroidTestApp.
+         * Create GradleTestProject from a TestProject.
          */
-        public Builder fromTestApp(@NonNull AndroidTestApp testApp) {
-            this.testApp = testApp;
+        public Builder fromTestApp(@NonNull TestProject testProject) {
+            this.testProject = testProject;
             return this;
         }
 
@@ -172,7 +172,7 @@ public class GradleTestProject implements TestRule {
     private ByteArrayOutputStream stdout;
 
     @Nullable
-    private AndroidTestApp testApp;
+    private TestProject testProject;
 
     private GradleTestProject() {
         this(null, null, false);
@@ -180,14 +180,14 @@ public class GradleTestProject implements TestRule {
 
     private GradleTestProject(
             @Nullable String name,
-            @Nullable AndroidTestApp testApp,
+            @Nullable TestProject testProject,
             boolean captureStdOut) {
         sdkDir = SdkHelper.findSdkDir();
         ndkDir = findNdkDir();
         String buildDir = System.getenv("PROJECT_BUILD_DIR");
         outDir = (buildDir == null) ? new File("build/tests") : new File(buildDir, "tests");
         this.name = (name == null) ? DEFAULT_TEST_PROJECT_NAME : name;
-        this.testApp = testApp;
+        this.testProject = testProject;
         if (captureStdOut) {
             stdout = new ByteArrayOutputStream();
         }
@@ -212,7 +212,7 @@ public class GradleTestProject implements TestRule {
         ndkDir = rootProject.ndkDir;
         sdkDir = rootProject.sdkDir;
         stdout = rootProject.stdout;
-        testApp = null;
+        testProject = null;
     }
 
     public static Builder builder() {
@@ -286,18 +286,11 @@ public class GradleTestProject implements TestRule {
                         new File(Builder.TEST_PROJECT_DIR, COMMON_BUILD_SCRIPT),
                         new File(testDir.getParent(), COMMON_BUILD_SCRIPT));
 
-                if (testApp != null) {
-                    testApp.writeSources(testDir);
+                if (testProject != null) {
+                    testProject.write(testDir, getGradleBuildscript());
                 } else {
                     Files.write(
-                            "buildscript {\n" +
-                                    "    repositories {\n" +
-                                    "        maven { url '" + getRepoDir().toString() + "' }\n" +
-                                    "    }\n" +
-                                    "    dependencies {\n" +
-                                    "        classpath \"com.android.tools.build:gradle:" + ANDROID_GRADLE_VERSION + "\"\n" +
-                                    "    }\n" +
-                                    "}\n",
+                            getGradleBuildscript(),
                             buildFile,
                             Charsets.UTF_8);
                 }
@@ -426,6 +419,20 @@ public class GradleTestProject implements TestRule {
     }
 
     /**
+     * Returns a string that contains the gradle buildscript content
+     */
+    public String getGradleBuildscript() {
+        return "buildscript {\n" +
+                "    repositories {\n" +
+                "        maven { url '" + getRepoDir().toString() + "' }\n" +
+                "    }\n" +
+                "    dependencies {\n" +
+                "        classpath \"com.android.tools.build:gradle:" + ANDROID_GRADLE_VERSION + "\"\n" +
+                "    }\n" +
+                "}\n";
+    }
+
+    /**
      * Return a list of all task names of the project.
      */
     public List<String> getTaskList() {
@@ -516,7 +523,6 @@ public class GradleTestProject implements TestRule {
             connection.close();
         }
     }
-
 
     /**
      * Returns the project model without building.
