@@ -6,6 +6,9 @@
   * New source folders recognized as unit tests: src/test/java, src/testDebug/java etc.
   * New configurations for adding test-only dependencies, e.g.
       testCompile 'junit:junit:4.11'
+  * New option, android.testOptions.unitTests.returnDefaultValues to control
+    the behaviour of the "mockable" android.jar.
+  * Improved DSL reference. See http://developer.android.com/tools/building/plugin-for-gradle.html
 
 1.0.0-rc2
 - Enhanced manifest merger logging by specifying library coordinates.

@@ -21,14 +21,7 @@
             <thead>
                 <tr><td>Name</td></tr>
             </thead>
-            <tr><td>resValues</td></tr>
-            <tr><td>buildConfigFields</td></tr>
-            <tr><td>proguardFiles</td></tr>
-            <tr><td>consumerProguardFiles</td></tr>
-            <tr><td>manifestPlaceholders</td></tr>
-            <tr><td>multiDexEnabled</td></tr>
-            <tr><td>multiDexKeepFile</td></tr>
-            <tr><td>multiDexKeepProguard</td></tr>
+            <tr><td>returnDefaultValues</td></tr>
         </table>
     </section>
     <section>
@@ -37,11 +30,7 @@
             <thead>
                 <tr><td>Name</td></tr>
             </thead>
-            <tr><td>addResValue</td></tr>
-            <tr><td>addResValues</td></tr>
-            <tr><td>addBuildConfigField</td></tr>
-            <tr><td>addBuildConfigFields</td></tr>
-            <tr><td>addManifestPlaceHolders</td></tr>
+            <tr><td>returnDefaultValues</td></tr>
         </table>
     </section>
 </section>
