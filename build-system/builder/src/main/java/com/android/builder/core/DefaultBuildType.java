@@ -64,6 +64,9 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
         return this;
     }
 
+    /**
+     * Name of this build type.
+     */
     @Override
     @NonNull
     public String getName() {
@@ -89,6 +92,11 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
         mTestCoverageEnabled = testCoverageEnabled;
     }
 
+    /**
+     * Whether test coverage is enabled for this build type.
+     *
+     * ??? TODO: Explain how test coverage works. See http://b.android.com/134593
+     */
     @Override
     public boolean isTestCoverageEnabled() {
         return mTestCoverageEnabled;
@@ -98,6 +106,9 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
         mPseudoLocalesEnabled = pseudoLocalesEnabled;
     }
 
+    /**
+     * ???
+     */
     @Override
     public boolean isPseudoLocalesEnabled() {
         return mPseudoLocalesEnabled;
@@ -136,7 +147,11 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
         return this;
     }
 
-    /** Optimization level to use by the renderscript compiler. */
+    /**
+     * Optimization level to use by the renderscript compiler.
+     *
+     * ??? Link to some description of the levels?
+     */
     @Override
     public int getRenderscriptOptimLevel() {
         return mRenderscriptOptimLevel;
@@ -220,6 +235,9 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
         return mSigningConfig;
     }
 
+    /**
+     * ???
+     */
     @Override
     public boolean isEmbedMicroApp() {
         return mEmbedMicroApp;

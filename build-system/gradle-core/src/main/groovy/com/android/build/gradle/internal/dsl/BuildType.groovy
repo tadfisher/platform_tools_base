@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.dsl
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable
 import com.android.annotations.VisibleForTesting
-import com.android.build.gradle.internal.core.NdkConfig
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.DefaultBuildType
@@ -63,11 +62,17 @@ public class BuildType extends DefaultBuildType implements Serializable {
         ndkConfig = null
     }
 
+    /**
+     * ???
+     */
     @Nullable
-    public NdkConfig getNdkConfig() {
+    public NdkOptions getNdkConfig() {
         return ndkConfig;
     }
 
+    /**
+     * ???
+     */
     public void init(SigningConfig debugSigningConfig) {
         if (BuilderConstants.DEBUG.equals(getName())) {
             setDebuggable(true)
@@ -113,6 +118,9 @@ public class BuildType extends DefaultBuildType implements Serializable {
 
     // -- DSL Methods. TODO remove once the instantiator does what I expect it to do.
 
+    /**
+     * ???
+     */
     public void buildConfigField(
             @NonNull String type,
             @NonNull String name,
@@ -125,6 +133,9 @@ public class BuildType extends DefaultBuildType implements Serializable {
         addBuildConfigField(AndroidBuilder.createClassField(type, name, value));
     }
 
+    /**
+     * ???
+     */
     public void resValue(
             @NonNull String type,
             @NonNull String name,
@@ -177,12 +188,18 @@ public class BuildType extends DefaultBuildType implements Serializable {
         return this;
     }
 
+    /**
+     * ???
+     */
     @NonNull
     public BuildType consumerProguardFiles(Object... proguardFileArray) {
         consumerProguardFiles.addAll(project.files(proguardFileArray).files);
         return this;
     }
 
+    /**
+     * ???
+     */
     @NonNull
     public BuildType setConsumerProguardFiles(Iterable<?> proguardFileIterable) {
         consumerProguardFiles.clear();
@@ -192,10 +209,16 @@ public class BuildType extends DefaultBuildType implements Serializable {
         return this;
     }
 
+    /**
+     * Configures the {@link NdkOptions}.
+     */
     void ndk(Action<NdkOptions> action) {
         action.execute(ndkConfig)
     }
 
+    /**
+     * ???
+     */
     Boolean getUseJack() {
         return useJack
     }
@@ -204,12 +227,21 @@ public class BuildType extends DefaultBuildType implements Serializable {
         this.useJack = useJack
     }
 
+    /**
+     * ???
+     */
     void useJack(Boolean useJack) {
         setUseJack(useJack)
     }
 
+    /**
+     * ???
+     */
     boolean shrinkResources = false // opt-in for now until we've validated it in the field
 
+    /**
+     * ???
+     */
     void shrinkResources(boolean flag) {
         this.shrinkResources = flag
     }
