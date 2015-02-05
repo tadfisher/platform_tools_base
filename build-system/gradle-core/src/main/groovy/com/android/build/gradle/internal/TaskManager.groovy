@@ -110,6 +110,7 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.execution.TaskExecutionGraph
+import org.gradle.api.file.FileCollection
 import org.gradle.api.internal.ConventionMapping
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.logging.Logger
@@ -1123,6 +1124,25 @@ abstract class TaskManager {
         variantData.javaCompileTask = compileTask
         variantData.compileTask.dependsOn variantData.javaCompileTask
         optionalDependsOn(variantData.javaCompileTask, variantData.sourceGenTask)
+
+        if (testedVariantData != null) {
+            // we are asked to set up a compilation task against unit tests, we should make sure
+            // the tested variant was not built using Jack as the .class files are not available
+            // in that case.
+            boolean sourceFilesPresent = false;
+            for (Object o : variantData.getJavaSources()) {
+                if (o instanceof File && ((File) o).exists()) {
+                    sourceFilesPresent = true
+                    break
+                }
+                if (o instanceof FileCollection && !((FileCollection) o ).files.isEmpty()) {
+                    sourceFilesPresent = true
+                }
+            }
+            if (sourceFilesPresent && testedVariantData.getVariantConfiguration().getUseJack()) {
+                throw new RuntimeException("Unit tests are not yet supported when Jack is used")
+            }
+        }
 
         compileTask.source = variantData.getJavaSources()
 
