@@ -21,6 +21,7 @@
             <thead>
                 <tr><td>Name</td></tr>
             </thead>
+            <tr><td>returnDefaultValues</td></tr>
         </table>
     </section>
     <section>
@@ -29,6 +30,7 @@
             <thead>
                 <tr><td>Name</td></tr>
             </thead>
+            <tr><td>returnDefaultValues</td></tr>
         </table>
     </section>
 </section>
