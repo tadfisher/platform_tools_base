@@ -127,6 +127,12 @@ class ProductFlavor extends DefaultProductFlavor {
         setTargetSdkVersion(targetSdkVersion);
     }
 
+    /**
+     * Sets the maximum SDK version to the given value.
+     *
+     * <p>See <a href="http://developer.android.com/guide/topics/manifest/uses-sdk-element.html">
+     * uses-sdk element documentation</a>.
+     */
     @NonNull
     public void maxSdkVersion(int targetSdkVersion) {
         setMaxSdkVersion(targetSdkVersion);
@@ -160,6 +166,9 @@ class ProductFlavor extends DefaultProductFlavor {
 
 // -- DSL Methods. TODO remove once the instantiator does what I expect it to do.
 
+    /**
+     * ???
+     */
     public void buildConfigField(
             @NonNull String type,
             @NonNull String name,
@@ -178,6 +187,9 @@ class ProductFlavor extends DefaultProductFlavor {
         addBuildConfigField(AndroidBuilder.createClassField(type, name, value));
     }
 
+    /**
+     * ???
+     */
     public void resValue(
             @NonNull String type,
             @NonNull String name,
@@ -233,11 +245,17 @@ class ProductFlavor extends DefaultProductFlavor {
         }
     }
 
+    /**
+     * ???
+     */
     @NonNull
     public void consumerProguardFiles(Object... proguardFileArray) {
         consumerProguardFiles.addAll(project.files(proguardFileArray).files)
     }
 
+    /**
+     * ???
+     */
     @NonNull
     public void setConsumerProguardFiles(Iterable<?> proguardFileIterable) {
         consumerProguardFiles.clear()
@@ -254,26 +272,44 @@ class ProductFlavor extends DefaultProductFlavor {
                 "Current NDK support is deprecated.  Alternative will be provided in the future.");
     }
 
+    /**
+     * ???
+     */
     void resConfig(@NonNull String config) {
         addResourceConfiguration(config);
     }
 
+    /**
+     * ???
+     */
     void resConfigs(@NonNull String... config) {
         addResourceConfigurations(config);
     }
 
+    /**
+     * ???
+     */
     void resConfigs(@NonNull Collection<String> config) {
         addResourceConfigurations(config);
     }
 
+    /**
+     * ???
+     */
     Boolean getUseJack() {
         return useJack
     }
 
+    /**
+     * ???
+     */
     void setUseJack(Boolean useJack) {
         this.useJack = useJack
     }
 
+    /**
+     * ???
+     */
     void useJack(Boolean useJack) {
         setUseJack(useJack)
     }

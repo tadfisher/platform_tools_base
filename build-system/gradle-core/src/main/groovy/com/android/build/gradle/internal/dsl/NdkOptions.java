@@ -51,6 +51,9 @@ public class NdkOptions implements NdkConfig, Serializable {
         setAbiFilters(ndkConfig.abiFilters);
     }
 
+    /**
+     * The module name.
+     */
     @Override
     @Input @Optional
     public String getModuleName() {
@@ -61,6 +64,9 @@ public class NdkOptions implements NdkConfig, Serializable {
         this.moduleName = moduleName;
     }
 
+    /**
+     * C flags.
+     */
     @Override
     @Input @Optional
     public String getcFlags() {
@@ -71,12 +77,18 @@ public class NdkOptions implements NdkConfig, Serializable {
         this.cFlags = cFlags;
     }
 
+    /**
+     * LD libs.
+     */
     @Override
     @Input @Optional
     public Set<String> getLdLibs() {
         return ldLibs;
     }
 
+    /**
+     * Adds a new LD lib.
+     */
     @NonNull
     public NdkOptions ldLibs(String lib) {
         if (ldLibs == null) {
@@ -86,6 +98,9 @@ public class NdkOptions implements NdkConfig, Serializable {
         return this;
     }
 
+    /**
+     * Adds new LD libs.
+     */
     @NonNull
     public NdkOptions ldLibs(String... libs) {
         if (ldLibs == null) {
@@ -113,12 +128,18 @@ public class NdkOptions implements NdkConfig, Serializable {
     }
 
 
+    /**
+     * ABI filters.
+     */
     @Override
     @Input @Optional
     public Set<String> getAbiFilters() {
         return abiFilters;
     }
 
+    /**
+     * Adds a new ABI filter.
+     */
     @NonNull
     public NdkOptions abiFilter(String filter) {
         if (abiFilters == null) {
@@ -128,6 +149,9 @@ public class NdkOptions implements NdkConfig, Serializable {
         return this;
     }
 
+    /**
+     * Adds new ABI filters.
+     */
     @NonNull
     public NdkOptions abiFilters(String... filters) {
         if (abiFilters == null) {
@@ -154,6 +178,9 @@ public class NdkOptions implements NdkConfig, Serializable {
         return this;
     }
 
+    /**
+     * The APP_STL value.
+     */
     @Override
     @Nullable
     public String getStl() {

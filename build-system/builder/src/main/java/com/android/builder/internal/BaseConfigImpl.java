@@ -48,40 +48,65 @@ public abstract class BaseConfigImpl implements Serializable, BaseConfig {
     @Nullable
     private File mMultiDexKeepFile;
 
+    /**
+     * ???
+     *
+     * TODO: Add JavaDoc to ClassField as well, if we want this documented.
+     */
     public void addBuildConfigField(@NonNull ClassField field) {
         mBuildConfigFields.put(field.getName(), field);
     }
 
-    public void addResValue(@NonNull ClassField field) {
-        mResValues.put(field.getName(), field);
+    /**
+     * ???
+     */
+    public void addResValue(@NonNull ClassField field) { mResValues.put(field.getName(), field);
     }
 
+    /**
+     * ???
+     */
     public void addResValues(@NonNull Map<String, ClassField> values) {
         mResValues.putAll(values);
     }
 
+    /**
+     * ???
+     */
     @Override
     @NonNull
     public Map<String, ClassField> getBuildConfigFields() {
         return mBuildConfigFields;
     }
 
+    /**
+     * ???
+     */
     public void addBuildConfigFields(@NonNull Map<String, ClassField> fields) {
         mBuildConfigFields.putAll(fields);
     }
 
+    /**
+     * ???
+     */
     @NonNull
     @Override
     public Map<String, ClassField> getResValues() {
         return mResValues;
     }
 
+    /**
+     * ???
+     */
     @Override
     @NonNull
     public List<File> getProguardFiles() {
         return mProguardFiles;
     }
 
+    /**
+     * ???
+     */
     @Override
     @NonNull
     public List<File> getConsumerProguardFiles() {
@@ -89,16 +114,25 @@ public abstract class BaseConfigImpl implements Serializable, BaseConfig {
     }
 
 
+    /**
+     * ???
+     */
     @NonNull
     @Override
     public Map<String, Object> getManifestPlaceholders() {
         return mManifestPlaceholders;
     }
 
+    /**
+     * ???
+     */
     public void addManifestPlaceholders(@NonNull Map<String, Object> manifestPlaceholders) {
         mManifestPlaceholders.putAll(manifestPlaceholders);
     }
 
+    /**
+     * ???
+     */
     public void setManifestPlaceholders(@NonNull Map<String, Object> manifestPlaceholders) {
         mManifestPlaceholders.clear();
         this.mManifestPlaceholders.putAll(manifestPlaceholders);
@@ -146,6 +180,9 @@ public abstract class BaseConfigImpl implements Serializable, BaseConfig {
         mMultiDexEnabled = multiDex;
     }
 
+    /**
+     * ???
+     */
     @Override
     @Nullable
     public File getMultiDexKeepFile() {
@@ -156,6 +193,9 @@ public abstract class BaseConfigImpl implements Serializable, BaseConfig {
         mMultiDexKeepFile = file;
     }
 
+    /**
+     * ???
+     */
     @Override
     @Nullable
     public File getMultiDexKeepProguard() {

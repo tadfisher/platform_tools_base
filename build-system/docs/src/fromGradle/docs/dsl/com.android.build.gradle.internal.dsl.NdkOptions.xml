@@ -21,6 +21,11 @@
             <thead>
                 <tr><td>Name</td></tr>
             </thead>
+            <tr><td>moduleName</td></tr>
+            <tr><td>ldLibs</td></tr>
+            <tr><td>abiFilters</td></tr>
+            <tr><td>stl</td></tr>
+            <tr><td>cFlags</td></tr>
         </table>
     </section>
     <section>
@@ -29,8 +34,8 @@
             <thead>
                 <tr><td>Name</td></tr>
             </thead>
-            <tr><td>addResourceConfiguration</td></tr>
-            <tr><td>addResourceConfigurations</td></tr>
+            <tr><td>ldLibs</td></tr>
+            <tr><td>abiFilters</td></tr>
         </table>
     </section>
 </section>
