@@ -309,6 +309,9 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
         return this;
     }
 
+    /**
+     * ???
+     */
     public void addResourceConfiguration(@NonNull String configuration) {
         if (mResourceConfiguration == null) {
             mResourceConfiguration = Sets.newHashSet();
@@ -317,6 +320,9 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
         mResourceConfiguration.add(configuration);
     }
 
+    /**
+     * ???
+     */
     public void addResourceConfigurations(@NonNull String... configurations) {
         if (mResourceConfiguration == null) {
             mResourceConfiguration = Sets.newHashSet();
@@ -325,6 +331,9 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
         mResourceConfiguration.addAll(Arrays.asList(configurations));
     }
 
+    /**
+     * ???
+     */
     public void addResourceConfigurations(@NonNull Collection<String> configurations) {
         if (mResourceConfiguration == null) {
             mResourceConfiguration = Sets.newHashSet();
@@ -333,6 +342,9 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
         mResourceConfiguration.addAll(configurations);
     }
 
+    /**
+     * ???
+     */
     @NonNull
     @Override
     public Collection<String> getResourceConfigurations() {
