@@ -48,40 +48,63 @@ public abstract class BaseConfigImpl implements Serializable, BaseConfig {
     @Nullable
     private File mMultiDexKeepFile;
 
+    /**
+     * Adds a BuildConfig field.
+     */
     public void addBuildConfigField(@NonNull ClassField field) {
         mBuildConfigFields.put(field.getName(), field);
     }
 
-    public void addResValue(@NonNull ClassField field) {
-        mResValues.put(field.getName(), field);
+    /**
+     * Adds a generated resource value.
+     */
+    public void addResValue(@NonNull ClassField field) { mResValues.put(field.getName(), field);
     }
 
+    /**
+     * Adds a generated resource value.
+     */
     public void addResValues(@NonNull Map<String, ClassField> values) {
         mResValues.putAll(values);
     }
 
+    /**
+     * Returns the BuildConfig fields.
+     */
     @Override
     @NonNull
     public Map<String, ClassField> getBuildConfigFields() {
         return mBuildConfigFields;
     }
 
+    /**
+     * Adds BuildConfig fields.
+     */
     public void addBuildConfigFields(@NonNull Map<String, ClassField> fields) {
         mBuildConfigFields.putAll(fields);
     }
 
+    /**
+     * Returns the generated resource values.
+     */
     @NonNull
     @Override
     public Map<String, ClassField> getResValues() {
         return mResValues;
     }
 
+    /**
+     * Returns the Proguard Files.
+     */
     @Override
     @NonNull
     public List<File> getProguardFiles() {
         return mProguardFiles;
     }
 
+    /**
+     * Returns the consumer progard files.
+     */
     @Override
     @NonNull
     public List<File> getConsumerProguardFiles() {
@@ -89,16 +112,25 @@ public abstract class BaseConfigImpl implements Serializable, BaseConfig {
     }
 
 
+    /**
+     * Returns the manifest placeholders.
+     */
     @NonNull
     @Override
     public Map<String, Object> getManifestPlaceholders() {
         return mManifestPlaceholders;
     }
 
+    /**
+     * Adds manifest placeholders.
+     */
     public void addManifestPlaceHolders(@NonNull Map<String, Object> manifestPlaceholders) {
         mManifestPlaceholders.putAll(manifestPlaceholders);
     }
 
+    /**
+     * Sets a new set of manifest placeholders.
+     */
     public void setManifestPlaceholders(@NonNull Map<String, Object> manifestPlaceholders) {
         mManifestPlaceholders.clear();
         this.mManifestPlaceholders.putAll(manifestPlaceholders);
@@ -146,6 +178,9 @@ public abstract class BaseConfigImpl implements Serializable, BaseConfig {
         mMultiDexEnabled = multiDex;
     }
 
+    /**
+     * ???
+     */
     @Override
     @Nullable
     public File getMultiDexKeepFile() {
@@ -156,6 +191,9 @@ public abstract class BaseConfigImpl implements Serializable, BaseConfig {
         mMultiDexKeepFile = file;
     }
 
+    /**
+     * ???
+     */
     @Override
     @Nullable
     public File getMultiDexKeepProguard() {
