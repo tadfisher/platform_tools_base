@@ -859,8 +859,16 @@ final class Device implements IDevice {
 
         assert(!apkFilePaths.isEmpty());
         if (getApiLevel() < 21) {
-            throw new InstallException(
-                    "This multi-apk application requires a device with API level 21+");
+            Log.w("Internal error : installPackages invoked with device < 21 for %s",
+                    Joiner.on(",").join(apkFilePaths));
+
+            if (apkFilePaths.size() == 1) {
+                installPackage(apkFilePaths.get(0), reinstall, extraArgs);
+            }
+            Log.e("Internal error : installPackages invoked with device < 21 for multiple APK : %s",
+                    Joiner.on(",").join(apkFilePaths));
+
+            return;
         }
         String mainPackageFilePath = apkFilePaths.get(0);
         Log.d(mainPackageFilePath,
