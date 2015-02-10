@@ -142,6 +142,11 @@ public class LargeTestProject implements TestProject {
                 Charset.defaultCharset());
     }
 
+    @Override
+    public boolean containsFullBuildScript() {
+        return false;
+    }
+
     private GradleModule createProject(
             @NonNull ModuleFactory factory,
             int depth,
