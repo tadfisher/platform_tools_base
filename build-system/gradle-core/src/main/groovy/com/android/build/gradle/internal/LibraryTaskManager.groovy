@@ -315,7 +315,8 @@ class LibraryTaskManager extends TaskManager {
         variantConfig.output = new LibraryBundle(
                 bundle.archivePath,
                 project.file("$project.buildDir/${FD_INTERMEDIATES}/$DIR_BUNDLES/${dirName}"),
-                variantData.getName()) {
+                variantData.getName(),
+                project.getPath()) {
 
             @Override
             @Nullable
