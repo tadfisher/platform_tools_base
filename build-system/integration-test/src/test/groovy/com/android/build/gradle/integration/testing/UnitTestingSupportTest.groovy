@@ -41,7 +41,8 @@ class UnitTestingSupportTest {
                 [ "referenceProductionCode",
                   "exceptions",
                   "mockFinalClass",
-                  "mockFinalMethod" ])
+                  "mockFinalMethod",
+                  "resourcesOnClasspath" ])
 
         checkResults(
                 "build/test-results/TEST-com.android.tests.NonStandardName.xml",
