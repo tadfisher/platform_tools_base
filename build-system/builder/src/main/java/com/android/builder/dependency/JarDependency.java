@@ -18,6 +18,7 @@ package com.android.builder.dependency;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.model.Library;
 import com.android.builder.model.MavenCoordinates;
 
 import java.io.File;
@@ -28,7 +29,7 @@ import java.io.File;
  * This is not meant to include transitive dependencies, as there's no need to record this
  * information when building.
  */
-public class JarDependency {
+public class JarDependency implements Library {
 
     @NonNull
     private final File mJarFile;
@@ -79,8 +80,15 @@ public class JarDependency {
     }
 
     @Nullable
+    @Override
     public MavenCoordinates getResolvedCoordinates() {
         return mResolvedCoordinates;
+    }
+
+    @Nullable
+    @Override
+    public MavenCoordinates getRequestedCoordinates() {
+        return null;
     }
 
     @Override
