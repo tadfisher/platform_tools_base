@@ -22,7 +22,6 @@ import com.android.build.gradle.internal.variant.ApplicationVariantData
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.BaseVariantOutputData
 import com.android.builder.core.AndroidBuilder
-import groovy.transform.CompileStatic
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.tasks.TaskContainer
@@ -85,7 +84,7 @@ class ApplicationTaskManager extends TaskManager {
         if (variantData.getVariantConfiguration().getUseJack()) {
             createJackTask(appVariantData, null /*testedVariant*/);
         } else{
-            createCompileTask(variantData, null /*testedVariant*/);
+            createJavaCompileTask(variantData, null /*testedVariant*/);
             createJarTask(variantData);
             createPostCompilationTasks(appVariantData);
         }

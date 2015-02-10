@@ -138,7 +138,7 @@ class LibraryTaskManager extends TaskManager {
                 "$project.buildDir/${FD_INTERMEDIATES}/$DIR_BUNDLES/${dirName}/$SdkConstants.FD_AIDL"))
 
         // Add a compile task
-        createCompileTask(variantData, null/*testedVariant*/)
+        createJavaCompileTask(variantData, null/*testedVariant*/)
 
         // package the prebuilt native libs into the bundle folder
         Sync packageJniLibs = project.tasks.create(
