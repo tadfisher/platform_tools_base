@@ -56,7 +56,21 @@ public class NinePatchAsyncAaptProcessTest extends NinePatchAaptProcessorTest {
 
     @Override
     protected File getAapt() {
-        return super.getAapt(FullRevision.parseRevision("21"));
+        return super.getAapt(FullRevision.parseRevision("22"));
+    }
+
+    @Override
+    protected void runTest() throws Throwable {
+        try {
+            super.runTest();
+        } catch (RuntimeException e) {
+            if (e.getMessage().startsWith("Test requires build-tools 22")) {
+                sLogger.warning("Skipped " + this.getName() + " as it requires build tools 22.");
+                //TODO: Remove once build tools 22 is released.
+            } else {
+                throw e;
+            }
+        }
     }
 
     @NonNull
