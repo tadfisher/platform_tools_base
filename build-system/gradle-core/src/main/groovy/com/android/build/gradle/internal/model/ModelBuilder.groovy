@@ -158,11 +158,11 @@ public class ModelBuilder implements ToolingModelBuilder {
                     extraModelInfo.getExtraFlavorSourceProviders(pfData.productFlavor.name)))
         }
 
-        Set<Project> gradleProjects = project.getRootProject().getAllprojects();
+        Project rootProject = project.getRootProject();
 
         for (BaseVariantData variantData : variantManager.variantDataList) {
             if (!variantData.type.isForTesting()) {
-                androidProject.addVariant(createVariant(variantData, gradleProjects))
+                androidProject.addVariant(createVariant(variantData, rootProject))
             }
         }
 
@@ -193,9 +193,9 @@ public class ModelBuilder implements ToolingModelBuilder {
     @NonNull
     private VariantImpl createVariant(
             @NonNull BaseVariantData variantData,
-            @NonNull Set<Project> gradleProjects) {
+            @NonNull Project rootProject) {
         AndroidArtifact mainArtifact = createAndroidArtifact(
-                ARTIFACT_MAIN, variantData, androidBuilder, extraModelInfo, gradleProjects)
+                ARTIFACT_MAIN, variantData, androidBuilder, extraModelInfo, rootProject)
 
         String variantName = variantData.variantConfiguration.fullName
 
@@ -215,13 +215,13 @@ public class ModelBuilder implements ToolingModelBuilder {
                                 testVariantData,
                                 androidBuilder,
                                 extraModelInfo,
-                                gradleProjects))
+                                rootProject))
                         break
                     case VariantType.UNIT_TEST:
                         extraJavaArtifacts.add(createUnitTestsJavaArtifact(
                                 variantType,
                                 testVariantData,
-                                gradleProjects))
+                                rootProject))
                         break
                     case null:
                         // No test variant with the given type for the current variant.
@@ -260,9 +260,9 @@ public class ModelBuilder implements ToolingModelBuilder {
     private JavaArtifactImpl createUnitTestsJavaArtifact(
             @NonNull VariantType variantType,
             @NonNull BaseVariantData variantData,
-            @NonNull Set<Project> gradleProjects) {
+            @NonNull Project rootProject) {
         def sourceProviders = determineSourceProviders(variantType.artifactName, variantData, extraModelInfo)
-        def dependencies = DependenciesImpl.cloneDependencies(variantData, androidBuilder, gradleProjects)
+        def dependencies = DependenciesImpl.cloneDependencies(variantData, androidBuilder, rootProject)
 
         // Add the mockable JAR path. It will be created before tests are actually run from the IDE.
         dependencies.javaLibraries.add(
@@ -287,7 +287,7 @@ public class ModelBuilder implements ToolingModelBuilder {
             @NonNull BaseVariantData variantData,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull ExtraModelInfo extraModelInfo,
-            @NonNull Set<Project> gradleProjects) {
+            @NonNull Project rootProject) {
         VariantConfiguration variantConfiguration = variantData.variantConfiguration
 
         SigningConfig signingConfig = variantConfiguration.signingConfig
@@ -349,7 +349,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                 getGeneratedSourceFolders(variantData),
                 getGeneratedResourceFolders(variantData),
                 compileTask.destinationDir,
-                DependenciesImpl.cloneDependencies(variantData, androidBuilder, gradleProjects),
+                DependenciesImpl.cloneDependencies(variantData, androidBuilder, rootProject),
                 sourceProviders.variantSourceProvider,
                 sourceProviders.multiFlavorSourceProvider,
                 variantConfiguration.supportedAbis,

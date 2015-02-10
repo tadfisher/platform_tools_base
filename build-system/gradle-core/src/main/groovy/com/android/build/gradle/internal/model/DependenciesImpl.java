@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.model;
 
 import static com.android.SdkConstants.DOT_JAR;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
@@ -30,6 +31,8 @@ import com.android.builder.dependency.LibraryDependency;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
+import com.android.builder.model.Library;
+import com.android.builder.model.MavenCoordinates;
 import com.google.common.collect.Lists;
 
 import org.gradle.api.Project;
@@ -71,7 +74,7 @@ public class DependenciesImpl implements Dependencies, Serializable {
     static DependenciesImpl cloneDependencies(
             @NonNull BaseVariantData variantData,
             @NonNull AndroidBuilder androidBuilder,
-            @NonNull Set<Project> gradleProjects) {
+            @NonNull Project rootProject) {
         VariantDependencies variantDependencies = variantData.getVariantDependency();
 
         List<AndroidLibrary> libraries;
@@ -81,7 +84,7 @@ public class DependenciesImpl implements Dependencies, Serializable {
         List<LibraryDependencyImpl> libs = variantDependencies.getLibraries();
         libraries = Lists.newArrayListWithCapacity(libs.size());
         for (LibraryDependencyImpl libImpl : libs) {
-            AndroidLibrary clonedLib = getAndroidLibrary(libImpl, gradleProjects);
+            AndroidLibrary clonedLib = getAndroidLibrary(libImpl, rootProject);
             libraries.add(clonedLib);
         }
 
@@ -100,7 +103,7 @@ public class DependenciesImpl implements Dependencies, Serializable {
                 File jarFile = jarDep.getJarFile();
                 Project projectMatch;
                 if (!customArtifact &&
-                        (projectMatch = getProject(jarFile, gradleProjects)) != null) {
+                        (projectMatch = getProject(jarDep, rootProject)) != null) {
                     projects.add(projectMatch.getPath());
                 } else {
                     javaLibraries.add(
@@ -167,14 +170,13 @@ public class DependenciesImpl implements Dependencies, Serializable {
     @NonNull
     private static AndroidLibrary getAndroidLibrary(
             @NonNull LibraryDependency libraryDependency,
-            @NonNull Set<Project> gradleProjects) {
-        File bundle = libraryDependency.getBundle();
-        Project projectMatch = getProject(bundle, gradleProjects);
+            @NonNull Project rootProject) {
+        Project projectMatch = getProject(libraryDependency, rootProject);
 
         List<LibraryDependency> deps = libraryDependency.getDependencies();
         List<AndroidLibrary> clonedDeps = Lists.newArrayListWithCapacity(deps.size());
         for (LibraryDependency child : deps) {
-            AndroidLibrary clonedLib = getAndroidLibrary(child, gradleProjects);
+            AndroidLibrary clonedLib = getAndroidLibrary(child, rootProject);
             clonedDeps.add(clonedLib);
         }
 
@@ -244,34 +246,54 @@ public class DependenciesImpl implements Dependencies, Serializable {
         return Collections.emptyList();
     }
 
+    /**
+     * Finds a matching Project for the given dependency.
+     * @param libraryDependency the dependency
+     * @param rootProject the root Gradle project
+     * @return a matching project or null.
+     */
     @Nullable
-    public static Project getProject(File outputFile, Set<Project> gradleProjects) {
-        // search for a project that contains this file in its output folder.
-        Project projectMatch = null;
-        for (Project project : gradleProjects) {
-            File buildDir = project.getBuildDir();
-            if (contains(buildDir, outputFile)) {
-                projectMatch = project;
-                break;
-            }
+    public static Project getProject(Library libraryDependency, Project rootProject) {
+        /*
+         This mechanism relies on matching the resolved coordinates of the dependency
+         and the project's gradle path.
+
+         The coordinates can look something like:
+         1. <rootFolder>:leaf:<type>:<version>
+         2. <rootFolder>.segment1[.segment2...]:leaf:<type>:<version>
+
+         where <type> is typicall aar or jar, and version can be x.y.z or 'unspecified'.
+         <rootFolder must match the Gradle root project's folder name.
+
+         Case #1 matches project with path :leaf
+         Case #2 matches project with path :segment1[:segment2...]:leaf
+         */
+        MavenCoordinates coordinates = libraryDependency.getResolvedCoordinates();
+        if (coordinates == null) {
+            return null;
         }
-        return projectMatch;
-    }
 
-    private static boolean contains(@NonNull File dir, @NonNull File file) {
-        try {
-            dir = dir.getCanonicalFile();
-            file = file.getCanonicalFile();
-        } catch (IOException e) {
-            return false;
+        String artifactId = coordinates.getArtifactId();
+        String groupId = coordinates.getGroupId();
+
+        StringBuilder sb = new StringBuilder(":");
+        String rootDir;
+
+        //remove the first section of the group ID.
+        int pos = groupId.indexOf('.');
+        if (pos != -1) {
+            sb.append(groupId.substring(pos + 1).replace('.', ':')).append(':');
+            rootDir = groupId.substring(0, pos);
+        } else {
+            rootDir = groupId;
         }
 
-        // quick fail
-        return file.getAbsolutePath().startsWith(dir.getAbsolutePath()) && doContains(dir, file);
-    }
+        // rootdir must match, or there's no need to look for the a matching project
+        if (!rootProject.getProjectDir().getName().equals(rootDir)) {
+            return null;
+        }
 
-    private static boolean doContains(@NonNull File dir, @NonNull File file) {
-        File parent = file.getParentFile();
-        return parent != null && (parent.equals(dir) || doContains(dir, parent));
+        sb.append(artifactId);
+        return rootProject.findProject(sb.toString());
     }
 }
