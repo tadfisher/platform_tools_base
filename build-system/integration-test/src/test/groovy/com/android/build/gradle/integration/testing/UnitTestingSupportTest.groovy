@@ -40,6 +40,7 @@ class UnitTestingSupportTest {
                 ["thisIsIgnored"],
                 [ "referenceProductionCode",
                   "exceptions",
+                  "aarDependencies",
                   "mockFinalClass",
                   "mockInnerClass",
                   "mockFinalMethod" ])
