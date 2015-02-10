@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal
 
+import com.android.SdkConstants
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable
 import com.android.build.OutputFile
@@ -1285,8 +1286,13 @@ abstract class TaskManager {
      */
     void createUnitTestVariantTasks(@NonNull TestVariantData variantData) {
         BaseVariantData testedVariantData = variantData.getTestedVariantData() as BaseVariantData
+        createPreBuildTasks(variantData)
         createCompileAnchorTask(variantData)
         createCompileTask(variantData, testedVariantData)
+
+        // TODO: Unify task creation in 1.2, remove this "special case".
+        variantData.javaCompileTask.dependsOn variantData.prepareDependenciesTask
+
         createJackAndUnitTestVerificationTask(variantData, testedVariantData)
         variantData.assembleVariantTask = createAssembleTask(variantData)
         variantData.assembleVariantTask.dependsOn variantData.compileTask
@@ -1490,7 +1496,9 @@ abstract class TaskManager {
                 project.files(
                         testCompileTask.classpath,
                         testCompileTask.outputs.files,
-                        androidBuilder.bootClasspath.findAll { it.name != "android.jar"},
+                        androidBuilder.bootClasspath.findAll {
+                            it.name != SdkConstants.FN_FRAMEWORK_LIBRARY
+                        },
                         createMockableJar.outputFile)
             }
 
@@ -2863,6 +2871,21 @@ abstract class TaskManager {
 
     public void createAnchorTasks(
             @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData) {
+        createPreBuildTasks(variantData)
+
+        // also create sourceGenTask
+        variantData.sourceGenTask = project.tasks.create(
+                "generate${variantData.variantConfiguration.fullName.capitalize()}Sources")
+        // and resGenTask
+        variantData.resourceGenTask = project.tasks.create(
+                "generate${variantData.variantConfiguration.fullName.capitalize()}Resources")
+        variantData.assetGenTask = project.tasks.create(
+                "generate${variantData.variantConfiguration.fullName.capitalize()}Assets")
+        // and compile task
+        createCompileAnchorTask(variantData)
+    }
+
+    private void createPreBuildTasks(BaseVariantData<? extends BaseVariantOutputData> variantData) {
         variantData.preBuildTask = project.tasks.create(
                 "pre${variantData.variantConfiguration.fullName.capitalize()}Build")
         variantData.preBuildTask.dependsOn mainPreBuild
@@ -2885,17 +2908,6 @@ abstract class TaskManager {
         for (LibraryDependencyImpl lib : configurationDependencies.libraries) {
             dependencyManager.addDependencyToPrepareTask(variantData, prepareDependenciesTask, lib)
         }
-
-        // also create sourceGenTask
-        variantData.sourceGenTask = project.tasks.create(
-                "generate${variantData.variantConfiguration.fullName.capitalize()}Sources")
-        // and resGenTask
-        variantData.resourceGenTask = project.tasks.create(
-                "generate${variantData.variantConfiguration.fullName.capitalize()}Resources")
-        variantData.assetGenTask = project.tasks.create(
-                "generate${variantData.variantConfiguration.fullName.capitalize()}Assets")
-        // and compile task
-        createCompileAnchorTask(variantData)
     }
 
     private void createCompileAnchorTask(

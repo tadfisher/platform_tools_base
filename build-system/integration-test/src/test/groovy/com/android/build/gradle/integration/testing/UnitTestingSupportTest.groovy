@@ -37,7 +37,7 @@ class UnitTestingSupportTest {
 
         checkResults(
                 "build/test-results/TEST-com.android.tests.UnitTest.xml",
-                ["thisIsIgnored"],
+                ["thisIsIgnored", "aarDependencies"],
                 [ "referenceProductionCode",
                   "exceptions",
                   "mockFinalClass",

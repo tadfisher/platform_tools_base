@@ -1,6 +1,7 @@
 package com.android.tests;
 
 import static org.junit.Assert.*;
+import static org.junit.Assume.*;
 import static org.mockito.Mockito.*;
 
 import org.junit.Ignore;
@@ -50,6 +51,18 @@ public class UnitTest {
         PowerManager.WakeLock wakeLock = mock(PowerManager.WakeLock.class);
         when(wakeLock.isHeld()).thenReturn(true);
         assertTrue(wakeLock.isHeld());
+    }
+
+    @Test
+    public void aarDependencies() throws Exception {
+        // assertj-android AAR contains java 7 bytecode.
+        assumeFalse(System.getProperty("java.version").startsWith("1.6"));
+
+        MainActivity mainActivity = mock(MainActivity.class);
+        when(mainActivity.getTitle()).thenReturn("foo");
+
+        // This comes from an AAR testing library.
+        org.assertj.android.api.Assertions.assertThat(mainActivity).hasTitle("foo");
     }
 
     @Test
