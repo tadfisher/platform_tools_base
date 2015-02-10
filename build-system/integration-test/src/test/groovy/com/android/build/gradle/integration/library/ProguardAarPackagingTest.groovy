@@ -5,12 +5,14 @@ import com.android.annotations.NonNull
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.AbstractAndroidTestApp
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp
+import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
 import com.google.common.base.Joiner
 import com.google.common.io.Files
 import org.apache.commons.io.FileUtils
 import org.junit.AfterClass
+import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
@@ -28,18 +30,11 @@ import static org.junit.Assert.assertTrue
   * when using proguard.
  */
 class ProguardAarPackagingTest {
-    @ClassRule
-    static public GradleTestProject androidProject =
-            GradleTestProject.builder().withName("mainProject").create()
-    @ClassRule
-    static public GradleTestProject libraryInJarProject =
-            GradleTestProject.builder().withName("libInJar").create()
 
-    @BeforeClass
-    static public void setUp() {
-        // Create android test application
-        AndroidTestApp testApp = new HelloWorldApp()
+    static public AndroidTestApp testApp = new HelloWorldApp()
+    static public AndroidTestApp libraryInJar = new EmptyAndroidTestApp()
 
+    static {
         TestSourceFile oldHelloWorld = testApp.getFile("HelloWorld.java")
         testApp.removeFile(oldHelloWorld)
         testApp.addFile(new TestSourceFile(oldHelloWorld.path, oldHelloWorld.name, """\
@@ -61,8 +56,29 @@ public class HelloWorld extends Activity {
 }
 """))
 
-        testApp.write(androidProject.testDir, null)
+        // Create simple library jar.
+        libraryInJar.addFile(new TestSourceFile(
+                "src/main/java/com/example/libinjar","LibInJar.java", """\
+package com.example.libinjar;
 
+public class LibInJar {
+    public static void method() {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+}
+"""))
+    }
+
+    @ClassRule
+    static public GradleTestProject androidProject =
+            GradleTestProject.builder().withName("mainProject").fromTestApp(testApp).create()
+    @ClassRule
+    static public GradleTestProject libraryInJarProject =
+            GradleTestProject.builder().withName("libInJar").fromTestApp(libraryInJar).create()
+
+    @BeforeClass
+    static public void setUp() {
+        // Create android test application
         androidProject.getBuildFile() << """\
 apply plugin: 'com.android.library'
 
@@ -81,20 +97,7 @@ android {
     }
 }
 """
-        // Create simple library jar.
 
-        def libraryInJar = new AbstractAndroidTestApp() { }
-        libraryInJar.addFile(new TestSourceFile(
-                "src/main/java/com/example/libinjar","LibInJar.java", """\
-package com.example.libinjar;
-
-public class LibInJar {
-    public static void method() {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-}
-"""))
-        libraryInJar.write(libraryInJarProject.testDir, null)
         libraryInJarProject.buildFile << "apply plugin: 'java'"
         libraryInJarProject.execute("assemble")
 
@@ -106,6 +109,7 @@ public class LibInJar {
                 libraryInJarProject.file(libInJarName),
                 androidProject.file("libs/libinjar.jar"))
     }
+
 
     @AfterClass
     static void cleanUp() {
