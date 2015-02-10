@@ -1068,7 +1068,7 @@ abstract class TaskManager {
         processResources.from(((AndroidSourceSet) variantConfiguration.defaultSourceSet).resources.
                 getSourceFiles())
 
-        if (!variantConfiguration.type.isForTesting()) {
+        if (variantConfiguration.type != ANDROID_TEST) {
             processResources.from(
                     ((AndroidSourceSet) variantConfiguration.buildTypeSourceSet).resources.
                             getSourceFiles())
@@ -1268,8 +1268,10 @@ abstract class TaskManager {
         BaseVariantData testedVariantData = variantData.getTestedVariantData() as BaseVariantData
         createCompileAnchorTask(variantData)
         createCompileTask(variantData, testedVariantData)
+        createProcessJavaResTask(variantData)
         variantData.assembleVariantTask = createAssembleTask(variantData)
-        variantData.assembleVariantTask.dependsOn variantData.compileTask
+        variantData.assembleVariantTask.dependsOn variantData.compileTask,
+                variantData.processJavaResourcesTask
     }
 
     /**
@@ -1468,10 +1470,13 @@ abstract class TaskManager {
             JavaCompile testCompileTask = variantData.javaCompileTask
             runTestsTask.testClassesDir = testCompileTask.destinationDir
 
+            Copy javaResTask = variantData.processJavaResourcesTask
+
             conventionMapping(runTestsTask).map("classpath") {
                 project.files(
                         testCompileTask.classpath,
                         testCompileTask.outputs.files,
+                        javaResTask.outputs.files,
                         androidBuilder.bootClasspath.findAll { it.name != "android.jar"},
                         createMockableJar.outputFile)
             }
