@@ -12,12 +12,28 @@ apply plugin: 'clone-artifacts'
 apply plugin: 'idea'
 apply plugin: 'jacoco'
 
+String gradleVersion = "2.2"
+File gradleLib = file("$rootProject.ext.androidHostOut/alternate-gradle/gradle-$gradleVersion/lib")
+
 dependencies {
     compile project(':base:gradle-core')
 
     testCompile 'junit:junit:3.8.1'
     testCompile project(':base:project-test-lib')
+    testCompile gradleApi()
 }
+
+configurations{
+    provided
+}
+
+dependencies{
+    provided fileTree(dir:gradleLib, exclude:"groovy-all-2.3.6.jar")
+    provided 'org.codehaus.groovy:groovy-all:2.3.6'
+}
+
+//Include provided for compilation
+sourceSets.main.compileClasspath += configurations.provided
 
 group = 'com.android.tools.build'
 archivesBaseName = 'gradle'
