@@ -16,12 +16,16 @@
 
 package com.android.builder.png;
 
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertTrue;
+
 import com.android.annotations.NonNull;
 import com.android.testutils.TestUtils;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 
-import junit.framework.TestCase;
+import junit.framework.Test;
+import junit.framework.TestResult;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -34,7 +38,7 @@ import javax.imageio.ImageIO;
 
 /**
  */
-public abstract class BasePngTest extends TestCase {
+public abstract class PngTestUtils {
 
     /**
      * Signature of a PNG file.
@@ -125,7 +129,7 @@ public abstract class BasePngTest extends TestCase {
      * @return the SDK
      */
     @NonNull
-    protected File getSdkDir() {
+    protected static File getSdkDir() {
         String androidHome = System.getenv("ANDROID_HOME");
         if (androidHome != null) {
             File f = new File(androidHome);
