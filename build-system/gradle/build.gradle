@@ -17,7 +17,19 @@ dependencies {
 
     testCompile 'junit:junit:3.8.1'
     testCompile project(':base:project-test-lib')
+    testCompile 'org.codehaus.groovy:groovy-all:2.3.6'
 }
+
+configurations{
+    provided
+}
+
+dependencies{
+    provided 'org.codehaus.groovy:groovy-all:2.3.6'
+}
+
+//Include provided for compilation
+sourceSets.main.compileClasspath += configurations.provided
 
 group = 'com.android.tools.build'
 archivesBaseName = 'gradle'
