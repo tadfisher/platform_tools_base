@@ -16,7 +16,7 @@ dependencies {
     compile gradleApi()
     compile project(':base:gradle-core')
 
-    testCompile 'junit:junit:3.8.1'
+    testCompile 'junit:junit:4.12'
     testCompile project(':base:project-test-lib')
 }
 
