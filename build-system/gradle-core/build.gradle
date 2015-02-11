@@ -37,23 +37,23 @@ task setupGradleInIde {
 
 
 dependencies {
-    compile fileTree(gradleLib)
-    compile localGroovy()
+    compile fileTree(dir:gradleLib, exclude:"groovy-all-2.3.6.jar")
     compile project(':base:builder')
     compile project(':base:lint')
     compile "net.sf.proguard:proguard-gradle:${project.ext.proguardVersion}"
 
     testCompile 'junit:junit:3.8.1'
     testCompile project(':base:project-test-lib')
+    testCompile gradleApi()
 }
 
-// configuration for dependencies provided by the runtime,
-// in this case proguard.
+// configuration for dependencies provided by the runtime
 configurations{
     provided
 }
 
 dependencies{
+    provided 'org.codehaus.groovy:groovy-all:2.3.6'
     provided "net.sf.proguard:proguard-gradle:${project.ext.proguardVersion}"
 }
 
