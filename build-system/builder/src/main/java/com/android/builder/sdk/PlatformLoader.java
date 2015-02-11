@@ -57,7 +57,11 @@ public class PlatformLoader implements SdkLoader {
             throw new IllegalStateException("Already created an SDK Loader with different SDK Path");
         }
 
-        return sLoader = new PlatformLoader(treeLocation);
+        if (sLoader == null) {
+            sLoader = new PlatformLoader(treeLocation);
+        }
+
+        return sLoader;
     }
 
     public static synchronized void unload() {
