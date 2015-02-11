@@ -1086,7 +1086,7 @@ abstract class TaskManager {
         processResources.from(((AndroidSourceSet) variantConfiguration.defaultSourceSet).resources.
                 getSourceFiles())
 
-        if (!variantConfiguration.type.isForTesting()) {
+        if (variantConfiguration.type != ANDROID_TEST) {
             processResources.from(
                     ((AndroidSourceSet) variantConfiguration.buildTypeSourceSet).resources.
                             getSourceFiles())
@@ -1301,9 +1301,11 @@ abstract class TaskManager {
         createPreBuildTasks(variantData)
         createCompileAnchorTask(variantData)
         createCompileTask(variantData, testedVariantData)
+        createProcessJavaResTask(variantData)
 
         // TODO: Unify task creation in 1.2, remove this "special case".
         variantData.javaCompileTask.dependsOn variantData.prepareDependenciesTask
+        variantData.javaCompileTask.dependsOn variantData.processJavaResourcesTask
 
         createJackAndUnitTestVerificationTask(variantData, testedVariantData)
         variantData.assembleVariantTask.dependsOn variantData.compileTask
@@ -1507,6 +1509,7 @@ abstract class TaskManager {
                 project.files(
                         testCompileTask.classpath,
                         testCompileTask.outputs.files,
+                        variantData.processJavaResourcesTask.outputs.files,
                         androidBuilder.bootClasspath.findAll {
                             it.name != SdkConstants.FN_FRAMEWORK_LIBRARY
                         },
