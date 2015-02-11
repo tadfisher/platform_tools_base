@@ -43,7 +43,8 @@ class UnitTestingSupportTest {
                   "aarDependencies",
                   "mockFinalClass",
                   "mockInnerClass",
-                  "mockFinalMethod" ])
+                  "mockFinalMethod",
+                  "resourcesOnClasspath"])
 
         checkResults(
                 "build/test-results/TEST-com.android.tests.NonStandardName.xml",
