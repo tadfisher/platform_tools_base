@@ -120,7 +120,7 @@ public class ShrinkResources extends BaseTask {
 
                 getBuilder().processResources(
                         aaptPackageCommandBuilder,
-                        processResourcesTask.getEnforceUniquePackageName(),
+                        true  /* enforceUniquePackageName */
                 )
             } else {
                 // Just rewrite the .ap_ file to strip out the res/ files for unused resources

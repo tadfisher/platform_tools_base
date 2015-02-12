@@ -603,23 +603,6 @@ public abstract class BaseExtension {
         this.generatePureSplits = flag;
     }
 
-    private boolean enforceUniquePackageName = true
-
-    public void enforceUniquePackageName(boolean value) {
-        if (!value) {
-            LoggingUtil.displayDeprecationWarning(logger, project, "Support for libraries with same package name is deprecated and will be removed in 1.0")
-        }
-        enforceUniquePackageName = value
-    }
-
-    public void setEnforceUniquePackageName(boolean value) {
-        enforceUniquePackageName(value)
-    }
-
-    public getEnforceUniquePackageName() {
-        return enforceUniquePackageName
-    }
-
     public boolean getUseNewNativePlugin() {
         return useNewNativePlugin
     }

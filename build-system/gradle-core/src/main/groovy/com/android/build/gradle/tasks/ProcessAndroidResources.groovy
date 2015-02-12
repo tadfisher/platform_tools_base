@@ -76,9 +76,6 @@ public class ProcessAndroidResources extends IncrementalTask {
     @Nested @Optional
     Collection<String> splits
 
-    @Input
-    boolean enforceUniquePackageName
-
     // this doesn't change from one build to another, so no need to annotate
     VariantType type
 
@@ -142,6 +139,6 @@ public class ProcessAndroidResources extends IncrementalTask {
 
         getBuilder().processResources(
                 aaptPackageCommandBuilder,
-                getEnforceUniquePackageName())
+                true  /* enforceUniquePackageName */)
     }
 }
