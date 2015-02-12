@@ -23,6 +23,11 @@ dependencies {
 task testPrebuilts(type: Test)
 task connectedIntegrationTestPrebuilts(type: Test)
 
+ext.maxCPU = Runtime.runtime.availableProcessors() / 2
+if (ext.maxCPU > 8) {
+  ext.maxCPU = 8
+}
+
 configure([test, testPrebuilts]) {
     environment("PROJECT_BUILD_DIR", project.buildDir)
 
@@ -35,7 +40,7 @@ configure([test, testPrebuilts]) {
     environment("CUSTOM_REPO", rootProject.file("../out/repo"))
 
     forkEvery = 1
-    maxParallelForks = Runtime.runtime.availableProcessors() / 2
+    maxParallelForks = project.ext.maxCPU
 
     useJUnit {
         excludeCategories "com.android.build.gradle.integration.common.category.DeviceTests"
