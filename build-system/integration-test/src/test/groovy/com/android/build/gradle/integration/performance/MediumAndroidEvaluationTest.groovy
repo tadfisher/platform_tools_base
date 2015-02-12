@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.integration.performance
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.app.AndroidGradleModule
+import com.android.build.gradle.integration.common.fixture.app.GradleModuleFactory
 import com.android.build.gradle.integration.common.fixture.app.LargeTestProject
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
@@ -33,7 +35,7 @@ class MediumAndroidEvaluationTest {
     @ClassRule
     static public GradleTestProject project = GradleTestProject.builder()
             .fromTestApp(LargeTestProject.builder()
-                .withType(LargeTestProject.ProjectType.ANDROID)
+                .withModule(AndroidGradleModule)
                 .withDepth(MEDIUM_DEPTH)
                 .withBreadth(MEDIUM_BREADTH)
                 .create())
