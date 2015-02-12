@@ -21,9 +21,14 @@ android {
   }
 }
 
+repositories { jcenter() }
+
 dependencies {
   wearApp project(':micro-apps:default')
   flavor1WearApp project(':micro-apps:flavor1')
   customWearApp project(':micro-apps:custom')
+
+  testCompile 'junit:junit:4.12'
 }
+
 
