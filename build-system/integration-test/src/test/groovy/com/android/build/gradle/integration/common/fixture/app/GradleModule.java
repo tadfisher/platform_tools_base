@@ -26,6 +26,8 @@ import java.util.List;
 
 /**
  * Creates a gradle-based module.
+ *
+ *
  */
 public abstract class GradleModule {
 
