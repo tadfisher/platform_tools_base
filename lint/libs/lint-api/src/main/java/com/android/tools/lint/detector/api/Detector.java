@@ -19,12 +19,11 @@ package com.android.tools.lint.detector.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.ResourceFolderType;
-import com.android.tools.lint.client.api.JavaParser;
 import com.android.tools.lint.client.api.JavaParser.ResolvedClass;
 import com.android.tools.lint.client.api.JavaParser.ResolvedMethod;
 import com.android.tools.lint.client.api.LintDriver;
 import com.google.common.annotations.Beta;
-
+import lombok.ast.*;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodInsnNode;
@@ -34,26 +33,11 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-
-import lombok.ast.AstVisitor;
-import lombok.ast.ClassDeclaration;
-import lombok.ast.ConstructorInvocation;
-import lombok.ast.MethodInvocation;
-import lombok.ast.Node;
+import java.util.*;
 
 /**
- * A detector is able to find a particular problem. It might also be thought of as enforcing
- * a rule, but "rule" is a bit overloaded in ADT terminology since ViewRules are used in
- * the Rules API to allow views to specify designtime behavior in the graphical layout editor.
- * <p>
- * Each detector provides information about the issues it can find, such as an explanation
- * of how to fix the issue, the priority, the category, etc. It also has an id which is
- * used to persistently identify a particular type of error.
+ * A detector is able to find a particular problem (or a set of related problems).
+ * Each problem type is uniquely identified as an {@link Issue}.
  * <p>
  * Detectors will be called in a predefined order:
  * <ol>
@@ -63,16 +47,14 @@ import lombok.ast.Node;
  *        "values-en" but after "values", and so on.
  *   <li> Java sources
  *   <li> Java classes
+ *   <li> Gradle files
+ *   <li> Generic files
  *   <li> Proguard files
+ *   <li> Property files
  * </ol>
  * If a detector needs information when processing a file type that comes from a type of
  * file later in the order above, they can request a second phase; see
  * {@link LintDriver#requestRepeat}.
- * <p>
- * NOTE: Detectors might be constructed just once and shared between lint runs, so
- * any per-detector state should be initialized and reset via the before/after
- * methods.
- * <p/>
  * <b>NOTE: This is not a public or final API; if you rely on this be prepared
  * to adjust your code for the next tools release.</b>
  */
