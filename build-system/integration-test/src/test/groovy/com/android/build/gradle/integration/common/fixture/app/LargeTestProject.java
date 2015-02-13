@@ -193,7 +193,7 @@ public class LargeTestProject implements TestProject {
 
     private static void createGradleProperties(@NonNull File location) throws IOException {
         Files.write(
-                "org.gradle.jvmargs=-Xmx6096m -XX:MaxPermSize=1024m\n" +
+                "org.gradle.jvmargs=-Xmx8096m -XX:MaxPermSize=2048m\n" +
                         "org.gradle.daemon=true\n",
                 new File(location, "gradle.properties"), Charset.defaultCharset());
     }
