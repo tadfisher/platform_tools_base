@@ -87,7 +87,7 @@ public class WorkQueue<T> implements Runnable {
             @NonNull QueueThreadContext<T> queueThreadContext,
             @NonNull String queueName,
             int workforce,
-            int growthTriggerRatio) {
+            float growthTriggerRatio) {
 
         this.mLogger = logger;
         this.mName = queueName;
