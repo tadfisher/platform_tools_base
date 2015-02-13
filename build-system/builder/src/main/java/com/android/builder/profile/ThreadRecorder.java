@@ -17,6 +17,8 @@
 package com.android.builder.profile;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayDeque;
@@ -37,9 +39,24 @@ public class ThreadRecorder {
 
     private static final Logger logger = Logger.getLogger(ThreadRecorder.class.getName());
 
+    // Dummy implementation that records nothing but comply to the overall recording contracts.
+    private static final Recorder dummyRecorder = new Recorder() {
+        @Nullable
+        @Override
+        public <T> T record(@NonNull ExecutionType executionType, @NonNull Block<T> block,
+                Property... properties) {
+            try {
+                return block.call();
+            } catch (Exception e) {
+                block.handleException(e);
+            }
+            return null;
+        }
+    };
+
 
     public static Recorder get() {
-        return recorder.get();
+        return ProcessRecorderFactory.isEnabled() ? recorder.get() : dummyRecorder;
     }
 
     private static final ThreadLocal<Recorder> recorder = new ThreadLocal<Recorder>() {
@@ -67,7 +84,6 @@ public class ThreadRecorder {
                 }
             }
 
-            final long threadId = Thread.currentThread().getId();
             final Deque<PartialRecord> stackOfRecords = new ArrayDeque<PartialRecord>();
             final AtomicLong recordId = new AtomicLong(0); 
                     
@@ -120,5 +136,4 @@ public class ThreadRecorder {
             };
         }
     };
-
 }

@@ -27,45 +27,30 @@ import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Records all the {@link ExecutionRecord} for a process, in order it was received and sends then
  * synchronously to a {@link JsonRecordWriter}.
  */
-public class ProcessRecorder {
+class ProcessRecorder {
 
     @NonNull
-    static ProcessRecorder get() {
-        return ProcessRecorderFactory.INSTANCE.get();
+    public static ProcessRecorder get() {
+        return ProcessRecorderFactory.sINSTANCE.get();
     }
 
+    /**
+     * Abstraction of {@link ExecutionRecord} writer.
+     */
     public interface ExecutionRecordWriter {
+
         void write(@NonNull ExecutionRecord executionRecord);
+
+        void close() throws IOException;
     }
 
-    static class JsonRecordWriter implements ExecutionRecordWriter {
 
-        @NonNull
-        private final Gson gson;
-        @NonNull
-        private final Writer writer;
-
-        JsonRecordWriter(@NonNull Writer writer) {
-            this.gson = new Gson();
-            this.writer = writer;
-        }
-
-        @Override
-        public void write(@NonNull ExecutionRecord executionRecord) {
-            String json = gson.toJson(executionRecord);
-            try {
-                writer.append(json);
-                writer.append("\n");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
 
     private class WorkQueueContext implements QueueThreadContext<ExecutionRecordWriter> {
         @Override
@@ -83,6 +68,11 @@ public class ProcessRecorder {
 
         @Override
         public void shutdown() {
+            try {
+                singletonJobContext.getPayload().close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -114,14 +104,53 @@ public class ProcessRecorder {
         }
     }
 
-    /**
-     * Done with the recording processing, finish processing the outstanding {@link ExecutionRecord}
-     * publication and shutdowns the processing queue.
-     *
-     * @throws InterruptedException
-     */
-    public void finish() throws InterruptedException {
+    void finish() throws InterruptedException {
         workQueue.shutdown();
     }
 
+    /**
+     * Created by jedo on 2/12/15.
+     */
+    static class JsonRecordWriter implements ExecutionRecordWriter {
+
+        @NonNull
+        private final Gson gson;
+
+        @NonNull
+        private final Writer writer;
+
+        @NonNull
+        private final AtomicBoolean closed = new AtomicBoolean(false);
+
+        public JsonRecordWriter(@NonNull Writer writer) {
+            this.gson = new Gson();
+            this.writer = writer;
+        }
+
+        @Override
+        public synchronized void write(@NonNull ExecutionRecord executionRecord) {
+            if (closed.get()) {
+                return;
+            }
+            String json = gson.toJson(executionRecord);
+            try {
+                writer.append(json);
+                writer.append("\n");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void close() throws IOException {
+            synchronized (this) {
+                if (closed.get()) {
+                    return;
+                }
+                closed.set(true);
+            }
+            writer.flush();
+            writer.close();
+        }
+    }
 }
