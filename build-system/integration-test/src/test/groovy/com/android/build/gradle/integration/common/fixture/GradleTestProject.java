@@ -689,6 +689,7 @@ public class GradleTestProject implements TestRule {
         if (!Strings.isNullOrEmpty(debugIntegrationTest)) {
             jvmArguments.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005");
         }
+        jvmArguments.add("-DFoo");
         return jvmArguments;
     }
 

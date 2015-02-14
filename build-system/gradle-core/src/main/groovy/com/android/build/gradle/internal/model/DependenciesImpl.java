@@ -16,35 +16,24 @@
 
 package com.android.build.gradle.internal.model;
 
-import static com.android.SdkConstants.DOT_JAR;
-
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dependency.LibraryDependencyImpl;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.dependency.JarDependency;
-import com.android.builder.dependency.LibraryDependency;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
 import com.google.common.collect.Lists;
 
-import org.gradle.api.Project;
-
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 /**
  */
@@ -79,8 +68,11 @@ public class DependenciesImpl implements Dependencies, Serializable {
 
         List<LibraryDependencyImpl> libs = variantDependencies.getLibraries();
         libraries = Lists.newArrayListWithCapacity(libs.size());
+
+        DependencyBuilder builder = DependencyBuilder.builder();
+
         for (LibraryDependencyImpl libImpl : libs) {
-            AndroidLibrary clonedLib = getAndroidLibrary(libImpl);
+            AndroidLibrary clonedLib = builder.getAndroidLibrary(libImpl);
             libraries.add(clonedLib);
         }
 
@@ -159,80 +151,5 @@ public class DependenciesImpl implements Dependencies, Serializable {
     @Override
     public List<String> getProjects() {
         return projects;
-    }
-
-    @NonNull
-    private static AndroidLibrary getAndroidLibrary(@NonNull LibraryDependency libraryDependency) {
-        List<LibraryDependency> deps = libraryDependency.getDependencies();
-        List<AndroidLibrary> clonedDeps = Lists.newArrayListWithCapacity(deps.size());
-        for (LibraryDependency child : deps) {
-            AndroidLibrary clonedLib = getAndroidLibrary(child);
-            clonedDeps.add(clonedLib);
-        }
-
-        // compute local jar even if the bundle isn't exploded.
-        Collection<File> localJarOverride = findLocalJar(libraryDependency);
-
-        return new AndroidLibraryImpl(
-                libraryDependency,
-                clonedDeps,
-                localJarOverride,
-                libraryDependency.getProject(),
-                libraryDependency.getProjectVariant(),
-                libraryDependency.getRequestedCoordinates(),
-                libraryDependency.getResolvedCoordinates());
-    }
-
-    /**
-     * Finds the local jar for an aar.
-     *
-     * Since the model can be queried before the aar are exploded, we attempt to get them
-     * from inside the aar.
-     *
-     * @param library the library.
-     * @return its local jars.
-     */
-    @NonNull
-    private static Collection<File> findLocalJar(LibraryDependency library) {
-        // if the library is exploded, just use the normal method.
-        File explodedFolder = library.getFolder();
-        if (explodedFolder.isDirectory()) {
-            return library.getLocalJars();
-        }
-
-        // if the aar file is present, search inside it for jar files under libs/
-        File aarFile = library.getBundle();
-        if (aarFile.isFile()) {
-            List<File> jarList = Lists.newArrayList();
-
-            ZipFile zipFile = null;
-            try {
-                //noinspection IOResourceOpenedButNotSafelyClosed
-                zipFile = new ZipFile(aarFile);
-
-                for (Enumeration<? extends ZipEntry> e = zipFile.entries(); e.hasMoreElements();) {
-                    ZipEntry zipEntry = e.nextElement();
-                    String name = zipEntry.getName();
-                    if (name.startsWith("libs/") && name.endsWith(DOT_JAR)) {
-                        jarList.add(new File(explodedFolder, name.replace('/', File.separatorChar)));
-                    }
-                }
-
-                return jarList;
-            } catch (FileNotFoundException ignored) {
-                // should not happen since we check ahead of time
-            } catch (IOException e) {
-                // we'll return an empty list below
-            } finally {
-                if (zipFile != null) {
-                    try {
-                        zipFile.close();
-                    } catch (IOException ignored) {
-                    }
-                }
-            }
-        }
-
-        return Collections.emptyList();
     }
 }

@@ -39,12 +39,17 @@ public class GetAndroidModelAction implements BuildAction<Map<String, AndroidPro
 
         Map<String, AndroidProject> modelMap = Maps.newHashMapWithExpectedSize(projects.size());
 
+        long t1 = System.currentTimeMillis();
+
         for (BasicGradleProject project : projects) {
             AndroidProject model = buildController.findModel(project, AndroidProject.class);
             if (model != null) {
                 modelMap.put(project.getPath(), model);
             }
         }
+
+        long t2 = System.currentTimeMillis();
+        System.out.println("GETMODEL: " + (t2-t1) + "ms");
 
         return modelMap;
     }

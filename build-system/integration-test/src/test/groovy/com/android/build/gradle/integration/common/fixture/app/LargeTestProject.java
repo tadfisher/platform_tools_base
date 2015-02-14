@@ -45,6 +45,7 @@ public class LargeTestProject implements TestProject {
     private final ProjectType type;
     private final int maxDepth;
     private final int maxBreadth;
+    private final int memory;
 
     public enum ProjectType {
         ANDROID, JAVA
@@ -55,6 +56,7 @@ public class LargeTestProject implements TestProject {
         private ProjectType type;
         private int maxDepth = 1;
         private int maxBreadth = 1;
+        private int memory = 0;
 
         public Builder withType(@NonNull ProjectType type) {
             this.type = type;
@@ -71,8 +73,13 @@ public class LargeTestProject implements TestProject {
             return this;
         }
 
+        public Builder withMemory(int memory) {
+            this.memory = memory;
+            return this;
+        }
+
         public LargeTestProject create() throws IOException {
-            return new LargeTestProject(type, maxDepth, maxBreadth);
+            return new LargeTestProject(type, maxDepth, maxBreadth, memory);
         }
     }
 
@@ -112,10 +119,11 @@ public class LargeTestProject implements TestProject {
     }
 
     public LargeTestProject(
-            @NonNull ProjectType type, int maxDepth, int maxBreadth) {
+            @NonNull ProjectType type, int maxDepth, int maxBreadth, int memory) {
         this.type = type;
         this.maxDepth = maxDepth;
         this.maxBreadth = maxBreadth;
+        this.memory = memory;
     }
 
     @Override
@@ -191,10 +199,12 @@ public class LargeTestProject implements TestProject {
         }
     }
 
-    private static void createGradleProperties(@NonNull File location) throws IOException {
-        Files.write(
-                "org.gradle.jvmargs=-Xmx6096m -XX:MaxPermSize=1024m\n" +
-                        "org.gradle.daemon=true\n",
-                new File(location, "gradle.properties"), Charset.defaultCharset());
+    private void createGradleProperties(@NonNull File location) throws IOException {
+        if (memory != 0) {
+            Files.write(String.format(
+                    "org.gradle.jvmargs=-Xmx%dm -XX:MaxPermSize=1024m\n" +
+                            "org.gradle.daemon=true\n", memory),
+                    new File(location, "gradle.properties"), Charset.defaultCharset());
+        }
     }
 }
