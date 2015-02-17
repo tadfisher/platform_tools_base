@@ -129,7 +129,7 @@ public class ApkInfoParser {
         String pkgName = null, versionCode = null, versionName = null;
 
         for (String line : aaptOutput) {
-            Matcher m = PATTERN.matcher(line);
+            Matcher m = PATTERN.matcher(line.trim());
             if (m.matches()) {
                 pkgName = m.group(1);
                 versionCode = m.group(2);
