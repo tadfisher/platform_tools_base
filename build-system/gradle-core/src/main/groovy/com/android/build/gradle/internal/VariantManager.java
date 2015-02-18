@@ -51,6 +51,7 @@ import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
+import com.android.build.gradle.tasks.TestedExtension;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.google.common.base.Function;
@@ -597,10 +598,15 @@ public class VariantManager implements VariantModel {
      */
     private void createVariantDataForProductFlavors(
             @NonNull List<com.android.build.gradle.api.GroupableProductFlavor> productFlavorList) {
-        BuildTypeData testBuildTypeData = buildTypes.get(extension.getTestBuildType());
+        if (!(extension instanceof TestedExtension)) {
+            return;
+        }
+        TestedExtension testedExtension = (TestedExtension) extension;
+
+        BuildTypeData testBuildTypeData = buildTypes.get(testedExtension.getTestBuildType());
         if (testBuildTypeData == null) {
             throw new RuntimeException(String.format(
-                    "Test Build Type '%1$s' does not exist.", extension.getTestBuildType()));
+                    "Test Build Type '%1$s' does not exist.", testedExtension.getTestBuildType()));
         }
 
         BaseVariantData variantForAndroidTest = null;
@@ -680,7 +686,7 @@ public class VariantManager implements VariantModel {
                             androidTestVariantData,
                             androidTestVariant);
 
-                    extension.addTestVariant(androidTestVariant);
+                    ((TestedExtension) extension).addTestVariant(androidTestVariant);
                     ((TestedVariant) variantApi).setTestVariant(androidTestVariant);
                 }
             }
