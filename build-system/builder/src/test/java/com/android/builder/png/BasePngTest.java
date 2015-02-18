@@ -125,7 +125,7 @@ public abstract class BasePngTest extends TestCase {
      * @return the SDK
      */
     @NonNull
-    protected File getSdkDir() {
+    protected static File getSdkDir() {
         String androidHome = System.getenv("ANDROID_HOME");
         if (androidHome != null) {
             File f = new File(androidHome);

@@ -37,6 +37,8 @@ public class NinePatchAsyncAaptProcessTest extends NinePatchAaptProcessorTest {
         TestSuite suite = new TestSuite();
         suite.setName("NinePatchAsyncAaptProcessor");
 
+        PngCruncher pngCruncher = getCruncher();
+        int key = pngCruncher.start();
         NinePatchAaptProcessorTest test = null;
         for (File file : getNinePatches()) {
             String testName = "process_async_aapt_" + file.getName();
@@ -45,6 +47,8 @@ public class NinePatchAsyncAaptProcessTest extends NinePatchAaptProcessorTest {
                     NinePatchAsyncAaptProcessTest.class, testName);
 
             test.setFile(file);
+            test.setPngCruncher(pngCruncher);
+            test.setPngCruncherKey(key);
 
             suite.addTest(test);
         }
@@ -54,9 +58,8 @@ public class NinePatchAsyncAaptProcessTest extends NinePatchAaptProcessorTest {
         return suite;
     }
 
-    @Override
-    protected File getAapt() {
-        return super.getAapt(FullRevision.parseRevision("22"));
+    private static File getAapt() {
+        return NinePatchAaptProcessorTest.getAapt(FullRevision.parseRevision("22.1.3"));
     }
 
     /* TODO: Remove this override once build tools 22 is released.
@@ -77,8 +80,7 @@ public class NinePatchAsyncAaptProcessTest extends NinePatchAaptProcessorTest {
     }
 
     @NonNull
-    @Override
-    protected PngCruncher getCruncher() {
+    private static PngCruncher getCruncher() {
         File aapt = getAapt();
         return QueuedCruncher.Builder.INSTANCE.newCruncher(aapt.getAbsolutePath(), sLogger);
     }

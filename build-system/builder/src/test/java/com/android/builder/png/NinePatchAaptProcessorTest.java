@@ -57,6 +57,9 @@ public class NinePatchAaptProcessorTest extends BasePngTest {
         TestSuite suite = new TestSuite();
         suite.setName("NinePatchAaptProcessor");
 
+        PngCruncher pngCruncher = getCruncher();
+        int key = pngCruncher.start();
+
         NinePatchAaptProcessorTest test = null;
         for (File file : getNinePatches()) {
             if (test == null) {
@@ -68,13 +71,15 @@ public class NinePatchAaptProcessorTest extends BasePngTest {
                     NinePatchAaptProcessorTest.class, testName);
 
             test.setFile(file);
+            test.setPngCruncher(pngCruncher);
+            test.setPngCruncherKey(key);
 
             suite.addTest(test);
+
         }
         if (test != null) {
             test.setIsFinal(true);
         }
-
         return suite;
     }
 
@@ -82,6 +87,8 @@ public class NinePatchAaptProcessorTest extends BasePngTest {
     private File mFile;
 
     private boolean mIsFinal = false;
+    private PngCruncher mPngCruncher;
+    private int mPngCruncherKey;
 
     protected void setFile(@NonNull File file) {
         mFile = file;
@@ -91,13 +98,21 @@ public class NinePatchAaptProcessorTest extends BasePngTest {
         mIsFinal = isFinal;
     }
 
+    protected void setPngCruncher(@NonNull PngCruncher pngCruncher) {
+        this.mPngCruncher = pngCruncher;
+    }
+
+    protected  void setPngCruncherKey(int key) {
+        this.mPngCruncherKey = key;
+    }
+
     @NonNull
-    protected File getAapt() {
+    private static File getAapt() {
         return getAapt(FullRevision.parseRevision("21"));
     }
 
     @NonNull
-    protected File getAapt(FullRevision fullRevision) {
+    protected static File getAapt(FullRevision fullRevision) {
         ILogger logger = new StdLogger(StdLogger.Level.VERBOSE);
         SdkManager sdkManager = SdkManager.createManager(getSdkDir().getAbsolutePath(), logger);
         assert sdkManager != null;
@@ -109,7 +124,7 @@ public class NinePatchAaptProcessorTest extends BasePngTest {
     }
 
     @NonNull
-    protected PngCruncher getCruncher() {
+    private static PngCruncher getCruncher() {
         ILogger logger = new StdLogger(StdLogger.Level.VERBOSE);
         ProcessExecutor processExecutor = new DefaultProcessExecutor(logger);
         ProcessOutputHandler processOutputHandler = new LoggedProcessOutputHandler(logger);
@@ -122,7 +137,7 @@ public class NinePatchAaptProcessorTest extends BasePngTest {
     public void tearSuiteDown() throws IOException, DataFormatException {
         long startTime = System.currentTimeMillis();
         try {
-            getCruncher().end();
+            mPngCruncher.end(mPngCruncherKey);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -170,9 +185,8 @@ public class NinePatchAaptProcessorTest extends BasePngTest {
             throws PngException, IOException {
         File outFile = File.createTempFile("pngWriterTest", ".png");
         outFile.deleteOnExit();
-        PngCruncher aaptCruncher = getCruncher();
         try {
-            aaptCruncher.crunchPng(file, outFile);
+            mPngCruncher.crunchPng(mPngCruncherKey, file, outFile);
         } catch (PngException e) {
             e.printStackTrace();
             throw e;
