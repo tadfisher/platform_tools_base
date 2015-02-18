@@ -117,7 +117,7 @@ public class WorkQueue<T> implements Runnable {
         checkWorkforce();
     }
 
-    private void _push(QueueTask<T> task) throws InterruptedException {
+    private synchronized void _push(QueueTask<T> task) throws InterruptedException {
         // at this point, I am not trying to limit the number of pending jobs.
         // eventually we would want to put some limit to the size of the pending jobs
         // queue so it does not grow out of control.
