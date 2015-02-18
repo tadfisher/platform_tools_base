@@ -38,6 +38,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class AaptProcess {
 
+    private static final int DEFAULT_SLAVE_APPT_TIMEOUT_IN_SECONDS = 5;
+    private static final int SLAVE_AAPT_TIMEOUT_IN_SECONDS =
+            System.getenv("SLAVE_AAPT_TIMEOUT") == null
+                    ? DEFAULT_SLAVE_APPT_TIMEOUT_IN_SECONDS
+                    : Integer.parseInt(System.getenv("SLAVE_AAPT_TIMEOUT"));
+
     private final Process mProcess;
     private final ILogger mLogger;
 
@@ -89,7 +95,13 @@ public class AaptProcess {
     }
 
     public void waitForReady() throws InterruptedException {
-        mReadyLatch.await(TimeUnit.NANOSECONDS.convert(5, TimeUnit.SECONDS));
+        if (!mReadyLatch.await(TimeUnit.NANOSECONDS.convert(
+                SLAVE_AAPT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS))) {
+            throw new RuntimeException("Timed out while waiting for slave aapt process, "
+                    + "try setting environment variable SLAVE_AAPT_TIMEOUT to a value bigger than "
+                    + SLAVE_AAPT_TIMEOUT_IN_SECONDS + " seconds");
+        }
+
         mLogger.info("Slave %1$s is ready", hashCode());
     }
 
@@ -205,10 +217,6 @@ public class AaptProcess {
                             mProcess.hashCode(), line);
                 }
             }
-        }
-
-        synchronized boolean isProcessRead() {
-            return ready.get();
         }
     }
 
