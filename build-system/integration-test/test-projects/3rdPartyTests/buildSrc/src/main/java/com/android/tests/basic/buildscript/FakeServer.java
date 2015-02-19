@@ -17,8 +17,8 @@ public class FakeServer extends TestServer {
 
     @Override
     public void uploadApks(@NonNull String variantName,
-                           @NonNull File testApk,
-                           @Nullable File testedApk) {
+            @NonNull File testApk,
+            @Nullable File testedApk) {
         System.out.println("uploadApks CALLED");
 
         if (testApk == null) {

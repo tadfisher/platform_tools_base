@@ -19,7 +19,6 @@ package com.android.builder.testing;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.ApiVersion;
-import com.google.common.collect.ImmutableList;
 
 import java.io.File;
 import java.util.List;
@@ -73,10 +72,10 @@ public interface TestData {
      * @param language the device's language
      * @param region the device's region
      * @param abis a list of ABIs in descending priority order.
-     * @return the file to install or null if non is compatible.
+     * @return an immutable list of the file(s) to install, empty if not compatible.
      */
     @NonNull
-    ImmutableList<File> getTestedApks(
+    List<File> getTestedApks(
             int density,
             @Nullable String language,
             @Nullable String region,

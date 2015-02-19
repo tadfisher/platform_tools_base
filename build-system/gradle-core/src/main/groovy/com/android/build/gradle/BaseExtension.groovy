@@ -43,6 +43,7 @@ import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.BuilderConstants
 import com.android.builder.model.SourceProvider
 import com.android.builder.testing.api.DeviceProvider
+import com.android.builder.testing.api.RemoteTestRunner
 import com.android.builder.testing.api.TestServer
 import com.android.sdklib.repository.FullRevision
 import com.google.common.collect.Lists
@@ -134,6 +135,7 @@ public abstract class BaseExtension {
         new DefaultDomainObjectSet<TestVariant>(TestVariant.class)
 
     private final List<DeviceProvider> deviceProviderList = Lists.newArrayList();
+    private final List<RemoteTestRunner> remoteTestRunnerList = Lists.newArrayList();
     private final List<TestServer> testServerList = Lists.newArrayList();
 
     private final AndroidBuilder androidBuilder
@@ -430,6 +432,16 @@ public abstract class BaseExtension {
     @NonNull
     List<DeviceProvider> getDeviceProviders() {
         return deviceProviderList
+    }
+
+    void remoteTestRunner(RemoteTestRunner remoteTestRunner) {
+        checkWritability()
+        remoteTestRunnerList.add(remoteTestRunner)
+    }
+
+    @NonNull
+    List<RemoteTestRunner> getRemoteTestRunners() {
+        return remoteTestRunnerList;
     }
 
     void testServer(TestServer testServer) {

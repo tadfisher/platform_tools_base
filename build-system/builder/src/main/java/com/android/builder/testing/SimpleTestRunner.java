@@ -72,7 +72,7 @@ public class SimpleTestRunner implements TestRunner {
                         device, testData.getMinSdkVersion(), logger, projectName, variantName)) {
 
                     // now look for a matching output file
-                    ImmutableList<File> testedApks = ImmutableList.of();
+                    List<File> testedApks = ImmutableList.of();
                     if (!testData.isLibrary()) {
                         testedApks = testData.getTestedApks(device.getDensity(),
                                 device.getLanguage(),
