@@ -377,7 +377,7 @@ public abstract class BasePlugin {
     }
 
     private void createTasks() {
-        taskManager.createTasks()
+        taskManager.createTasksBeforeEvaluate()
 
         project.afterEvaluate {
             ensureTargetSetup()
