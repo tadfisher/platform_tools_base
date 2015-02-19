@@ -36,7 +36,7 @@ import com.android.build.gradle.internal.dsl.SigningConfigFactory
 import com.android.build.gradle.internal.model.ModelBuilder
 import com.android.build.gradle.internal.process.GradleJavaProcessExecutor
 import com.android.build.gradle.internal.process.GradleProcessExecutor
-import com.android.build.gradle.internal.profile.GroovyRecorder
+import com.android.build.gradle.internal.profile.SpanRecorders
 import com.android.build.gradle.internal.variant.VariantFactory
 import com.android.build.gradle.tasks.JillTask
 import com.android.build.gradle.tasks.PreDex
@@ -231,15 +231,15 @@ public abstract class BasePlugin {
         ProcessRecorderFactory.initialize(logger, project.rootProject.
                 file("profiler" + System.currentTimeMillis() + ".json"))
 
-        GroovyRecorder.record(project, ExecutionType.BASE_PLUGIN_PROJECT_CONFIGURE) {
+        SpanRecorders.record(project, ExecutionType.BASE_PLUGIN_PROJECT_CONFIGURE) {
             configureProject()
         }
 
-        GroovyRecorder.record(project, ExecutionType.BASE_PLUGIN_PROJECT_BASE_EXTENSTION_CREATION) {
+        SpanRecorders.record(project, ExecutionType.BASE_PLUGIN_PROJECT_BASE_EXTENSTION_CREATION) {
             createExtension()
         }
 
-        GroovyRecorder.record(project, ExecutionType.BASE_PLUGIN_PROJECT_TASKS_CREATION) {
+        SpanRecorders.record(project, ExecutionType.BASE_PLUGIN_PROJECT_TASKS_CREATION) {
             createTasks()
         }
     }
@@ -273,7 +273,7 @@ public abstract class BasePlugin {
         project.gradle.buildFinished {
             ExecutorSingleton.shutdown()
             sdkHandler.unload()
-            GroovyRecorder.record(project, ExecutionType.BASE_PLUGIN_BUILD_FINISHED) {
+            SpanRecorders.record(project, ExecutionType.BASE_PLUGIN_BUILD_FINISHED) {
                 PreDexCache.getCache().clear(
                         project.rootProject.file(
                                 "${project.rootProject.buildDir}/${FD_INTERMEDIATES}/dex-cache/cache.xml"),
@@ -371,13 +371,13 @@ public abstract class BasePlugin {
     }
 
     private void createTasks() {
-        GroovyRecorder.record(project, ExecutionType.TASK_MANAGER_CREATE_TASKS) {
+        SpanRecorders.record(project, ExecutionType.TASK_MANAGER_CREATE_TASKS) {
             taskManager.createTasks()
         }
 
         project.afterEvaluate {
             ensureTargetSetup()
-            GroovyRecorder.record(project, ExecutionType.BASE_PLUGIN_CREATE_ANDROID_TASKS) {
+            SpanRecorders.record(project, ExecutionType.BASE_PLUGIN_CREATE_ANDROID_TASKS) {
                 createAndroidTasks(false)
             }
         }
@@ -437,7 +437,7 @@ public abstract class BasePlugin {
         }
 
         taskManager.createMockableJarTask()
-        GroovyRecorder.record(project, ExecutionType.VARIANT_MANAGER_CREATE_ANDROID_TASKS) {
+        SpanRecorders.record(project, ExecutionType.VARIANT_MANAGER_CREATE_ANDROID_TASKS) {
             variantManager.createAndroidTasks()
         }
     }

@@ -18,6 +18,11 @@ package com.android.builder.profile;
 
 /**
  * Defines a type of processing.
+ *
+ * Use range for similar categories events :
+ * 0-1000       initial setup
+ * 1000-2000    application related task creation
+ * 2000-3000    library related task creation
  */
 public enum ExecutionType {
 
@@ -64,10 +69,6 @@ public enum ExecutionType {
     LIB_TASK_MANAGER_CREATE_POST_COMPILATION_TASK(2013),
     LIB_TASK_MANAGER_CREATE_PROGUARD_TASK(2014),
     LIB_TASK_MANAGER_CREATE_PACKAGE_LOCAL_JAR(2015);
-
-
-    // LAST ID = 6,
-    // increment for each new execution type;
 
     int getId() {
         return id;

@@ -18,7 +18,7 @@ package com.android.build.gradle.internal
 
 import com.android.annotations.NonNull
 import com.android.build.gradle.BaseExtension
-import com.android.build.gradle.internal.profile.GroovyRecorder
+import com.android.build.gradle.internal.profile.SpanRecorders
 import com.android.build.gradle.internal.variant.ApplicationVariantData
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.BaseVariantOutputData
@@ -57,37 +57,37 @@ class ApplicationTaskManager extends TaskManager {
         handleMicroApp(variantData);
 
         // Add a task to process the manifest(s)
-        GroovyRecorder.record(ExecutionType.APP_TASK_MANAGER_CREATE_MERGE_MANIFEST_TASK) {
+        SpanRecorders.record(ExecutionType.APP_TASK_MANAGER_CREATE_MERGE_MANIFEST_TASK) {
             createMergeAppManifestsTask(variantData)
         }
 
         // Add a task to create the res values
-        GroovyRecorder.record(ExecutionType.APP_TASK_MANAGER_CREATE_GENERATE_RES_VALUES_TASK) {
+        SpanRecorders.record(ExecutionType.APP_TASK_MANAGER_CREATE_GENERATE_RES_VALUES_TASK) {
             createGenerateResValuesTask(variantData);
         }
 
         // Add a task to compile renderscript files.
-        GroovyRecorder.record(ExecutionType.APP_TASK_MANAGER_CREATE_CREATE_RENDERSCRIPT_TASK) {
+        SpanRecorders.record(ExecutionType.APP_TASK_MANAGER_CREATE_CREATE_RENDERSCRIPT_TASK) {
             createRenderscriptTask(variantData);
         }
 
         // Add a task to merge the resource folders
-        GroovyRecorder.record(ExecutionType.APP_TASK_MANAGER_CREATE_MERGE_RESOURCES_TASK) {
+        SpanRecorders.record(ExecutionType.APP_TASK_MANAGER_CREATE_MERGE_RESOURCES_TASK) {
             createMergeResourcesTask(variantData, true /*process9Patch*/);
         }
 
         // Add a task to merge the asset folders
-        GroovyRecorder.record(ExecutionType.APP_TASK_MANAGER_CREATE_MERGE_ASSETS_TASK) {
+        SpanRecorders.record(ExecutionType.APP_TASK_MANAGER_CREATE_MERGE_ASSETS_TASK) {
             createMergeAssetsTask(
                     variantData, null /*default location*/, true /*includeDependencies*/);
         }
 
         // Add a task to create the BuildConfig class
-        GroovyRecorder.record(ExecutionType.APP_TASK_MANAGER_CREATE_BUILD_CONFIG_TASK) {
+        SpanRecorders.record(ExecutionType.APP_TASK_MANAGER_CREATE_BUILD_CONFIG_TASK) {
             createBuildConfigTask(variantData);
         }
 
-        GroovyRecorder.record(ExecutionType.APP_TASK_MANAGER_CREATE_PROCESS_RES_TASK) {
+        SpanRecorders.record(ExecutionType.APP_TASK_MANAGER_CREATE_PROCESS_RES_TASK) {
             // Add a task to process the Android Resources and generate source files
             createProcessResTask(variantData, true /*generateResourcePackage*/);
 
@@ -95,12 +95,12 @@ class ApplicationTaskManager extends TaskManager {
             createProcessJavaResTask(variantData);
         }
 
-        GroovyRecorder.record(ExecutionType.APP_TASK_MANAGER_CREATE_AIDL_TASK) {
+        SpanRecorders.record(ExecutionType.APP_TASK_MANAGER_CREATE_AIDL_TASK) {
             createAidlTask(variantData, null /*parcelableDir*/);
         }
 
         // Add a compile task
-        GroovyRecorder.record(ExecutionType.APP_TASK_MANAGER_CREATE_COMPILE_TASK) {
+        SpanRecorders.record(ExecutionType.APP_TASK_MANAGER_CREATE_COMPILE_TASK) {
             if (variantData.getVariantConfiguration().getUseJack()) {
                 createJackTask(appVariantData, null /*testedVariant*/);
             } else {
@@ -112,7 +112,7 @@ class ApplicationTaskManager extends TaskManager {
 
         // Add NDK tasks
         if (isNdkTaskNeeded) {
-            GroovyRecorder.record(ExecutionType.APP_TASK_MANAGER_CREATE_NDK_TASK) {
+            SpanRecorders.record(ExecutionType.APP_TASK_MANAGER_CREATE_NDK_TASK) {
                 createNdkTasks(variantData);
             }
         }
@@ -122,12 +122,12 @@ class ApplicationTaskManager extends TaskManager {
             if (extension.getBuildToolsRevision().getMajor() < 21) {
                 throw new RuntimeException("Pure splits can only be used with buildtools 21 and later")
             }
-            GroovyRecorder.record(ExecutionType.APP_TASK_MANAGER_CREATE_SPLIT_TASK) {
+            SpanRecorders.record(ExecutionType.APP_TASK_MANAGER_CREATE_SPLIT_TASK) {
                 createSplitResourcesTasks(appVariantData);
                 createSplitAbiTasks(appVariantData);
             }
         }
-        GroovyRecorder.record(ExecutionType.APP_TASK_MANAGER_CREATE_PACKAGING_TASK) {
+        SpanRecorders.record(ExecutionType.APP_TASK_MANAGER_CREATE_PACKAGING_TASK) {
             createPackagingTask(appVariantData, true /*publishApk*/);
         }
     }

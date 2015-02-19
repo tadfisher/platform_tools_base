@@ -22,7 +22,7 @@ import com.android.annotations.Nullable
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
-import com.android.build.gradle.internal.profile.GroovyRecorder
+import com.android.build.gradle.internal.profile.SpanRecorders
 import com.android.build.gradle.internal.tasks.MergeFileTask
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.BaseVariantOutputData
@@ -40,8 +40,6 @@ import com.android.builder.dependency.ManifestDependency
 import com.android.builder.model.AndroidLibrary
 import com.android.builder.model.MavenCoordinates
 import com.android.builder.profile.ExecutionType
-import com.android.builder.profile.Recorder
-import com.android.builder.profile.ThreadRecorder
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.internal.ConventionMapping
@@ -93,21 +91,21 @@ class LibraryTaskManager extends TaskManager {
         createCheckManifestTask(variantData)
 
         // Add a task to create the res values
-        GroovyRecorder.record(ExecutionType.LIB_TASK_MANAGER_CREATE_GENERATE_RES_VALUES_TASK) {
+        SpanRecorders.record(ExecutionType.LIB_TASK_MANAGER_CREATE_GENERATE_RES_VALUES_TASK) {
             createGenerateResValuesTask(variantData);
         }
 
         // Add a task to process the manifest(s)
-        GroovyRecorder.record(ExecutionType.LIB_TASK_MANAGER_CREATE_MERGE_MANIFEST_TASK) {
+        SpanRecorders.record(ExecutionType.LIB_TASK_MANAGER_CREATE_MERGE_MANIFEST_TASK) {
             createMergeLibManifestsTask(variantData, DIR_BUNDLES)
         }
 
         // Add a task to compile renderscript files.
-        GroovyRecorder.record(ExecutionType.LIB_TASK_MANAGER_CREATE_CREATE_RENDERSCRIPT_TASK) {
+        SpanRecorders.record(ExecutionType.LIB_TASK_MANAGER_CREATE_CREATE_RENDERSCRIPT_TASK) {
             createRenderscriptTask(variantData)
         }
 
-        MergeResources packageRes = GroovyRecorder.record(ExecutionType.LIB_TASK_MANAGER_CREATE_MERGE_RESOURCES_TASK) {
+        MergeResources packageRes = SpanRecorders.record(ExecutionType.LIB_TASK_MANAGER_CREATE_MERGE_RESOURCES_TASK) {
             // Create a merge task to only merge the resources from this library and not
             // the dependencies. This is what gets packaged in the aar.
             MergeResources packageRes = basicCreateMergeResourcesTask(variantData,
@@ -130,18 +128,18 @@ class LibraryTaskManager extends TaskManager {
         }
 
         // Add a task to merge the assets folders
-        GroovyRecorder.record(ExecutionType.LIB_TASK_MANAGER_CREATE_MERGE_ASSETS_TASK) {
+        SpanRecorders.record(ExecutionType.LIB_TASK_MANAGER_CREATE_MERGE_ASSETS_TASK) {
             createMergeAssetsTask(variantData,
                     "$project.buildDir/${FD_INTERMEDIATES}/$DIR_BUNDLES/${dirName}/assets",
                     false /*includeDependencies*/)
         }
 
         // Add a task to create the BuildConfig class
-        GroovyRecorder.record(ExecutionType.LIB_TASK_MANAGER_CREATE_BUILD_CONFIG_TASK) {
+        SpanRecorders.record(ExecutionType.LIB_TASK_MANAGER_CREATE_BUILD_CONFIG_TASK) {
             createBuildConfigTask(variantData)
         }
 
-        GroovyRecorder.record(ExecutionType.LIB_TASK_MANAGER_CREATE_PROCESS_RES_TASK) {
+        SpanRecorders.record(ExecutionType.LIB_TASK_MANAGER_CREATE_PROCESS_RES_TASK) {
             // Add a task to generate resource source files, directing the location
             // of the r.txt file to be directly in the bundle.
             createProcessResTask(variantData,
@@ -153,13 +151,13 @@ class LibraryTaskManager extends TaskManager {
             createProcessJavaResTask(variantData)
         }
 
-        GroovyRecorder.record(ExecutionType.LIB_TASK_MANAGER_CREATE_AIDL_TASK) {
+        SpanRecorders.record(ExecutionType.LIB_TASK_MANAGER_CREATE_AIDL_TASK) {
             createAidlTask(variantData, project.file(
                     "$project.buildDir/${FD_INTERMEDIATES}/$DIR_BUNDLES/${dirName}/$SdkConstants.FD_AIDL"))
         }
 
         // Add a compile task
-        GroovyRecorder.record(ExecutionType.LIB_TASK_MANAGER_CREATE_COMPILE_TASK) {
+        SpanRecorders.record(ExecutionType.LIB_TASK_MANAGER_CREATE_COMPILE_TASK) {
             createCompileTask(variantData, null /*testedVariant*/)
         }
 
@@ -171,14 +169,14 @@ class LibraryTaskManager extends TaskManager {
         // Add dependencies on NDK tasks if NDK plugin is applied.
         if (isNdkTaskNeeded) {
             // Add NDK tasks
-            GroovyRecorder.record(ExecutionType.LIB_TASK_MANAGER_CREATE_NDK_TASK) {
+            SpanRecorders.record(ExecutionType.LIB_TASK_MANAGER_CREATE_NDK_TASK) {
                 createNdkTasks(variantData);
                 packageJniLibs.dependsOn variantData.ndkCompileTask
                 packageJniLibs.from(variantData.ndkCompileTask.soFolder).include("**/*.so")
             }
         }
 
-        Sync packageRenderscript = GroovyRecorder.record(ExecutionType.LIB_TASK_MANAGER_CREATE_PACKAGING_TASK) {
+        Sync packageRenderscript = SpanRecorders.record(ExecutionType.LIB_TASK_MANAGER_CREATE_PACKAGING_TASK) {
             // package from 2 sources.
             packageJniLibs.from(variantConfig.jniLibsList).include("**/*.so")
             packageJniLibs.into(project.file(
@@ -196,7 +194,7 @@ class LibraryTaskManager extends TaskManager {
         }
 
         // merge consumer proguard files from different build types and flavors
-        MergeFileTask mergeProGuardFileTask = GroovyRecorder.record(
+        MergeFileTask mergeProGuardFileTask = SpanRecorders.record(
                 ExecutionType.LIB_TASK_MANAGER_CREATE_MERGE_PROGUARD_FILE_TASK) {
             MergeFileTask mergeProGuardFileTask = project.tasks.create(
                     "merge${fullName.capitalize()}ProguardFiles",
@@ -232,7 +230,7 @@ class LibraryTaskManager extends TaskManager {
         // data holding dependencies and input for the dex. This gets updated as new
         // post-compilation steps are inserted between the compilation and dx.
         PostCompilationData pcData = new PostCompilationData()
-        GroovyRecorder.record(ExecutionType.LIB_TASK_MANAGER_CREATE_POST_COMPILATION_TASK) {
+        SpanRecorders.record(ExecutionType.LIB_TASK_MANAGER_CREATE_POST_COMPILATION_TASK) {
             pcData.classGeneratingTask = Collections.singletonList(variantData.javaCompileTask)
             pcData.libraryGeneratingTask = Collections.singletonList(
                     variantData.variantDependency.packageConfiguration.buildDependencies)
@@ -254,12 +252,12 @@ class LibraryTaskManager extends TaskManager {
 
         if (buildType.isMinifyEnabled()) {
             // run proguard on output of compile task
-            GroovyRecorder.record(ExecutionType.LIB_TASK_MANAGER_CREATE_PROGUARD_TASK) {
+            SpanRecorders.record(ExecutionType.LIB_TASK_MANAGER_CREATE_PROGUARD_TASK) {
                 createProguardTasks(variantData, null, pcData)
             }
         } else {
             // package the local jar in libs/
-            GroovyRecorder.record(ExecutionType.LIB_TASK_MANAGER_CREATE_PACKAGE_LOCAL_JAR) {
+            SpanRecorders.record(ExecutionType.LIB_TASK_MANAGER_CREATE_PACKAGE_LOCAL_JAR) {
                 Sync packageLocalJar = project.tasks.create(
                         "package${fullName.capitalize()}LocalJar",
                         Sync)

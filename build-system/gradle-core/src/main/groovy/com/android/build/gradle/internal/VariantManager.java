@@ -45,7 +45,7 @@ import com.android.build.gradle.internal.dsl.GroupableProductFlavor;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.dsl.Splits;
-import com.android.build.gradle.internal.profile.GroovyRecorder;
+import com.android.build.gradle.internal.profile.SpanRecorders;
 import com.android.build.gradle.internal.variant.ApplicationVariantFactory;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
@@ -245,7 +245,7 @@ public class VariantManager implements VariantModel {
         }
 
         for (final BaseVariantData<? extends BaseVariantOutputData> variantData : variantDataList) {
-            ThreadRecorder.get().record(ExecutionType.VARIANT_MANAGER_CREATE_TASKS_FOR_VARIANT,
+            SpanRecorders.record(project, ExecutionType.VARIANT_MANAGER_CREATE_TASKS_FOR_VARIANT,
                     new Recorder.Block<Void>() {
                         @Override
                         public Void call() throws Exception {
@@ -253,8 +253,7 @@ public class VariantManager implements VariantModel {
                             return null;
                         }
                     },
-                    new Recorder.Property("project", project.getName()),
-                    new Recorder.Property("variant", variantData.getName()));
+                    new Recorder.Property(SpanRecorders.VARIANT, variantData.getName()));
         }
 
         // create the lint tasks.
