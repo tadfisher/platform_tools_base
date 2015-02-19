@@ -44,6 +44,7 @@ import com.android.build.gradle.internal.tasks.GenerateApkDataTask
 import com.android.build.gradle.internal.tasks.InstallVariantTask
 import com.android.build.gradle.internal.tasks.MockableAndroidJarTask
 import com.android.build.gradle.internal.tasks.PrepareDependenciesTask
+import com.android.build.gradle.internal.tasks.RemoteTestRunnerTask
 import com.android.build.gradle.internal.tasks.SigningReportTask
 import com.android.build.gradle.internal.tasks.TestServerTask
 import com.android.build.gradle.internal.tasks.UninstallTask
@@ -98,6 +99,7 @@ import com.android.builder.model.ProductFlavor
 import com.android.builder.model.SourceProvider
 import com.android.builder.testing.ConnectedDeviceProvider
 import com.android.builder.testing.api.DeviceProvider
+import com.android.builder.testing.api.RemoteTestRunner
 import com.android.builder.testing.api.TestServer
 import com.android.sdklib.AndroidTargetHash
 import com.android.sdklib.BuildToolInfo
@@ -282,7 +284,7 @@ abstract class TaskManager {
         uninstallAll.group = INSTALL_GROUP
 
         deviceCheck = project.tasks.create("deviceCheck")
-        deviceCheck.description = "Runs all device checks using Device Providers and Test Servers."
+        deviceCheck.description = "Runs all device checks using Device Providers, Remote Test Runners and Test Servers."
         deviceCheck.group = JavaBasePlugin.VERIFICATION_GROUP
 
         connectedCheck = project.tasks.create("connectedCheck")
@@ -1565,6 +1567,7 @@ abstract class TaskManager {
         List<AndroidReportTask> reportTasks = Lists.newArrayListWithExpectedSize(2)
 
         List<DeviceProvider> providers = getExtension().deviceProviders
+        List<RemoteTestRunner> remoteTestRunners = getExtension().remoteTestRunners
         List<TestServer> servers = getExtension().testServers
 
         Task mainConnectedTask = connectedCheck
@@ -1598,9 +1601,11 @@ abstract class TaskManager {
         }
 
         Task mainProviderTask = deviceCheck
+
+        boolean agregateReport = (providers.size() + remoteTestRunners.size()) > 1 || hasFlavors;
         // if more than one provider tasks, either because of several flavors, or because of
         // more than one providers, then create an aggregate report tasks for all of them.
-        if (providers.size() > 1 || hasFlavors) {
+        if (agregateReport) {
             mainProviderTask = project.tasks.create("${DEVICE}${ANDROID_TEST.suffix}",
                     AndroidReportTask)
             mainProviderTask.group = JavaBasePlugin.VERIFICATION_GROUP
@@ -1710,11 +1715,39 @@ abstract class TaskManager {
                                     "$DEVICE/$deviceProvider.name"
                             )
 
-                    mainProviderTask.dependsOn providerTask
+                    if (agregateReport) {
+                        (mainProviderTask as AndroidReportTask).addTask providerTask
+                    } else {
+                        mainProviderTask.dependsOn providerTask
+                    }
                     testVariantData.providerTestTaskList.add(providerTask)
 
                     if (!deviceProvider.isConfigured()) {
                         providerTask.enabled = false;
+                    }
+                }
+
+                // now the remote test runners
+                for (RemoteTestRunner remoteTestRunner: remoteTestRunners) {
+                    RemoteTestRunnerTask remoteTestTask =
+                            createRemoteTestRunnerTask(
+                                    hasFlavors ?
+                                            "${remoteTestRunner.name}${ANDROID_TEST.suffix}${baseVariantData.variantConfiguration.fullName.capitalize()}" :
+                                            "${remoteTestRunner.name}${ANDROID_TEST.suffix}",
+                                    "Installs and runs the tests for Build '${baseVariantData.variantConfiguration.fullName}' using remote test runner '${remoteTestRunner.name.capitalize()}'.",
+                                    testVariantData,
+                                    baseVariantData as BaseVariantData,
+                                    remoteTestRunner,
+                                    "$DEVICE/$remoteTestRunner.name"
+                            )
+                    if (agregateReport) {
+                        (mainProviderTask as AndroidReportTask).addTask remoteTestTask
+                    } else {
+                        mainProviderTask.dependsOn remoteTestTask
+                    }
+                    testVariantData.providerTestTaskList.add(remoteTestTask)
+                    if (!remoteTestRunner.isConfigured()) {
+                        remoteTestTask.enabled = false;
                     }
                 }
 
@@ -1834,6 +1867,70 @@ abstract class TaskManager {
             String flavorFolder = testVariantData.variantConfiguration.flavorName
             if (!flavorFolder.isEmpty()) {
                 flavorFolder = "$FD_FLAVORS/" + flavorFolder
+            }
+
+            project.file("$rootLocation/$subFolder/$flavorFolder")
+        }
+
+        return testTask
+    }
+
+
+    private RemoteTestRunnerTask createRemoteTestRunnerTask(
+            @NonNull String taskName,
+            @NonNull String description,
+            @NonNull TestVariantData testVariantData,
+            @NonNull BaseVariantData<? extends BaseVariantOutputData> testedVariantData,
+            @NonNull RemoteTestRunner remoteTestRunner,
+            @NonNull String subFolder) {
+
+        // Get single output for now for the test.
+        BaseVariantOutputData testVariantOutputData = testVariantData.outputs.get(0)
+
+        RemoteTestRunnerTask testTask = project.tasks.create(
+                taskName,
+                RemoteTestRunnerTask.class)
+
+        testTask.description = description
+        testTask.group = JavaBasePlugin.VERIFICATION_GROUP
+        testTask.dependsOn testVariantOutputData.assembleTask, testedVariantData.assembleVariantTask
+
+        testTask.androidBuilder = androidBuilder
+        testTask.testVariantData = testVariantData
+        testTask.flavorName = testVariantData.variantConfiguration.flavorName.capitalize()
+        testTask.remoteTestRunner = remoteTestRunner
+
+        conventionMapping(testTask).map("resultsDir") {
+            String rootLocation = getExtension().testOptions.resultsDir != null ?
+                    getExtension().testOptions.resultsDir :
+                    "${project.buildDir}/${FD_OUTPUTS}/${FD_ANDROID_RESULTS}"
+
+            String flavorFolder = testVariantData.variantConfiguration.flavorName
+            if (!flavorFolder.isEmpty()) {
+                flavorFolder = "$FD_FLAVORS/" + flavorFolder
+            }
+
+            project.file("$rootLocation/$subFolder/$flavorFolder")
+        }
+
+        conventionMapping(testTask).map("reportsDir") {
+            String rootLocation = getExtension().testOptions.reportDir != null ?
+                    getExtension().testOptions.reportDir :
+                    "${project.buildDir}/${FD_OUTPUTS}/${FD_REPORTS}/${FD_ANDROID_TESTS}"
+
+            String flavorFolder = testVariantData.variantConfiguration.flavorName
+            if (!flavorFolder.isEmpty()) {
+                flavorFolder = "$FD_FLAVORS/$flavorFolder"
+            }
+
+            project.file("$rootLocation/$subFolder/$flavorFolder")
+        }
+        conventionMapping(testTask).map("coverageDir") {
+            String rootLocation = "${project.buildDir}/${FD_OUTPUTS}/code-coverage"
+
+            String flavorFolder = testVariantData.variantConfiguration.flavorName
+            if (!flavorFolder.isEmpty()) {
+                flavorFolder = "$FD_FLAVORS/$flavorFolder"
             }
 
             project.file("$rootLocation/$subFolder/$flavorFolder")

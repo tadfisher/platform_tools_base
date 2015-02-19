@@ -15,6 +15,9 @@ import com.google.common.util.concurrent.SettableFuture;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.String;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -120,51 +123,57 @@ public class FakeDevice extends DeviceConnector {
 
     @Override
     public void executeShellCommand(String command, IShellOutputReceiver receiver,
-                                    long maxTimeToOutputResponse, TimeUnit maxTimeUnits)
+            long maxTimeToOutputResponse, TimeUnit maxTimeUnits)
             throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
             IOException {
         System.out.println(String.format("EXECSHELL(%S) CALLED", name));
 
         // now fake out some tests result to make the test runner happy.
-        addLineToReceiver("INSTRUMENTATION_STATUS: numtests=2\r\n", receiver);
-        addLineToReceiver("INSTRUMENTATION_STATUS: numtests=2\r\n", receiver);
-        addLineToReceiver("INSTRUMENTATION_STATUS: stream=\r\n", receiver);
-        addLineToReceiver("com.android.tests.basic.MainTest:\r\n", receiver);
-        addLineToReceiver("INSTRUMENTATION_STATUS: id=InstrumentationTestRunner\r\n", receiver);
-        addLineToReceiver("INSTRUMENTATION_STATUS: test=testBuildConfig\r\n", receiver);
-        addLineToReceiver("INSTRUMENTATION_STATUS: class=com.android.tests.basic.MainTest\r\n", receiver);
-        addLineToReceiver("INSTRUMENTATION_STATUS: current=1\r\n", receiver);
-        addLineToReceiver("INSTRUMENTATION_STATUS_CODE: 1\r\n", receiver);
-        addLineToReceiver("INSTRUMENTATION_STATUS: numtests=2\r\n", receiver);
-        addLineToReceiver("INSTRUMENTATION_STATUS: stream=.\r\n", receiver);
-        addLineToReceiver("INSTRUMENTATION_STATUS: id=InstrumentationTestRunner\r\n", receiver);
-        addLineToReceiver("INSTRUMENTATION_STATUS: test=testBuildConfig\r\n", receiver);
-        addLineToReceiver("INSTRUMENTATION_STATUS: class=com.android.tests.basic.MainTest\r\n", receiver);
-        addLineToReceiver("INSTRUMENTATION_STATUS: current=1\r\n", receiver);
-        addLineToReceiver("INSTRUMENTATION_STATUS_CODE: 0\r\n", receiver);
-        addLineToReceiver("INSTRUMENTATION_STATUS: numtests=2\r\n", receiver);
-        addLineToReceiver("INSTRUMENTATION_STATUS: stream=\r\n", receiver);
-        addLineToReceiver("INSTRUMENTATION_STATUS: id=InstrumentationTestRunner\r\n", receiver);
-        addLineToReceiver("INSTRUMENTATION_STATUS: test=testPreconditions\r\n", receiver);
-        addLineToReceiver("INSTRUMENTATION_STATUS: class=com.android.tests.basic.MainTest\r\n", receiver);
-        addLineToReceiver("INSTRUMENTATION_STATUS: current=2\r\n", receiver);
-        addLineToReceiver("INSTRUMENTATION_STATUS_CODE: 1\r\n", receiver);
-        addLineToReceiver("INSTRUMENTATION_STATUS: numtests=2\r\n", receiver);
-        addLineToReceiver("INSTRUMENTATION_STATUS: stream=.\r\n", receiver);
-        addLineToReceiver("INSTRUMENTATION_STATUS: id=InstrumentationTestRunner\r\n", receiver);
-        addLineToReceiver("INSTRUMENTATION_STATUS: test=testPreconditions\r\n", receiver);
-        addLineToReceiver("INSTRUMENTATION_STATUS: class=com.android.tests.basic.MainTest\r\n", receiver);
-        addLineToReceiver("INSTRUMENTATION_STATUS: current=2\r\n", receiver);
-        addLineToReceiver("INSTRUMENTATION_STATUS_CODE: 0\r\n", receiver);
-        addLineToReceiver("INSTRUMENTATION_RESULT: stream=\r\n", receiver);
-        addLineToReceiver("Test results for InstrumentationTestRunner=..\r\n", receiver);
-        addLineToReceiver("Time: 0.247\r\n", receiver);
-        addLineToReceiver("\r\n", receiver);
-        addLineToReceiver("OK (2 tests)\r\n", receiver);
+        for (String outputLine : testOutput) {
+            addLineToReceiver(outputLine, receiver);
+            addLineToReceiver("\r\n", receiver);
+        }
         receiver.flush();
 
         execShellCalled = true;
     }
+
+    static List<String> testOutput = Arrays.asList(
+            "INSTRUMENTATION_STATUS: numtests=2",
+            "INSTRUMENTATION_STATUS: numtests=2",
+            "INSTRUMENTATION_STATUS: stream=",
+            "com.android.tests.basic.MainTest:",
+            "INSTRUMENTATION_STATUS: id=InstrumentationTestRunner",
+            "INSTRUMENTATION_STATUS: test=testBuildConfig",
+            "INSTRUMENTATION_STATUS: class=com.android.tests.basic.MainTest",
+            "INSTRUMENTATION_STATUS: current=1",
+            "INSTRUMENTATION_STATUS_CODE: 1",
+            "INSTRUMENTATION_STATUS: numtests=2",
+            "INSTRUMENTATION_STATUS: stream=.",
+            "INSTRUMENTATION_STATUS: id=InstrumentationTestRunner",
+            "INSTRUMENTATION_STATUS: test=testBuildConfig",
+            "INSTRUMENTATION_STATUS: class=com.android.tests.basic.MainTest",
+            "INSTRUMENTATION_STATUS: current=1",
+            "INSTRUMENTATION_STATUS_CODE: 0",
+            "INSTRUMENTATION_STATUS: numtests=2",
+            "INSTRUMENTATION_STATUS: stream=",
+            "INSTRUMENTATION_STATUS: id=InstrumentationTestRunner",
+            "INSTRUMENTATION_STATUS: test=testPreconditions",
+            "INSTRUMENTATION_STATUS: class=com.android.tests.basic.MainTest",
+            "INSTRUMENTATION_STATUS: current=2",
+            "INSTRUMENTATION_STATUS_CODE: 1",
+            "INSTRUMENTATION_STATUS: numtests=2",
+            "INSTRUMENTATION_STATUS: stream=.",
+            "INSTRUMENTATION_STATUS: id=InstrumentationTestRunner",
+            "INSTRUMENTATION_STATUS: test=testPreconditions",
+            "INSTRUMENTATION_STATUS: class=com.android.tests.basic.MainTest",
+            "INSTRUMENTATION_STATUS: current=2",
+            "INSTRUMENTATION_STATUS_CODE: 0",
+            "INSTRUMENTATION_RESULT: stream=",
+            "Test results for InstrumentationTestRunner=..",
+            "Time: 0.247",
+            "",
+            "OK (2 tests)");
 
     private void addLineToReceiver(String line, IShellOutputReceiver receiver) {
         byte[] bytes = line.getBytes();
