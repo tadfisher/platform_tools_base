@@ -65,7 +65,7 @@ public interface TestData {
     /**
      * Returns an APK file to install based on given density and abis.
      * @param deviceConfigProvider provider for the test device characteristics.
-     * @return the file to install or null if non is compatible.
+     * @return an immutable list of the file(s) to install, empty if not compatible.
      */
     @NonNull
     List<File> getTestedApks(
