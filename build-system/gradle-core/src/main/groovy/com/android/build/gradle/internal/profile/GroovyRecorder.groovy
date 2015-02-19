@@ -26,6 +26,17 @@ import org.gradle.api.Project
  */
 class GroovyRecorder {
 
+    static <T> T record(ExecutionType executionType, Closure<T> closure) {
+        // have to explicitly cast as groovy does not support inner classes with generics...
+        return (T) ThreadRecorder.get().record(executionType, new Recorder.Block() {
+
+            @Override
+            Object call() throws Exception {
+                return closure.call()
+            }
+        })
+    }
+
     static <T> T record(Project project,ExecutionType executionType, Closure<T> closure) {
         // have to explicitly cast as groovy does not support inner classes with generics...
        return (T) ThreadRecorder.get().record(executionType, new Recorder.Block() {
@@ -35,5 +46,21 @@ class GroovyRecorder {
                 return closure.call()
             }
         }, new Recorder.Property("project", project.name))
+    }
+
+    static <T> T record(Project project,ExecutionType executionType, Recorder.Block<T> closure) {
+        return ThreadRecorder.get().record(executionType, closure,
+                new Recorder.Property("project", project.name))
+    }
+
+    static <T> T record(Project project,ExecutionType executionType, Recorder.Block<T> closure,
+            Recorder.Property... properties) {
+
+        ArrayList<Recorder.Property> copyOfProperties = properties.toList();
+        copyOfProperties.add(new Recorder.Property("project", project.name));
+
+        return ThreadRecorder.get().record(executionType, closure,
+                copyOfProperties.toArray(new Recorder.Property[copyOfProperties.size()]));
+
     }
 }

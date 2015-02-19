@@ -46,8 +46,6 @@ import com.android.builder.internal.compiler.JackConversionCache
 import com.android.builder.internal.compiler.PreDexCache
 import com.android.builder.profile.ExecutionType
 import com.android.builder.profile.ProcessRecorderFactory
-import com.android.builder.profile.Recorder
-import com.android.builder.profile.ThreadRecorder
 import com.android.builder.sdk.TargetInfo
 import com.android.ide.common.blame.output.BlameAwareLoggedProcessOutputHandler
 import com.android.ide.common.internal.ExecutorSingleton
@@ -67,7 +65,6 @@ import org.gradle.tooling.BuildException
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 
 import java.security.MessageDigest
-import java.util.concurrent.Callable
 import java.util.jar.Attributes
 import java.util.jar.Manifest
 import java.util.regex.Pattern
@@ -139,7 +136,7 @@ public abstract class BasePlugin {
             URL url = cl.findResource("META-INF/MANIFEST.MF");
             manifest = new Manifest(url.openStream());
         } catch (IOException ignore) {
-            getLogger().info(ignore.toString());
+            //getLogger().info(ignore.toString());
             return;
         }
 
@@ -234,15 +231,15 @@ public abstract class BasePlugin {
         ProcessRecorderFactory.initialize(logger, project.rootProject.
                 file("profiler" + System.currentTimeMillis() + ".json"))
 
-        GroovyRecorder.record(project, ExecutionType.BASEPLUGIN_PROJECT_CONFIGURE) {
+        GroovyRecorder.record(project, ExecutionType.BASE_PLUGIN_PROJECT_CONFIGURE) {
             configureProject()
         }
 
-        GroovyRecorder.record(project, ExecutionType.BASEPLUGIN_PROJECT_BASE_EXTENSTION_CREATION) {
+        GroovyRecorder.record(project, ExecutionType.BASE_PLUGIN_PROJECT_BASE_EXTENSTION_CREATION) {
             createExtension()
         }
 
-        GroovyRecorder.record(project, ExecutionType.BASEPLUGIN_PROJECT_TASKS_CREATION) {
+        GroovyRecorder.record(project, ExecutionType.BASE_PLUGIN_PROJECT_TASKS_CREATION) {
             createTasks()
         }
     }
@@ -276,7 +273,7 @@ public abstract class BasePlugin {
         project.gradle.buildFinished {
             ExecutorSingleton.shutdown()
             sdkHandler.unload()
-            GroovyRecorder.record(project, ExecutionType.BASEPLUGIN_BUILD_FINISHED) {
+            GroovyRecorder.record(project, ExecutionType.BASE_PLUGIN_BUILD_FINISHED) {
                 PreDexCache.getCache().clear(
                         project.rootProject.file(
                                 "${project.rootProject.buildDir}/${FD_INTERMEDIATES}/dex-cache/cache.xml"),
@@ -374,11 +371,15 @@ public abstract class BasePlugin {
     }
 
     private void createTasks() {
-        taskManager.createTasks()
+        GroovyRecorder.record(project, ExecutionType.TASK_MANAGER_CREATE_TASKS) {
+            taskManager.createTasks()
+        }
 
         project.afterEvaluate {
             ensureTargetSetup()
-            createAndroidTasks(false)
+            GroovyRecorder.record(project, ExecutionType.BASE_PLUGIN_CREATE_ANDROID_TASKS) {
+                createAndroidTasks(false)
+            }
         }
     }
 
@@ -436,7 +437,9 @@ public abstract class BasePlugin {
         }
 
         taskManager.createMockableJarTask()
-        variantManager.createAndroidTasks()
+        GroovyRecorder.record(project, ExecutionType.VARIANT_MANAGER_CREATE_ANDROID_TASKS) {
+            variantManager.createAndroidTasks()
+        }
     }
 
     private boolean isVerbose() {

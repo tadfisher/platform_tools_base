@@ -45,6 +45,7 @@ import com.android.build.gradle.internal.dsl.GroupableProductFlavor;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.dsl.Splits;
+import com.android.build.gradle.internal.profile.GroovyRecorder;
 import com.android.build.gradle.internal.variant.ApplicationVariantFactory;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
@@ -53,6 +54,8 @@ import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
+import com.android.builder.profile.ExecutionType;
+import com.android.builder.profile.Recorder;
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -240,12 +243,27 @@ public class VariantManager implements VariantModel {
             populateVariantDataList();
         }
 
-        for (BaseVariantData<? extends BaseVariantOutputData> variantData : variantDataList) {
-            createTasksForVariantData(project.getTasks(), variantData);
+        for (final BaseVariantData<? extends BaseVariantOutputData> variantData : variantDataList) {
+            GroovyRecorder.record(project, ExecutionType.VARIANT_MANAGER_CREATE_TASKS_FOR_VARIANT,
+                    new Recorder.Block<Void>() {
+                        @Override
+                        public Void call() throws Exception {
+                            createTasksForVariantData(project.getTasks(), variantData);
+                            return null;
+                        }
+                    },
+                    new Recorder.Property("variant", variantData.getName()));
         }
 
         // create the lint tasks.
-        taskManager.createLintTasks(variantDataList);
+        GroovyRecorder.record(project, ExecutionType.VARIANT_MANAGER_CREATE_LINT_TASKS,
+                new Recorder.Block<Void>() {
+                    @Override
+                    public Void call() throws Exception {
+                        taskManager.createLintTasks(variantDataList);
+                        return null;
+                    }
+                });
 
         // create the test tasks.
         taskManager.createConnectedCheckTasks(variantDataList, !productFlavors.isEmpty(), false /*isLibrary*/);
