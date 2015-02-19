@@ -255,10 +255,11 @@ public class VariantManager implements VariantModel {
     }
 
     /**
-     * Task creation entry point.
+     * Variant/Task creation entry point.
      */
     public void createAndroidTasks() {
         variantFactory.validateModel(this);
+        variantFactory.preVariantWork(project);
 
         taskManager.createAssembleAndroidTestTask();
 
@@ -598,15 +599,16 @@ public class VariantManager implements VariantModel {
      */
     private void createVariantDataForProductFlavors(
             @NonNull List<com.android.build.gradle.api.GroupableProductFlavor> productFlavorList) {
-        if (!(extension instanceof TestedExtension)) {
-            return;
-        }
-        TestedExtension testedExtension = (TestedExtension) extension;
 
-        BuildTypeData testBuildTypeData = buildTypes.get(testedExtension.getTestBuildType());
-        if (testBuildTypeData == null) {
-            throw new RuntimeException(String.format(
-                    "Test Build Type '%1$s' does not exist.", testedExtension.getTestBuildType()));
+        BuildTypeData testBuildTypeData = null;
+        if (extension instanceof TestedExtension) {
+            TestedExtension testedExtension = (TestedExtension) extension;
+
+            testBuildTypeData = buildTypes.get(testedExtension.getTestBuildType());
+            if (testBuildTypeData == null) {
+                throw new RuntimeException(String.format(
+                        "Test Build Type '%1$s' does not exist.", testedExtension.getTestBuildType()));
+            }
         }
 
         BaseVariantData variantForAndroidTest = null;
