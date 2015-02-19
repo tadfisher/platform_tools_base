@@ -24,6 +24,8 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.google.common.collect.Lists;
 
+import org.gradle.api.DefaultTask;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -33,7 +35,7 @@ import java.util.List;
 public class TestVariantData extends ApkVariantData {
 
     public DeviceProviderInstrumentTestTask connectedTestTask;
-    public final List<DeviceProviderInstrumentTestTask> providerTestTaskList = Lists.newArrayList();
+    public final List<DefaultTask> providerTestTaskList = Lists.newArrayList();
     @NonNull
     private final TestedVariantData testedVariantData;
 
