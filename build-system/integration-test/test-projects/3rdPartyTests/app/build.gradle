@@ -1,6 +1,7 @@
 apply plugin: 'com.android.application'
 
 project.ext.fakeProvider = new com.android.tests.basic.buildscript.FakeProvider()
+project.ext.fakeRemoteTestRunner = new com.android.tests.basic.buildscript.FakeRemoteTestRunner()
 project.ext.fakeServer = new com.android.tests.basic.buildscript.FakeServer()
 
 apply from: "../../commonLocalRepo.gradle"
@@ -10,6 +11,7 @@ android {
     buildToolsVersion = rootProject.buildToolsVersion
 
     deviceProvider project.fakeProvider
+    remoteTestRunner project.fakeRemoteTestRunner
     testServer project.fakeServer
 
     buildTypes {
