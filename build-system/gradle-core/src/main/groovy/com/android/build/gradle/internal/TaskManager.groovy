@@ -45,6 +45,7 @@ import com.android.build.gradle.internal.tasks.GenerateApkDataTask
 import com.android.build.gradle.internal.tasks.InstallVariantTask
 import com.android.build.gradle.internal.tasks.MockableAndroidJarTask
 import com.android.build.gradle.internal.tasks.PrepareDependenciesTask
+import com.android.build.gradle.internal.tasks.RemoteTestRunnerTask
 import com.android.build.gradle.internal.tasks.SigningReportTask
 import com.android.build.gradle.internal.tasks.TestServerTask
 import com.android.build.gradle.internal.tasks.UninstallTask
@@ -98,6 +99,7 @@ import com.android.builder.model.ProductFlavor
 import com.android.builder.model.SourceProvider
 import com.android.builder.testing.ConnectedDeviceProvider
 import com.android.builder.testing.api.DeviceProvider
+import com.android.builder.testing.api.RemoteTestRunner
 import com.android.builder.testing.api.TestServer
 import com.android.sdklib.AndroidTargetHash
 import com.android.sdklib.BuildToolInfo
@@ -280,7 +282,7 @@ abstract class TaskManager {
         }
 
         tasks.create(DEVICE_CHECK) {
-            it.description = "Runs all device checks using Device Providers and Test Servers."
+            it.description = "Runs all device checks using Device Providers, Remote Test runners and Test Servers."
             it.group = JavaBasePlugin.VERIFICATION_GROUP
         }
 
@@ -1589,7 +1591,6 @@ abstract class TaskManager {
         String connectedRootName = "${CONNECTED}${ANDROID_TEST.suffix}"
         String defaultReportsDir = "$project.buildDir/$FD_REPORTS/$FD_ANDROID_TESTS"
         String defaultResultsDir = "$project.buildDir/${FD_OUTPUTS}/$FD_ANDROID_RESULTS"
-
         // If more than one flavor, create a report aggregator task and make this the parent
         // task for all new connected tasks.  Otherwise, create a top level connectedAndroidTest
         // DefaultTask.
@@ -1601,10 +1602,12 @@ abstract class TaskManager {
                 mainConnectedTask.reportType = ReportType.MULTI_FLAVOR
                 conventionMapping(mainConnectedTask).map("resultsDir") {
                     String rootLocation = extension.testOptions.resultsDir ?: defaultResultsDir
+
                     project.file("$rootLocation/connected/$FD_FLAVORS_ALL")
                 }
                 conventionMapping(mainConnectedTask).map("reportsDir") {
                     String rootLocation = extension.testOptions.reportDir ?: defaultReportsDir
+
                     project.file("$rootLocation/connected/$FD_FLAVORS_ALL")
                 }
 
@@ -1638,6 +1641,7 @@ abstract class TaskManager {
                 }
                 conventionMapping(mainProviderTask).map("reportsDir") {
                     String rootLocation = extension.testOptions.reportDir ?: defaultReportsDir
+
                     project.file("$rootLocation/devices/$FD_FLAVORS_ALL")
                 }
             }
@@ -1782,6 +1786,28 @@ abstract class TaskManager {
             }
         }
 
+        List<RemoteTestRunner> remoteTestRunners = getExtension().remoteTestRunners
+        // and the remote test runners
+        for (RemoteTestRunner remoteTestRunner : remoteTestRunners) {
+            RemoteTestRunnerTask remoteTestRunnerTask =
+                    createRemoteTestRunnerTask(
+                            hasFlavors ?
+                                    "${remoteTestRunner.name}${ANDROID_TEST.suffix}${baseVariantData.variantConfiguration.fullName.capitalize()}" :
+                                    "${remoteTestRunner.name}${ANDROID_TEST.suffix}",
+                            "Runs the tests for Build '${baseVariantData.variantConfiguration.fullName}' using Remote Test Runner '${remoteTestRunner.name.capitalize()}'.",
+                            testVariantData,
+                            baseVariantData as BaseVariantData,
+                            remoteTestRunner,
+                            "$DEVICE/$remoteTestRunner.name"
+                    )
+            tasks.named(mainProviderTaskName) {
+                it.dependsOn remoteTestRunnerTask
+            }
+            testVariantData.providerTestTaskList.add(remoteTestRunnerTask)
+            if (!remoteTestRunner.isConfigured()) {
+                remoteTestRunnerTask.enabled = false;
+            }
+        }
         // now the test servers
         // don't use an auto loop as it'll break the closure inside.
         List<TestServer> servers = getExtension().testServers
@@ -1876,10 +1902,70 @@ abstract class TaskManager {
         }
         conventionMapping(testTask).map("coverageDir") {
             String rootLocation = "$project.buildDir/${FD_OUTPUTS}/code-coverage"
+            String flavorFolder = testVariantData.variantConfiguration.flavorName
+            if (!flavorFolder.isEmpty()) {
+                flavorFolder = "$FD_FLAVORS/" + flavorFolder
+            }
+            project.file("$rootLocation/$subFolder/$flavorFolder")
+        }
+        return testTask
+    }
+
+    private RemoteTestRunnerTask createRemoteTestRunnerTask(
+            @NonNull String taskName,
+            @NonNull String description,
+            @NonNull TestVariantData testVariantData,
+            @NonNull BaseVariantData<? extends BaseVariantOutputData> testedVariantData,
+            @NonNull RemoteTestRunner remoteTestRunner,
+            @NonNull String subFolder) {
+
+        // Get single output for now for the test.
+        BaseVariantOutputData testVariantOutputData = testVariantData.outputs.get(0)
+
+        RemoteTestRunnerTask testTask = project.tasks.create(
+                taskName,
+                RemoteTestRunnerTask.class)
+
+        testTask.description = description
+        testTask.group = JavaBasePlugin.VERIFICATION_GROUP
+        testTask.dependsOn testVariantOutputData.assembleTask, testedVariantData.assembleVariantTask
+
+        testTask.androidBuilder = androidBuilder
+        testTask.testVariantData = testVariantData
+        testTask.flavorName = testVariantData.variantConfiguration.flavorName.capitalize()
+        testTask.remoteTestRunner = remoteTestRunner
+
+        conventionMapping(testTask).map("resultsDir") {
+            String rootLocation = getExtension().testOptions.resultsDir != null ?
+                    getExtension().testOptions.resultsDir :
+                    "${project.buildDir}/${FD_OUTPUTS}/${FD_ANDROID_RESULTS}"
 
             String flavorFolder = testVariantData.variantConfiguration.flavorName
             if (!flavorFolder.isEmpty()) {
                 flavorFolder = "$FD_FLAVORS/" + flavorFolder
+            }
+
+            project.file("$rootLocation/$subFolder/$flavorFolder")
+        }
+
+        conventionMapping(testTask).map("reportsDir") {
+            String rootLocation = getExtension().testOptions.reportDir != null ?
+                    getExtension().testOptions.reportDir :
+                    "$project.buildDir/$FD_REPORTS/$FD_ANDROID_TESTS"
+
+            String flavorFolder = testVariantData.variantConfiguration.flavorName
+            if (!flavorFolder.isEmpty()) {
+                flavorFolder = "$FD_FLAVORS/$flavorFolder"
+            }
+
+            project.file("$rootLocation/$subFolder/$flavorFolder")
+        }
+        conventionMapping(testTask).map("coverageDir") {
+            String rootLocation = "${project.buildDir}/${FD_OUTPUTS}/code-coverage"
+
+            String flavorFolder = testVariantData.variantConfiguration.flavorName
+            if (!flavorFolder.isEmpty()) {
+                flavorFolder = "$FD_FLAVORS/$flavorFolder"
             }
 
             project.file("$rootLocation/$subFolder/$flavorFolder")
