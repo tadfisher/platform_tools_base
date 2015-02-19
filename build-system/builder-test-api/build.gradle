@@ -11,6 +11,7 @@ apply plugin: 'java'
 apply plugin: 'clone-artifacts'
 
 dependencies {
+    compile project(':base:builder-model')
     compile project(':base:ddmlib')
 
     testCompile 'junit:junit:4.12'
