@@ -82,6 +82,7 @@ public class MergeResources extends IncrementalTask {
     }
 
     private PngCruncher getCruncher() {
+        // New cruncher is disabled.
         if (getUseNewCruncher()) {
             if (builder.getTargetInfo().buildTools.getRevision().getMajor() >= 22) {
                 return QueuedCruncher.Builder.INSTANCE.newCruncher(
