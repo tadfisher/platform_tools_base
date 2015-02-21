@@ -357,7 +357,7 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
         // on the name of the task instead of the task itself.
         @Mutate
         void createAndroidTasks(
-                VariantManager variantManager,
+                CollectionBuilder<Task> tasks,
                 AndroidComponentSpec androidSpec,
                 TaskManager taskManager,
                 SdkHandler sdkHandler,
@@ -366,6 +366,8 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
             DefaultAndroidComponentSpec spec = (DefaultAndroidComponentSpec) androidSpec
 
             applyProjectSourceSet(spec, androidSources, spec.extension)
+
+            taskManager.taskFactory = new TaskCollectionBuilderAdaptor(tasks)
 
             // Create lifecycle tasks.
             taskManager.createTasksBeforeEvaluate()
@@ -389,7 +391,9 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
                 CollectionBuilder<Task> tasks,
                 AndroidBinary androidBinary,
                 VariantManager variantManager,
-                AndroidComponentSpec androidSpec) {
+                TaskManager taskManager) {
+            taskManager.taskFactory = new TaskCollectionBuilderAdaptor(tasks)
+
             DefaultAndroidBinary binary = androidBinary as DefaultAndroidBinary
             variantManager.createTasksForVariantData(
                     new TaskCollectionBuilderAdaptor(tasks),
@@ -401,7 +405,7 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
          */
         @Mutate
         void createRemainingTasks(
-                TaskContainer tasks,
+                CollectionBuilder<Task> tasks,
                 @Path("tasks.assemble") Task assembleTask,
                 TaskManager taskManager,
                 VariantManager variantManager) {

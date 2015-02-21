@@ -67,13 +67,12 @@ class LibraryTaskManager extends TaskManager {
 
     public LibraryTaskManager (
             Project project,
-            TaskContainer tasks,
             AndroidBuilder androidBuilder,
             BaseExtension extension,
             SdkHandler sdkHandler,
             DependencyManager dependencyManager,
             ToolingModelBuilderRegistry toolingRegistry) {
-        super(project, tasks, androidBuilder, extension, sdkHandler, dependencyManager, toolingRegistry)
+        super(project, androidBuilder, extension, sdkHandler, dependencyManager, toolingRegistry)
     }
 
     @Override

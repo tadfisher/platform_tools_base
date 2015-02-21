@@ -26,7 +26,6 @@ import com.android.builder.core.AndroidBuilder
 import com.android.builder.profile.ExecutionType
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.tasks.TaskContainer
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 
 /**
@@ -35,13 +34,12 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 class ApplicationTaskManager extends TaskManager {
     public ApplicationTaskManager (
             Project project,
-            TaskContainer tasks,
             AndroidBuilder androidBuilder,
             BaseExtension extension,
             SdkHandler sdkHandler,
             DependencyManager dependencyManager,
             ToolingModelBuilderRegistry toolingRegistry) {
-        super(project, tasks, androidBuilder, extension, sdkHandler, dependencyManager, toolingRegistry)
+        super(project, androidBuilder, extension, sdkHandler, dependencyManager, toolingRegistry)
     }
 
     @Override
