@@ -17,31 +17,73 @@ package com.android.tools.rpclib.binary;
 
 import junit.framework.TestCase;
 
+import javax.xml.bind.DatatypeConverter;
+import java.util.HashSet;
+import java.util.Set;
+
 public class HandleTest extends TestCase {
+  static final byte[] handleBytes = { -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
+
   public void testHandleEquality() {
-    byte[] handleBytes = { -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
+    // Check handle identity.
     Handle handle1 = new Handle(handleBytes);
+    assertEquals(handle1, handle1);
+
+    // Check equality of two handles created with the same bytes.
     Handle handle2 = new Handle(handleBytes);
     assertEquals(handle1, handle2);
   }
 
   public void testHandleNonEquality() {
-    byte[] handleBytes = { -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
     Handle handle = new Handle(handleBytes);
+    assertFalse(handle.equals(null));
 
     // Check that we're getting a different handle than the zero-bytes handle.
-    byte[] zeroBytes = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-    Handle zeroHandle = new Handle(zeroBytes);
+    Handle zeroHandle = new Handle(new byte[handleBytes.length]);
     assertNotSame(zeroHandle, handle);
 
     // Check that we're getting a different handle if only the last byte differs.
-    byte[] handleLastDiffBytes = { -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 0 };
+    byte[] handleLastDiffBytes = new byte[handleBytes.length];
+    System.arraycopy(handleBytes, 0, handleLastDiffBytes, 0, handleBytes.length);
+    handleLastDiffBytes[handleLastDiffBytes.length-1]++;
     Handle handleLastDiff = new Handle(handleLastDiffBytes);
     assertNotSame(handleLastDiff, handle);
 
     // Check that we're getting a different handle if only the first byte differs.
-    byte[] handleFirstDiffBytes = { 1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
+    byte[] handleFirstDiffBytes = new byte[handleBytes.length];
+    System.arraycopy(handleBytes, 0, handleFirstDiffBytes, 0, handleBytes.length);
+    handleLastDiffBytes[0]++;
     Handle handleFirstDiff = new Handle(handleFirstDiffBytes);
     assertNotSame(handleFirstDiff, handle);
+  }
+
+  public void testHandleToString() {
+    Handle handle = new Handle(handleBytes);
+
+    StringBuilder sb = new StringBuilder();
+    for (byte b : handleBytes) {
+      sb.append(String.format("%02x", b&0xff));
+    }
+    assertEquals(sb.toString(), handle.toString());
+  }
+
+  public void testStringToHandle() {
+    String hex = "0123456789abcdef0123456789abcdef01234567";
+    Handle handle = new Handle(DatatypeConverter.parseHexBinary(hex));
+    assertEquals(handle.toString(), hex);
+  }
+
+  public void testHandleAsKey() {
+    Set<Handle> set = new HashSet<Handle>();
+
+    Handle handle1 = new Handle(handleBytes);
+    set.add(handle1);
+    assertTrue(set.contains(handle1));
+
+    Handle handle2 = new Handle(handleBytes);
+    set.add(handle2);
+    assertTrue(set.contains(handle2));
+
+    assertEquals(set.size(), 1);
   }
 }
