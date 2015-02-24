@@ -15,7 +15,7 @@
  */
 
 package com.android.build.gradle.integration.dependencies
-import com.android.build.gradle.integration.common.category.DeviceTests
+import com.android.build.gradle.integration.common.category.ConnectedDeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -57,7 +57,7 @@ dependencies {
     }
 
     @Test
-    @Category(DeviceTests.class)
+    @Category(ConnectedDeviceTests.class)
     void "run tests on devices"() {
         project.execute("connectedCheck")
     }
