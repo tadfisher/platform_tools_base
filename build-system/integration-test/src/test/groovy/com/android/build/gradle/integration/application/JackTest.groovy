@@ -18,7 +18,7 @@
 
 package com.android.build.gradle.integration.application
 
-import com.android.build.gradle.integration.common.category.DeviceTests
+import com.android.build.gradle.integration.common.category.ConnectedDeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.google.common.collect.ImmutableList
 import org.gradle.tooling.BuildException
@@ -74,13 +74,13 @@ class JackTest {
     }
 
     @Test
-    @Category(DeviceTests.class)
+    @Category(ConnectedDeviceTests.class)
     void "basic connectedCheck"() {
         basic.execute(JACK_OPTIONS, "connectedCheck")
     }
 
     @Test
-    @Category(DeviceTests.class)
+    @Category(ConnectedDeviceTests.class)
     void "multiDex connectedCheck"() {
         multiDex.execute(JACK_OPTIONS, "connectedCheck")
     }
