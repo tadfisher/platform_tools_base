@@ -38,7 +38,7 @@ public class UnitTest {
 
     @Test
     public void resourcesOnClasspath() throws Exception {
-        // resource_file.txt is only for buildTypeWithResource.
+        // prod_resource_file.txt is only for buildTypeWithResource.
         URL url = UnitTest.class.getClassLoader().getResource("resource_file.txt");
         assertNull(url);
 
