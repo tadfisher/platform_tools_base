@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.integration.component
 
-import com.android.build.gradle.integration.common.category.DeviceTests
+import com.android.build.gradle.integration.common.category.ConnectedDeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import org.junit.Before
@@ -91,7 +91,7 @@ model {
     }
 
     @Test
-    @Category(DeviceTests.class)
+    @Category(ConnectedDeviceTests.class)
     public void connnectedAndroidTest() {
         project.execute("connectedAndroidTest");
     }
