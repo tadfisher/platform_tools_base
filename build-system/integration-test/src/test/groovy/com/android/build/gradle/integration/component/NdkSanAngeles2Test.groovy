@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.integration.component
 
-import com.android.build.gradle.integration.common.category.DeviceTests
+import com.android.build.gradle.integration.common.category.ConnectedDeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -51,7 +51,7 @@ class NdkSanAngeles2Test {
     }
 
     @Test
-    @Category(DeviceTests.class)
+    @Category(ConnectedDeviceTests.class)
     void connectedCheck() {
         project.execute("connectedCheck");
     }
