@@ -25,7 +25,7 @@ import com.android.tools.rpclib.binary.ObjectTypeID;
 
 import java.io.IOException;
 
-class ObjectFactory {
+public class ObjectFactory {
     public enum Entries implements BinaryObjectCreator {
         ErrorEnum {
             @Override public BinaryObject create() {
