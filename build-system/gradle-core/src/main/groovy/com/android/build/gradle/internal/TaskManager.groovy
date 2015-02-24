@@ -1547,10 +1547,13 @@ abstract class TaskManager {
             project.files(
                     testCompileTask.classpath,
                     testCompileTask.outputs.files,
-                    variantData.processJavaResourcesTask.outputs.files,
+                    variantData.processJavaResourcesTask.outputs,
+                    testedVariantData.processJavaResourcesTask.outputs,
                     androidBuilder.bootClasspath.findAll {
                         it.name != SdkConstants.FN_FRAMEWORK_LIBRARY
                     },
+                    // Mockable JAR is last, to make sure you can shadow the classes with
+                    // dependencies.
                     createMockableJar.outputFile)
         }
 
@@ -1560,7 +1563,6 @@ abstract class TaskManager {
         for (ConfigurableReport report in [testTaskReports.junitXml, testTaskReports.html]) {
             report.destination = new File(report.destination, testedVariantData.name)
         }
-
         tasks.named(JavaPlugin.TEST_TASK_NAME) { Task test ->
             test.dependsOn runTestsTask
         }
