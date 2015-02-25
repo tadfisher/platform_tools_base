@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright (C) 2015 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,10 @@
  * limitations under the License.
  */
 
-def gradleVersion = System.env.CUSTOM_GRADLE ?: '1.2.0-alpha1'
+package com.android.build.gradle.integration.common.category;
 
-apply from: "commonLocalRepo.gradle"
-
-if (System.env.CUSTOM_REPO_2 != null) {
-    repositories {
-        maven { url System.env.CUSTOM_REPO_2 }
-    }
-}
-
-dependencies {
-    classpath "com.android.tools.build:gradle:$gradleVersion"
-    if (System.env.TEST_CLASSPATH_DEPENDENCY) {
-        classpath System.env.TEST_CLASSPATH_DEPENDENCY
-    }
+/**
+ * JUnit category used to label tests that requires a configured remote test runner.
+ */
+public interface RemoteDeviceTests {
 }

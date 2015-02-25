@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.category.ConnectedDeviceTests
+import com.android.build.gradle.integration.common.category.RemoteDeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.builder.model.AndroidProject
 import com.google.common.collect.ImmutableList
@@ -58,5 +59,11 @@ public class ParentLibsTest {
     @Category(ConnectedDeviceTests.class)
     void connectedCheck() {
         project.execute(ImmutableList.of("-p", "app"), "connectedCheck")
+    }
+
+    @Test
+    @Category(RemoteDeviceTests.class)
+    void deviceCheck() {
+        project.execute("deviceCheck")
     }
 }
