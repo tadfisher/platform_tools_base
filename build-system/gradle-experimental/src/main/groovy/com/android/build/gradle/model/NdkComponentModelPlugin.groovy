@@ -17,9 +17,9 @@
 
 package com.android.build.gradle.model
 
-import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.ProductFlavorCombo
-import com.android.build.gradle.internal.dsl.BuildType
+import com.android.build.gradle.internal.dsl.GradleBuildType
+import com.android.build.gradle.managed.ManagedBuildType
 import com.android.build.gradle.ndk.NdkExtension
 import com.android.build.gradle.ndk.internal.NdkConfiguration
 import com.android.build.gradle.ndk.internal.NdkExtensionConvention
@@ -41,6 +41,7 @@ import org.gradle.model.Model
 import org.gradle.model.Mutate
 import org.gradle.model.Path
 import org.gradle.model.RuleSource
+import org.gradle.model.collection.ManagedSet
 import org.gradle.nativeplatform.BuildTypeContainer
 import org.gradle.nativeplatform.FlavorContainer
 import org.gradle.nativeplatform.NativeLibraryBinarySpec
@@ -128,7 +129,7 @@ class NdkComponentModelPlugin implements Plugin<Project> {
         @Mutate
         void createNativeBuildTypes(
                 BuildTypeContainer nativeBuildTypes,
-                @Path("android.buildTypes") NamedDomainObjectContainer<BuildType> androidBuildTypes) {
+                @Path("android.buildTypes") ManagedSet<ManagedBuildType> androidBuildTypes) {
             for (def buildType : androidBuildTypes) {
                 nativeBuildTypes.maybeCreate(buildType.name)
             }

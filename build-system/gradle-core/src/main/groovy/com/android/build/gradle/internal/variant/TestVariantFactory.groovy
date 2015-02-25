@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.variant
 
 import com.android.annotations.NonNull
 import com.android.build.gradle.BaseExtension
-import com.android.build.gradle.internal.dsl.BuildType
+import com.android.build.gradle.internal.dsl.GradleBuildType
 import com.android.build.gradle.internal.dsl.GroupableProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.TestExtension
@@ -69,7 +69,7 @@ public class TestVariantFactory extends ApplicationVariantFactory {
 
     @Override
     public void createDefaultComponents(
-            @NonNull NamedDomainObjectContainer<BuildType> buildTypes,
+            @NonNull NamedDomainObjectContainer<GradleBuildType> buildTypes,
             @NonNull NamedDomainObjectContainer<GroupableProductFlavor> productFlavors,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs) {
         // don't call super as we don't want the default app version.

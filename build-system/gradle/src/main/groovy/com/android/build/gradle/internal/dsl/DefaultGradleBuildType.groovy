@@ -15,6 +15,7 @@
  */
 
 package com.android.build.gradle.internal.dsl
+
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable
 import com.android.annotations.VisibleForTesting
@@ -24,14 +25,16 @@ import com.android.builder.core.BuilderConstants
 import com.android.builder.core.DefaultBuildType
 import com.android.builder.model.BaseConfig
 import com.android.builder.model.ClassField
+import com.android.builder.model.SigningConfig
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.logging.Logger
 import org.gradle.internal.reflect.Instantiator
+
 /**
  * DSL object to configure build types.
  */
-public class BuildType extends DefaultBuildType implements Serializable {
+public class DefaultGradleBuildType extends DefaultBuildType implements GradleBuildType, Serializable {
     private static final long serialVersionUID = 1L
 
     @NonNull
@@ -43,7 +46,7 @@ public class BuildType extends DefaultBuildType implements Serializable {
 
     private Boolean useJack
 
-    public BuildType(@NonNull String name,
+    public DefaultGradleBuildType(@NonNull String name,
                         @NonNull Project project,
                         @NonNull Instantiator instantiator,
                         @NonNull Logger logger) {
@@ -54,7 +57,7 @@ public class BuildType extends DefaultBuildType implements Serializable {
     }
 
     @VisibleForTesting
-    BuildType(@NonNull String name,
+    DefaultGradleBuildType(@NonNull String name,
                  @NonNull Project project,
                  @NonNull Logger logger) {
         super(name)
@@ -151,7 +154,7 @@ public class BuildType extends DefaultBuildType implements Serializable {
      * full path to the files. They are identical except for enabling optimizations.
      */
     @NonNull
-    public BuildType proguardFile(Object proguardFile) {
+    public GradleBuildType proguardFile(Object proguardFile) {
         proguardFiles.add(project.file(proguardFile));
         return this;
     }
@@ -160,7 +163,7 @@ public class BuildType extends DefaultBuildType implements Serializable {
      * Adds new ProGuard configuration files.
      */
     @NonNull
-    public BuildType proguardFiles(Object... proguardFileArray) {
+    public GradleBuildType proguardFiles(Object... proguardFileArray) {
         proguardFiles.addAll(project.files(proguardFileArray).files);
         return this;
     }
@@ -169,7 +172,7 @@ public class BuildType extends DefaultBuildType implements Serializable {
      * Sets the ProGuard configuration files.
      */
     @NonNull
-    public BuildType setProguardFiles(Iterable<?> proguardFileIterable) {
+    public GradleBuildType setProguardFiles(Iterable<?> proguardFileIterable) {
         proguardFiles.clear();
         for (Object proguardFile : proguardFileIterable) {
             proguardFiles.add(project.file(proguardFile));
@@ -178,13 +181,13 @@ public class BuildType extends DefaultBuildType implements Serializable {
     }
 
     @NonNull
-    public BuildType consumerProguardFiles(Object... proguardFileArray) {
+    public GradleBuildType consumerProguardFiles(Object... proguardFileArray) {
         consumerProguardFiles.addAll(project.files(proguardFileArray).files);
         return this;
     }
 
     @NonNull
-    public BuildType setConsumerProguardFiles(Iterable<?> proguardFileIterable) {
+    public GradleBuildType setConsumerProguardFiles(Iterable<?> proguardFileIterable) {
         consumerProguardFiles.clear();
         for (Object proguardFile : proguardFileIterable) {
             consumerProguardFiles.add(project.file(proguardFile));

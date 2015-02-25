@@ -16,15 +16,14 @@
 package com.android.build.gradle
 
 import com.android.annotations.NonNull
-import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.internal.ExtraModelInfo
 import com.android.build.gradle.internal.SdkHandler
-import com.android.build.gradle.internal.dsl.BuildType
+import com.android.build.gradle.internal.dsl.GradleBuildType
 import com.android.build.gradle.internal.dsl.GroupableProductFlavor
-import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.builder.core.AndroidBuilder
+import com.android.builder.model.SigningConfig
 import groovy.transform.CompileStatic
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.internal.DefaultDomainObjectSet
@@ -48,7 +47,7 @@ public class TestExtension extends BaseExtension {
             @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull SdkHandler sdkHandler,
-            @NonNull NamedDomainObjectContainer<BuildType> buildTypes,
+            @NonNull NamedDomainObjectContainer<GradleBuildType> buildTypes,
             @NonNull NamedDomainObjectContainer<GroupableProductFlavor> productFlavors,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs,
             @NonNull ExtraModelInfo extraModelInfo,
