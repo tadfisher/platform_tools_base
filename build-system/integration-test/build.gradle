@@ -21,10 +21,10 @@ dependencies {
 // rebuilding the plugin.
 task testPrebuilts(type: Test)
 task connectedIntegrationTestPrebuilts(type: Test)
+task deviceIntegrationTestPrebuilts(type: Test)
 
 configure([test, testPrebuilts]) {
     environment("PROJECT_BUILD_DIR", project.buildDir)
-
 
 
     description =
@@ -37,7 +37,8 @@ configure([test, testPrebuilts]) {
     maxParallelForks = Runtime.runtime.availableProcessors() / 2
 
     useJUnit {
-        excludeCategories "com.android.build.gradle.integration.common.category.ConnectedDeviceTests"
+        excludeCategories "com.android.build.gradle.integration.common.category.ConnectedDeviceTests",
+                "com.android.build.gradle.integration.common.category.RemoteDeviceTests"
     }
 }
 
@@ -60,6 +61,43 @@ configure([connectedIntegrationTest, connectedIntegrationTestPrebuilts]) {
     }
 }
 
+task deviceIntegrationTest(type: Test)
+
+configure([deviceIntegrationTest, deviceIntegrationTestPrebuilts]) {
+    environment("PROJECT_BUILD_DIR", project.buildDir)
+
+    testClassesDir = sourceSets.test.output.classesDir
+    classpath = sourceSets.test.runtimeClasspath
+    description =
+            "Runs the project integration tests with device tests. This requires an SDK either " +
+                    "from the Android source tree, under out/..., or an env var ANDROID_HOME " +
+                    "and a configured remote test runner."
+    group = "verification"
+    systemProperties['jar.path'] = jar.archivePath
+    environment("CUSTOM_REPO", rootProject.file("../out/repo"))
+
+    useJUnit {
+        includeCategories "com.android.build.gradle.integration.common.category.RemoteDeviceTests"
+    }
+
+}
+
+task checkDeviceProvider() << {
+    if (System.getenv("TEST_CLASSPATH_DEPENDENCY") == null) {
+        throw new RuntimeException("No remote test runner classpath dependency st." +
+                " Need TEST_CLASSPATH_DEPENDENCY=com.example.foo:bar:1.0")
+    }
+    if (System.getenv("REMOTE_TEST_PROVIDER") == null) {
+        throw new RuntimeException("No remote test provider set. Need REMOTE_TEST_PROVIDER=foo")
+    }
+    if (System.getenv("REMOTE_TEST_PROVIDER") == null) {
+        throw new RuntimeException("No remote test provider set. Need REMOTE_TEST_PROVIDER=foo")
+    }
+}
+
+
+deviceIntegrationTest.dependsOn checkDeviceProvider
+deviceIntegrationTestPrebuilts.dependsOn checkDeviceProvider
 task performanceTest(type: Test) {
     environment("PROJECT_BUILD_DIR", project.buildDir)
 
@@ -82,6 +120,7 @@ task performanceTest(type: Test) {
 
 test.dependsOn ':publishLocal'
 connectedIntegrationTest.dependsOn ':publishLocal'
+deviceIntegrationTest.dependsOn ':publishLocal'
 performanceTest.dependsOn ':publishLocal'
 check.dependsOn performanceTest
 
