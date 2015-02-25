@@ -26,7 +26,7 @@ import org.gradle.internal.reflect.Instantiator;
 /**
  * Factory to create BuildType object using an {@link Instantiator} to add the DSL methods.
  */
-public class BuildTypeFactory implements NamedDomainObjectFactory<BuildType> {
+public class BuildTypeFactory implements NamedDomainObjectFactory<CoreBuildType> {
 
     @NonNull
     private final Instantiator instantiator;
@@ -45,7 +45,7 @@ public class BuildTypeFactory implements NamedDomainObjectFactory<BuildType> {
     }
 
     @Override
-    public BuildType create(String name) {
+    public CoreBuildType create(String name) {
         return instantiator.newInstance(BuildType.class, name, project, instantiator, logger);
     }
 }

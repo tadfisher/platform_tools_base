@@ -36,7 +36,7 @@ class LargeVariantAndroidComponentTest {
 
     @BeforeClass
     static void setUp() {
-        project.buildFile << new VariantBuildScriptGenerator(
+        VariantBuildScriptGenerator generator = new VariantBuildScriptGenerator(
                 buildTypes: VariantBuildScriptGenerator.LARGE_NUMBER,
                 productFlavors: VariantBuildScriptGenerator.LARGE_NUMBER,
                 """
@@ -56,7 +56,11 @@ class LargeVariantAndroidComponentTest {
                         \${productFlavors}
                     }
                 }
-                """.stripIndent()).createBuildScript()
+                """.stripIndent())
+        generator.addPostProcessor("buildTypes") { return (String) "create { name = \"$it\" }" }
+
+        project.buildFile << generator.createBuildScript()
+        project
         project.execute("help");
     }
 
