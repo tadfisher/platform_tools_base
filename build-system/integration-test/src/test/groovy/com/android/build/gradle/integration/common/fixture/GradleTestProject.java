@@ -32,6 +32,7 @@ import com.android.build.gradle.integration.common.utils.JacocoAgent;
 import com.android.build.gradle.integration.common.utils.SdkHelper;
 import com.android.builder.model.AndroidProject;
 import com.android.io.StreamException;
+import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
 import com.google.common.base.Charsets;
@@ -85,7 +86,9 @@ public class GradleTestProject implements TestRule {
     public static final String GRADLE_TEST_VERSION = "2.2.1";
     public static final String GRADLE_EXP_TEST_VERSION = "2.4-20150224230024+0000";
 
-    private static final String ANDROID_GRADLE_VERSION = "1.2.0-alpha1";
+    @Nullable
+    public static final String REMOTE_TEST_PROVIDER = System.getenv("REMOTE_TEST_PROVIDER");
+
     private static final String COMMON_HEADER = "commonHeader.gradle";
     private static final String COMMON_LOCAL_REPO = "commonLocalRepo.gradle";
     private static final String COMMON_BUILD_SCRIPT = "commonBuildScript.gradle";
@@ -93,7 +96,6 @@ public class GradleTestProject implements TestRule {
     private static final String DEFAULT_TEST_PROJECT_NAME = "project";
 
     public static class Builder {
-        private static final File SAMPLE_PROJECT_DIR = new File("samples");
         private static final File TEST_PROJECT_DIR = new File("test-projects");
 
         @Nullable
@@ -455,14 +457,10 @@ public class GradleTestProject implements TestRule {
      * Returns a string that contains the gradle buildscript content
      */
     public String getGradleBuildscript() {
-        return "buildscript {\n" +
-                "    repositories {\n" +
-                "        maven { url '" + getRepoDir().toString() + "' }\n" +
-                "    }\n" +
-                "    dependencies {\n" +
-                "        classpath \"com.android.tools.build:gradle" + (experimentalMode ? "-experimental" : "") + ":" + ANDROID_GRADLE_VERSION + "\"\n" +
-                "    }\n" +
-                "}\n";
+        String buildScriptName = experimentalMode ? COMMON_BUILD_SCRIPT_EXP : COMMON_BUILD_SCRIPT;
+        return "/* Generated build file */\n" +
+                    "apply from: '../" + COMMON_HEADER + "'\n" +
+                    "buildscript { apply from: '../" + buildScriptName + "', to: buildscript }\n";
     }
 
     /**
@@ -703,6 +701,7 @@ public class GradleTestProject implements TestRule {
 
     private static List<String> getDebugJvmArguments() {
         List<String> jvmArguments = new ArrayList<String>();
+        jvmArguments.add("-XX:MaxPermSize=1024m");
         String debugIntegrationTest = System.getenv("DEBUG_INNER_TEST");
         if (!Strings.isNullOrEmpty(debugIntegrationTest)) {
             jvmArguments.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005");
