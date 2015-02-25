@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.category.ConnectedDeviceTests
+import com.android.build.gradle.integration.common.category.RemoteDeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
@@ -140,9 +141,14 @@ class AndroidTestResourcesTest {
     @Test
     @Category(ConnectedDeviceTests.class)
     public void "check test layout can be used in device tests"() {
-        appProject.execute("connectedAndroidTest")
+        appProject.execute("connectedCheck")
     }
 
+    @Test
+    @Category(RemoteDeviceTests.class)
+    public void "check test layout can be used in device tests (remote)"() {
+        appProject.execute("deviceCheck")
+    }
 
     private void checkLayoutInR(GradleTestProject fixture) {
         def rFile = fixture.file(Joiner.on(File.separatorChar).join(

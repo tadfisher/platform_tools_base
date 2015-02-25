@@ -17,10 +17,12 @@
 package com.android.build.gradle.integration.ndk
 
 import com.android.build.gradle.integration.common.category.ConnectedDeviceTests
+import com.android.build.gradle.integration.common.category.RemoteDeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.ClassRule
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.experimental.categories.Category
 
@@ -50,7 +52,14 @@ class NdkLibPrebuiltsTest {
 
     @Test
     @Category(ConnectedDeviceTests.class)
-    void connectedCheck() {
-        project.execute("connectedCheck")
+    void connnectedCheck() {
+        project.execute("connectedCheck");
+    }
+
+    @Test
+    @Ignore
+    @Category(RemoteDeviceTests.class)
+    void deviceCheck() {
+        project.execute("deviceCheck")
     }
 }
