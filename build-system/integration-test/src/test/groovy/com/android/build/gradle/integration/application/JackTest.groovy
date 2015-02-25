@@ -19,6 +19,7 @@
 package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.category.ConnectedDeviceTests
+import com.android.build.gradle.integration.common.category.RemoteDeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.google.common.collect.ImmutableList
 import org.gradle.tooling.BuildException
@@ -80,16 +81,37 @@ class JackTest {
     }
 
     @Test
+    @Category(RemoteDeviceTests.class)
+    void "basic deviceCheck"() {
+        basic.execute(JACK_OPTIONS, "deviceCheck")
+    }
+
+
+    @Test
     @Category(ConnectedDeviceTests.class)
     void "minify connectedCheck"() {
         minify.execute(JACK_OPTIONS, "connectedCheck")
     }
 
     @Test
+    @Category(RemoteDeviceTests.class)
+    void "minify deviceCheck"() {
+        minify.execute(JACK_OPTIONS, "deviceCheck")
+    }
+
+
+    @Test
     @Category(ConnectedDeviceTests.class)
     void "multiDex connectedCheck"() {
         multiDex.execute(JACK_OPTIONS, "connectedCheck")
     }
+
+    @Test
+    @Category(RemoteDeviceTests.class)
+    void "multiDex deviceCheck"() {
+        multiDex.execute(JACK_OPTIONS, "deviceCheck")
+    }
+
 
     @Test
     void "minify unitTests with Javac"() {
