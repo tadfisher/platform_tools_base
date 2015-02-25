@@ -18,9 +18,9 @@ package com.android.sdklib.internal.repository.packages;
 
 import com.android.sdklib.repository.FullRevision;
 
-import java.util.Arrays;
-
 import junit.framework.TestCase;
+
+import java.util.Arrays;
 
 public class FullRevisionTest extends TestCase {
 
@@ -50,6 +50,21 @@ public class FullRevisionTest extends TestCase {
         assertEquals(p, FullRevision.parseRevision("5.0.0 rc6"));
         assertEquals("[5, 0, 0]",    Arrays.toString(p.toIntArray(false /*includePreview*/)));
         assertEquals("[5, 0, 0, 6]", Arrays.toString(p.toIntArray(true  /*includePreview*/)));
+
+        p = new FullRevision(1, 2, 0, 1, "-", FullRevision.PreviewType.ALPHA);
+        assertEquals(1, p.getMajor());
+        assertEquals(2, p.getMinor());
+        assertEquals(FullRevision.IMPLICIT_MICRO_REV, p.getMicro());
+        assertEquals(1, p.getPreview());
+        assertTrue(p.isPreview());
+        assertEquals("1.2-alpha1", p.toShortString());
+        assertEquals(p, FullRevision.parseRevision("1.2-alpha1"));
+        assertEquals("1.2.0-alpha1", p.toString());
+        assertEquals(p, FullRevision.parseRevision("1.2.0-alpha1"));
+        assertFalse(p.equals(FullRevision.parseRevision("1.2.0-rc1")));
+        assertTrue(p.compareTo(FullRevision.parseRevision("1.2.0-rc1")) < 0);
+        assertEquals("[1, 2, 0]",    Arrays.toString(p.toIntArray(false /*includePreview*/)));
+        assertEquals("[1, 2, 0, 1]", Arrays.toString(p.toIntArray(true  /*includePreview*/)));
 
         p = new FullRevision(6, 7, 0);
         assertEquals(6, p.getMajor());
