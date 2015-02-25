@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright (C) 2015 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,10 @@
  * limitations under the License.
  */
 
-ext {
-    buildToolsVersion = [System.env.CUSTOM_BUILDTOOLS, project.properties["CUSTOM_BUILDTOOLS"], '22.0.1'].find()
-    latestCompileSdk = 21
+package com.android.build.gradle.integration.common.category;
 
-    useJack = System.env.CUSTOM_JACK || project.properties["CUSTOM_JACK"]
-}
-
-def remoteTestProvider = System.env.REMOTE_TEST_PROVIDER
-if (remoteTestProvider != null) {
-    plugins.withId('android') {
-        apply plugin: remoteTestProvider
-    }
+/**
+ * JUnit category used to label tests that requires a configured remote test runner.
+ */
+public interface RemoteDeviceTests {
 }

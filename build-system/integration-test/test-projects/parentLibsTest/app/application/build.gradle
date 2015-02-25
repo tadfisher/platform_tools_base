@@ -1,3 +1,4 @@
+apply from: "../../../commonHeader.gradle"
 apply plugin: 'com.android.application'
 
 android {
