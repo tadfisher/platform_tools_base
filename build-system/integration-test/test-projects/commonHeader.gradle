@@ -20,3 +20,10 @@ ext {
 
     useJack = System.env.CUSTOM_JACK || project.properties["CUSTOM_JACK"]
 }
+
+def remoteTestProvider = System.env.REMOTE_TEST_PROVIDER
+if (remoteTestProvider != null) {
+    plugins.withId('android') {
+        apply plugin: remoteTestProvider
+    }
+}
