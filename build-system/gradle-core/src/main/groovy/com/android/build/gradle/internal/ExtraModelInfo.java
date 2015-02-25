@@ -24,7 +24,7 @@ import static com.android.ide.common.blame.output.GradleMessageRewriter.ErrorFor
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.api.BaseVariant;
-import com.android.build.gradle.internal.dsl.BuildType;
+import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.model.ArtifactMetaDataImpl;
 import com.android.build.gradle.internal.model.JavaArtifactImpl;
@@ -176,7 +176,7 @@ public class ExtraModelInfo {
     }
 
     public void registerBuildTypeSourceProvider(@NonNull String name,
-            @NonNull BuildType buildType,
+            @NonNull CoreBuildType buildType,
             @NonNull SourceProvider sourceProvider) {
         if (extraArtifactMap.get(name) == null) {
             throw new IllegalArgumentException(

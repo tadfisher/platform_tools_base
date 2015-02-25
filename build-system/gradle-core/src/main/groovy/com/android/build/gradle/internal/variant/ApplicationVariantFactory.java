@@ -20,14 +20,11 @@ import static com.android.builder.core.BuilderConstants.DEBUG;
 import static com.android.builder.core.BuilderConstants.RELEASE;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.ApplicationVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
-import com.android.build.gradle.internal.BuildTypeData;
-import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantModel;
 import com.android.build.gradle.internal.api.ApkVariantImpl;
@@ -35,9 +32,8 @@ import com.android.build.gradle.internal.api.ApkVariantOutputImpl;
 import com.android.build.gradle.internal.api.ApplicationVariantImpl;
 import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.dsl.BuildType;
+import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.GroupableProductFlavor;
-import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.model.FilterDataImpl;
 import com.android.builder.core.AndroidBuilder;
@@ -182,7 +178,7 @@ public class ApplicationVariantFactory implements VariantFactory {
 
     @Override
     public void createDefaultComponents(
-            @NonNull NamedDomainObjectContainer<BuildType> buildTypes,
+            @NonNull NamedDomainObjectContainer<CoreBuildType> buildTypes,
             @NonNull NamedDomainObjectContainer<GroupableProductFlavor> productFlavors,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs) {
         // must create signing config first so that build type 'debug' can be initialized

@@ -29,12 +29,13 @@ import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.coverage.JacocoPlugin
 import com.android.build.gradle.internal.dsl.BuildType
+import com.android.build.gradle.internal.dsl.CoreBuildType
 import com.android.build.gradle.internal.dsl.BuildTypeFactory
 import com.android.build.gradle.internal.dsl.GroupableProductFlavor
 import com.android.build.gradle.internal.dsl.GroupableProductFlavorFactory
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.dsl.SigningConfigFactory
-import com.android.build.gradle.internal.model.DependenciesImpl
+import com.android.build.gradle.internal.model.DefaultAndroidConfig
 import com.android.build.gradle.internal.model.ModelBuilder
 import com.android.build.gradle.internal.process.GradleJavaProcessExecutor
 import com.android.build.gradle.internal.process.GradleProcessExecutor
@@ -45,7 +46,7 @@ import com.android.build.gradle.tasks.JillTask
 import com.android.build.gradle.tasks.PreDex
 import com.android.builder.Version
 import com.android.builder.core.AndroidBuilder
-import com.android.builder.core.DefaultBuildType
+import com.android.builder.core.BuilderConstants
 import com.android.builder.internal.compiler.JackConversionCache
 import com.android.builder.internal.compiler.PreDexCache
 import com.android.builder.profile.ExecutionType
@@ -64,18 +65,14 @@ import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.plugins.JavaPlugin
-import org.gradle.api.tasks.TaskContainer
 import org.gradle.internal.reflect.Instantiator
 import org.gradle.tooling.BuildException
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 
 import java.security.MessageDigest
-import java.util.jar.Attributes
 import java.util.jar.Manifest
 import java.util.regex.Pattern
 
-import static com.android.builder.core.BuilderConstants.DEBUG
-import static com.android.builder.core.BuilderConstants.RELEASE
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES
 import static java.io.File.separator
 
@@ -307,7 +304,7 @@ public abstract class BasePlugin {
     }
 
     private void createExtension() {
-        def buildTypeContainer = project.container(BuildType,
+        def buildTypeContainer = project.container(CoreBuildType,
                 new BuildTypeFactory(instantiator, project, project.getLogger()))
         def productFlavorContainer = project.container(GroupableProductFlavor,
                 new GroupableProductFlavorFactory(instantiator, project, project.getLogger()))
@@ -343,16 +340,23 @@ public abstract class BasePlugin {
 
         // Register a builder for the custom tooling model
         ModelBuilder modelBuilder = new ModelBuilder(
-                androidBuilder, variantManager, taskManager, extension, extraModelInfo, isLibrary())
+                androidBuilder,
+                variantManager,
+                taskManager,
+                new DefaultAndroidConfig(extension, signingConfigContainer),
+                extraModelInfo,
+                isLibrary())
         registry.register(modelBuilder);
 
         // map the whenObjectAdded callbacks on the containers.
         signingConfigContainer.whenObjectAdded { SigningConfig signingConfig ->
-            variantManager.addSigningConfig((SigningConfig) signingConfig)
+            variantManager.addSigningConfig(signingConfig)
         }
 
-        buildTypeContainer.whenObjectAdded { DefaultBuildType buildType ->
-            variantManager.addBuildType((BuildType) buildType)
+        buildTypeContainer.whenObjectAdded { BuildType buildType ->
+            SigningConfig signingConfig = signingConfigContainer.findByName(BuilderConstants.DEBUG)
+            buildType.init(signingConfig)
+            variantManager.addBuildType(buildType)
         }
 
         productFlavorContainer.whenObjectAdded { GroupableProductFlavor productFlavor ->
