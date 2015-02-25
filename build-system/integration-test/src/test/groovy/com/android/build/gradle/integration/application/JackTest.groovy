@@ -80,9 +80,21 @@ class JackTest {
     }
 
     @Test
+    @Category(RemoteDeviceTests.class)
+    void "basic deviceCheck"() {
+        basic.execute(JACK_OPTIONS, "deviceCheck")
+    }
+
+    @Test
     @Category(ConnectedDeviceTests.class)
     void "multiDex connectedCheck"() {
         multiDex.execute(JACK_OPTIONS, "connectedCheck")
+    }
+
+    @Test
+    @Category(RemoteDeviceTests.class)
+    void "multiDex deviceCheck"() {
+        multiDex.execute(JACK_OPTIONS, "deviceCheck")
     }
 
     @Test
