@@ -124,37 +124,45 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      */
     private final VariantConfiguration mTestedConfig;
 
-    /** An optional output that is only valid if the type is Type#LIBRARY so that the test
-     * for the library can use the library as if it was a normal dependency. */
+    /**
+     * An optional output that is only valid if the type is Type#LIBRARY so that the test
+     * for the library can use the library as if it was a normal dependency.
+     */
     private LibraryDependency mOutput;
 
     @NonNull
     private ProductFlavor mMergedFlavor;
 
     /**
-     * External/Jar dependencies
+     * External/Jar dependencies.
      */
     private final Set<JarDependency> mExternalJars = Sets.newHashSet();
 
     /**
-     * Local Jar dependencies
+     * Local Jar dependencies.
      */
     private final Set<JarDependency> mLocalJars = Sets.newHashSet();
 
-    /** List of direct library dependencies. Each object defines its own dependencies. */
+    /**
+     * List of direct library dependencies. Each object defines its own dependencies.
+     */
     private final List<LibraryDependency> mDirectLibraries = Lists.newArrayList();
 
-    /** list of all library dependencies in a flat list.
-     * The order is based on the order needed to call aapt: earlier libraries override resources
-     * of latter ones. */
+    /**
+     * List of all library dependencies in a flat list.
+     *
+     * <p>The order is based on the order needed to call aapt: earlier libraries override resources
+     * of latter ones.
+     */
     private final List<LibraryDependency> mFlatLibraries = Lists.newArrayList();
 
     /**
-     * Variant-specific build Config fields
+     * Variant-specific build Config fields.
      */
     private final Map<String, ClassField> mBuildConfigFields = Maps.newTreeMap();
+
     /**
-     * Variant-specific res values
+     * Variant-specific res values.
      */
     private final Map<String, ClassField> mResValues = Maps.newTreeMap();
 
@@ -709,6 +717,11 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         return this;
     }
 
+    @Nullable
+    public LibraryDependency getOutput() {
+        return mOutput;
+    }
+
     @NonNull
     public D getDefaultConfig() {
         return mDefaultConfig;
@@ -774,7 +787,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      */
     @NonNull
     public List<LibraryDependency> getAllLibraries() {
-        return mFlatLibraries;
+        return Lists.newArrayList(mFlatLibraries);
     }
 
     @NonNull
