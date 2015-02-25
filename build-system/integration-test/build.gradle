@@ -29,6 +29,7 @@ def testEnvironment = [
 // rebuilding the plugin.
 task testPrebuilts(type: Test)
 task connectedIntegrationTestPrebuilts(type: Test)
+task remoteDeviceIntegrationTestPrebuilts(type: Test)
 
 configure([test, testPrebuilts]) {
     description =
@@ -63,6 +64,45 @@ configure([connectedIntegrationTest, connectedIntegrationTestPrebuilts]) {
     }
 }
 
+task remoteDeviceIntegrationTest(type: Test)
+
+configure([remoteDeviceIntegrationTest, remoteDeviceIntegrationTestPrebuilts]) {
+
+    testClassesDir = sourceSets.test.output.classesDir
+    classpath = sourceSets.test.runtimeClasspath
+    description =
+            "Runs the project integration tests with device tests. This requires an SDK either " +
+                    "from the Android source tree, under out/..., or an env var ANDROID_HOME " +
+                    "and a configured remote test runner."
+    group = "verification"
+    systemProperties['jar.path'] = jar.archivePath
+    environment = testEnvironment
+
+    forkEvery = 1
+    maxParallelForks = Runtime.runtime.availableProcessors() / 2
+
+    useJUnit {
+        includeCategories "com.android.build.gradle.integration.common.category.RemoteDeviceTests"
+    }
+
+}
+
+task checkDeviceProvider() << {
+    if (System.getenv("TEST_CLASSPATH_DEPENDENCY") == null) {
+        throw new RuntimeException("No remote test runner classpath dependency st." +
+                " Need TEST_CLASSPATH_DEPENDENCY=com.example.foo:bar:1.0")
+    }
+    if (System.getenv("REMOTE_TEST_PROVIDER") == null) {
+        throw new RuntimeException("No remote test provider set. Need REMOTE_TEST_PROVIDER=foo")
+    }
+    if (System.getenv("ADDITIONAL_TEST_CUSTOM_REPO") == null) {
+        System.err.println("ADDITIONAL_TEST_CUSTOM_REPO not set.")
+    }
+}
+
+
+remoteDeviceIntegrationTest.dependsOn checkDeviceProvider
+remoteDeviceIntegrationTestPrebuilts.dependsOn checkDeviceProvider
 task performanceTest(type: Test) {
     include "com/android/build/gradle/integration/performance/**"
 
@@ -83,6 +123,7 @@ task performanceTest(type: Test) {
 
 test.dependsOn ':publishLocal'
 connectedIntegrationTest.dependsOn ':publishLocal'
+remoteDeviceIntegrationTest.dependsOn ':publishLocal'
 performanceTest.dependsOn ':publishLocal'
 check.dependsOn performanceTest
 

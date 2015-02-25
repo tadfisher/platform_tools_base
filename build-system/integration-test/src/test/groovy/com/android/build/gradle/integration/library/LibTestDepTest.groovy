@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.library
 
 import com.android.build.gradle.integration.common.category.ConnectedDeviceTests
+import com.android.build.gradle.integration.common.category.RemoteDeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.ModelHelper
 import com.android.builder.model.AndroidArtifact
@@ -27,6 +28,7 @@ import com.android.builder.model.Variant
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.ClassRule
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.experimental.categories.Category
 
@@ -92,5 +94,12 @@ class LibTestDepTest {
     @Category(ConnectedDeviceTests.class)
     void connectedCheck() {
         project.execute("connectedCheck")
+    }
+
+    @Test
+    @Ignore
+    @Category(RemoteDeviceTests.class)
+    void deviceCheck() {
+        project.execute("deviceCheck")
     }
 }

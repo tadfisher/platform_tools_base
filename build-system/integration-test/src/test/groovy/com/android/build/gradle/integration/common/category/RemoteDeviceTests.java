@@ -14,18 +14,10 @@
  * limitations under the License.
  */
 
-repositories {
-    if (System.env.CUSTOM_REPO != null) {
-        maven { url System.env.CUSTOM_REPO }
-    } else if (System.env.USE_EXTERNAL_REPO) {
-        jcenter()
-    } else {
-        throw new RuntimeException("Neither CUSTOM_REPO nor USE_EXTERNAL_REPO set.")
-    }
+package com.android.build.gradle.integration.common.category;
 
-    if (System.env.ADDITIONAL_TEST_CUSTOM_REPO != null) {
-        maven { url System.env.ADDITIONAL_TEST_CUSTOM_REPO }
-    }
+/**
+ * JUnit category used to label tests that requires a configured remote test runner.
+ */
+public interface RemoteDeviceTests {
 }
-
-

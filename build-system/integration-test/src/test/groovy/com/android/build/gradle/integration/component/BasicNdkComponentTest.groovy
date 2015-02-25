@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.component
 
 import com.android.build.gradle.integration.common.category.ConnectedDeviceTests
+import com.android.build.gradle.integration.common.category.RemoteDeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import org.junit.AfterClass
@@ -107,7 +108,13 @@ model {
 
     @Test
     @Category(ConnectedDeviceTests.class)
-    public void connnectedAndroidTest() {
-        project.execute("connectedAndroidTest");
+    public void connnectedCheck() {
+        project.execute("connectedCheck");
+    }
+
+    @Test
+    @Category(RemoteDeviceTests.class)
+    void deviceCheck() {
+        project.execute("deviceCheck")
     }
 }

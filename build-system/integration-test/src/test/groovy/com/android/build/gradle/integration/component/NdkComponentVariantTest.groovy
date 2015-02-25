@@ -17,11 +17,13 @@
 package com.android.build.gradle.integration.component
 
 import com.android.build.gradle.integration.common.category.ConnectedDeviceTests
+import com.android.build.gradle.integration.common.category.RemoteDeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.ClassRule
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.experimental.categories.Category
 
@@ -139,5 +141,12 @@ model {
     @Category(ConnectedDeviceTests.class)
     public void connectedAndroidTest() {
         project.execute("connectedAndroidTestArmDebug");
+    }
+
+    @Test
+    @Category(RemoteDeviceTests.class)
+    @Ignore("Device provider doesn't work with experimental plugin yet.")
+    public void deviceTest() {
+        project.execute("${GradleTestProject.REMOTE_TEST_PROVIDER}AndroidTestX86Debug")
     }
 }
