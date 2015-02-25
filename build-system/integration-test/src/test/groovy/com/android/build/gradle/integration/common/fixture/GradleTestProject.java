@@ -81,7 +81,7 @@ public class GradleTestProject implements TestRule {
 
     public static final int DEFAULT_COMPILE_SDK_VERSION = 21;
     public static final String DEFAULT_BUILD_TOOL_VERSION = "22.0.1";
-
+    public static final String REMOTE_TEST_PROVIDER = System.getenv().get("REMOTE_TEST_PROVIDER");
     public static final String GRADLE_TEST_VERSION = "2.2.1";
     public static final String GRADLE_EXP_TEST_VERSION = "2.4-20150322230018+0000";
 

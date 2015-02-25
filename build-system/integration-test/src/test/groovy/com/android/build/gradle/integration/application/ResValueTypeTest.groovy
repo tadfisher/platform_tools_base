@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.category.ConnectedDeviceTests
+import com.android.build.gradle.integration.common.category.RemoteDeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
@@ -26,6 +27,8 @@ import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
 import org.junit.experimental.categories.Category
+
+import java.rmi.Remote
 
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertTrue
@@ -134,5 +137,11 @@ android {
     @Category(ConnectedDeviceTests.class)
     void "check resValue is treated as string"() {
         project.execute("clean", "connectedAndroidTest")
+    }
+
+    @Test
+    @Category(RemoteDeviceTests.class)
+    void "check resValue is treated as string remote"() {
+        project.execute("clean", "deviceCheck")
     }
 }
