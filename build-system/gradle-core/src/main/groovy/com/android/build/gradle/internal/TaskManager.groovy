@@ -32,7 +32,6 @@ import com.android.build.gradle.internal.dependency.ManifestDependencyImpl
 import com.android.build.gradle.internal.dependency.SymbolFileProviderImpl
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.dsl.AbiSplitOptions
-import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.publishing.ApkPublishArtifact
 import com.android.build.gradle.internal.publishing.MappingPublishArtifact
 import com.android.build.gradle.internal.publishing.MetadataPublishArtifact
@@ -98,6 +97,7 @@ import com.android.builder.dependency.LibraryDependency
 import com.android.builder.internal.testing.SimpleTestCallable
 import com.android.builder.model.ApiVersion
 import com.android.builder.model.ProductFlavor
+import com.android.builder.model.SigningConfig
 import com.android.builder.model.SourceProvider
 import com.android.builder.testing.ConnectedDeviceProvider
 import com.android.builder.testing.TestData
@@ -178,7 +178,7 @@ abstract class TaskManager {
 
     public static final String ANDROID_GROUP = "Android"
 
-    final Map<SigningConfig, ValidateSigningTask> validateSigningTaskMap = [:]
+    final Map<String, ValidateSigningTask> validateSigningTaskMap = [:]
 
     protected Project project
 
@@ -634,7 +634,7 @@ abstract class TaskManager {
 
         renderscriptTask.supportMode = config.renderscriptSupportModeEnabled
         renderscriptTask.ndkMode = ndkMode
-        renderscriptTask.debugBuild = config.buildType.renderscriptDebuggable
+        renderscriptTask.debugBuild = config.buildType.isRenderscriptDebuggable()
         renderscriptTask.optimLevel = config.buildType.renderscriptOptimLevel
 
         conventionMapping(renderscriptTask).map("sourceDirs") { config.renderscriptSourceList }
@@ -939,10 +939,10 @@ abstract class TaskManager {
             }
 
             conventionMapping(processResources).map("type") { config.type }
-            conventionMapping(processResources).map("debuggable") { config.buildType.debuggable }
+            conventionMapping(processResources).map("debuggable") { config.buildType.isDebuggable() }
             conventionMapping(processResources).map("aaptOptions") { getExtension().aaptOptions }
             conventionMapping(processResources).
-                    map("pseudoLocalesEnabled") { config.buildType.pseudoLocalesEnabled }
+                    map("pseudoLocalesEnabled") { config.buildType.isPseudoLocalesEnabled() }
 
             conventionMapping(processResources).map("resourceConfigs") {
                 return config.mergedFlavor.resourceConfigurations
@@ -988,8 +988,7 @@ abstract class TaskManager {
         variantOutputData.packageSplitResourcesTask.densitySplits = densityFilters
         variantOutputData.packageSplitResourcesTask.languageSplits = languageFilters
         variantOutputData.packageSplitResourcesTask.outputBaseName = config.baseName
-        variantOutputData.packageSplitResourcesTask.signingConfig =
-                (SigningConfig) config.signingConfig
+        variantOutputData.packageSplitResourcesTask.signingConfig = config.signingConfig
         variantOutputData.packageSplitResourcesTask.outputDirectory =
                 new File("$project.buildDir/${FD_INTERMEDIATES}/splits/${config.dirName}")
         variantOutputData.packageSplitResourcesTask.androidBuilder = androidBuilder
@@ -1066,8 +1065,7 @@ abstract class TaskManager {
         variantOutputData.packageSplitAbiTask.inputFiles = generateSplitAbiRes.getOutputFiles()
         variantOutputData.packageSplitAbiTask.splits = filters
         variantOutputData.packageSplitAbiTask.outputBaseName = config.baseName
-        variantOutputData.packageSplitAbiTask.signingConfig =
-                (SigningConfig) config.signingConfig
+        variantOutputData.packageSplitAbiTask.signingConfig = config.signingConfig
         variantOutputData.packageSplitAbiTask.outputDirectory =
                 new File("$project.buildDir/${FD_INTERMEDIATES}/splits/${config.dirName}")
         variantOutputData.packageSplitAbiTask.androidBuilder = androidBuilder
@@ -1078,7 +1076,7 @@ abstract class TaskManager {
             getJniFolders(variantData);
         }
         conventionMapping(variantOutputData.packageSplitAbiTask).
-                map("jniDebuggable") { config.buildType.jniDebuggable }
+                map("jniDebuggable") { config.buildType.isJniDebuggable() }
         conventionMapping(variantOutputData.packageSplitAbiTask).
                 map("packagingOptions") { getExtension().packagingOptions }
 
@@ -1345,7 +1343,7 @@ abstract class TaskManager {
         conventionMapping(ndkCompile).map("ndkConfig") { variantConfig.ndkConfig }
 
         conventionMapping(ndkCompile).map("debuggable") {
-            variantConfig.buildType.jniDebuggable
+            variantConfig.buildType.isJniDebuggable()
         }
 
         conventionMapping(ndkCompile).map("objFolder") {
@@ -1530,7 +1528,7 @@ abstract class TaskManager {
     private void createLintVitalTask(@NonNull ApkVariantData variantData) {
         assert getExtension().lintOptions.checkReleaseBuilds
         // TODO: re-enable with Jack when possible
-        if (!variantData.variantConfiguration.buildType.debuggable &&
+        if (!variantData.variantConfiguration.buildType.isDebuggable() &&
                 !variantData.variantConfiguration.useJack) {
             String variantName = variantData.variantConfiguration.fullName
             def capitalizedVariantName = variantName.capitalize()
@@ -2460,7 +2458,7 @@ abstract class TaskManager {
         if (project.hasProperty(PROPERTY_APK_LOCATION)) {
             apkLocation = project.getProperties().get(PROPERTY_APK_LOCATION)
         }
-        SigningConfig sc = (SigningConfig) config.signingConfig
+        SigningConfig sc = config.signingConfig
 
         boolean multiOutput = variantData.outputs.size() > 1
 
@@ -2552,11 +2550,11 @@ abstract class TaskManager {
                 }
                 return config.supportedAbis
             }
-            conventionMapping(packageApp).map("jniDebugBuild") { config.buildType.jniDebuggable }
+            conventionMapping(packageApp).map("jniDebugBuild") { config.buildType.isJniDebuggable() }
 
             conventionMapping(packageApp).map("signingConfig") { sc }
             if (sc != null) {
-                ValidateSigningTask validateSigningTask = validateSigningTaskMap.get(sc)
+                ValidateSigningTask validateSigningTask = validateSigningTaskMap.get(sc.name)
                 if (validateSigningTask == null) {
                     validateSigningTask =
                             project.tasks.create("validate${sc.name.capitalize()}Signing",
@@ -2564,7 +2562,7 @@ abstract class TaskManager {
                     validateSigningTask.androidBuilder = androidBuilder
                     validateSigningTask.signingConfig = sc
 
-                    validateSigningTaskMap.put(sc, validateSigningTask)
+                    validateSigningTaskMap.put(sc.name, validateSigningTask)
                 }
 
                 packageApp.dependsOn validateSigningTask

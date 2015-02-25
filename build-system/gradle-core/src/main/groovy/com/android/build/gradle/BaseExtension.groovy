@@ -29,17 +29,17 @@ import com.android.build.gradle.internal.coverage.JacocoExtension
 import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.dsl.AdbOptions
 import com.android.build.gradle.internal.dsl.AndroidSourceSetFactory
-import com.android.build.gradle.internal.dsl.BuildType
+import com.android.build.gradle.internal.dsl.GradleBuildType
 import com.android.build.gradle.internal.dsl.DexOptions
 import com.android.build.gradle.internal.dsl.GroupableProductFlavor
 import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.dsl.PackagingOptions
 import com.android.build.gradle.internal.dsl.ProductFlavor
-import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.dsl.Splits
 import com.android.build.gradle.internal.dsl.TestOptions
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.BuilderConstants
+import com.android.builder.model.SigningConfig
 import com.android.builder.model.SourceProvider
 import com.android.builder.testing.api.DeviceProvider
 import com.android.builder.testing.api.TestServer
@@ -103,7 +103,7 @@ public abstract class BaseExtension {
     final NamedDomainObjectContainer<GroupableProductFlavor> productFlavors
 
     /** Build types used by this project. */
-    final NamedDomainObjectContainer<BuildType> buildTypes
+    final NamedDomainObjectContainer<GradleBuildType> buildTypes
 
     /** Signing configs used by this project. */
     final NamedDomainObjectContainer<SigningConfig> signingConfigs
@@ -146,7 +146,7 @@ public abstract class BaseExtension {
             @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull SdkHandler sdkHandler,
-            @NonNull NamedDomainObjectContainer<BuildType> buildTypes,
+            @NonNull NamedDomainObjectContainer<GradleBuildType> buildTypes,
             @NonNull NamedDomainObjectContainer<GroupableProductFlavor> productFlavors,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs,
             @NonNull ExtraModelInfo extraModelInfo,
@@ -290,7 +290,7 @@ public abstract class BaseExtension {
     /**
      * Configures the build types.
      */
-    void buildTypes(Action<? super NamedDomainObjectContainer<BuildType>> action) {
+    void buildTypes(Action<? super NamedDomainObjectContainer<GradleBuildType>> action) {
         checkWritability()
         action.execute(buildTypes)
     }
@@ -504,7 +504,7 @@ public abstract class BaseExtension {
 
     public void registerBuildTypeSourceProvider(
             @NonNull String name,
-            @NonNull BuildType buildType,
+            @NonNull GradleBuildType buildType,
             @NonNull SourceProvider sourceProvider) {
         extraModelInfo.registerBuildTypeSourceProvider(name, buildType, sourceProvider)
     }

@@ -15,10 +15,10 @@
  */
 
 package com.android.build.gradle.internal.model
+
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable
 import com.android.build.OutputFile
-import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.api.ApkOutputFile
 import com.android.build.gradle.internal.BuildTypeData
 import com.android.build.gradle.internal.ExtraModelInfo
@@ -52,7 +52,6 @@ import com.google.common.collect.ImmutableCollection
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.Lists
 import groovy.transform.CompileStatic
-import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 import org.gradle.tooling.provider.model.ToolingModelBuilder
 
@@ -60,6 +59,7 @@ import java.util.jar.Attributes
 import java.util.jar.Manifest
 
 import static com.android.builder.model.AndroidProject.ARTIFACT_MAIN
+
 /**
  * Builder for the custom Android model.
  */
@@ -68,7 +68,7 @@ public class ModelBuilder implements ToolingModelBuilder {
 
     AndroidBuilder androidBuilder
 
-    BaseExtension extension
+    AndroidConfigurations config
 
     ExtraModelInfo extraModelInfo
 
@@ -82,11 +82,11 @@ public class ModelBuilder implements ToolingModelBuilder {
             AndroidBuilder androidBuilder,
             VariantManager variantManager,
             TaskManager taskManager,
-            BaseExtension extension,
+            AndroidConfigurations config,
             ExtraModelInfo extraModelInfo,
             boolean isLibrary) {
         this.androidBuilder = androidBuilder
-        this.extension = extension
+        this.config = config
         this.extraModelInfo = extraModelInfo
         this.variantManager = variantManager
         this.taskManager = taskManager
@@ -101,10 +101,7 @@ public class ModelBuilder implements ToolingModelBuilder {
 
     @Override
     public Object buildAll(String modelName, Project project) {
-        NamedDomainObjectContainer<SigningConfig> signingConfigs
-
-        // Cast is needed due to covariance issues.
-        signingConfigs = extension.signingConfigs as NamedDomainObjectContainer<SigningConfig>
+        Collection<? extends SigningConfig> signingConfigs = config.signingConfigs
 
         // Get the boot classpath. This will ensure the target is configured.
         List<String> bootClasspath = androidBuilder.bootClasspathAsStrings
@@ -118,9 +115,9 @@ public class ModelBuilder implements ToolingModelBuilder {
                 .collect { new ArtifactMetaDataImpl(it.artifactName, true, it.artifactType) }
                 .each artifactMetaDataList.&add
 
-        LintOptions lintOptions = com.android.build.gradle.internal.dsl.LintOptions.create(extension.lintOptions)
+        LintOptions lintOptions = com.android.build.gradle.internal.dsl.LintOptions.create(config.extension.lintOptions)
 
-        AaptOptions aaptOptions = AaptOptionsImpl.create(extension.aaptOptions)
+        AaptOptions aaptOptions = AaptOptionsImpl.create(config.extension.aaptOptions)
 
         List<SyncIssue> syncIssues = Lists.newArrayList(extraModelInfo.syncIssues.values());
 
@@ -137,10 +134,10 @@ public class ModelBuilder implements ToolingModelBuilder {
                 artifactMetaDataList,
                 findUnresolvedDependencies(syncIssues),
                 syncIssues,
-                extension.compileOptions,
+                config.extension.compileOptions,
                 lintOptions,
                 project.getBuildDir(),
-                extension.resourcePrefix,
+                config.extension.resourcePrefix,
                 isLibrary,
                 manifestData.modelApiVersion as int)
 
@@ -445,7 +442,7 @@ public class ModelBuilder implements ToolingModelBuilder {
 
     @NonNull
     private static Collection<SigningConfig> cloneSigningConfigs(
-            @NonNull Collection<SigningConfig> signingConfigs) {
+            @NonNull Collection<? extends SigningConfig> signingConfigs) {
         Collection<SigningConfig> results = Lists.newArrayListWithCapacity(signingConfigs.size())
 
         for (SigningConfig signingConfig : signingConfigs) {

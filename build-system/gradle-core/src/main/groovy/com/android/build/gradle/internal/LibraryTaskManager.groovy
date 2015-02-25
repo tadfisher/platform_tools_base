@@ -21,6 +21,7 @@ import com.android.annotations.Nullable
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
+import com.android.build.gradle.internal.dsl.GradleBuildType
 import com.android.build.gradle.internal.profile.SpanRecorders
 import com.android.build.gradle.internal.tasks.MergeFileTask
 import com.android.build.gradle.internal.variant.BaseVariantData
@@ -79,7 +80,7 @@ class LibraryTaskManager extends TaskManager {
             @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData) {
         LibraryVariantData libVariantData = variantData as LibraryVariantData
         GradleVariantConfiguration variantConfig = variantData.variantConfiguration
-        DefaultBuildType buildType = variantConfig.buildType
+        GradleBuildType buildType = variantConfig.buildType
 
         String fullName = variantConfig.fullName
         String dirName = variantConfig.dirName
