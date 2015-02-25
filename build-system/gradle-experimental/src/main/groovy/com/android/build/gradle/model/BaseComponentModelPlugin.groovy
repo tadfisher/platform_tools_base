@@ -32,16 +32,18 @@ import com.android.build.gradle.internal.SdkHandler
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.coverage.JacocoPlugin
-import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.GroupableProductFlavor
-import com.android.build.gradle.internal.dsl.SigningConfig
-import com.android.build.gradle.internal.dsl.SigningConfigFactory
+import com.android.build.gradle.internal.model.DefaultAndroidConfigurations
 import com.android.build.gradle.internal.model.ModelBuilder
 import com.android.build.gradle.internal.process.GradleJavaProcessExecutor
 import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.build.gradle.internal.tasks.DependencyReportTask
 import com.android.build.gradle.internal.tasks.SigningReportTask
 import com.android.build.gradle.internal.variant.VariantFactory
+import com.android.build.gradle.managed.BuildTypeAdaptor
+import com.android.build.gradle.managed.ManagedBuildType
+import com.android.build.gradle.managed.ManagedSigningConfig
+import com.android.build.gradle.managed.SigningConfigAdaptor
 import com.android.build.gradle.ndk.NdkExtension
 import com.android.build.gradle.tasks.JillTask
 import com.android.build.gradle.tasks.PreDex
@@ -50,8 +52,10 @@ import com.android.builder.core.BuilderConstants
 import com.android.builder.internal.compiler.JackConversionCache
 import com.android.builder.internal.compiler.PreDexCache
 import com.android.builder.sdk.TargetInfo
+import com.android.builder.signing.DefaultSigningConfig
 import com.android.ide.common.internal.ExecutorSingleton
 import com.android.ide.common.process.LoggedProcessOutputHandler
+import com.android.ide.common.signing.KeystoreHelper
 import com.android.utils.ILogger
 import groovy.transform.CompileStatic
 import org.gradle.api.DefaultTask
@@ -78,6 +82,7 @@ import org.gradle.model.Mutate
 import org.gradle.model.Path
 import org.gradle.model.RuleSource
 import org.gradle.model.collection.CollectionBuilder
+import org.gradle.model.collection.ManagedSet
 import org.gradle.model.internal.core.ModelCreators
 import org.gradle.model.internal.core.ModelReference
 import org.gradle.model.internal.registry.ModelRegistry
@@ -140,10 +145,16 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
         @Mutate
         void configureAndroidModel(
                 AndroidModel androidModel,
-                @Path("androidConfig") BaseExtension config,
-                @Path("androidSigningConfigs") NamedDomainObjectContainer<SigningConfig> signingConfigs) {
+                @Path("androidConfig") BaseExtension config) {
             androidModel.config = config
-            androidModel.signingConfigs = signingConfigs
+
+            androidModel.signingConfigs.create {
+                it.name = DEBUG
+                it.storeFile = KeystoreHelper.defaultDebugKeystoreLocation();
+                it.storePassword = DefaultSigningConfig.DEFAULT_PASSWORD;
+                it.keyAlias = DefaultSigningConfig.DEFAULT_ALIAS;
+                it.keyPassword = DefaultSigningConfig.DEFAULT_PASSWORD;
+            }
         }
 
         // TODO: Remove code duplicated from BasePlugin.
@@ -212,9 +223,7 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
         @Model("androidConfig")
         BaseExtension androidConfig(
                 ServiceRegistry serviceRegistry,
-                @Path("androidBuildTypes") NamedDomainObjectContainer<BuildType> buildTypeContainer,
                 @Path("androidProductFlavors") NamedDomainObjectContainer<GroupableProductFlavor> productFlavorContainer,
-                @Path("androidSigningConfigs") NamedDomainObjectContainer<SigningConfig> signingConfigContainer,
                 @Path("isApplication") Boolean isApplication,
                 AndroidBuilder androidBuilder,
                 SdkHandler sdkHandler,
@@ -226,11 +235,43 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
 
             BaseExtension extension = (BaseExtension) instantiator.newInstance(extensionClass,
                     (ProjectInternal) project, instantiator, androidBuilder,
-                    sdkHandler, buildTypeContainer, productFlavorContainer, signingConfigContainer,
+                    sdkHandler, null, productFlavorContainer, null,
                     extraModelInfo, !isApplication)
 
             return extension
         }
+
+        @Mutate
+        void initDebugBuildTypes(
+                @Path("android.buildTypes") ManagedSet<ManagedBuildType> buildTypes,
+                @Path("android.signingConfigs") ManagedSet<ManagedSigningConfig> signingConfigs) {
+            final ManagedSigningConfig debugSigningConfig = signingConfigs.find { it -> DEBUG }
+
+            buildTypes.beforeEach { ManagedBuildType buildType ->
+                initBuildType(buildType)
+            }
+
+            buildTypes.afterEach { ManagedBuildType buildType ->
+                if (buildType.getName().equals(DEBUG)) {
+                    buildType.setSigningConfig(debugSigningConfig)
+                }
+            }
+        }
+
+        private static void initBuildType(@NonNull ManagedBuildType buildType) {
+            buildType.setIsDebuggable(false)
+            buildType.setIsTestCoverageEnabled(false)
+            buildType.setIsJniDebuggable(false)
+            buildType.setIsPseudoLocalesEnabled(false)
+            buildType.setIsRenderscriptDebuggable(false)
+            buildType.setRenderscriptOptimLevel(3)
+            buildType.setIsMinifyEnabled(false)
+            buildType.setIsZipAlignEnabled(true)
+            buildType.setIsEmbedMicroApp(true)
+            buildType.setUseJack(false)
+            buildType.setShrinkResources(false)
+        }
+
 
         @Mutate
         void addDefaultAndroidSourceSet(AndroidComponentModelSourceSet sources) {
@@ -253,19 +294,6 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
             }
         }
 
-        @Model("androidSigningConfigs")
-        NamedDomainObjectContainer<SigningConfig> signingConfig(ServiceRegistry serviceRegistry,
-                Project project) {
-            Instantiator instantiator = serviceRegistry.get(Instantiator.class);
-            def signingConfigContainer =
-                    project.container(SigningConfig, new SigningConfigFactory(instantiator))
-            signingConfigContainer.create(DEBUG)
-            signingConfigContainer.whenObjectRemoved {
-                throw new UnsupportedOperationException("Removing signingConfigs is not supported.")
-            }
-            return signingConfigContainer
-        }
-
         @Mutate
         void closeProjectSourceSet(AndroidComponentModelSourceSet sources) {
         }
@@ -274,10 +302,10 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
         void createAndroidComponents(
                 AndroidComponentSpec androidSpec,
                 ServiceRegistry serviceRegistry,
-                @Path("android.config") BaseExtension androidExtension,
-                @Path("android.buildTypes") NamedDomainObjectContainer<BuildType> buildTypeContainer,
+                BaseExtension androidExtension,
+                @Path("android.buildTypes") ManagedSet<ManagedBuildType> buildTypes,
                 @Path("android.productFlavors") NamedDomainObjectContainer<GroupableProductFlavor> productFlavorContainer,
-                @Path("android.signingConfigs") NamedDomainObjectContainer<SigningConfig> signingConfigContainer,
+                @Path("android.signingConfigs") ManagedSet<ManagedSigningConfig> signingConfigs,
                 VariantFactory variantFactory,
                 TaskManager taskManager,
                 Project project,
@@ -305,19 +333,22 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
                     taskManager,
                     instantiator)
 
-            signingConfigContainer.all { SigningConfig signingConfig ->
-                variantManager.addSigningConfig(signingConfig)
-            }
-            buildTypeContainer.all { BuildType buildType ->
-                variantManager.addBuildType(buildType)
+            for(ManagedBuildType buildType : buildTypes) {
+                variantManager.addBuildType(new BuildTypeAdaptor(buildType))
             }
             productFlavorContainer.all { GroupableProductFlavor productFlavor ->
                 variantManager.addProductFlavor(productFlavor)
             }
 
             ModelBuilder modelBuilder = new ModelBuilder(
-                    androidBuilder, variantManager, taskManager,
-                    androidExtension, extraModelInfo, !isApplication);
+                    androidBuilder,
+                    variantManager,
+                    taskManager,
+                    new DefaultAndroidConfigurations(
+                            androidExtension,
+                            signingConfigs.collect { new SigningConfigAdaptor(it) }),
+                    extraModelInfo,
+                    !isApplication);
             toolingRegistry.register(modelBuilder);
 
 

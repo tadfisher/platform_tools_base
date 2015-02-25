@@ -17,7 +17,7 @@ package com.android.build.gradle.internal
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
-import com.android.build.gradle.internal.dsl.BuildType
+import com.android.build.gradle.internal.dsl.GradleBuildType
 import com.android.builder.core.VariantType
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -27,7 +27,7 @@ import org.gradle.api.artifacts.Configuration
  */
 class BuildTypeData implements ConfigurationProvider {
 
-    final BuildType buildType
+    final GradleBuildType buildType
     final DefaultAndroidSourceSet sourceSet
     private final DefaultAndroidSourceSet unitTestSourceSet
     private final Project project
@@ -35,7 +35,7 @@ class BuildTypeData implements ConfigurationProvider {
     final Task assembleTask
 
     BuildTypeData(
-            @NonNull  BuildType buildType,
+            @NonNull  GradleBuildType buildType,
             @NonNull  Project project,
             @NonNull  DefaultAndroidSourceSet sourceSet,
             @Nullable DefaultAndroidSourceSet unitTestSourceSet) {

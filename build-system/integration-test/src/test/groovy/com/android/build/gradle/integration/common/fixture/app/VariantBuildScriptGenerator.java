@@ -1,6 +1,10 @@
 package com.android.build.gradle.integration.common.fixture.app;
 
+import com.google.common.collect.Maps;
+
 import java.util.Map;
+
+import groovy.lang.Closure;
 
 /**
  * Generator to create build.gradle with arbitrary number of variants.
@@ -25,6 +29,8 @@ public class VariantBuildScriptGenerator {
 
     private final Map<String, Integer> variantCounts;
 
+    private final Map<String, Closure<String>> variantPostProcessors = Maps.newHashMap();
+
     /**
      * Create a VariantBuildScriptGenerator
      *
@@ -33,9 +39,15 @@ public class VariantBuildScriptGenerator {
      * @param template a template for the build script.  Strings in the format "${key}" will be
      *                 replaced if the key exists in variantCounts.
      */
-    public VariantBuildScriptGenerator(Map<String, Integer> variantCounts, String template) {
+    public VariantBuildScriptGenerator(
+            Map<String, Integer> variantCounts,
+            String template) {
         this.template = template;
         this.variantCounts = variantCounts;
+    }
+
+    public void addPostProcessor(String variant, Closure<String> postProcessor) {
+        variantPostProcessors.put(variant, postProcessor);
     }
 
     /**
@@ -43,17 +55,19 @@ public class VariantBuildScriptGenerator {
      */
     public String createBuildScript() {
         String buildScript = template;
-        System.out.println(template);
         for (Map.Entry<String, Integer> variantCount : variantCounts.entrySet()) {
             String variantName = variantCount.getKey();
             StringBuilder variants = new StringBuilder();
             for (int i = 0; i < variantCount.getValue(); i++) {
-                variants.append(variantName);
-                variants.append(i);
+                Closure<String> postProcessor = variantPostProcessors.get(variantName);
+                if (postProcessor == null) {
+                    variants.append(variantName);
+                    variants.append(i);
+                } else {
+                    variants.append(postProcessor.call(variantName + i));
+                }
                 variants.append("\n");
             }
-            System.out.println(variants.toString());
-
             buildScript = buildScript.replace("${" + variantName + "}", variants.toString());
         }
 
