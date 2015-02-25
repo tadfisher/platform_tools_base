@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.ndk
 import com.android.build.gradle.integration.common.category.ConnectedDeviceTests
+import com.android.build.gradle.integration.common.category.RemoteDeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
@@ -66,7 +67,13 @@ class NdkJniLibTest {
 
     @Test
     @Category(ConnectedDeviceTests.class)
-    void connectedCheck() {
-        project.execute("connectedCheck")
+    void connnectedCheck() {
+        project.execute("connectedCheck");
+    }
+
+    @Test
+    @Category(RemoteDeviceTests.class)
+    void deviceCheck() {
+        project.execute("deviceCheck")
     }
 }
