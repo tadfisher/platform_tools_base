@@ -1,6 +1,5 @@
 apply from: "../commonHeader.gradle"
 buildscript { apply from: "../commonBuildScript.gradle", to: buildscript }
-
 apply plugin: 'com.android.application'
 
 apply from: "../commonLocalRepo.gradle"

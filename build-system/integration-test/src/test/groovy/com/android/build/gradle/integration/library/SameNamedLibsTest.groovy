@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.library
 
 import com.android.build.gradle.integration.common.category.ConnectedDeviceTests
+import com.android.build.gradle.integration.common.category.RemoteDeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -52,5 +53,11 @@ class SameNamedLibsTest {
     @Category(ConnectedDeviceTests.class)
     void connectedCheck() {
         project.execute("connectedCheck")
+    }
+
+    @Test
+    @Category(RemoteDeviceTests.class)
+    void deviceCheck() {
+        project.execute("deviceCheck")
     }
 }

@@ -14,13 +14,10 @@
  * limitations under the License.
  */
 
-def gradleVersion = System.env.CUSTOM_GRADLE ?: '1.2.0-alpha1'
+package com.android.build.gradle.integration.common.category;
 
-apply from: "commonLocalRepo.gradle"
-
-dependencies {
-    classpath "com.android.tools.build:gradle-experimental:$gradleVersion"
-    if (System.env.TEST_CLASSPATH_DEPENDENCY) {
-        classpath System.env.TEST_CLASSPATH_DEPENDENCY
-    }
+/**
+ * JUnit category used to label tests that requires a configured remote test runner.
+ */
+public interface RemoteDeviceTests {
 }
