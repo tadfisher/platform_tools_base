@@ -29,7 +29,6 @@ import com.android.build.gradle.internal.dependency.LibraryDependencyImpl
 import com.android.build.gradle.internal.dependency.ManifestDependencyImpl
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.dsl.AbiSplitOptions
-import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.publishing.ApkPublishArtifact
 import com.android.build.gradle.internal.publishing.MappingPublishArtifact
 import com.android.build.gradle.internal.publishing.MetadataPublishArtifact
@@ -102,7 +101,7 @@ import com.android.builder.core.VariantConfiguration
 import com.android.builder.core.VariantType
 import com.android.builder.dependency.LibraryDependency
 import com.android.builder.internal.testing.SimpleTestCallable
-import com.android.builder.model.AndroidProject
+import com.android.builder.model.SigningConfig
 import com.android.builder.testing.ConnectedDeviceProvider
 import com.android.builder.testing.TestData
 import com.android.builder.testing.api.DeviceProvider
@@ -113,8 +112,6 @@ import com.android.sdklib.BuildToolInfo
 import com.android.sdklib.IAndroidTarget
 import com.google.common.base.CharMatcher
 import com.google.common.collect.ImmutableList
-import com.google.common.collect.ImmutableSet
-import com.google.common.collect.Iterators
 import com.google.common.collect.Lists
 import com.google.common.collect.Sets
 import groovy.transform.CompileDynamic
@@ -630,8 +627,7 @@ abstract class TaskManager {
         variantOutputData.packageSplitResourcesTask.densitySplits = densityFilters
         variantOutputData.packageSplitResourcesTask.languageSplits = languageFilters
         variantOutputData.packageSplitResourcesTask.outputBaseName = config.baseName
-        variantOutputData.packageSplitResourcesTask.signingConfig =
-                (SigningConfig) config.signingConfig
+        variantOutputData.packageSplitResourcesTask.signingConfig = config.signingConfig
         variantOutputData.packageSplitResourcesTask.outputDirectory =
                 new File("$project.buildDir/${FD_INTERMEDIATES}/splits/${config.dirName}")
         variantOutputData.packageSplitResourcesTask.androidBuilder = androidBuilder
@@ -709,8 +705,7 @@ abstract class TaskManager {
         variantOutputData.packageSplitAbiTask.inputFiles = generateSplitAbiRes.getOutputFiles()
         variantOutputData.packageSplitAbiTask.splits = filters
         variantOutputData.packageSplitAbiTask.outputBaseName = config.baseName
-        variantOutputData.packageSplitAbiTask.signingConfig =
-                (SigningConfig) config.signingConfig
+        variantOutputData.packageSplitAbiTask.signingConfig = config.signingConfig
         variantOutputData.packageSplitAbiTask.outputDirectory =
                 new File("$project.buildDir/${FD_INTERMEDIATES}/splits/${config.dirName}")
         variantOutputData.packageSplitAbiTask.androidBuilder = androidBuilder
@@ -721,7 +716,7 @@ abstract class TaskManager {
             getJniFolders(variantData);
         }
         conventionMapping(variantOutputData.packageSplitAbiTask).
-                map("jniDebuggable") { config.buildType.jniDebuggable }
+                map("jniDebuggable") { config.buildType.isJniDebuggable() }
         conventionMapping(variantOutputData.packageSplitAbiTask).
                 map("packagingOptions") { getExtension().packagingOptions }
 
@@ -871,7 +866,7 @@ abstract class TaskManager {
         conventionMapping(ndkCompile).map("ndkConfig") { variantConfig.ndkConfig }
 
         conventionMapping(ndkCompile).map("debuggable") {
-            variantConfig.buildType.jniDebuggable
+            variantConfig.buildType.isJniDebuggable()
         }
 
         conventionMapping(ndkCompile).map("objFolder") {
@@ -1045,7 +1040,7 @@ abstract class TaskManager {
     private void createLintVitalTask(@NonNull ApkVariantData variantData) {
         assert getExtension().lintOptions.checkReleaseBuilds
         // TODO: re-enable with Jack when possible
-        if (!variantData.variantConfiguration.buildType.debuggable &&
+        if (!variantData.variantConfiguration.buildType.isDebuggable() &&
                 !variantData.variantConfiguration.useJack) {
             String variantName = variantData.variantConfiguration.fullName
             def capitalizedVariantName = variantName.capitalize()
@@ -1866,7 +1861,7 @@ abstract class TaskManager {
         if (project.hasProperty(PROPERTY_APK_LOCATION)) {
             apkLocation = project.getProperties().get(PROPERTY_APK_LOCATION)
         }
-        SigningConfig sc = (SigningConfig) config.signingConfig
+        SigningConfig sc = config.signingConfig
 
         boolean multiOutput = variantData.outputs.size() > 1
 

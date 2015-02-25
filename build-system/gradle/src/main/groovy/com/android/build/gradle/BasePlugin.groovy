@@ -28,11 +28,14 @@ import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.coverage.JacocoPlugin
 import com.android.build.gradle.internal.dsl.BuildType
+import com.android.build.gradle.internal.dsl.CoreBuildType
 import com.android.build.gradle.internal.dsl.BuildTypeFactory
+import com.android.build.gradle.internal.dsl.CoreSigningConfig
 import com.android.build.gradle.internal.dsl.GroupableProductFlavor
 import com.android.build.gradle.internal.dsl.GroupableProductFlavorFactory
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.dsl.SigningConfigFactory
+import com.android.build.gradle.internal.model.DefaultAndroidConfig
 import com.android.build.gradle.internal.model.ModelBuilder
 import com.android.build.gradle.internal.process.GradleJavaProcessExecutor
 import com.android.build.gradle.internal.process.GradleProcessExecutor
@@ -43,7 +46,7 @@ import com.android.build.gradle.tasks.JillTask
 import com.android.build.gradle.tasks.PreDex
 import com.android.builder.Version
 import com.android.builder.core.AndroidBuilder
-import com.android.builder.core.DefaultBuildType
+import com.android.builder.core.BuilderConstants
 import com.android.builder.internal.compiler.JackConversionCache
 import com.android.builder.internal.compiler.PreDexCache
 import com.android.builder.profile.ExecutionType
@@ -337,16 +340,23 @@ public abstract class BasePlugin {
 
         // Register a builder for the custom tooling model
         ModelBuilder modelBuilder = new ModelBuilder(
-                androidBuilder, variantManager, taskManager, extension, extraModelInfo, isLibrary())
+                androidBuilder,
+                variantManager,
+                taskManager,
+                new DefaultAndroidConfig(extension, signingConfigContainer),
+                extraModelInfo,
+                isLibrary())
         registry.register(modelBuilder);
 
         // map the whenObjectAdded callbacks on the containers.
         signingConfigContainer.whenObjectAdded { SigningConfig signingConfig ->
-            variantManager.addSigningConfig((SigningConfig) signingConfig)
+            variantManager.addSigningConfig(signingConfig)
         }
 
-        buildTypeContainer.whenObjectAdded { DefaultBuildType buildType ->
-            variantManager.addBuildType((BuildType) buildType)
+        buildTypeContainer.whenObjectAdded { BuildType buildType ->
+            SigningConfig signingConfig = signingConfigContainer.findByName(BuilderConstants.DEBUG)
+            buildType.init(signingConfig)
+            variantManager.addBuildType(buildType)
         }
 
         productFlavorContainer.whenObjectAdded { GroupableProductFlavor productFlavor ->
