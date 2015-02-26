@@ -18,6 +18,7 @@ package com.android.builder.internal.testing;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.TestingConstants;
 import com.android.builder.testing.TestData;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceException;
@@ -175,7 +176,7 @@ public class SimpleTestCallable implements Callable<Boolean> {
                 Map<String, String> emptyMetrics = Collections.emptyMap();
                 TestIdentifier fakeTest = new TestIdentifier(device.getClass().getName(), "hasTests");
                 fakeRunListener.testStarted(fakeTest);
-                fakeRunListener.testFailed(fakeTest , "No tests found.");
+                fakeRunListener.testFailed(fakeTest, TestingConstants.NO_TESTS_ERROR_MESSAGE);
                 fakeRunListener.testEnded(fakeTest, emptyMetrics);
 
                 // end the run to generate the XML file.
