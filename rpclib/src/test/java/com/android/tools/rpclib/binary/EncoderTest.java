@@ -307,16 +307,18 @@ public class EncoderTest extends TestCase {
       0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09
     };
     class DummyObject implements BinaryObject {
+      final String dummy = "dummy";
       @Override
       public ObjectTypeID type() {
         return new ObjectTypeID(dummyObjectTypeIDBytes);
       }
       @Override
-      public void decode(@NotNull Decoder e) throws IOException {
+      public void decode(@NotNull Decoder d) throws IOException {
+        assert d.string().equals(dummy);
       }
       @Override
       public void encode(@NotNull Encoder e) throws IOException {
-        e.string("dummy");
+        e.string(dummy);
       }
     }
 
