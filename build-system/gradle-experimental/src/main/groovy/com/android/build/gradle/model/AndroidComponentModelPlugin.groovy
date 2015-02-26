@@ -78,9 +78,8 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
         modelRegistry.create(
                 ModelCreators.bridgedInstance(
                         ModelReference.of("projectModel", Project), project)
-                                .simpleDescriptor("Model of project.")
-                                .build(),
-                ModelPath.ROOT)
+                                .descriptor("Model of project.")
+                                .build())
     }
 
     static class Rules extends RuleSource {
@@ -200,7 +199,7 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
          */
         @Mutate
         void createVariantSourceSet(
-                @Path("androidSources") AndroidComponentModelSourceSet sources,
+                @Path("android.sources") AndroidComponentModelSourceSet sources,
                 @Path("android.buildTypes") NamedDomainObjectContainer<BuildType> buildTypes,
                 @Path("android.productFlavors") NamedDomainObjectContainer<GroupableProductFlavor> flavors,
                 List<ProductFlavorCombo> flavorGroups) {

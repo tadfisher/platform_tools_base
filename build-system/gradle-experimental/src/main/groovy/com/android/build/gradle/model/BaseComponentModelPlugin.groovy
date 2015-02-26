@@ -137,9 +137,8 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
         modelRegistry.create(
                 ModelCreators.bridgedInstance(
                         ModelReference.of("toolingRegistry", ToolingModelBuilderRegistry), toolingRegistry)
-                        .simpleDescriptor("Tooling model builder model registry.")
-                        .build(),
-                ModelPath.ROOT)
+                        .descriptor("Tooling model builder model registry.")
+                        .build())
     }
 
     static class Rules extends RuleSource {
@@ -280,7 +279,7 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
         void createAndroidComponents(
                 AndroidComponentSpec androidSpec,
                 ServiceRegistry serviceRegistry,
-                BaseExtension androidExtension,
+                @Path("android.config") BaseExtension androidExtension,
                 @Path("android.buildTypes") NamedDomainObjectContainer<BuildType> buildTypeContainer,
                 @Path("android.productFlavors") NamedDomainObjectContainer<GroupableProductFlavor> productFlavorContainer,
                 @Path("android.signingConfigs") NamedDomainObjectContainer<SigningConfig> signingConfigContainer,
