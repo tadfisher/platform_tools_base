@@ -17,6 +17,7 @@
 package com.android.builder.testing;
 
 import com.android.annotations.NonNull;
+import com.android.builder.TestingConstants;
 import com.android.builder.internal.InstallUtils;
 import com.android.builder.internal.testing.CustomTestRunListener;
 import com.android.builder.internal.testing.SimpleTestCallable;
@@ -106,7 +107,7 @@ public class SimpleTestRunner implements TestRunner {
             TestIdentifier fakeTest = new TestIdentifier(variantName,
                     totalDevices == 0 ? "_FoundConnectedDevices" : "_FoundCompatibleDevices");
             fakeRunListener.testStarted(fakeTest);
-            fakeRunListener.testFailed(fakeTest , "No tests found.");
+            fakeRunListener.testFailed(fakeTest , TestingConstants.NO_TESTS_ERROR_MESSAGE);
             fakeRunListener.testEnded(fakeTest, emptyMetrics);
 
             // end the run to generate the XML file.
@@ -124,7 +125,7 @@ public class SimpleTestRunner implements TestRunner {
                 Map<String, String> emptyMetrics = Collections.emptyMap();
                 TestIdentifier fakeTest = new TestIdentifier(variantName, "_FoundUnauthorizedDevices");
                 fakeRunListener.testStarted(fakeTest);
-                fakeRunListener.testFailed(fakeTest , "No tests found.");
+                fakeRunListener.testFailed(fakeTest , TestingConstants.NO_TESTS_ERROR_MESSAGE);
                 fakeRunListener.testEnded(fakeTest, emptyMetrics);
 
                 // end the run to generate the XML file.
