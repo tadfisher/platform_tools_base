@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<template
+    format="4"
+    revision="1"
+    name="Native Activity (C++)"
+    minApi="9"
+    minBuildApi="14"
+    description="Creates C++ Activity.">
+
+    <category value="Activity" />
+    <formfactor value="Mobile" />
+
+    <parameter
+        id="libraryName"
+        name="Native Library name"
+        type="string"
+        constraints="unique|nonempty"
+        default=""
+        help="The name of the C++ library to create. Must not started with 'lib'" />
+
+    <parameter
+        id="isLauncher"
+        name="Launcher Activity"
+        type="boolean"
+        default="true"
+        help="If true, this activity will have a CATEGORY_LAUNCHER intent filter, making it visible in the launcher" />
+
+    <parameter
+        id="packageName"
+        name="Package name"
+        type="string"
+        constraints="package"
+        default="com.mycompany.myapp" />
+
+    <!-- 128x128 thumbnails relative to template.xml -->
+    <thumbs>
+        <!-- default thumbnail is required -->
+        <thumb>template_native_activity.png</thumb>
+    </thumbs>
+
+    <globals file="globals.xml.ftl" />
+    <execute file="recipe.xml.ftl" />
+
+</template>
