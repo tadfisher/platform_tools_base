@@ -407,9 +407,7 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
             // create the test tasks.
             taskManager.createConnectedCheckTasks (
                     new TaskCollectionBuilderAdaptor(tasks),
-                    variantManager.variantDataList,
-                    !variantManager.productFlavors.isEmpty() /*hasFlavors*/,
-                    false /*isLibrary*/ );
+                    !variantManager.productFlavors.isEmpty() /*hasFlavors*/);
         }
 
         @Mutate

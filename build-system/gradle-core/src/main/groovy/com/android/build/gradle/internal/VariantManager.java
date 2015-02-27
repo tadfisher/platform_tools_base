@@ -274,6 +274,17 @@ public class VariantManager implements VariantModel {
         }
 
         final TaskFactory tasks = new TaskContainerAdaptor(project.getTasks());
+
+        // Create top level test tasks.
+        ThreadRecorder.get().record(ExecutionType.VARIANT_MANAGER_CREATE_TESTS_TASKS,
+                new Recorder.Block<Void>() {
+                    @Override
+                    public Void call() throws Exception {
+                        taskManager.createConnectedCheckTasks(tasks, !productFlavors.isEmpty());
+                        return null;
+                    }
+                });
+
         for (final BaseVariantData<? extends BaseVariantOutputData> variantData : variantDataList) {
             SpanRecorders.record(project, ExecutionType.VARIANT_MANAGER_CREATE_TASKS_FOR_VARIANT,
                     new Recorder.Block<Void>() {
@@ -292,22 +303,6 @@ public class VariantManager implements VariantModel {
                     @Override
                     public Void call() throws Exception {
                         taskManager.createLintTasks(variantDataList);
-                        return null;
-                    }
-                });
-
-        // create the test tasks.
-        ThreadRecorder.get().record(ExecutionType.VARIANT_MANAGER_CREATE_TESTS_TASKS,
-                new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        taskManager.createConnectedCheckTasks(
-                                tasks,
-                                variantDataList,
-                                !productFlavors.isEmpty(),
-                                false /*isLibrary*/);
-                        taskManager.createUnitTestTasks(variantDataList);
-
                         return null;
                     }
                 });
@@ -438,7 +433,7 @@ public class VariantManager implements VariantModel {
                     taskManager.createAndroidTestVariantTasks(tasks, (TestVariantData) variantData);
                     break;
                 case UNIT_TEST:
-                    taskManager.createUnitTestVariantTasks((TestVariantData) variantData);
+                    taskManager.createUnitTestVariantTasks(tasks, (TestVariantData) variantData);
                     break;
                 default:
                     throw new IllegalArgumentException("Unknown test type " + variantType);
