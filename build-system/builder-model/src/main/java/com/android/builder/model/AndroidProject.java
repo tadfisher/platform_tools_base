@@ -43,6 +43,8 @@ public interface AndroidProject {
 
     String PROPERTY_APK_LOCATION = "android.injected.apk.location";
 
+    String PROPERTY_CODE_COMPILATION_FROM_IDE = "android.injected.code.compilation.from.ide";
+
     String ARTIFACT_MAIN = "_main_";
     String ARTIFACT_ANDROID_TEST = "_android_test_";
     String ARTIFACT_UNIT_TEST = "_unit_test_";
