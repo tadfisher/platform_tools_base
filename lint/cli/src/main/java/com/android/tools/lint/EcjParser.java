@@ -24,7 +24,6 @@ import com.android.annotations.Nullable;
 import com.android.sdklib.IAndroidTarget;
 import com.android.tools.lint.client.api.JavaParser;
 import com.android.tools.lint.client.api.LintClient;
-import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
@@ -72,7 +71,6 @@ import org.eclipse.jdt.internal.compiler.batch.FileSystem;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
-import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
 import org.eclipse.jdt.internal.compiler.impl.BooleanConstant;
 import org.eclipse.jdt.internal.compiler.impl.ByteConstant;
 import org.eclipse.jdt.internal.compiler.impl.CharConstant;
@@ -89,7 +87,6 @@ import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.ElementValuePair;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LocalVariableBinding;
-import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.NestedTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemBinding;
@@ -312,10 +309,8 @@ public class EcjParser extends JavaParser {
                 t.printStackTrace();
             }
 
-            if (environment != null) {
-                environment.cleanup();
-                environment = null;
-            }
+            environment.cleanup();
+            environment = null;
         }
 
         return environment;
@@ -569,7 +564,7 @@ public class EcjParser extends JavaParser {
         return null;
     }
 
-    private static ResolvedNode resolve(@Nullable Binding binding) {
+    private ResolvedNode resolve(@Nullable Binding binding) {
         if (binding == null || binding instanceof ProblemBinding) {
             return null;
         }
@@ -709,7 +704,7 @@ public class EcjParser extends JavaParser {
     }
 
     @Nullable
-    private static TypeDescriptor getTypeDescriptor(@Nullable TypeBinding resolvedType) {
+    private TypeDescriptor getTypeDescriptor(@Nullable TypeBinding resolvedType) {
         if (resolvedType == null) {
             return null;
         }
@@ -804,7 +799,7 @@ public class EcjParser extends JavaParser {
         }
     }
 
-    private static class EcjTypeDescriptor extends TypeDescriptor {
+    private class EcjTypeDescriptor extends TypeDescriptor {
         private final TypeBinding mBinding;
 
         private EcjTypeDescriptor(@NonNull TypeBinding binding) {
@@ -842,6 +837,7 @@ public class EcjParser extends JavaParser {
             return null;
         }
 
+        @SuppressWarnings("RedundantIfStatement")
         @Override
         public boolean equals(Object o) {
             if (this == o) {
@@ -866,7 +862,7 @@ public class EcjParser extends JavaParser {
         }
     }
 
-    private static class EcjResolvedMethod extends ResolvedMethod {
+    private class EcjResolvedMethod extends ResolvedMethod {
         private MethodBinding mBinding;
 
         private EcjResolvedMethod(MethodBinding binding) {
@@ -931,6 +927,40 @@ public class EcjParser extends JavaParser {
                 return result;
             }
 
+            // Look for external annotations
+            ExternalAnnotations manager = ExternalAnnotations.get(mClient);
+            Iterable<ResolvedAnnotation> external = manager.getAnnotations(this);
+            if (external != null) {
+                return external;
+            }
+
+            return Collections.emptyList();
+        }
+
+        @NonNull
+        @Override
+        public Iterable<ResolvedAnnotation> getParameterAnnotations(int index) {
+            AnnotationBinding[][] parameterAnnotations = mBinding.getParameterAnnotations();
+            if (parameterAnnotations != null &&
+                    index >= 0 && index < parameterAnnotations.length) {
+                AnnotationBinding[] annotations = parameterAnnotations[index];
+                int count = annotations.length;
+                if (count > 0) {
+                    List<ResolvedAnnotation> result = Lists.newArrayListWithExpectedSize(count);
+                    for (AnnotationBinding annotation : annotations) {
+                        result.add(new EcjResolvedAnnotation(annotation));
+                    }
+                    return result;
+                }
+            }
+
+            // Look for external annotations
+            ExternalAnnotations manager = ExternalAnnotations.get(mClient);
+            Iterable<ResolvedAnnotation> external = manager.getAnnotations(this, index);
+            if (external != null) {
+                return external;
+            }
+
             return Collections.emptyList();
         }
 
@@ -944,6 +974,7 @@ public class EcjParser extends JavaParser {
             return mBinding.toString();
         }
 
+        @SuppressWarnings("RedundantIfStatement")
         @Override
         public boolean equals(Object o) {
             if (this == o) {
@@ -968,7 +999,7 @@ public class EcjParser extends JavaParser {
         }
     }
 
-    private static class EcjResolvedClass extends ResolvedClass {
+    private class EcjResolvedClass extends ResolvedClass {
         private final TypeBinding mBinding;
 
         private EcjResolvedClass(TypeBinding binding) {
@@ -1145,6 +1176,13 @@ public class EcjParser extends JavaParser {
                 }
             }
 
+            // Look for external annotations
+            ExternalAnnotations manager = ExternalAnnotations.get(mClient);
+            Iterable<ResolvedAnnotation> external = manager.getAnnotations(this);
+            if (external != null) {
+                return external;
+            }
+
             return Collections.emptyList();
         }
 
@@ -1189,6 +1227,7 @@ public class EcjParser extends JavaParser {
             return getName();
         }
 
+        @SuppressWarnings("RedundantIfStatement")
         @Override
         public boolean equals(Object o) {
             if (this == o) {
@@ -1213,7 +1252,7 @@ public class EcjParser extends JavaParser {
         }
     }
 
-    private static class EcjResolvedField extends ResolvedField {
+    private class EcjResolvedField extends ResolvedField {
         private FieldBinding mBinding;
 
         private EcjResolvedField(FieldBinding binding) {
@@ -1286,6 +1325,13 @@ public class EcjParser extends JavaParser {
                 return result;
             }
 
+            // Look for external annotations
+            ExternalAnnotations manager = ExternalAnnotations.get(mClient);
+            Iterable<ResolvedAnnotation> external = manager.getAnnotations(this);
+            if (external != null) {
+                return external;
+            }
+
             return Collections.emptyList();
         }
 
@@ -1299,6 +1345,7 @@ public class EcjParser extends JavaParser {
             return mBinding.toString();
         }
 
+        @SuppressWarnings("RedundantIfStatement")
         @Override
         public boolean equals(Object o) {
             if (this == o) {
@@ -1323,7 +1370,7 @@ public class EcjParser extends JavaParser {
         }
     }
 
-    private static class EcjResolvedVariable extends ResolvedVariable {
+    private class EcjResolvedVariable extends ResolvedVariable {
         private LocalVariableBinding mBinding;
 
         private EcjResolvedVariable(LocalVariableBinding binding) {
@@ -1359,6 +1406,7 @@ public class EcjParser extends JavaParser {
             return mBinding.toString();
         }
 
+        @SuppressWarnings("RedundantIfStatement")
         @Override
         public boolean equals(Object o) {
             if (this == o) {
@@ -1383,7 +1431,7 @@ public class EcjParser extends JavaParser {
         }
     }
 
-    private static class EcjResolvedAnnotation extends ResolvedAnnotation {
+    private class EcjResolvedAnnotation extends ResolvedAnnotation {
         private AnnotationBinding mBinding;
 
         private EcjResolvedAnnotation(final AnnotationBinding binding) {
@@ -1440,7 +1488,7 @@ public class EcjParser extends JavaParser {
 
         @Override
         public String getSignature() {
-            return mBinding.toString();
+            return new String(mBinding.getAnnotationType().readableName());
         }
 
         @Override
@@ -1449,6 +1497,7 @@ public class EcjParser extends JavaParser {
             return 0;
         }
 
+        @SuppressWarnings("RedundantIfStatement")
         @Override
         public boolean equals(Object o) {
             if (this == o) {

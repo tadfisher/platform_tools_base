@@ -259,6 +259,17 @@ public abstract class JavaParser {
         @NonNull
         public abstract String getSimpleName();
 
+        /** Returns the package name of this class */
+        @NonNull
+        public String getPackageName() {
+            String name = getName();
+            String simpleName = getSimpleName();
+            if (name.length() > simpleName.length() + 1) {
+                return name.substring(0, name.length() - simpleName.length() - 1);
+            }
+            return name;
+        }
+
         /** Returns whether this class' fully qualified name matches the given name */
         public abstract boolean matches(@NonNull String name);
 
@@ -329,6 +340,60 @@ public abstract class JavaParser {
         /** Returns any annotations defined on this method */
         @NonNull
         public abstract Iterable<ResolvedAnnotation> getAnnotations();
+
+        /** Returns any annotations defined on the given parameter of this method */
+        @NonNull
+        public abstract Iterable<ResolvedAnnotation> getParameterAnnotations(int index);
+
+        /**
+         * Returns true if this method is annotated with the given annotation type
+         *
+         * @param type the fully qualified name of the annotation to check
+         * @return true if this method is annotated with an annotation of the given type
+         */
+        public boolean isAnnotatedWith(@NonNull String type) {
+            return findAnnotation(type) != null;
+        }
+
+        public boolean isParameterAnnotatedWith(@NonNull String type, int parameterIndex) {
+            return findParameterAnnotation(type, parameterIndex) != null;
+        }
+
+        /**
+         * Searches for the annotation of the given type on the method
+         *
+         * @param type the fully qualified name of the annotation to check
+         * @param parameterIndex the index of the parameter to look up
+         * @return the annotation, or null if not found
+         */
+        @Nullable
+        public ResolvedAnnotation findParameterAnnotation(@NonNull String type,
+                int parameterIndex) { // TODO: Override in IDEA to use faster method!
+            for (ResolvedAnnotation annotation : getParameterAnnotations(parameterIndex)) {
+                if (annotation.getType().matchesSignature(type)) {
+                    return annotation;
+                }
+            }
+
+            return null;
+        }
+
+        /**
+         * Searches for the annotation of the given type on the method
+         *
+         * @param type the fully qualified name of the annotation to check
+         * @return the annotation, or null if not found
+         */
+        @Nullable
+        public ResolvedAnnotation findAnnotation(@NonNull String type) { // TODO: Override in IDEA to use faster method!
+            for (ResolvedAnnotation annotation : getAnnotations()) {
+                if (annotation.getType().matchesSignature(type)) {
+                    return annotation;
+                }
+            }
+
+            return null;
+        }
     }
 
     /** A field declaration */

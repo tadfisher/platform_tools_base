@@ -18,8 +18,11 @@ package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.RESOURCE_CLZ_COLOR;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.tools.lint.client.api.JavaParser.ResolvedMethod;
+import com.android.tools.lint.client.api.JavaParser.ResolvedNode;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
@@ -33,6 +36,7 @@ import com.android.tools.lint.detector.api.Speed;
 import java.io.File;
 
 import lombok.ast.AstVisitor;
+import lombok.ast.Expression;
 import lombok.ast.MethodDeclaration;
 import lombok.ast.MethodInvocation;
 import lombok.ast.Node;
@@ -89,6 +93,7 @@ public class ColorUsageDetector extends Detector implements Detector.JavaScanner
                 select = select.getParent();
             }
 
+            Node parameter = select;
             Node current = select.getParent();
             while (current != null) {
                 if (current.getClass() == MethodInvocation.class) {
@@ -96,6 +101,27 @@ public class ColorUsageDetector extends Detector implements Detector.JavaScanner
                     String methodName = call.astName().astValue();
                     if (methodName.endsWith("Color")              //$NON-NLS-1$
                             && methodName.startsWith("set")) {    //$NON-NLS-1$
+                        // Make sure this method is either annotated annotated with @ColorInt,
+                        // or *not* annotated with @ColorRes:
+                        ResolvedNode resolved = context.resolve(call);
+                        if (resolved instanceof ResolvedMethod) {
+                            ResolvedMethod method = (ResolvedMethod) resolved;
+                            int index = 0;
+                            for (Expression expression : call.astArguments()) {
+                                if (expression == parameter) {
+                                    if (method.isParameterAnnotatedWith(
+                                            SdkConstants.SUPPORT_ANNOTATIONS_PREFIX + "ColorRes",
+                                            index)) {
+                                        return;
+                                    }
+                                    break;
+                                }
+                                index++;
+                            }
+
+                            // We don't have @ColorInt yet, so just assume it
+                        }
+
                         if ("setProgressBackgroundColor".equals(methodName)) {
                             // Special exception: SwipeRefreshLayout does not follow the normal
                             // naming convention: its setProgressBackgroundColor does *not* take
@@ -104,6 +130,7 @@ public class ColorUsageDetector extends Detector implements Detector.JavaScanner
                             // libraries.
                             return;
                         }
+
                         context.report(
                                 ISSUE, select, context.getLocation(select), String.format(
                                     "Should pass resolved color instead of resource id here: " +
@@ -113,6 +140,7 @@ public class ColorUsageDetector extends Detector implements Detector.JavaScanner
                 } else if (current.getClass() == MethodDeclaration.class) {
                     break;
                 }
+                parameter = current;
                 current = current.getParent();
             }
         }

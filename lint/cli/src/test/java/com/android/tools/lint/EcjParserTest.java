@@ -268,7 +268,8 @@ public class EcjParserTest extends AbstractCheckTest {
             }
         });
 
-        JavaParser parser = new EcjParser(new LintCliClient(), null);
+        LintCliClient client = new LintCliClient();
+        JavaParser parser = new EcjParser(client, null);
         AstPrettyPrinter astPrettyPrinter = new AstPrettyPrinter(parser);
         unit.accept(new SourcePrinter(astPrettyPrinter));
         String actual = astPrettyPrinter.finish();
