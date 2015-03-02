@@ -17,6 +17,7 @@ package com.android.builder.compiling;
 
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_TYPE;
+import static com.android.SdkConstants.TAG_STRING;
 import static com.android.SdkConstants.TAG_ITEM;
 import static com.android.SdkConstants.TAG_RESOURCES;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -117,19 +118,31 @@ public class ResValueGenerator {
             if (item instanceof ClassField) {
                 ClassField field = (ClassField)item;
 
-                Node itemNode = document.createElement(TAG_ITEM);
+                if (field.getType().equals(TAG_STRING)) {
+                    Node itemNode = document.createElement(TAG_STRING);
 
-                Attr nameAttr = document.createAttribute(ATTR_NAME);
-                nameAttr.setValue(field.getName());
-                itemNode.getAttributes().setNamedItem(nameAttr);
+                    Attr nameAttr = document.createAttribute(ATTR_NAME);
+                    nameAttr.setValue(field.getName());
+                    itemNode.getAttributes().setNamedItem(nameAttr);
 
-                Attr typeAttr = document.createAttribute(ATTR_TYPE);
-                typeAttr.setValue(field.getType());
-                itemNode.getAttributes().setNamedItem(typeAttr);
+                    itemNode.appendChild(document.createTextNode(field.getValue()));
 
-                itemNode.appendChild(document.createTextNode(field.getValue()));
+                    rootNode.appendChild(itemNode);
+                } else {
+                    Node itemNode = document.createElement(TAG_ITEM);
 
-                rootNode.appendChild(itemNode);
+                    Attr nameAttr = document.createAttribute(ATTR_NAME);
+                    nameAttr.setValue(field.getName());
+                    itemNode.getAttributes().setNamedItem(nameAttr);
+
+                    Attr typeAttr = document.createAttribute(ATTR_TYPE);
+                    typeAttr.setValue(field.getType());
+                    itemNode.getAttributes().setNamedItem(typeAttr);
+
+                    itemNode.appendChild(document.createTextNode(field.getValue()));
+
+                    rootNode.appendChild(itemNode);
+                }
             } else if (item instanceof String) {
                 rootNode.appendChild(document.createTextNode("\n"));
                 rootNode.appendChild(document.createComment((String) item));
