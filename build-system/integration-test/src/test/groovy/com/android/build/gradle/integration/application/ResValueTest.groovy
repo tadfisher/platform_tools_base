@@ -60,35 +60,35 @@ class ResValueTest {
                 buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
 
                 defaultConfig {
-                    resValue "string", "VALUE_DEFAULT", "1"
-                    resValue "string", "VALUE_DEBUG",   "1"
-                    resValue "string", "VALUE_FLAVOR",  "1"
-                    resValue "string", "VALUE_VARIANT", "1"
+                    resValue "int", "VALUE_DEFAULT", "1"
+                    resValue "int", "VALUE_DEBUG",   "1"
+                    resValue "int", "VALUE_FLAVOR",  "1"
+                    resValue "int", "VALUE_VARIANT", "1"
                 }
 
                 buildTypes {
                     debug {
-                        resValue "string", "VALUE_DEBUG",   "100"
-                        resValue "string", "VALUE_VARIANT", "100"
+                        resValue "int", "VALUE_DEBUG",   "100"
+                        resValue "int", "VALUE_VARIANT", "100"
                     }
                 }
 
                 productFlavors {
                     flavor1 {
-                        resValue "string", "VALUE_DEBUG",   "10"
-                        resValue "string", "VALUE_FLAVOR",  "10"
-                        resValue "string", "VALUE_VARIANT", "10"
+                        resValue "int", "VALUE_DEBUG",   "10"
+                        resValue "int", "VALUE_FLAVOR",  "10"
+                        resValue "int", "VALUE_VARIANT", "10"
                     }
                     flavor2 {
-                        resValue "string", "VALUE_DEBUG",   "20"
-                        resValue "string", "VALUE_FLAVOR",  "20"
-                        resValue "string", "VALUE_VARIANT", "20"
+                        resValue "int", "VALUE_DEBUG",   "20"
+                        resValue "int", "VALUE_FLAVOR",  "20"
+                        resValue "int", "VALUE_VARIANT", "20"
                     }
                 }
 
                 applicationVariants.all { variant ->
                     if (variant.buildType.name == "debug") {
-                        variant.resValue "string", "VALUE_VARIANT", "1000"
+                        variant.resValue "int", "VALUE_VARIANT", "1000"
                     }
                 }
             }
@@ -117,13 +117,13 @@ class ResValueTest {
     <!-- Automatically generated file. DO NOT MODIFY -->
 
     <!-- Values from the variant -->
-    <item name="VALUE_VARIANT" type="string">1000</item>
+    <item name="VALUE_VARIANT" type="int">1000</item>
     <!-- Values from build type: debug -->
-    <item name="VALUE_DEBUG" type="string">100</item>
+    <item name="VALUE_DEBUG" type="int">100</item>
     <!-- Values from product flavor: flavor1 -->
-    <item name="VALUE_FLAVOR" type="string">10</item>
+    <item name="VALUE_FLAVOR" type="int">10</item>
     <!-- Values from default config. -->
-    <item name="VALUE_DEFAULT" type="string">1</item>
+    <item name="VALUE_DEFAULT" type="int">1</item>
 
 </resources>
 """
@@ -149,13 +149,13 @@ class ResValueTest {
     <!-- Automatically generated file. DO NOT MODIFY -->
 
     <!-- Values from the variant -->
-    <item name="VALUE_VARIANT" type="string">1000</item>
+    <item name="VALUE_VARIANT" type="int">1000</item>
     <!-- Values from build type: debug -->
-    <item name="VALUE_DEBUG" type="string">100</item>
+    <item name="VALUE_DEBUG" type="int">100</item>
     <!-- Values from product flavor: flavor2 -->
-    <item name="VALUE_FLAVOR" type="string">20</item>
+    <item name="VALUE_FLAVOR" type="int">20</item>
     <!-- Values from default config. -->
-    <item name="VALUE_DEFAULT" type="string">1</item>
+    <item name="VALUE_DEFAULT" type="int">1</item>
 
 </resources>
 """
@@ -181,11 +181,11 @@ class ResValueTest {
     <!-- Automatically generated file. DO NOT MODIFY -->
 
     <!-- Values from product flavor: flavor1 -->
-    <item name="VALUE_DEBUG" type="string">10</item>
-    <item name="VALUE_FLAVOR" type="string">10</item>
-    <item name="VALUE_VARIANT" type="string">10</item>
+    <item name="VALUE_DEBUG" type="int">10</item>
+    <item name="VALUE_FLAVOR" type="int">10</item>
+    <item name="VALUE_VARIANT" type="int">10</item>
     <!-- Values from default config. -->
-    <item name="VALUE_DEFAULT" type="string">1</item>
+    <item name="VALUE_DEFAULT" type="int">1</item>
 
 </resources>
 """
@@ -211,11 +211,11 @@ class ResValueTest {
     <!-- Automatically generated file. DO NOT MODIFY -->
 
     <!-- Values from product flavor: flavor2 -->
-    <item name="VALUE_DEBUG" type="string">20</item>
-    <item name="VALUE_FLAVOR" type="string">20</item>
-    <item name="VALUE_VARIANT" type="string">20</item>
+    <item name="VALUE_DEBUG" type="int">20</item>
+    <item name="VALUE_FLAVOR" type="int">20</item>
+    <item name="VALUE_VARIANT" type="int">20</item>
     <!-- Values from default config. -->
-    <item name="VALUE_DEFAULT" type="string">1</item>
+    <item name="VALUE_DEFAULT" type="int">1</item>
 
 </resources>
 """
