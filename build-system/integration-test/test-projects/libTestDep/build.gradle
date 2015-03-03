@@ -4,8 +4,9 @@ buildscript { apply from: "../commonBuildScript.gradle", to: buildscript }
 
 apply plugin: 'com.android.library'
 
+apply from: "../commonLocalRepo.gradle"
 repositories {
-    mavenCentral()
+    jcenter()
 }
 
 dependencies {
