@@ -21,7 +21,10 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.ClassRule
+import org.junit.Ignore
 import org.junit.Test
+
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ANDROID_GRADLE_VERSION
 
 /**
  * Tests the handling of test dependency.
@@ -38,6 +41,15 @@ class TestWithSameDepAsAppWithProguard {
     @BeforeClass
     public static void setUp() {
         project.getBuildFile() << """
+buildscript {
+    repositories {
+        maven { url '${project.getRepoDir().toString()}' }
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:$ANDROID_GRADLE_VERSION'
+    }
+}
+
 apply plugin: 'com.android.application'
 
 repositories {
