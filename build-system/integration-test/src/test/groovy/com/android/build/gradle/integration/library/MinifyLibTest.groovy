@@ -49,6 +49,11 @@ class MinifyLibTest {
     }
 
     @Test
+    void minifiedAndroidTest() {
+        project.execute("assembleMinifiedAndroidTest")
+    }
+
+    @Test
     @Category(DeviceTests.class)
     void connectedCheck() {
         project.execute("connectedCheck")

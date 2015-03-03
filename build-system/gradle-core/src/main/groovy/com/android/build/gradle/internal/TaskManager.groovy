@@ -2815,6 +2815,7 @@ abstract class TaskManager {
             // Don't remove any code in tested app.
             proguardTask.dontshrink()
             proguardTask.dontoptimize()
+            proguardTask.dontwarn()
 
             // We can't call dontobfuscate, since that would make ProGuard ignore the mapping file.
             proguardTask.keep("class * {*;}")

@@ -1,7 +1,15 @@
 apply plugin: 'com.android.application'
 
+repositories {
+    jcenter()
+}
+
 dependencies {
     compile project(':lib')
+
+    // Adding dependency on an external library to test that proguard do not issue warnings for
+    // unknown referenced symbol.
+    androidTestCompile 'com.google.guava:guava:15.0'
 }
 
 android {
