@@ -46,6 +46,7 @@ import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 
 import org.gradle.api.Task;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.bundling.Jar;
 import org.gradle.api.tasks.compile.AbstractCompile;
