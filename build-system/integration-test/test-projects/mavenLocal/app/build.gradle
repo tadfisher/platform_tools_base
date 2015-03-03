@@ -6,7 +6,6 @@ apply plugin: 'maven'
 
 repositories {
     mavenLocal()
-    mavenCentral()
 }
 
 dependencies {
@@ -17,4 +16,4 @@ android {
     compileSdkVersion 19
     buildToolsVersion = rootProject.buildToolsVersion
 }
-
+throw new RuntimeException("NEVER RUN");

@@ -13,3 +13,4 @@ uploadArchives {
     mavenInstaller()
   }
 }
+throw new RuntimeException("NEVER RUN");

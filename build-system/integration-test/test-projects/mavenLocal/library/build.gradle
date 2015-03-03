@@ -6,7 +6,6 @@ apply plugin: 'maven'
 
 repositories {
     mavenLocal()
-    mavenCentral()
 }
 
 dependencies {
@@ -27,3 +26,4 @@ uploadArchives {
     mavenInstaller()
   }
 }
+throw new RuntimeException("NEVER RUN");
