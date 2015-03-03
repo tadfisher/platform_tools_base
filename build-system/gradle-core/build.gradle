@@ -29,6 +29,9 @@ dependencies {
     testCompile 'junit:junit:4.12'
     testCompile 'org.mockito:mockito-all:1.9.5'
     testCompile project(':base:project-test-lib')
+    testCompile 'org.jdeferred:jdeferred-android-aar:1.2.3'
+    testCompile 'org.jdeferred:jdeferred-core:1.2.3'
+    testCompile 'org.jdeferred:jdeferred-android-core:1.2.3'
 }
 
 group = 'com.android.tools.build'
