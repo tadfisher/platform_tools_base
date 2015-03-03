@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 package com.android.build.gradle
-
 import com.android.annotations.NonNull
-import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.internal.ExtraModelInfo
@@ -30,7 +28,6 @@ import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.internal.DefaultDomainObjectSet
 import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.internal.reflect.Instantiator
-
 /**
  * 'android' extension for 'com.android.test' project.
  */
