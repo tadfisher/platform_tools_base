@@ -22,6 +22,7 @@ import com.android.builder.model.ApiVersion;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
 
+import java.io.File;
 import java.util.Collection;
 
 /**
