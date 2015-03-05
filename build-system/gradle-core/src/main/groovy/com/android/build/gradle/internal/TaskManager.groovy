@@ -46,6 +46,7 @@ import com.android.build.gradle.internal.tasks.InstallVariantTask
 import com.android.build.gradle.internal.tasks.MockableAndroidJarTask
 import com.android.build.gradle.internal.tasks.PrepareDependenciesTask
 import com.android.build.gradle.internal.tasks.SigningReportTask
+import com.android.build.gradle.internal.tasks.SourceSetsTask
 import com.android.build.gradle.internal.tasks.TestServerTask
 import com.android.build.gradle.internal.tasks.UninstallTask
 import com.android.build.gradle.internal.tasks.ValidateSigningTask
@@ -200,6 +201,8 @@ abstract class TaskManager {
 
     private static final String CONNECTED_CHECK = "connectedCheck"
 
+    private static final String SOURCE_SETS = "sourceSets"
+
     // Tasks
     private Task assembleAndroidTest
 
@@ -292,6 +295,11 @@ abstract class TaskManager {
         }
 
         tasks.create(MAIN_PREBUILD)
+
+        tasks.create(SOURCE_SETS, SourceSetsTask) {
+            it.description = "Prints out all the source sets defined in this project."
+            it.group = ANDROID_GROUP
+        }
     }
 
     public void createAssembleAndroidTestTask() {
