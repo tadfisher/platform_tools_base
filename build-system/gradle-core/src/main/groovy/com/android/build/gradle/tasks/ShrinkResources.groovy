@@ -118,10 +118,7 @@ public class ShrinkResources extends BaseTask {
                                 .setResourceConfigs(processResourcesTask.getResourceConfigs())
                                 .setSplits(processResourcesTask.getSplits())
 
-                getBuilder().processResources(
-                        aaptPackageCommandBuilder,
-                        processResourcesTask.getEnforceUniquePackageName(),
-                )
+                getBuilder().processResources(aaptPackageCommandBuilder)
             } else {
                 // Just rewrite the .ap_ file to strip out the res/ files for unused resources
                 analyzer.rewriteResourceZip(getUncompressedResources(), getCompressedResources())

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 package com.android.build.gradle
-
 import com.android.SdkConstants
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable
@@ -22,7 +21,6 @@ import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.ExtraModelInfo
-import com.android.build.gradle.internal.LoggingUtil
 import com.android.build.gradle.internal.SdkHandler
 import com.android.build.gradle.internal.SourceSetSourceProviderWrapper
 import com.android.build.gradle.internal.coverage.JacocoExtension
@@ -57,7 +55,6 @@ import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.SourceSet
 import org.gradle.internal.reflect.Instantiator
-
 /**
  * Base 'android' extension for all android plugins.
  *
@@ -592,22 +589,5 @@ public abstract class BaseExtension {
             logger.warn("Pure splits are not supported by PlayStore yet.")
         }
         this.generatePureSplits = flag;
-    }
-
-    private boolean enforceUniquePackageName = true
-
-    public void enforceUniquePackageName(boolean value) {
-        if (!value) {
-            LoggingUtil.displayDeprecationWarning(logger, project, "Support for libraries with same package name is deprecated and will be removed in 1.0")
-        }
-        enforceUniquePackageName = value
-    }
-
-    public void setEnforceUniquePackageName(boolean value) {
-        enforceUniquePackageName(value)
-    }
-
-    public getEnforceUniquePackageName() {
-        return enforceUniquePackageName
     }
 }

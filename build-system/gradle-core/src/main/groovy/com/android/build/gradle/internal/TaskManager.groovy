@@ -874,7 +874,6 @@ abstract class TaskManager {
                     && variantData.generateRClassTask == null) {
                 variantData.generateRClassTask = processResources
                 variantData.sourceGenTask.dependsOn processResources
-                processResources.enforceUniquePackageName = getExtension().getEnforceUniquePackageName()
 
                 conventionMapping(processResources).map("libraries") {
                     getTextSymbolDependencies(config.allLibraries)

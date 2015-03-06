@@ -118,7 +118,7 @@ import java.util.Set;
  * then build steps can be done with
  * {@link #mergeManifests(File, List, List, String, int, String, String, String, Integer, String, String, ManifestMerger2.MergeType, Map, File)}
  * {@link #processTestManifest(String, String, String, String, String, Boolean, Boolean, java.io.File, java.util.List, java.io.File, java.io.File)}
- * {@link #processResources(AaptPackageProcessBuilder, boolean)}
+ * {@link #processResources(boolean)}
  * {@link #compileAllAidlFiles(java.util.List, java.io.File, java.io.File, java.util.List, com.android.builder.compiling.DependencyFileProcessor)}
  * {@link #convertByteCode(Collection, Collection, File, boolean, boolean, File, DexOptions, List, File, boolean, boolean)}
  * {@link #packageApk(String, java.io.File, java.util.Collection, java.util.Collection, String, java.util.Collection, java.util.Set, boolean, com.android.builder.model.SigningConfig, com.android.builder.model.PackagingOptions, String)}
@@ -756,17 +756,13 @@ public class AndroidBuilder {
     /**
      * Process the resources and generate R.java and/or the packaged resources.
      *
-     *  @param aaptCommand aapt command invocation parameters.
-     *  @param enforceUniquePackageName if true method will fail if some libraries share the same
-     *                                 package name
+     * @param aaptCommand aapt command invocation parameters.
      *
      * @throws IOException
      * @throws InterruptedException
      * @throws ProcessException
      */
-    public void processResources(
-            @NonNull AaptPackageProcessBuilder aaptCommand,
-            boolean enforceUniquePackageName)
+    public void processResources(@NonNull AaptPackageProcessBuilder aaptCommand)
             throws IOException, InterruptedException, ProcessException {
 
         checkState(mTargetInfo != null,
@@ -804,15 +800,10 @@ public class AndroidBuilder {
                 }
 
                 if (appPackageName.equals(packageName)) {
-                    if (enforceUniquePackageName) {
-                        String msg = String.format(
-                                "Error: A library uses the same package as this project: %s",
-                                packageName);
-                        throw new RuntimeException(msg);
-                    }
-
-                    // ignore libraries that have the same package name as the app
-                    continue;
+                    String msg = String.format(
+                            "Error: A library uses the same package as this project: %s",
+                            packageName);
+                    throw new RuntimeException(msg);
                 }
 
                 File rFile = lib.getSymbolFile();
@@ -842,7 +833,7 @@ public class AndroidBuilder {
             for (String packageName : libMap.keySet()) {
                 Collection<SymbolLoader> symbols = libMap.get(packageName);
 
-                if (enforceUniquePackageName && symbols.size() > 1) {
+                if (symbols.size() > 1) {
                     String msg = String.format(
                             "Error: more than one library with package name '%s'\n" +
                             "You can temporarily disable this error with android.enforceUniquePackageName=false\n" +
