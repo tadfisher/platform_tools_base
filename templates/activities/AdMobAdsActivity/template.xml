@@ -7,7 +7,7 @@
     minBuildApi="14"
     description="Creates a new blank activity, with an action bar and a contained Fragment.">
 
-    <category value="Activity" />
+    <category value="Google" />
     <formfactor value="Mobile" />
 
     <parameter
