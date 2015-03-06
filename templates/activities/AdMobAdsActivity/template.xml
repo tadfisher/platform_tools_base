@@ -2,12 +2,12 @@
 <template
     format="3"
     revision="1"
-    name="AdMob Ads Activity"
+    name="Google AdMob Activity"
     minApi="7"
     minBuildApi="14"
-    description="Creates a new blank activity, with an action bar and a contained Fragment.">
+    description="Creates a demo activity (with Fragment) showcasing how AdMob ads work.">
 
-    <category value="Activity" />
+    <category value="Google" />
     <formfactor value="Mobile" />
 
     <parameter
