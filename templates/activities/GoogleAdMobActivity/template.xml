@@ -2,12 +2,12 @@
 <template
     format="3"
     revision="1"
-    name="AdMob Ads Activity"
+    name="Google AdMob Activity"
     minApi="7"
     minBuildApi="14"
-    description="Creates a new blank activity, with an action bar and a contained Fragment.">
+    description="Create an activity with an AdMob Ad fragment.">
 
-    <category value="Activity" />
+    <category value="Google" />
     <formfactor value="Mobile" />
 
     <parameter
@@ -90,10 +90,10 @@
     <!-- 128x128 thumbnails relative to template.xml -->
     <thumbs>
         <!-- default thumbnail is required -->
-        <thumb>template_admob_ad_activity.png</thumb>
+        <thumb>template_admob_activity.png</thumb>
         <!-- attributes act as selectors based on chosen parameters -->
-        <thumb adFormat="interstitial">template_admob_ad_activity_interstitial.png</thumb>
-        <thumb adFormat="banner">template_admob_ad_activity_banner.png</thumb>
+        <thumb adFormat="interstitial">template_admob_activity_interstitial.png</thumb>
+        <thumb adFormat="banner">template_admob_activity_banner.png</thumb>
     </thumbs>
 
     <globals file="globals.xml.ftl" />
