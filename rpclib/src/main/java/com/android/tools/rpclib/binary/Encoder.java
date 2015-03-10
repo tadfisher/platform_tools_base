@@ -34,83 +34,121 @@ public class Encoder {
   public Encoder(@NotNull OutputStream out) {
     mEncodedMap = new TObjectIntHashMap<BinaryObject>();
     mOutputStream = out;
-    mBuffer = new byte[8];
-  }
-
-  private void write(int count) throws IOException {
-    mOutputStream.write(mBuffer, 0, count);
+    mBuffer = new byte[9];
   }
 
   public void bool(boolean v) throws IOException {
     mBuffer[0] = (byte)(v ? 1 : 0);
-    write(1);
+    mOutputStream.write(mBuffer, 0, 1);
   }
 
   public void int8(byte v) throws IOException {
     mBuffer[0] = v;
-    write(1);
+    mOutputStream.write(mBuffer, 0, 1);
   }
 
   public void uint8(short v) throws IOException {
     mBuffer[0] = (byte)(v & 0xff);
-    write(1);
+    mOutputStream.write(mBuffer, 0, 1);
   }
 
   public void int16(short v) throws IOException {
-    mBuffer[0] = (byte)((v >>> 0) & 0xff);
-    mBuffer[1] = (byte)((v >>> 8) & 0xff);
-    write(2);
+    int uv = (int)(v) << 1;
+    if (v < 0) uv = ~uv;
+    uint16(uv & 0xffff);
   }
 
   public void uint16(int v) throws IOException {
-    int16((short)(v & 0xffff));
+    int space = 0x7f;
+    int tag = 0;
+    for (int o = 8; true; o--) {
+      if (v <= space) {
+        mBuffer[o] = (byte)(v | tag);
+        mOutputStream.write(mBuffer, o, 9 - o);
+        return;
+      }
+      mBuffer[o] = (byte)(v&0xff);
+      v >>= 8;
+      space >>= 1;
+      tag = (tag >> 1) | 0x80;
+    }
   }
 
   public void int32(int v) throws IOException {
-    mBuffer[0] = (byte)((v >>> 0) & 0xff);
-    mBuffer[1] = (byte)((v >>> 8) & 0xff);
-    mBuffer[2] = (byte)((v >>> 16) & 0xff);
-    mBuffer[3] = (byte)((v >>> 24) & 0xff);
-    write(4);
+    long uv = (long)(v) << 1;
+    if (v < 0) uv = ~uv;
+    uint32(uv & 0xffffffffL);
   }
 
   public void uint32(long v) throws IOException {
-    int32((int)(v & 0xffffffff));
+    long space = 0x7f;
+    int tag = 0;
+    for (int o = 8; true; o--) {
+      if (v <= space) {
+        mBuffer[o] = (byte)(v | tag);
+        mOutputStream.write(mBuffer, o, 9 - o);
+        return;
+      }
+      mBuffer[o] = (byte)(v&0xff);
+      v >>= 8;
+      space >>= 1;
+      tag = (tag >> 1) | 0x80;
+    }
   }
 
   public void int64(long v) throws IOException {
-    mBuffer[0] = (byte)((v >>> 0) & 0xff);
-    mBuffer[1] = (byte)((v >>> 8) & 0xff);
-    mBuffer[2] = (byte)((v >>> 16) & 0xff);
-    mBuffer[3] = (byte)((v >>> 24) & 0xff);
-    mBuffer[4] = (byte)((v >>> 32) & 0xff);
-    mBuffer[5] = (byte)((v >>> 40) & 0xff);
-    mBuffer[6] = (byte)((v >>> 48) & 0xff);
-    mBuffer[7] = (byte)((v >>> 56) & 0xff);
-    write(8);
+    long uv = v << 1;
+    if (v < 0) uv = ~uv;
+    uint64(uv);
   }
 
   public void uint64(long v) throws IOException {
-    int64(v);
+    long space = ~0x7fL;
+    int tag = 0;
+    for (int o = 8; true; o--) {
+      if ((v & space) == 0) {
+        mBuffer[o] = (byte)(v | tag);
+        mOutputStream.write(mBuffer, o, 9 - o);
+        return;
+      }
+      mBuffer[o] = (byte)(v&0xff);
+      v >>>= 8;
+      space >>= 1;
+      tag =(tag >> 1) | 0x80;
+    }
   }
 
   public void float32(float v) throws IOException {
-    int32(Float.floatToIntBits(v));
+    int bits = Float.floatToIntBits(v);
+    int shuffled = ((bits & 0x000000ff) <<  24) |
+                   ((bits & 0x0000ff00) <<   8) |
+                   ((bits & 0x00ff0000) >>   8) |
+                   ((bits & 0xff000000) >>> 24);
+    uint32(shuffled);
   }
 
   public void float64(double v) throws IOException {
-    int64(Double.doubleToLongBits(v));
+    long bits = Double.doubleToLongBits(v);
+    long shuffled = ((bits & 0x00000000000000ffL) <<  56) |
+                    ((bits & 0x000000000000ff00L) <<  40) |
+                    ((bits & 0x0000000000ff0000L) <<  24) |
+                    ((bits & 0x00000000ff000000L) <<   8) |
+                    ((bits & 0x000000ff00000000L) >>   8) |
+                    ((bits & 0x0000ff0000000000L) >>  24) |
+                    ((bits & 0x00ff000000000000L) >>  40) |
+                    ((bits & 0xff00000000000000L) >>> 56);
+    uint64(shuffled);
   }
 
   public void string(@Nullable String v) throws IOException {
     try {
       if (v == null) {
-        int32(0);
+        uint32(0);
         return;
       }
 
       byte[] bytes = v.getBytes("UTF-8");
-      int32((short)(bytes.length));
+      uint32(bytes.length);
       for (byte b : bytes) {
         int8(b);
       }
@@ -122,7 +160,7 @@ public class Encoder {
 
   public void object(@Nullable BinaryObject obj) throws IOException {
     if (obj == null) {
-      uint16(BinaryObject.NULL_ID);
+      uint32(BinaryObject.NULL_ID);
       return;
     }
 
@@ -132,9 +170,9 @@ public class Encoder {
       return;
     }
 
-    int key = mEncodedMap.size();
+    int key = mEncodedMap.size()+1;
     mEncodedMap.put(obj, key);
-    uint16(key);
+    uint32(key);
     obj.type().encode(this);
     obj.encode(this);
   }

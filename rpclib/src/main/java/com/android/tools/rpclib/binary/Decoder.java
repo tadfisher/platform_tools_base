@@ -34,7 +34,7 @@ public class Decoder {
   public Decoder(@NotNull InputStream in) {
     mDecodedMap = new TIntObjectHashMap<BinaryObject>();
     mInputStream = in;
-    mBuffer = new byte[8];
+    mBuffer = new byte[9];
   }
 
   public void read(byte[] buf, int count) throws IOException {
@@ -63,59 +63,101 @@ public class Decoder {
   }
 
   public short int16() throws IOException {
-    read(2);
-    int i = 0;
-    i |= (mBuffer[0] & 0xff);
-    i |= (mBuffer[1] & 0xff) << 8;
-    return (short)i;
+    short uv = uint16();
+    int v = (uv >> 1) & 0x7fff;
+    if ((uv & 1) != 0) {
+      v = ~v;
+    }
+    return (short)v;
   }
 
   public short uint16() throws IOException {
-    return int16();
+    read(1);
+    int count = 0;
+    for (int tag = (mBuffer[0] & 0xff); (tag & 0x80) != 0; tag <<= 1) count += 1;
+    int v = mBuffer[0] & (0xff >> count);
+    if (count == 0) {
+      return (short)v;
+    }
+    read(count);
+    for (int i = 0; i < count; i++) {
+      v = (v << 8) | (mBuffer[i] & 0xff);
+    }
+    return (short)v;
   }
 
   public int int32() throws IOException {
-    read(4);
-    int i = 0;
-    i |= (mBuffer[0] & 0xff);
-    i |= (mBuffer[1] & 0xff) << 8;
-    i |= (mBuffer[2] & 0xff) << 16;
-    i |= (mBuffer[3] & 0xff) << 24;
-    return i;
+    int uv = uint32();
+    int v = uv >>> 1;
+    if ((uv & 1) != 0) {
+      v = ~v;
+    }
+    return v;
   }
 
   public int uint32() throws IOException {
-    return int32();
+    read(1);
+    int count = 0;
+    for (int tag = (mBuffer[0] & 0xff); (tag & 0x80) != 0; tag <<= 1) count += 1;
+    int v = mBuffer[0] & (0xff >> count);
+    if (count == 0) {
+      return v;
+    }
+    read(count);
+    for (int i = 0; i < count; i++) {
+      v = (v << 8) | (mBuffer[i] & 0xff);
+    }
+    return v;
   }
 
   public long int64() throws IOException {
-    read(8);
-    long i = 0;
-    i |= (mBuffer[0] & 0xffL);
-    i |= (mBuffer[1] & 0xffL) << 8;
-    i |= (mBuffer[2] & 0xffL) << 16;
-    i |= (mBuffer[3] & 0xffL) << 24;
-    i |= (mBuffer[4] & 0xffL) << 32;
-    i |= (mBuffer[5] & 0xffL) << 40;
-    i |= (mBuffer[6] & 0xffL) << 48;
-    i |= (mBuffer[7] & 0xffL) << 56;
-    return i;
+    long uv = uint64();
+    long v = uv >>> 1;
+    if ((uv & 1) != 0) {
+      v = ~v;
+    }
+    return v;
   }
 
   public long uint64() throws IOException {
-    return int64();
+    read(1);
+    int count = 0;
+    for (int tag =( mBuffer[0] & 0xff); (tag & 0x80) != 0; tag <<= 1) count += 1;
+    long v = mBuffer[0] & (0xff >>> count);
+    if (count == 0) {
+      return v;
+    }
+    read(count);
+    for (int i = 0; i < count; i++) {
+      v = (v << 8) | (mBuffer[i] & 0xffL);
+    }
+    return v;
   }
 
   public float float32() throws IOException {
-    return Float.intBitsToFloat(int32());
+    int bits = uint32();
+    int shuffled = ((bits & 0x000000ff) <<  24) |
+                   ((bits & 0x0000ff00) <<   8) |
+                   ((bits & 0x00ff0000) >>   8) |
+                   ((bits & 0xff000000) >>> 24);
+    return Float.intBitsToFloat(shuffled);
   }
 
   public double float64() throws IOException {
-    return Double.longBitsToDouble(int64());
+    long bits = uint64();
+    long shuffled = ((bits & 0x00000000000000ffL) <<  56) |
+                    ((bits & 0x000000000000ff00L) <<  40) |
+                    ((bits & 0x0000000000ff0000L) <<  24) |
+                    ((bits & 0x00000000ff000000L) <<   8) |
+                    ((bits & 0x000000ff00000000L) >>   8) |
+                    ((bits & 0x0000ff0000000000L) >>  24) |
+                    ((bits & 0x00ff000000000000L) >>  40) |
+                    ((bits & 0xff00000000000000L) >>> 56);
+    return Double.longBitsToDouble(shuffled);
   }
 
   public String string() throws IOException {
-    int size = int32();
+    int size = uint32();
     byte[] bytes = new byte[size];
     for (int i = 0; i < size; i++) {
       bytes[i] = int8();
@@ -130,7 +172,7 @@ public class Decoder {
 
   @Nullable
   public BinaryObject object() throws IOException {
-    int key = uint16() & 0xffff;
+    int key = uint32();
 
     if (key == BinaryObject.NULL_ID) {
       return null;
