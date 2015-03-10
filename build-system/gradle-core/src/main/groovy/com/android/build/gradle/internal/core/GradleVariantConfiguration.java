@@ -21,8 +21,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.dsl.GradleBuildType;
-import com.android.build.gradle.internal.dsl.GroupableProductFlavor;
-import com.android.build.gradle.internal.dsl.ProductFlavor;
+import com.android.build.gradle.internal.dsl.GradleGroupableProductFlavor;
+import com.android.build.gradle.internal.dsl.GradleProductFlavor;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.SigningConfig;
@@ -37,7 +37,7 @@ import java.util.Set;
  *
  * It also adds support for Ndk support that is not ready to go in the builder library.
  */
-public class GradleVariantConfiguration extends VariantConfiguration<GradleBuildType, ProductFlavor, GroupableProductFlavor> {
+public class GradleVariantConfiguration extends VariantConfiguration<GradleBuildType, GradleProductFlavor, GradleGroupableProductFlavor> {
 
     private final MergedNdkConfig mMergedNdkConfig = new MergedNdkConfig();
 
@@ -45,7 +45,7 @@ public class GradleVariantConfiguration extends VariantConfiguration<GradleBuild
      * Creates a {@link GradleVariantConfiguration} for a normal (non-test) variant.
      */
     public GradleVariantConfiguration(
-            @NonNull ProductFlavor defaultConfig,
+            @NonNull GradleProductFlavor defaultConfig,
             @NonNull SourceProvider defaultSourceProvider,
             @NonNull GradleBuildType buildType,
             @Nullable SourceProvider buildTypeSourceProvider,
@@ -61,7 +61,7 @@ public class GradleVariantConfiguration extends VariantConfiguration<GradleBuild
      */
     public GradleVariantConfiguration(
             @Nullable VariantConfiguration testedConfig,
-            @NonNull ProductFlavor defaultConfig,
+            @NonNull GradleProductFlavor defaultConfig,
             @NonNull SourceProvider defaultSourceProvider,
             @NonNull GradleBuildType buildType,
             @Nullable SourceProvider buildTypeSourceProvider,
@@ -75,7 +75,7 @@ public class GradleVariantConfiguration extends VariantConfiguration<GradleBuild
     @NonNull
     @Override
     public VariantConfiguration addProductFlavor(
-            @NonNull GroupableProductFlavor productFlavor,
+            @NonNull GradleGroupableProductFlavor productFlavor,
             @NonNull SourceProvider sourceProvider,
             @NonNull String dimensionName) {
         checkNotNull(productFlavor);
@@ -120,7 +120,7 @@ public class GradleVariantConfiguration extends VariantConfiguration<GradleBuild
         }
 
         // cant use merge flavor as useJack is not a prop on the base class.
-        for (ProductFlavor productFlavor : getProductFlavors()) {
+        for (GradleProductFlavor productFlavor : getProductFlavors()) {
             value = productFlavor.getUseJack();
             if (value != null) {
                 return value;
@@ -142,7 +142,7 @@ public class GradleVariantConfiguration extends VariantConfiguration<GradleBuild
             mMergedNdkConfig.append(getDefaultConfig().getNdkConfig());
         }
 
-        final List<GroupableProductFlavor> flavors = getProductFlavors();
+        final List<GradleGroupableProductFlavor> flavors = getProductFlavors();
         for (int i = flavors.size() - 1 ; i >= 0 ; i--) {
             NdkConfig ndkConfig = flavors.get(i).getNdkConfig();
             if (ndkConfig != null) {

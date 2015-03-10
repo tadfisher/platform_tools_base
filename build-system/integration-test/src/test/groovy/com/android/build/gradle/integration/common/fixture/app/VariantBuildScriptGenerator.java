@@ -19,9 +19,9 @@ import groovy.lang.Closure;
  */
 public class VariantBuildScriptGenerator {
 
-    public static final Integer LARGE_NUMBER = 15;
+    public static final Integer LARGE_NUMBER = 25;
 
-    public static final Integer MEDIUM_NUMBER = 5;
+    public static final Integer MEDIUM_NUMBER = 15;
 
     public static final Integer SMALL_NUMBER = 2;
 

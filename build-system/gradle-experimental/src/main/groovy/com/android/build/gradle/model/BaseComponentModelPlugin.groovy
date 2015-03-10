@@ -32,7 +32,6 @@ import com.android.build.gradle.internal.SdkHandler
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.coverage.JacocoPlugin
-import com.android.build.gradle.internal.dsl.GroupableProductFlavor
 import com.android.build.gradle.internal.model.DefaultAndroidConfigurations
 import com.android.build.gradle.internal.model.ModelBuilder
 import com.android.build.gradle.internal.process.GradleJavaProcessExecutor
@@ -41,7 +40,9 @@ import com.android.build.gradle.internal.tasks.DependencyReportTask
 import com.android.build.gradle.internal.tasks.SigningReportTask
 import com.android.build.gradle.internal.variant.VariantFactory
 import com.android.build.gradle.managed.BuildTypeAdaptor
+import com.android.build.gradle.managed.GroupableProductFlavorAdaptor
 import com.android.build.gradle.managed.ManagedBuildType
+import com.android.build.gradle.managed.ManagedGroupableProductFlavor
 import com.android.build.gradle.managed.ManagedSigningConfig
 import com.android.build.gradle.managed.SigningConfigAdaptor
 import com.android.build.gradle.ndk.ManagedNdkConfig
@@ -59,7 +60,6 @@ import com.android.ide.common.signing.KeystoreHelper
 import com.android.utils.ILogger
 import groovy.transform.CompileStatic
 import org.gradle.api.DefaultTask
-import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -143,6 +143,12 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
 
         project.apply plugin: NdkComponentModelPlugin
 
+        // Remove this when our models no longer depends on Project.
+        modelRegistry.create(
+                ModelCreators.bridgedInstance(
+                        ModelReference.of("projectModel", Project), project)
+                        .descriptor("Model of project.")
+                        .build())
         modelRegistry.create(
                 ModelCreators.bridgedInstance(
                         ModelReference.of("toolingRegistry", ToolingModelBuilderRegistry), toolingRegistry)
@@ -234,7 +240,6 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
         @Model("androidConfig")
         BaseExtension androidConfig(
                 ServiceRegistry serviceRegistry,
-                @Path("androidProductFlavors") NamedDomainObjectContainer<GroupableProductFlavor> productFlavorContainer,
                 @Path("isApplication") Boolean isApplication,
                 AndroidBuilder androidBuilder,
                 SdkHandler sdkHandler,
@@ -246,8 +251,7 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
 
             BaseExtension extension = (BaseExtension) instantiator.newInstance(extensionClass,
                     (ProjectInternal) project, instantiator, androidBuilder,
-                    sdkHandler, null, productFlavorContainer, null,
-                    extraModelInfo, !isApplication)
+                    sdkHandler, null, null, null, extraModelInfo, !isApplication)
 
             return extension
         }
@@ -312,7 +316,7 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
                 ServiceRegistry serviceRegistry,
                 BaseExtension androidExtension,
                 @Path("android.buildTypes") ManagedSet<ManagedBuildType> buildTypes,
-                @Path("android.productFlavors") NamedDomainObjectContainer<GroupableProductFlavor> productFlavorContainer,
+                @Path("android.productFlavors") ManagedSet<ManagedGroupableProductFlavor> productFlavors,
                 @Path("android.signingConfigs") ManagedSet<ManagedSigningConfig> signingConfigs,
                 VariantFactory variantFactory,
                 TaskManager taskManager,
@@ -344,8 +348,8 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
             for(ManagedBuildType buildType : buildTypes) {
                 variantManager.addBuildType(new BuildTypeAdaptor(buildType))
             }
-            productFlavorContainer.all { GroupableProductFlavor productFlavor ->
-                variantManager.addProductFlavor(productFlavor)
+            for(ManagedGroupableProductFlavor productFlavor : productFlavors) {
+                variantManager.addProductFlavor(new GroupableProductFlavorAdaptor(productFlavor))
             }
 
             ModelBuilder modelBuilder = new ModelBuilder(

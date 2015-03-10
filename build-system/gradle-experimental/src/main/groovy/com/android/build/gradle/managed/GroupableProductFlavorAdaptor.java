@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright (C) 2015 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,29 +14,25 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal;
+package com.android.build.gradle.managed;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.dsl.GradleGroupableProductFlavor;
-import com.android.build.gradle.internal.dsl.GradleProductFlavor;
-import com.android.builder.model.SigningConfig;
-
-import java.util.Map;
 
 /**
- * Provides information about the build types, product flavors and signing configurations.
+ * An adaptor to convert a ManagedGroupableProductFlavor to GradleProductFlavor.
  */
-public interface VariantModel {
+public class GroupableProductFlavorAdaptor extends ProductFlavorAdaptor
+        implements GradleGroupableProductFlavor {
 
-    @NonNull
-    ProductFlavorData<GradleProductFlavor> getDefaultConfig();
+    public GroupableProductFlavorAdaptor(@NonNull ManagedGroupableProductFlavor productFlavor) {
+        super(productFlavor);
+    }
 
-    @NonNull
-    Map<String, BuildTypeData> getBuildTypes();
-
-    @NonNull
-    Map<String, ProductFlavorData<GradleGroupableProductFlavor>> getProductFlavors();
-
-    @NonNull
-    Map<String, ? extends SigningConfig> getSigningConfigs();
+    @Nullable
+    @Override
+    public String getFlavorDimension() {
+        return ((ManagedGroupableProductFlavor) productFlavor).getFlavorDimension();
+    }
 }

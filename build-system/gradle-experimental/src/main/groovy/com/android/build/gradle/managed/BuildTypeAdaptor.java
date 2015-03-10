@@ -78,6 +78,13 @@ public class BuildTypeAdaptor implements GradleBuildType {
 
     @NonNull
     @Override
+    public Collection<File> getTestProguardFiles() {
+        // TODO: To be implemented
+        return Lists.newArrayList();
+    }
+
+    @NonNull
+    @Override
     public Map<String, Object> getManifestPlaceholders() {
         // TODO: To be implemented
         return Maps.newHashMap();
