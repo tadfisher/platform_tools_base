@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.gradle.ndk.NdkExtension
+import com.android.build.gradle.ndk.ManagedNdkConfig
 import com.android.build.gradle.ndk.internal.NdkHandler
 import com.android.build.gradle.ndk.internal.StlConfiguration
 import com.google.common.base.Charsets
@@ -37,7 +37,7 @@ class GdbSetupTask extends DefaultTask {
     NdkHandler ndkHandler
 
     @Input
-    NdkExtension extension
+    ManagedNdkConfig extension
 
     @Input
     NativeBinarySpec binary

@@ -17,16 +17,17 @@
 
 package com.android.build.gradle.model
 
+import com.android.annotations.NonNull
 import com.android.build.gradle.internal.ProductFlavorCombo
-import com.android.build.gradle.internal.dsl.GradleBuildType
 import com.android.build.gradle.managed.ManagedBuildType
-import com.android.build.gradle.ndk.NdkExtension
+import com.android.build.gradle.managed.ManagedPattern
+import com.android.build.gradle.ndk.ManagedNdkConfig
 import com.android.build.gradle.ndk.internal.NdkConfiguration
 import com.android.build.gradle.ndk.internal.NdkExtensionConvention
 import com.android.build.gradle.ndk.internal.NdkHandler
 import com.android.build.gradle.ndk.internal.ToolchainConfiguration
 import com.android.builder.core.VariantConfiguration
-import org.gradle.api.NamedDomainObjectContainer
+import com.android.builder.model.BuildType
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -76,35 +77,36 @@ class NdkComponentModelPlugin implements Plugin<Project> {
 
     static class Rules extends RuleSource {
         @Mutate
-        void configureAndroidModel(
-                AndroidModel androidModel,
-                @Path("androidNdk") NdkExtension ndk) {
-            androidModel.ndk = ndk
+        void initializeNdkConfig(@Path("android.ndk") ManagedNdkConfig ndk) {
+            ndk.moduleName = ""
+            ndk.compileSdkVersion = ""
+            ndk.toolchain = ""
+            ndk.toolchainVersion = ""
+            ndk.CFlags = ""
+            ndk.cppFlags = ""
+            ndk.stl = ""
+            ndk.renderscriptNdkMode = false
         }
 
-        @Model("androidNdk")
-        NdkExtension createAndroidNdk(ServiceRegistry serviceRegistry) {
-            Instantiator instantiator = serviceRegistry.get(Instantiator.class)
-            return instantiator.newInstance(NdkExtension)
+        @Finalize
+        void setDefaultNdkExtensionValue(@Path("android.ndk") ManagedNdkConfig ndkConfig) {
+            NdkExtensionConvention.setExtensionDefault(ndkConfig)
         }
 
         @Mutate
-        void addDefaultNativeSourceSet(AndroidComponentModelSourceSet sources) {
+        void addDefaultNativeSourceSet(@Path("android.sources") AndroidComponentModelSourceSet sources) {
             sources.addDefaultSourceSet("c", CSourceSet.class);
             sources.addDefaultSourceSet("cpp", CppSourceSet.class);
         }
 
         @Model
-        NdkHandler ndkHandler(ProjectIdentifier projectId, NdkExtension extension) {
+        NdkHandler ndkHandler(
+                ProjectIdentifier projectId,
+                @Path("android.ndk") ManagedNdkConfig ndkConfig) {
             while (projectId.parentIdentifier != null) {
                 projectId = projectId.parentIdentifier
             }
-            return new NdkHandler(projectId.projectDir, extension)
-        }
-
-        @Finalize
-        void setDefaultNdkExtensionValue(NdkExtension extension) {
-            NdkExtensionConvention.setExtensionDefault(extension)
+            return new NdkHandler(projectId.projectDir, ndkConfig)
         }
 
         @Mutate
@@ -116,13 +118,13 @@ class NdkComponentModelPlugin implements Plugin<Project> {
         @Mutate
         void createToolchains(
                 NativeToolChainRegistry toolchains,
-                NdkExtension ndkExtension,
+                @Path("android.ndk") ManagedNdkConfig ndkConfig,
                 NdkHandler ndkHandler) {
             // Create toolchain for each ABI.
             ToolchainConfiguration.configureToolchain(
                     toolchains,
-                    ndkExtension.getToolchain(),
-                    ndkExtension.getToolchainVersion(),
+                    ndkConfig.getToolchain(),
+                    ndkConfig.getToolchainVersion(),
                     ndkHandler)
         }
 
@@ -147,16 +149,16 @@ class NdkComponentModelPlugin implements Plugin<Project> {
         @Mutate
         void createNativeLibrary(
                 ComponentSpecContainer specs,
-                @Path("android.ndk") NdkExtension extension,
+                @Path("android.ndk") ManagedNdkConfig ndkConfig,
                 NdkHandler ndkHandler,
                 @Path("android.sources") AndroidComponentModelSourceSet sources,
                 @Path("buildDir") File buildDir) {
-            if (!extension.moduleName.isEmpty()) {
-                NativeLibrarySpec library = specs.create(extension.moduleName, NativeLibrarySpec)
+            if (!ndkConfig.moduleName.isEmpty()) {
+                NativeLibrarySpec library = specs.create(ndkConfig.moduleName, NativeLibrarySpec)
                 specs.withType(DefaultAndroidComponentSpec) { androidSpec ->
                     androidSpec.nativeLibrary = library
                     NdkConfiguration.configureProperties(
-                            library, sources, buildDir, extension, ndkHandler)
+                            library, sources, buildDir, ndkConfig, ndkHandler)
                 }
             }
         }
@@ -164,14 +166,14 @@ class NdkComponentModelPlugin implements Plugin<Project> {
         void createAdditionalTasksForNatives(
                 TaskContainer tasks,
                 ComponentSpecContainer specs,
-                NdkExtension extension,
+                @Path("android.ndk") ManagedNdkConfig ndkConfig,
                 NdkHandler ndkHandler,
                 @Path("buildDir") File buildDir) {
             specs.withType(DefaultAndroidComponentSpec) { androidSpec ->
                 if (androidSpec.nativeLibrary != null) {
                     androidSpec.nativeLibrary.binaries.withType(SharedLibraryBinarySpec) { binary ->
                         NdkConfiguration.createTasks(
-                                tasks, binary, buildDir, extension, ndkHandler)
+                                tasks, binary, buildDir, ndkConfig, ndkHandler)
                     }
                 }
             }
@@ -182,10 +184,10 @@ class NdkComponentModelPlugin implements Plugin<Project> {
                 BinaryContainer binaries,
                 ComponentSpecContainer specs,
                 AndroidComponentSpec androidSpec,
-                @Path("android.ndk") NdkExtension extension) {
-            if (!extension.moduleName.isEmpty()) {
+                @Path("android.ndk") ManagedNdkConfig ndkConfig) {
+            if (!ndkConfig.moduleName.isEmpty()) {
                 NativeLibrarySpec library =
-                        specs.withType(NativeLibrarySpec).getByName(extension.moduleName);
+                        specs.withType(NativeLibrarySpec).getByName(ndkConfig.moduleName);
                 binaries.withType(DefaultAndroidBinary).each { binary ->
                     def nativeBinaries = getNativeBinaries(library, binary.buildType, binary.productFlavors)
                     binary.getNativeBinaries().addAll(nativeBinaries)
@@ -236,7 +238,7 @@ class NdkComponentModelPlugin implements Plugin<Project> {
 
     private static Collection<SharedLibraryBinarySpec> getNativeBinaries(
             NativeLibrarySpec library,
-            com.android.builder.model.BuildType buildType,
+            BuildType buildType,
             List<? extends com.android.build.gradle.api.GroupableProductFlavor> productFlavors) {
         ProductFlavorCombo flavorGroup = new ProductFlavorCombo(productFlavors);
         library.binaries.withType(SharedLibraryBinarySpec).matching { binary ->
