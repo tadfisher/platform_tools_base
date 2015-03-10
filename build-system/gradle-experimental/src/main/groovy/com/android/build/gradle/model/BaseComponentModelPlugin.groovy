@@ -44,7 +44,7 @@ import com.android.build.gradle.managed.BuildTypeAdaptor
 import com.android.build.gradle.managed.ManagedBuildType
 import com.android.build.gradle.managed.ManagedSigningConfig
 import com.android.build.gradle.managed.SigningConfigAdaptor
-import com.android.build.gradle.ndk.NdkExtension
+import com.android.build.gradle.ndk.ManagedNdkConfig
 import com.android.build.gradle.tasks.JillTask
 import com.android.build.gradle.tasks.PreDex
 import com.android.builder.core.AndroidBuilder
@@ -274,7 +274,8 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
 
 
         @Mutate
-        void addDefaultAndroidSourceSet(AndroidComponentModelSourceSet sources) {
+        void addDefaultAndroidSourceSet(
+                @Path("android.sources") AndroidComponentModelSourceSet sources) {
             sources.addDefaultSourceSet("resources", AndroidLanguageSourceSet.class);
             sources.addDefaultSourceSet("java", AndroidLanguageSourceSet.class);
             sources.addDefaultSourceSet("manifest", AndroidLanguageSourceSet.class);
@@ -287,15 +288,11 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
 
         @Mutate
         void forwardCompileSdkVersion(
-                @Path("android.ndk") NdkExtension ndkExtension,
+                @Path("android.ndk") ManagedNdkConfig ndkConfig,
                 @Path("android.config") BaseExtension baseExtension) {
-            if (ndkExtension.compileSdkVersion.isEmpty() && baseExtension.compileSdkVersion != null) {
-                ndkExtension.compileSdkVersion(baseExtension.compileSdkVersion);
+            if (ndkConfig.compileSdkVersion.isEmpty() && baseExtension.compileSdkVersion != null) {
+                ndkConfig.compileSdkVersion = baseExtension.compileSdkVersion
             }
-        }
-
-        @Mutate
-        void closeProjectSourceSet(AndroidComponentModelSourceSet sources) {
         }
 
         @Mutate
