@@ -90,7 +90,7 @@ class PackageSplitRes extends SplitRelatedTask {
                             OutputFile.FilterType.DENSITY.toString(), density)
                 }
             }
-            if (languageSplits.contains(split)) {
+            if (languageSplits.contains(unMangleSplitName(split))) {
                 filterData = FilterDataImpl.build(
                         OutputFile.FilterType.LANGUAGE.toString(), split);
             }
@@ -142,7 +142,8 @@ class PackageSplitRes extends SplitRelatedTask {
                 return true;
             }
         }
-        return languageSplits.contains(splitWithOptionalSuffix);
+        String mangledName = unMangleSplitName(splitWithOptionalSuffix);
+        return languageSplits.contains(mangledName);
     }
 
     String getOutputFileNameForSplit(String split) {
@@ -156,5 +157,10 @@ class PackageSplitRes extends SplitRelatedTask {
         addAllFilterData(filterDataBuilder, densitySplits, OutputFile.FilterType.DENSITY);
         addAllFilterData(filterDataBuilder, languageSplits, OutputFile.FilterType.LANGUAGE);
         return filterDataBuilder.build();
+    }
+
+    static String unMangleSplitName(String splitWithOptionalSuffix) {
+        String mangledName = splitWithOptionalSuffix.replaceAll('_', ',');
+        return mangledName.replace("-", "-r");
     }
 }
