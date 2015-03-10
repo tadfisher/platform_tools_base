@@ -19,8 +19,8 @@ package com.android.build.gradle.internal
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
+import com.android.build.gradle.internal.dsl.GradleProductFlavor
 import com.android.builder.core.BuilderConstants
-import com.android.builder.core.DefaultProductFlavor
 import com.android.builder.core.VariantType
 import groovy.transform.CompileStatic
 import org.gradle.api.Project
@@ -31,7 +31,7 @@ import org.gradle.api.artifacts.Configuration
  * Class containing a ProductFlavor and associated data (sourcesets)
  */
 @CompileStatic
-public class ProductFlavorData<T extends DefaultProductFlavor> {
+public class ProductFlavorData<T extends GradleProductFlavor> {
 
     public static class ConfigurationProviderImpl implements ConfigurationProvider {
 

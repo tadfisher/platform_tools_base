@@ -28,7 +28,7 @@ import com.android.build.gradle.internal.api.LibraryVariantOutputImpl
 import com.android.build.gradle.internal.api.ReadOnlyObjectProvider
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.dsl.GradleBuildType
-import com.android.build.gradle.internal.dsl.GroupableProductFlavor
+import com.android.build.gradle.internal.dsl.GradleGroupableProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.VariantType
@@ -151,7 +151,7 @@ public class LibraryVariantFactory implements VariantFactory {
     @Override
     public void createDefaultComponents(
             @NonNull NamedDomainObjectContainer<GradleBuildType> buildTypes,
-            @NonNull NamedDomainObjectContainer<GroupableProductFlavor> productFlavors,
+            @NonNull NamedDomainObjectContainer<GradleGroupableProductFlavor> productFlavors,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs) {
         // must create signing config first so that build type 'debug' can be initialized
         // with the debug signing config.

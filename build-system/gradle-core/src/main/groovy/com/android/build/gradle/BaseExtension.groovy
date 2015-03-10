@@ -29,9 +29,10 @@ import com.android.build.gradle.internal.coverage.JacocoExtension
 import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.dsl.AdbOptions
 import com.android.build.gradle.internal.dsl.AndroidSourceSetFactory
-import com.android.build.gradle.internal.dsl.GradleBuildType
 import com.android.build.gradle.internal.dsl.DexOptions
-import com.android.build.gradle.internal.dsl.GroupableProductFlavor
+import com.android.build.gradle.internal.dsl.GradleBuildType
+import com.android.build.gradle.internal.dsl.GradleGroupableProductFlavor
+import com.android.build.gradle.internal.dsl.GradleProductFlavor
 import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.dsl.PackagingOptions
 import com.android.build.gradle.internal.dsl.ProductFlavor
@@ -100,7 +101,7 @@ public abstract class BaseExtension {
     final Splits splits
 
     /** All product flavors used by this project. */
-    final NamedDomainObjectContainer<GroupableProductFlavor> productFlavors
+    final NamedDomainObjectContainer<GradleGroupableProductFlavor> productFlavors
 
     /** Build types used by this project. */
     final NamedDomainObjectContainer<GradleBuildType> buildTypes
@@ -147,7 +148,7 @@ public abstract class BaseExtension {
             @NonNull AndroidBuilder androidBuilder,
             @NonNull SdkHandler sdkHandler,
             @NonNull NamedDomainObjectContainer<GradleBuildType> buildTypes,
-            @NonNull NamedDomainObjectContainer<GroupableProductFlavor> productFlavors,
+            @NonNull NamedDomainObjectContainer<GradleGroupableProductFlavor> productFlavors,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs,
             @NonNull ExtraModelInfo extraModelInfo,
             boolean isLibrary) {
@@ -298,7 +299,7 @@ public abstract class BaseExtension {
     /**
      * Configures the product flavors.
      */
-    void productFlavors(Action<? super NamedDomainObjectContainer<GroupableProductFlavor>> action) {
+    void productFlavors(Action<? super NamedDomainObjectContainer<GradleGroupableProductFlavor>> action) {
         checkWritability()
         action.execute(productFlavors)
     }
@@ -511,7 +512,7 @@ public abstract class BaseExtension {
 
     public void registerProductFlavorSourceProvider(
             @NonNull String name,
-            @NonNull ProductFlavor productFlavor,
+            @NonNull GradleProductFlavor productFlavor,
             @NonNull SourceProvider sourceProvider) {
         extraModelInfo.registerProductFlavorSourceProvider(name, productFlavor, sourceProvider)
     }

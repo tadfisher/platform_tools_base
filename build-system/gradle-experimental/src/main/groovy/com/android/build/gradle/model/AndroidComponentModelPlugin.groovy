@@ -16,15 +16,13 @@
 
 package com.android.build.gradle.model
 
-import com.android.annotations.NonNull
 import com.android.build.gradle.internal.ProductFlavorCombo
-import com.android.build.gradle.internal.dsl.GroupableProductFlavor
-import com.android.build.gradle.internal.dsl.GroupableProductFlavorFactory
 import com.android.build.gradle.managed.BuildTypeAdaptor
+import com.android.build.gradle.managed.GroupableProductFlavorAdaptor
 import com.android.build.gradle.managed.ManagedBuildType
+import com.android.build.gradle.managed.ManagedGroupableProductFlavor
 import com.android.builder.core.BuilderConstants
 import groovy.transform.CompileStatic
-import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.internal.reflect.Instantiator
@@ -74,13 +72,6 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
     @Override
     public void apply(Project project) {
         project.apply plugin: ComponentModelBasePlugin
-
-        // Remove this when our models no longer depends on Project.
-        modelRegistry.create(
-                ModelCreators.bridgedInstance(
-                        ModelReference.of("projectModel", Project), project)
-                                .descriptor("Model of project.")
-                                .build())
     }
 
     static class Rules extends RuleSource {
@@ -90,18 +81,14 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
             builder.defaultImplementation(AndroidLanguageSourceSet)
         }
 
+        /**
+         * Create "android" model block.
+         */
         @Model("android")
         void android(AndroidModel androidModel) {
         }
 
         // Initialize each component separately to ensure correct ordering.
-        @Defaults
-        void androidModelProductFlavors (
-                AndroidModel androidModel,
-                @Path("androidProductFlavors") NamedDomainObjectContainer<GroupableProductFlavor> productFlavors) {
-            androidModel.productFlavors = productFlavors
-        }
-
         @Defaults
         void androidModelSources (
                 AndroidModel androidModel,
@@ -123,30 +110,15 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
         }
 
         @Model
-        NamedDomainObjectContainer<GroupableProductFlavor> androidProductFlavors(
-                ServiceRegistry serviceRegistry,
-                Project project) {
-            Instantiator instantiator = serviceRegistry.get(Instantiator.class)
-            def productFlavorContainer = project.container(GroupableProductFlavor,
-                    new GroupableProductFlavorFactory(instantiator, project, project.getLogger()))
-
-            productFlavorContainer.whenObjectRemoved {
-                throw new UnsupportedOperationException(
-                        "Removing product flavors is not supported.")
-            }
-
-            return productFlavorContainer
-
-        }
-
-        @Model
         List<ProductFlavorCombo> createProductFlavorCombo (
-                @Path("android.productFlavors") NamedDomainObjectContainer<GroupableProductFlavor> productFlavors) {
+                @Path("android.productFlavors") ManagedSet<ManagedGroupableProductFlavor> productFlavors) {
             // TODO: Create custom product flavor container to manually configure flavor dimensions.
             List<String> flavorDimensionList = productFlavors*.flavorDimension.unique().asList()
             flavorDimensionList.removeAll([null])
 
-            return ProductFlavorCombo.createCombinations(flavorDimensionList, productFlavors)
+            return ProductFlavorCombo.createCombinations(
+                    flavorDimensionList,
+                    productFlavors.collect { new GroupableProductFlavorAdaptor(it) })
         }
 
         @ComponentType
@@ -179,7 +151,7 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
         void createVariantSourceSet(
                 @Path("android.sources") AndroidComponentModelSourceSet sources,
                 @Path("android.buildTypes") ManagedSet<ManagedBuildType> buildTypes,
-                @Path("android.productFlavors") NamedDomainObjectContainer<GroupableProductFlavor> flavors,
+                @Path("android.productFlavors") ManagedSet<ManagedGroupableProductFlavor> flavors,
                 List<ProductFlavorCombo> flavorGroups,
                 ProjectSourceSet projectSourceSet,
                 LanguageRegistry languageRegistry) {

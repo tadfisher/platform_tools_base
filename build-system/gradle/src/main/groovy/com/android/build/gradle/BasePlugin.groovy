@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.coverage.JacocoPlugin
 import com.android.build.gradle.internal.dsl.DefaultGradleBuildType
 import com.android.build.gradle.internal.dsl.GradleBuildType
 import com.android.build.gradle.internal.dsl.BuildTypeFactory
+import com.android.build.gradle.internal.dsl.GradleGroupableProductFlavor
 import com.android.build.gradle.internal.dsl.GroupableProductFlavor
 import com.android.build.gradle.internal.dsl.GroupableProductFlavorFactory
 import com.android.build.gradle.internal.dsl.SigningConfig
@@ -309,7 +310,7 @@ public abstract class BasePlugin {
     private void createExtension() {
         def buildTypeContainer = project.container(GradleBuildType,
                 new BuildTypeFactory(instantiator, project, project.getLogger()))
-        def productFlavorContainer = project.container(GroupableProductFlavor,
+        def productFlavorContainer = project.container(GradleGroupableProductFlavor,
                 new GroupableProductFlavorFactory(instantiator, project, project.getLogger()))
         def signingConfigContainer = project.container(SigningConfig,
                 new SigningConfigFactory(instantiator))

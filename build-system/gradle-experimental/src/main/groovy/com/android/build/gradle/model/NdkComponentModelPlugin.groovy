@@ -17,10 +17,9 @@
 
 package com.android.build.gradle.model
 
-import com.android.annotations.NonNull
+import com.android.build.gradle.api.GroupableProductFlavor
 import com.android.build.gradle.internal.ProductFlavorCombo
 import com.android.build.gradle.managed.ManagedBuildType
-import com.android.build.gradle.managed.ManagedPattern
 import com.android.build.gradle.ndk.ManagedNdkConfig
 import com.android.build.gradle.ndk.internal.NdkConfiguration
 import com.android.build.gradle.ndk.internal.NdkExtensionConvention
@@ -33,8 +32,6 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.internal.project.ProjectIdentifier
 import org.gradle.api.tasks.TaskContainer
-import org.gradle.internal.reflect.Instantiator
-import org.gradle.internal.service.ServiceRegistry
 import org.gradle.language.c.CSourceSet
 import org.gradle.language.cpp.CppSourceSet
 import org.gradle.model.Finalize
@@ -75,6 +72,7 @@ class NdkComponentModelPlugin implements Plugin<Project> {
         }
     }
 
+    @SuppressWarnings("GrMethodMayBeStatic")
     static class Rules extends RuleSource {
         @Mutate
         void initializeNdkConfig(@Path("android.ndk") ManagedNdkConfig ndk) {
@@ -239,7 +237,7 @@ class NdkComponentModelPlugin implements Plugin<Project> {
     private static Collection<SharedLibraryBinarySpec> getNativeBinaries(
             NativeLibrarySpec library,
             BuildType buildType,
-            List<? extends com.android.build.gradle.api.GroupableProductFlavor> productFlavors) {
+            List<? extends GroupableProductFlavor> productFlavors) {
         ProductFlavorCombo flavorGroup = new ProductFlavorCombo(productFlavors);
         library.binaries.withType(SharedLibraryBinarySpec).matching { binary ->
             (binary.buildType.name.equals(buildType.name)
@@ -264,6 +262,7 @@ class NdkComponentModelPlugin implements Plugin<Project> {
                             || (binary.flavor.name.equals("default")
                                     && variantConfig.getFlavorName().isEmpty()))
                     && (variantConfig.getNdkConfig().getAbiFilters() == null
+                            || variantConfig.getNdkConfig().getAbiFilters().isEmpty()
                             || variantConfig.getNdkConfig().getAbiFilters().contains(
                                     binary.targetPlatform.name)))
         }

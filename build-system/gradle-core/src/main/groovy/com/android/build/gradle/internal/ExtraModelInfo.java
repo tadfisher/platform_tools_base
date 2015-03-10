@@ -25,7 +25,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.internal.dsl.GradleBuildType;
-import com.android.build.gradle.internal.dsl.ProductFlavor;
+import com.android.build.gradle.internal.dsl.GradleProductFlavor;
 import com.android.build.gradle.internal.model.ArtifactMetaDataImpl;
 import com.android.build.gradle.internal.model.JavaArtifactImpl;
 import com.android.build.gradle.internal.model.SyncIssueImpl;
@@ -189,7 +189,7 @@ public class ExtraModelInfo {
     }
 
     public void registerProductFlavorSourceProvider(@NonNull String name,
-            @NonNull ProductFlavor productFlavor,
+            @NonNull GradleProductFlavor productFlavor,
             @NonNull SourceProvider sourceProvider) {
         if (extraArtifactMap.get(name) == null) {
             throw new IllegalArgumentException(
