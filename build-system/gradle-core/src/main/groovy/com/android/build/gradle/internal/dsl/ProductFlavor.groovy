@@ -35,7 +35,7 @@ import org.gradle.internal.reflect.Instantiator
 /**
  * DSL object used to configure product flavors.
  */
-class ProductFlavor extends DefaultProductFlavor {
+class ProductFlavor extends DefaultProductFlavor implements GradleProductFlavor {
 
     @NonNull
     protected final Project project

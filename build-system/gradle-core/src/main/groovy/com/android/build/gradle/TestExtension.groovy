@@ -21,7 +21,7 @@ import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.internal.ExtraModelInfo
 import com.android.build.gradle.internal.SdkHandler
 import com.android.build.gradle.internal.dsl.GradleBuildType
-import com.android.build.gradle.internal.dsl.GroupableProductFlavor
+import com.android.build.gradle.internal.dsl.GradleGroupableProductFlavor
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.model.SigningConfig
 import groovy.transform.CompileStatic
@@ -48,7 +48,7 @@ public class TestExtension extends BaseExtension {
             @NonNull AndroidBuilder androidBuilder,
             @NonNull SdkHandler sdkHandler,
             @NonNull NamedDomainObjectContainer<GradleBuildType> buildTypes,
-            @NonNull NamedDomainObjectContainer<GroupableProductFlavor> productFlavors,
+            @NonNull NamedDomainObjectContainer<GradleGroupableProductFlavor> productFlavors,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs,
             @NonNull ExtraModelInfo extraModelInfo,
             boolean isLibrary) {

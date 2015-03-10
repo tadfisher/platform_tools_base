@@ -27,7 +27,7 @@ import org.gradle.internal.reflect.Instantiator;
  * Factory to create GroupableProductFlavor object using an {@link Instantiator} to add
  * the DSL methods.
  */
-public class GroupableProductFlavorFactory implements NamedDomainObjectFactory<GroupableProductFlavor> {
+public class GroupableProductFlavorFactory implements NamedDomainObjectFactory<GradleGroupableProductFlavor> {
 
     @NonNull
     private final Instantiator instantiator;
@@ -45,7 +45,7 @@ public class GroupableProductFlavorFactory implements NamedDomainObjectFactory<G
     }
 
     @Override
-    public GroupableProductFlavor create(String name) {
+    public GradleGroupableProductFlavor create(String name) {
         return instantiator.newInstance(GroupableProductFlavor.class,
                 name, project, instantiator, logger);
     }
