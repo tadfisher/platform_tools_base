@@ -29,7 +29,7 @@ import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.dsl.GroupableProductFlavor;
+import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.variant.ApkVariantOutputData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
@@ -37,7 +37,6 @@ import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.builder.Version;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.core.DefaultProductFlavor;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.AaptOptions;
 import com.android.builder.model.AndroidArtifact;
@@ -47,6 +46,7 @@ import com.android.builder.model.ApiVersion;
 import com.android.builder.model.ArtifactMetaData;
 import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.LintOptions;
+import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.SourceProviderContainer;
@@ -390,12 +390,12 @@ public class ModelBuilder implements ToolingModelBuilder {
     @NonNull
     private static List<String> getProductFlavorNames(
             @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData) {
-        List<GroupableProductFlavor> productFlavors = variantData.getVariantConfiguration()
+        List<CoreProductFlavor> productFlavors = variantData.getVariantConfiguration()
                 .getProductFlavors();
 
         List<String> flavorNames = Lists.newArrayListWithCapacity(productFlavors.size());
 
-        for (DefaultProductFlavor flavor : productFlavors) {
+        for (ProductFlavor flavor : productFlavors) {
             flavorNames.add(flavor.getName());
         }
 

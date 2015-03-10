@@ -50,5 +50,5 @@ public interface VariantFilter {
      * Returns the list of flavors, or an empty list.
      */
     @NonNull
-    public List<GroupableProductFlavor> getFlavors();
+    public List<ProductFlavor> getFlavors();
 }
