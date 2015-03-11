@@ -169,28 +169,7 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                         File file = resourceFile.getFile();
 
                         String filename = file.getName();
-
-                        // Validate the filename here. Waiting for aapt isn't good
-                        // because the error messages don't point back to the original
-                        // file (if it's not an XML file) and besides, aapt prints
-                        // the wrong path (it hard-codes "res" into the path for example,
-                        // even if the file is not in a folder named res.
-                        for (int i = 0, n = filename.length(); i < n; i++) {
-                            // This is a direct port of the aapt file check in aapt's
-                            // Resource.cpp#makeFileResources validation
-                            char c = filename.charAt(i);
-                            if (!((c >= 'a' && c <= 'z')
-                                    || (c >= '0' && c <= '9')
-                                    || c == '_' || c == '.')) {
-                                String message =
-                                        "Invalid file name: must contain only lowercase "
-                                        + "letters and digits ([a-z0-9_.])";
-                                throw new MergingException(message).setFile(file);
-                            }
-                        }
-
                         String folderName = getFolderName(item);
-
                         File typeFolder = new File(getRootFolder(), folderName);
                         try {
                             createDir(typeFolder);

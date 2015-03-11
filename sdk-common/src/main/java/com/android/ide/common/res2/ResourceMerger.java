@@ -99,7 +99,7 @@ public class ResourceMerger extends DataMerger<ResourceItem, ResourceFile, Resou
 
 
     @Override
-    protected ResourceSet createFromXml(Node node) {
+    protected ResourceSet createFromXml(Node node) throws MergingException {
         ResourceSet set = new ResourceSet("");
         return (ResourceSet) set.createFromXml(node);
     }
