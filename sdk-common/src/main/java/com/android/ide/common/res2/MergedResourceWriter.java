@@ -47,6 +47,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.regex.Pattern;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -181,6 +182,14 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                                         + "letters and digits ([a-z0-9_.])";
                                 throw new MergingException(message).setFile(file);
                             }
+                        }
+
+                        // be stricter than aapt.
+                        char c = filename.charAt(0);
+                        if (!(c >= 'a' && c<= 'z')) {
+                            String message = "Invalid file name: " +
+                                    "must start with a lowercase letter.";
+                            throw new MergingException(message).setFile(file);
                         }
 
                         String folderName = getFolderName(item);
