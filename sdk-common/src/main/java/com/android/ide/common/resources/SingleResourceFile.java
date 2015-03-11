@@ -17,6 +17,7 @@
 package com.android.ide.common.resources;
 
 import static com.android.SdkConstants.DOT_XML;
+import static com.android.ide.common.res2.ResourceNameValidator.getResourceName;
 
 import com.android.ide.common.rendering.api.DensityBasedResourceValue;
 import com.android.ide.common.rendering.api.ResourceValue;
@@ -26,6 +27,7 @@ import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceType;
 import com.android.utils.SdkUtils;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.List;
 
@@ -57,18 +59,18 @@ public class SingleResourceFile extends ResourceFile {
         mType = types.get(0);
 
         // compute the resource name
-        mResourceName = getResourceName(mType);
+        mResourceName = getResourceName(getFile(), mType);
 
         // test if there's a density qualifier associated with the resource
         DensityQualifier qualifier = folder.getConfiguration().getDensityQualifier();
 
         if (qualifier == null) {
-            mValue = new ResourceValue(mType, getResourceName(mType),
+            mValue = new ResourceValue(mType, mResourceName,
                     file.getOsLocation(), isFramework());
         } else {
             mValue = new DensityBasedResourceValue(
                     mType,
-                    getResourceName(mType),
+                    mResourceName,
                     file.getOsLocation(),
                     qualifier.getValue(),
                     isFramework());
@@ -132,20 +134,7 @@ public class SingleResourceFile extends ResourceFile {
         return mValue;
     }
 
-    /**
-     * Returns the name of the resources.
-     */
-    private String getResourceName(ResourceType type) {
-        // get the name from the filename.
-        String name = getFile().getName();
 
-        int pos = name.indexOf('.');
-        if (pos != -1) {
-            name = name.substring(0, pos);
-        }
-
-        return name;
-    }
 
     /**
      * Validates the associated resource file to make sure the attribute references are valid

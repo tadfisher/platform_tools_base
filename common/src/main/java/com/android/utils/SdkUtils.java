@@ -16,8 +16,6 @@
 
 package com.android.utils;
 
-import static com.android.SdkConstants.DOT_XML;
-
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -37,6 +35,8 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.NumberFormat;
 import java.text.ParseException;
+
+import static com.android.SdkConstants.*;
 
 /** Miscellaneous utilities used by the Android SDK tools */
 public class SdkUtils {
@@ -459,5 +459,22 @@ public class SdkUtils {
      */
     public static String constantNameToXmlName(String constantName) {
         return CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_HYPHEN, constantName);
+    }
+
+    /**
+     * Returns true if the given file path points to an image file recognized by
+     * Android. See http://developer.android.com/guide/appendix/media-formats.html
+     * for details.
+     *
+     * @param path the filename to be tested
+     * @return true if the file represents an image file
+     */
+    public static boolean hasImageExtension(String path) {
+        return endsWithIgnoreCase(path, DOT_PNG) ||
+               endsWithIgnoreCase(path, DOT_9PNG) ||
+               endsWithIgnoreCase(path, DOT_GIF) ||
+               endsWithIgnoreCase(path, DOT_JPG) ||
+               endsWithIgnoreCase(path, DOT_JPEG) ||
+               endsWithIgnoreCase(path, DOT_BMP);
     }
 }

@@ -24,6 +24,7 @@ dependencies {
     testCompile project(':base:sdklib').sourceSets.test.output
     testCompile project(':base:testutils')
     testCompile 'org.mockito:mockito-all:1.9.5'
+    testCompile 'com.google.truth:truth:0.24'
 }
 
 project.ext.pomName = 'Android Tools sdk-common library'

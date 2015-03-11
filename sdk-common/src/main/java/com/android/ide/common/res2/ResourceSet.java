@@ -69,7 +69,8 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
     }
 
     @Override
-    protected ResourceFile createFileAndItems(@NonNull File file, @NonNull Node fileNode) {
+    protected ResourceFile createFileAndItems(@NonNull File file, @NonNull Node fileNode)
+            throws MergingException {
         Attr qualifierAttr = (Attr) fileNode.getAttributes().getNamedItem(ATTR_QUALIFIER);
         String qualifier = qualifierAttr != null ? qualifierAttr.getValue() : "";
 

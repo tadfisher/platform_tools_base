@@ -78,7 +78,7 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
         mFactory.setIgnoringComments(true);
     }
 
-    protected abstract S createFromXml(Node node);
+    protected abstract S createFromXml(Node node) throws MergingException;
 
     protected abstract boolean requiresMerge(@NonNull String dataItemKey);
 

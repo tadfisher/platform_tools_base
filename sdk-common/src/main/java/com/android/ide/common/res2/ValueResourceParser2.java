@@ -123,12 +123,14 @@ class ValueResourceParser2 {
      * @param node the node representing the resource.
      * @return a ResourceItem object or null.
      */
-    static ResourceItem getResource(@NonNull Node node, @Nullable File from) {
+    static ResourceItem getResource(@NonNull Node node, @Nullable File from)
+            throws MergingException {
         ResourceType type = getType(node, from);
         String name = getName(node);
 
         if (name != null) {
             if (type != null) {
+                ResourceNameValidator.validate(name, type, from);
                 return new ResourceItem(name, type, node);
             }
         } else if (type == ResourceType.PUBLIC) {
