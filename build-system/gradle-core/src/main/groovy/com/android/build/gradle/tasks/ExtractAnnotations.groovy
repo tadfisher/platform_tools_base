@@ -112,11 +112,11 @@ class ExtractAnnotations extends AbstractCompile {
                 def problems = unit.compilationResult().allProblems
                 for (IProblem problem : problems) {
                     if (problem.error) {
-                        println "Not extracting annotations (compilation problems encountered)";
+                        println "Warning: symbol resolution problem during annotation extraction";
                         println "Error: " + problem.getOriginatingFileName() + ":" +
                                 problem.getSourceLineNumber() + ": " + problem.getMessage()
                         // TODO: Consider whether we abort the build at this point!
-                        return
+                        break
                     }
                 }
             }
