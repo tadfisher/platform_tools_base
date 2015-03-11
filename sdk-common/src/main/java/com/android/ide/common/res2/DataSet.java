@@ -106,7 +106,8 @@ abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>> implements 
      * @param fileNode the XML node.
      * @return a DataFile
      */
-    protected abstract F createFileAndItems(@NonNull File file, @NonNull Node fileNode);
+    protected abstract F createFileAndItems(@NonNull File file, @NonNull Node fileNode)
+            throws MergingException;
 
     /**
      * Reads the content of a data folders and loads the DataItem.
@@ -306,7 +307,7 @@ abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>> implements 
      * @param dataSetNode the node to read from.
      * @return a new DataSet object or null.
      */
-    DataSet<I,F> createFromXml(Node dataSetNode) {
+    DataSet<I,F> createFromXml(Node dataSetNode) throws MergingException {
         // get the config name
         Attr configNameAttr = (Attr) dataSetNode.getAttributes().getNamedItem(ATTR_CONFIG);
         if (configNameAttr == null) {

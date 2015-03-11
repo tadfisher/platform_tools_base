@@ -1526,8 +1526,36 @@ public class ResourceMergerTest extends BaseTestCase {
         } catch (MergingException e) {
             File file = new File(root, "layout" + File.separator + "ActivityMain.xml");
             file = file.getAbsoluteFile();
-            assertEquals(file.getPath() + ": Error: Invalid file name: must contain only "
-                    + "lowercase letters and digits ([a-z0-9_.])",
+            assertEquals(
+                    file.getPath() +
+                            ": Error: File-based resource names must start with a lowercase letter",
+                    e.getMessage());
+            return;
+        }
+        fail("Expected error");
+    }
+
+    public void testStricterInvalidFileNames() throws Exception {
+        File root = TestUtils.getRoot("resources", "brokenSetDrawableFileName");
+        ResourceSet resourceSet = new ResourceSet("brokenSetDrawableFileName");
+        resourceSet.addSource(root);
+        RecordingLogger logger =  new RecordingLogger();
+        resourceSet.loadFromFiles(logger);
+
+        ResourceMerger resourceMerger = new ResourceMerger();
+        resourceMerger.addDataSet(resourceSet);
+
+
+        File folder = Files.createTempDir();
+        try {
+            MergedResourceWriter writer = new MergedResourceWriter(folder, mPngCruncher, false, false, null);
+            resourceMerger.mergeData(writer, false /*doCleanUp*/);
+        } catch (MergingException e) {
+            File file = new File(root, "drawable" + File.separator + "1icon.png");
+            file = file.getAbsoluteFile();
+            assertEquals(
+                    file.getPath() +
+                            ": Error: File-based resource names must start with a lowercase letter",
                     e.getMessage());
             return;
         }
