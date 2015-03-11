@@ -47,6 +47,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.regex.Pattern;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -59,6 +60,9 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
     public static final String FN_VALUES_XML = "values.xml";
     /** Prefix in comments which mark the source locations for merge results */
     public static final String FILENAME_PREFIX = "From: ";
+    /** Resource file name pattern */
+    private static final Pattern RESOURCE_FILENAME_PATTERN =
+            Pattern.compile("^[a-z][a-z0-9_]*(\\.[a-z0-9]+|\\.9\\.png)?$");
 
     @NonNull
     private final PngCruncher mCruncher;
@@ -169,18 +173,10 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                         // file (if it's not an XML file) and besides, aapt prints
                         // the wrong path (it hard-codes "res" into the path for example,
                         // even if the file is not in a folder named res.
-                        for (int i = 0, n = filename.length(); i < n; i++) {
-                            // This is a direct port of the aapt file check in aapt's
-                            // Resource.cpp#makeFileResources validation
-                            char c = filename.charAt(i);
-                            if (!((c >= 'a' && c <= 'z')
-                                    || (c >= '0' && c <= '9')
-                                    || c == '_' || c == '.')) {
-                                String message =
-                                        "Invalid file name: must contain only lowercase "
-                                        + "letters and digits ([a-z0-9_.])";
-                                throw new MergingException(message).setFile(file);
-                            }
+                        if (!RESOURCE_FILENAME_PATTERN.matcher(filename).matches()) {
+                            String message = "Invalid file name: must conform to the pattern "
+                                        + "(" + RESOURCE_FILENAME_PATTERN.pattern() + ")";
+                            throw new MergingException(message).setFile(file);
                         }
 
                         String folderName = getFolderName(item);

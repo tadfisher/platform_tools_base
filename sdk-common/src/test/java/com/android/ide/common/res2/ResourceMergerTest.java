@@ -20,6 +20,7 @@ import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.FD_RES_DRAWABLE;
 import static com.android.SdkConstants.FD_RES_LAYOUT;
 import static com.android.SdkConstants.TAG_ATTR;
+import static com.google.common.truth.Truth.assertThat;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -1520,9 +1521,33 @@ public class ResourceMergerTest extends BaseTestCase {
         } catch (MergingException e) {
             File file = new File(root, "layout" + File.separator + "ActivityMain.xml");
             file = file.getAbsoluteFile();
-            assertEquals(file.getPath() + ": Error: Invalid file name: must contain only "
-                    + "lowercase letters and digits ([a-z0-9_.])",
-                    e.getMessage());
+            assertThat(e.getMessage()).startsWith(
+                    file.getPath() + ": Error: Invalid file name: must conform to the pattern (");
+            return;
+        }
+        fail("Expected error");
+    }
+
+    public void testStricterInvalidFileNames() throws Exception {
+        File root = TestUtils.getRoot("resources", "brokenSetDrawableFileName");
+        ResourceSet resourceSet = new ResourceSet("brokenSetDrawableFileName");
+        resourceSet.addSource(root);
+        RecordingLogger logger =  new RecordingLogger();
+        resourceSet.loadFromFiles(logger);
+
+        ResourceMerger resourceMerger = new ResourceMerger();
+        resourceMerger.addDataSet(resourceSet);
+
+
+        File folder = Files.createTempDir();
+        try {
+            MergedResourceWriter writer = new MergedResourceWriter(folder, mPngCruncher, false, false);
+            resourceMerger.mergeData(writer, false /*doCleanUp*/);
+        } catch (MergingException e) {
+            File file = new File(root, "drawable" + File.separator + "1icon.png");
+            file = file.getAbsoluteFile();
+            assertThat(e.getMessage()).startsWith(
+                    file.getPath() + ": Error: Invalid file name: must conform to the pattern (");
             return;
         }
         fail("Expected error");
