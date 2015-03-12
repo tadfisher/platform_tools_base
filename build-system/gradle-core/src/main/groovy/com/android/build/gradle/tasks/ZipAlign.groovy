@@ -15,7 +15,10 @@
  */
 package com.android.build.gradle.tasks
 
+import com.android.build.annotation.BindingInput
 import com.android.build.gradle.internal.tasks.FileSupplier
+import com.android.build.gradle.internal.tasks.processor.AndroidApk
+import com.android.build.gradle.internal.tasks.processor.ZipAlignedApk
 import org.gradle.api.DefaultTask
 import org.gradle.api.Task
 import org.gradle.api.tasks.InputFile
@@ -32,6 +35,7 @@ public class ZipAlign extends DefaultTask implements FileSupplier {
     File outputFile
 
     @InputFile
+    @AndroidApk
     File inputFile
 
     // ----- PRIVATE TASK API -----

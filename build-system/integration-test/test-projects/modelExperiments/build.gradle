@@ -1,0 +1,37 @@
+import org.gradle.api.Action
+import com.google.jedo.sample.BuildType;
+
+ext {
+    buildToolsVersion = System.env.CUSTOM_BUILDTOOLS != null ? System.env.CUSTOM_BUILDTOOLS : (project.hasProperty("CUSTOM_BUILDTOOLS") ? project.CUSTOM_BUILDTOOLS : '20.0.0')
+    useJack = System.env.CUSTOM_JACK != null ? true : (project.hasProperty("CUSTOM_JACK") ? true : false)
+}
+
+buildscript {
+    def gradleVersion = System.env.CUSTOM_GRADLE != null ? System.env.CUSTOM_GRADLE : '1.2.0-alpha1'
+
+    repositories {
+        if (System.env.CUSTOM_REPO != null) {
+            maven { url System.env.CUSTOM_REPO }
+        } else {
+            mavenCentral()
+        }
+    }
+    dependencies {
+        classpath "com.google.jedo.sample:experimental-wiring:$gradleVersion"
+    }
+}
+apply plugin: 'com.google.jedo.sample'
+
+model {
+    android {
+        number = 3;
+    }
+}
+
+task clean << {
+
+}
+
+repositories {
+  mavenCentral()
+}

@@ -54,6 +54,9 @@ import com.android.build.gradle.internal.tasks.multidex.CreateMainDexList
 import com.android.build.gradle.internal.tasks.multidex.CreateManifestKeepList
 import com.android.build.gradle.internal.tasks.multidex.JarMergingTask
 import com.android.build.gradle.internal.tasks.multidex.RetraceMainDexList
+import com.android.build.gradle.internal.tasks.processor.AndroidTask
+import com.android.build.gradle.internal.tasks.processor.AndroidTaskRegistry
+import com.android.build.gradle.internal.tasks.processor.AndroidApk
 import com.android.build.gradle.internal.test.report.ReportType
 import com.android.build.gradle.internal.variant.ApkVariantData
 import com.android.build.gradle.internal.variant.ApkVariantOutputData
@@ -2426,6 +2429,7 @@ abstract class TaskManager {
             @NonNull TaskFactory tasks,
             @NonNull ApkVariantData variantData,
             boolean publishApk) {
+        AndroidTaskRegistry taskRegistry = new AndroidTaskRegistry()
         GradleVariantConfiguration config = variantData.variantConfiguration
 
         boolean signedApk = variantData.isSigned()
@@ -2450,147 +2454,143 @@ abstract class TaskManager {
             String outputBaseName = variantOutputData.baseName
 
             // Add a task to generate application package
-            PackageApplication packageApp = project.tasks.
-                    create("package${outputName.capitalize()}",
-                            PackageApplication)
-            variantOutputData.packageApplicationTask = packageApp
-            packageApp.dependsOn variantOutputData.processResourcesTask,
-                    variantData.processJavaResourcesTask
+            AndroidTask packageAppAndroidTask =
+                    taskRegistry.create(tasks, "package${outputName.capitalize()}", PackageApplication) { PackageApplication packageApp ->
+                        variantOutputData.packageApplicationTask = packageApp
+                        packageApp.dependsOn variantOutputData.processResourcesTask,
+                                variantData.processJavaResourcesTask
 
-            optionalDependsOn(packageApp, variantData.dexTask, variantData.javaCompileTask)
+                        optionalDependsOn(packageApp, variantData.dexTask, variantData.javaCompileTask)
 
-            if (variantOutputData.packageSplitResourcesTask != null) {
-                packageApp.dependsOn variantOutputData.packageSplitResourcesTask
-            }
-            if (variantOutputData.packageSplitAbiTask != null) {
-                packageApp.dependsOn variantOutputData.packageSplitAbiTask
-            }
+                        if (variantOutputData.packageSplitResourcesTask != null) {
+                            packageApp.dependsOn variantOutputData.packageSplitResourcesTask
+                        }
+                        if (variantOutputData.packageSplitAbiTask != null) {
+                            packageApp.dependsOn variantOutputData.packageSplitAbiTask
+                        }
 
-            packageApp.dependsOn getNdkBuildable(variantData)
+                        packageApp.dependsOn getNdkBuildable(variantData)
 
-            packageApp.androidBuilder = androidBuilder
+                        packageApp.androidBuilder = androidBuilder
 
-            if (config.minifyEnabled && config.buildType.shrinkResources && !config.useJack) {
-                def shrinkTask = createShrinkResourcesTask(vod)
+                        if (config.minifyEnabled && config.buildType.shrinkResources && !config.useJack) {
+                            def shrinkTask = createShrinkResourcesTask(vod)
 
-                // When shrinking resources, rather than having the packaging task
-                // directly map to the packageOutputFile of ProcessAndroidResources,
-                // we insert the ShrinkResources task into the chain, such that its
-                // input is the ProcessAndroidResources packageOutputFile, and its
-                // output is what the PackageApplication task reads.
-                packageApp.dependsOn shrinkTask
-                conventionMapping(packageApp).map("resourceFile") {
-                    shrinkTask.compressedResources
-                }
-            } else {
-                conventionMapping(packageApp).map("resourceFile") {
-                    variantOutputData.processResourcesTask.packageOutputFile
-                }
-            }
-            conventionMapping(packageApp).map("dexFolder") {
-                if (variantData.dexTask != null) {
-                    return variantData.dexTask.outputFolder
-                }
+                            // When shrinking resources, rather than having the packaging task
+                            // directly map to the packageOutputFile of ProcessAndroidResources,
+                            // we insert the ShrinkResources task into the chain, such that its
+                            // input is the ProcessAndroidResources packageOutputFile, and its
+                            // output is what the PackageApplication task reads.
+                            packageApp.dependsOn shrinkTask
+                            conventionMapping(packageApp).map("resourceFile") {
+                                shrinkTask.compressedResources
+                            }
+                        } else {
+                            conventionMapping(packageApp).map("resourceFile") {
+                                variantOutputData.processResourcesTask.packageOutputFile
+                            }
+                        }
+                        conventionMapping(packageApp).map("dexFolder") {
+                            if (variantData.dexTask != null) {
+                                return variantData.dexTask.outputFolder
+                            }
 
-                if (variantData.javaCompileTask != null) {
-                    return variantData.javaCompileTask.getDestinationDir()
-                }
+                            if (variantData.javaCompileTask != null) {
+                                return variantData.javaCompileTask.getDestinationDir()
+                            }
 
-                return null
-            }
-            conventionMapping(packageApp).map("dexedLibraries") {
-                if (config.isMultiDexEnabled() &&
-                        !config.isLegacyMultiDexMode() &&
-                        variantData.preDexTask != null) {
-                    return project.fileTree(variantData.preDexTask.outputFolder).files
-                }
+                            return null
+                        }
+                        conventionMapping(packageApp).map("dexedLibraries") {
+                            if (config.isMultiDexEnabled() &&
+                                    !config.isLegacyMultiDexMode() &&
+                                    variantData.preDexTask != null) {
+                                return project.fileTree(variantData.preDexTask.outputFolder).files
+                            }
 
-                return Collections.<File> emptyList()
-            }
-            conventionMapping(packageApp).
-                    map("packagedJars") { androidBuilder.getPackagedJars(config) }
-            conventionMapping(packageApp).map("javaResourceDir") {
-                getOptionalDir(variantData.processJavaResourcesTask.destinationDir)
-            }
-            conventionMapping(packageApp).map("jniFolders") {
-                if (variantData.getSplitHandlingPolicy() ==
-                        BaseVariantData.SplitHandlingPolicy.PRE_21_POLICY) {
-                    return getJniFolders(variantData)
-                }
-                Set<String> filters = AbiSplitOptions.getAbiFilters(
-                        getExtension().getSplits().getAbiFilters())
-                return filters.isEmpty() ? getJniFolders(variantData) : Collections.emptySet();
-            }
-            conventionMapping(packageApp).map("abiFilters") {
-                if (variantOutputData.getMainOutputFile().getFilter(OutputFile.ABI) != null) {
-                    return ImmutableSet.
-                            of(variantOutputData.getMainOutputFile().getFilter(OutputFile.ABI))
-                }
-                return config.supportedAbis
-            }
-            conventionMapping(packageApp).map("jniDebugBuild") { config.buildType.jniDebuggable }
+                            return Collections.<File> emptyList()
+                        }
+                        conventionMapping(packageApp).
+                                map("packagedJars") { androidBuilder.getPackagedJars(config) }
+                        conventionMapping(packageApp).map("javaResourceDir") {
+                            getOptionalDir(variantData.processJavaResourcesTask.destinationDir)
+                        }
+                        conventionMapping(packageApp).map("jniFolders") {
+                            if (variantData.getSplitHandlingPolicy() ==
+                                    BaseVariantData.SplitHandlingPolicy.PRE_21_POLICY) {
+                                return getJniFolders(variantData)
+                            }
+                            Set<String> filters = AbiSplitOptions.getAbiFilters(
+                                    getExtension().getSplits().getAbiFilters())
+                            return filters.isEmpty() ? getJniFolders(variantData) : Collections.emptySet();
+                        }
+                        conventionMapping(packageApp).map("abiFilters") {
+                            if (variantOutputData.getMainOutputFile().getFilter(OutputFile.ABI) != null) {
+                                return ImmutableSet.
+                                        of(variantOutputData.getMainOutputFile().getFilter(OutputFile.ABI))
+                            }
+                            return config.supportedAbis
+                        }
+                        conventionMapping(packageApp).map("jniDebugBuild") { config.buildType.jniDebuggable }
 
-            conventionMapping(packageApp).map("signingConfig") { sc }
-            if (sc != null) {
-                ValidateSigningTask validateSigningTask = validateSigningTaskMap.get(sc)
-                if (validateSigningTask == null) {
-                    validateSigningTask =
-                            project.tasks.create("validate${sc.name.capitalize()}Signing",
-                                    ValidateSigningTask)
-                    validateSigningTask.androidBuilder = androidBuilder
-                    validateSigningTask.signingConfig = sc
+                        conventionMapping(packageApp).map("signingConfig") { sc }
+                        if (sc != null) {
+                            ValidateSigningTask validateSigningTask = validateSigningTaskMap.get(sc)
+                            if (validateSigningTask == null) {
+                                validateSigningTask =
+                                        project.tasks.create("validate${sc.name.capitalize()}Signing",
+                                                ValidateSigningTask)
+                                validateSigningTask.androidBuilder = androidBuilder
+                                validateSigningTask.signingConfig = sc
 
-                    validateSigningTaskMap.put(sc, validateSigningTask)
-                }
+                                validateSigningTaskMap.put(sc, validateSigningTask)
+                            }
 
-                packageApp.dependsOn validateSigningTask
-            }
+                            packageApp.dependsOn validateSigningTask
+                        }
 
-            String apkName = signedApk ?
-                    "$projectBaseName-${outputBaseName}-unaligned.apk" :
-                    "$projectBaseName-${outputBaseName}-unsigned.apk"
+                        String apkName = signedApk ?
+                                "$projectBaseName-${outputBaseName}-unaligned.apk" :
+                                "$projectBaseName-${outputBaseName}-unsigned.apk"
 
-            conventionMapping(packageApp).map("packagingOptions") { getExtension().packagingOptions }
+                        conventionMapping(packageApp).map("packagingOptions") { getExtension().packagingOptions }
 
-            conventionMapping(packageApp).map("outputFile") {
-                // if this is the final task then the location is
-                // the potentially overridden one.
-                if (!signedApk || !variantData.zipAlignEnabled) {
-                    project.file("$apkLocation/${apkName}")
-                } else {
-                    // otherwise default one.
-                    project.file("$defaultLocation/${apkName}")
-                }
-            }
+                        packageApp.outputFile =
+                                (!signedApk || !variantData.zipAlignEnabled) ?
+                                        project.file("$apkLocation/${apkName}") :
+                                        project.file("$defaultLocation/${apkName}");
+                        return null
+                    }
 
-            Task appTask = packageApp
+
+            AndroidTask appTask = packageAppAndroidTask
 
             if (signedApk) {
                 if (variantData.zipAlignEnabled) {
                     // Add a task to zip align application package
-                    def zipAlignTask = project.tasks.create(
-                            "zipalign${outputName.capitalize()}",
-                            ZipAlign)
-                    variantOutputData.zipAlignTask = zipAlignTask
 
-                    zipAlignTask.dependsOn packageApp
-                    conventionMapping(zipAlignTask).map("inputFile") { packageApp.outputFile }
-                    conventionMapping(zipAlignTask).map("outputFile") {
-                        project.file(
-                                "$apkLocation/$projectBaseName-${outputBaseName}.apk")
-                    }
-                    conventionMapping(zipAlignTask).map("zipAlignExe") {
-                        String path = androidBuilder.targetInfo?.buildTools?.getPath(ZIP_ALIGN)
-                        if (path != null) {
-                            return new File(path)
+                    AndroidTask zipAlignTask = taskRegistry.create(
+                            tasks,
+                            "zipalign${outputName.capitalize()}",
+                            ZipAlign) { ZipAlign zipAlignTask ->
+                        variantOutputData.zipAlignTask = zipAlignTask
+
+                        zipAlignTask.outputFile =
+                                new File("$apkLocation/$projectBaseName-${outputBaseName}.apk")
+
+                        conventionMapping(zipAlignTask).map("zipAlignExe") {
+                            String path = androidBuilder.targetInfo?.buildTools?.getPath(ZIP_ALIGN)
+                            if (path != null) {
+                                return new File(path)
+                            }
+
+                            return null
+                        }
+                        if (variantOutputData.splitZipAlign != null) {
+                            zipAlignTask.dependsOn variantOutputData.splitZipAlign
                         }
 
-                        return null
                     }
-                    if (variantOutputData.splitZipAlign != null) {
-                        zipAlignTask.dependsOn variantOutputData.splitZipAlign
-                    }
-
                     appTask = zipAlignTask
                 }
             }
@@ -2619,18 +2619,24 @@ abstract class TaskManager {
                 copyTask.destinationDir = new File(apkLocation as String);
                 copyTask.from(variantOutputData.packageSplitResourcesTask.getOutputDirectory())
                 variantOutputData.assembleTask.dependsOn(copyTask)
-                copyTask.mustRunAfter(appTask)
+                copyTask.mustRunAfter(appTask.name)
             }
 
-            variantOutputData.assembleTask.dependsOn appTask
+            variantOutputData.assembleTask.dependsOn appTask.name
 
             if (publishApk) {
                 // if this variant is the default publish config or we also should publish non
                 // defaults, proceed with declaring our artifacts.
                 if (getExtension().defaultPublishConfig.equals(outputName)) {
+                    appTask.named(tasks) { FileSupplier packageTask ->
+                        project.artifacts.add("default", new ApkPublishArtifact(
+                                projectBaseName,
+                                null,
+                                packageTask))
+                    }
 
                     for (FileSupplier outputFileProvider :
-                            variantOutputData.getOutputFileSuppliers()) {
+                            variantOutputData.getSplitOutputFileSuppliers()) {
                         project.artifacts.add("default", new ApkPublishArtifact(
                                 projectBaseName,
                                 null,
@@ -2646,8 +2652,17 @@ abstract class TaskManager {
                 }
 
                 if (getExtension().publishNonDefault) {
+                    appTask.named(tasks) { FileSupplier packageTask ->
+                        project.artifacts.add(
+                                variantData.variantDependency.publishConfiguration.name,
+                                new ApkPublishArtifact(
+                                        projectBaseName,
+                                        null,
+                                        packageTask))
+                    }
+
                     for (FileSupplier outputFileProvider :
-                            variantOutputData.getOutputFileSuppliers()) {
+                            variantOutputData.getSplitOutputFileSuppliers()) {
                         project.artifacts.add(
                                 variantData.variantDependency.publishConfiguration.name,
                                 new ApkPublishArtifact(

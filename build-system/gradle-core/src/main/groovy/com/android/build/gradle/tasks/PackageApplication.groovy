@@ -15,10 +15,12 @@
  */
 package com.android.build.gradle.tasks
 
+import com.android.build.annotation.BindingOutput
 import com.android.build.gradle.internal.dsl.PackagingOptions
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.tasks.FileSupplier
 import com.android.build.gradle.internal.tasks.IncrementalTask
+import com.android.build.gradle.internal.tasks.processor.AndroidApk
 import com.android.builder.packaging.DuplicateFileException
 import org.gradle.api.Task
 import org.gradle.api.file.FileTree
@@ -52,6 +54,7 @@ public class PackageApplication extends IncrementalTask implements FileSupplier 
     Set<File> jniFolders
 
     @OutputFile
+    @AndroidApk
     File outputFile
 
     @Input @Optional

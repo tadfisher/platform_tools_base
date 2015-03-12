@@ -1217,5 +1217,7 @@
     <orderEntry type="module" module-name="lint-checks-base" />
     <orderEntry type="library" exported="" name="jacoco" level="project" />
     <orderEntry type="library" name="mockito" level="project" />
+    <orderEntry type="module" module-name="annotation-processor" />
+    <orderEntry type="library" scope="TEST" name="truth" level="project" />
   </component>
 </module>
