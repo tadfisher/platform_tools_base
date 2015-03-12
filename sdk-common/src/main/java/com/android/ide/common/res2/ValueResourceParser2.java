@@ -123,7 +123,8 @@ class ValueResourceParser2 {
      * @param node the node representing the resource.
      * @return a ResourceItem object or null.
      */
-    static ResourceItem getResource(@NonNull Node node, @Nullable File from) {
+    static ResourceItem getResource(@NonNull Node node, @Nullable File from)
+            throws MergingException {
         ResourceType type = getType(node, from);
         String name = getName(node);
 
@@ -141,7 +142,7 @@ class ValueResourceParser2 {
      * @param node the node
      * @return the ResourceType or null if it could not be inferred.
      */
-    static ResourceType getType(@NonNull Node node, @Nullable File from) {
+    static ResourceType getType(@NonNull Node node, @Nullable File from) throws MergingException {
         String nodeName = node.getLocalName();
         String typeString = null;
 
@@ -162,17 +163,10 @@ class ValueResourceParser2 {
             if (type != null) {
                 return type;
             }
-
-            if (from != null) {
-                throw new RuntimeException(String.format("Unsupported type '%s' in file %s", typeString, from));
-            }
-            throw new RuntimeException(String.format("Unsupported type '%s'", typeString));
+            throw new MergingException(String.format("Unsupported type '%s'", typeString)).addFile(from);
         }
 
-        if (from != null) {
-            throw new RuntimeException(String.format("Unsupported node '%s' in file %s", nodeName, from));
-        }
-        throw new RuntimeException(String.format("Unsupported node '%s'", nodeName));
+        throw new MergingException(String.format("Unsupported node '%s'", nodeName)).addFile(from);
     }
 
     /**
@@ -180,7 +174,7 @@ class ValueResourceParser2 {
      * @param node the node.
      * @return the name or null if it could not be inferred.
      */
-    static String getName(Node node) {
+    static String getName(@NonNull Node node) {
         Attr attribute = (Attr) node.getAttributes().getNamedItemNS(null, ATTR_NAME);
 
         if (attribute != null) {
@@ -197,25 +191,17 @@ class ValueResourceParser2 {
      * @throws MergingException if a merging exception happens
      */
     @NonNull
-    static Document parseDocument(File file) throws MergingException {
+    static Document parseDocument(@NonNull File file) throws MergingException {
         try {
             return XmlUtils.parseUtfXmlFile(file, true /*namespaceAware*/);
         } catch (SAXParseException e) {
-            String message = e.getLocalizedMessage();
-            MergingException exception = new MergingException(message, e);
-            exception.setFile(file);
-            int lineNumber = e.getLineNumber();
-            if (lineNumber != -1) {
-                exception.setLine(lineNumber - 1); // make line numbers 0-based
-                exception.setColumn(e.getColumnNumber() - 1);
-            }
-            throw exception;
+            throw new MergingException(e).addFilePosition(file, e);
         } catch (ParserConfigurationException e) {
-            throw new MergingException(e).setFile(file);
+            throw new MergingException(e).addFile(file);
         } catch (SAXException e) {
-            throw new MergingException(e).setFile(file);
+            throw new MergingException(e).addFile(file);
         } catch (IOException e) {
-            throw new MergingException(e).setFile(file);
+            throw new MergingException(e).addFile(file);
         }
     }
 

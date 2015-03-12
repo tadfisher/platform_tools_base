@@ -16,7 +16,7 @@
 package com.android.ide.common.blame.parser;
 
 import com.android.annotations.NonNull;
-import com.android.ide.common.blame.SourceFragmentPositionRange;
+import com.android.ide.common.blame.SourcePositionRange;
 import com.android.ide.common.blame.output.GradleMessage;
 import com.android.ide.common.blame.output.GradleMessageRewriter;
 import com.android.ide.common.blame.parser.util.OutputLineReader;
@@ -56,8 +56,8 @@ public class JsonEncodedGradleMessageParser implements PatternAwareOutputParser 
         }
 
         GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.registerTypeAdapter(SourceFragmentPositionRange.class,
-                new SourceFragmentPositionRange.Deserializer());
+        gsonBuilder.registerTypeAdapter(SourcePositionRange.class,
+                new SourcePositionRange.Deserializer());
         Gson gson = gsonBuilder.create();
         try {
             GradleMessage msg = gson.fromJson(json, GradleMessage.class);

@@ -179,7 +179,7 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                                 String message =
                                         "Invalid file name: must contain only lowercase "
                                         + "letters and digits ([a-z0-9_.])";
-                                throw new MergingException(message).setFile(file);
+                                throw new MergingException(message).addFile(file);
                             }
                         }
 
@@ -189,7 +189,7 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                         try {
                             createDir(typeFolder);
                         } catch (IOException ioe) {
-                            throw new MergingException(ioe).setFile(typeFolder);
+                            throw new MergingException(ioe).addFile(typeFolder);
                         }
 
                         File outFile = new File(typeFolder, filename);
@@ -216,9 +216,9 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                                 Files.copy(file, outFile);
                             }
                         } catch (PngException e) {
-                            throw new MergingException(e).setFile(file);
+                            throw new MergingException(e).addFile(file);
                         } catch (IOException ioe) {
-                            throw new MergingException(ioe).setFile(file);
+                            throw new MergingException(ioe).addFile(file);
                         }
                         return null;
                     }
@@ -332,7 +332,7 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                     Files.write(content, outFile, Charsets.UTF_8);
                 } catch (Throwable t) {
                     ConsumerException exception = new ConsumerException(t);
-                    exception.setFile(currentFile != null ? currentFile.getFile() : outFile);
+                    exception.addFile(currentFile != null ? currentFile.getFile() : outFile);
                     throw exception;
                 }
             }

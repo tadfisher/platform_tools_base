@@ -27,21 +27,17 @@ import com.google.gson.JsonSerializer;
 
 import java.lang.reflect.Type;
 
-public class SourceFragmentPositionRange {
+public class SourcePositionRange {
 
+    public static SourcePositionRange UNKNOWN = new SourcePositionRange();
     private final int mStartLine;
-
     private final int mStartColumn;
-
     private final int mStartOffset;
-
     private final int mEndLine;
-
     private final int mEndColumn;
-
     private final int mEndOffset;
 
-    public SourceFragmentPositionRange(int startLine, int startColumn, int startOffset, int endLine,
+    public SourcePositionRange(int startLine, int startColumn, int startOffset, int endLine,
             int endColumn,
             int endOffset) {
         mStartLine = startLine;
@@ -52,14 +48,23 @@ public class SourceFragmentPositionRange {
         mEndOffset = endOffset;
     }
 
-    public SourceFragmentPositionRange(int lineNumber, int column, int offset) {
+    public SourcePositionRange(int lineNumber, int column, int offset) {
         mStartLine = mEndLine = lineNumber;
         mStartColumn = mEndColumn = column;
         mStartOffset = mEndOffset = offset;
     }
 
-    public SourceFragmentPositionRange() {
+    private SourcePositionRange() {
         mStartLine = mStartColumn = mStartOffset = mEndLine = mEndColumn = mEndOffset = -1;
+    }
+
+    protected SourcePositionRange(SourcePositionRange copy) {
+        mStartLine = copy.getStartLine();
+        mStartColumn = copy.getStartColumn();
+        mStartOffset = copy.getStartOffset();
+        mEndLine = copy.getEndLine();
+        mEndColumn = copy.getEndColumn();
+        mEndOffset = copy.getEndOffset();
     }
 
     /**
@@ -103,8 +108,8 @@ public class SourceFragmentPositionRange {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof SourceFragmentPositionRange) {
-            SourceFragmentPositionRange other = (SourceFragmentPositionRange) obj;
+        if (obj instanceof SourcePositionRange) {
+            SourcePositionRange other = (SourcePositionRange) obj;
 
             return other.mStartLine == mStartLine &&
                     other.mStartColumn == mStartColumn &&
@@ -155,10 +160,10 @@ public class SourceFragmentPositionRange {
     private static final String END_COLUMN = "endColumn";
     private static final String END_OFFSET = "endOffset";
 
-    public static class Serializer implements JsonSerializer<SourceFragmentPositionRange> {
+    public static class Serializer implements JsonSerializer<SourcePositionRange> {
 
         @Override
-        public JsonElement serialize(SourceFragmentPositionRange position, Type type,
+        public JsonElement serialize(SourcePositionRange position, Type type,
                 JsonSerializationContext jsonSerializationContext) {
             JsonObject result = new JsonObject();
             if (position.getStartLine() != -1) {
@@ -185,10 +190,10 @@ public class SourceFragmentPositionRange {
         }
     }
 
-    public static class Deserializer implements JsonDeserializer<SourceFragmentPositionRange> {
+    public static class Deserializer implements JsonDeserializer<SourcePositionRange> {
 
         @Override
-        public SourceFragmentPositionRange deserialize(JsonElement jsonElement, Type type,
+        public SourcePositionRange deserialize(JsonElement jsonElement, Type type,
                 JsonDeserializationContext jsonDeserializationContext) throws
                 JsonParseException {
             JsonObject object = jsonElement.getAsJsonObject();
@@ -200,7 +205,7 @@ public class SourceFragmentPositionRange {
                     : startColumn;
             int endOffset = object.has(END_OFFSET) ? object.get(END_OFFSET).getAsInt()
                     : startOffset;
-            return new SourceFragmentPositionRange(startLine, startColumn, startOffset, endLine,
+            return new SourcePositionRange(startLine, startColumn, startOffset, endLine,
                     endColumn, endOffset);
         }
     }
