@@ -30,7 +30,7 @@ import java.util.Collection;
 import java.util.Map;
 
 /**
- * An adaptor to convert a ManagedBuildType to a BuildType.
+ * An adaptor to convert a BuildType to a CoreBuildType.
  */
 public class BuildTypeAdaptor implements CoreBuildType {
     @NonNull
@@ -62,13 +62,6 @@ public class BuildTypeAdaptor implements CoreBuildType {
 
     @NonNull
     @Override
-    public Collection<File> getTestProguardFiles() {
-        // TODO: To be implemented
-        return Lists.newArrayList();
-    }
-
-    @NonNull
-    @Override
     public Collection<File> getProguardFiles() {
         // TODO: To be implemented
         return Lists.newArrayList();
@@ -77,6 +70,13 @@ public class BuildTypeAdaptor implements CoreBuildType {
     @NonNull
     @Override
     public Collection<File> getConsumerProguardFiles() {
+        // TODO: To be implemented
+        return Lists.newArrayList();
+    }
+
+    @NonNull
+    @Override
+    public Collection<File> getTestProguardFiles() {
         // TODO: To be implemented
         return Lists.newArrayList();
     }

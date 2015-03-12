@@ -27,7 +27,7 @@ import org.gradle.api.tasks.Optional;
 import java.io.File;
 
 /**
- * An adaptor to convert a ManagedSigningConfig to a SigningConfig.
+ * An adaptor to convert a managed.SigningConfig to a model.SigningConfig.
  */
 public class SigningConfigAdaptor implements CoreSigningConfig {
 
