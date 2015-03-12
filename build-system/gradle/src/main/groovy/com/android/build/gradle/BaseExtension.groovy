@@ -70,7 +70,7 @@ import org.gradle.internal.reflect.Instantiator
  * <li>Plugin <code>com.android.library</code> uses {@link LibraryExtension}</li>
  * </ul>
  */
-public abstract class BaseExtension {
+public abstract class BaseExtension implements AndroidConfig {
 
     private String target
     private FullRevision buildToolsRevision
@@ -626,7 +626,7 @@ public abstract class BaseExtension {
         enforceUniquePackageName(value)
     }
 
-    public getEnforceUniquePackageName() {
+    public boolean getEnforceUniquePackageName() {
         return enforceUniquePackageName
     }
 
@@ -639,5 +639,11 @@ public abstract class BaseExtension {
                     buildToolsRevision,
                     androidBuilder)
         }
+    }
+
+    // For compatibility with LibraryExtension.
+    @Override
+    Boolean getPackageBuildConfig() {
+        throw new GradleException("packageBuildConfig is not supported.");
     }
 }
