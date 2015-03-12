@@ -17,6 +17,7 @@
 package com.android.build;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 
 import java.io.File;
 import java.util.Collection;
@@ -31,7 +32,7 @@ public interface VariantOutput {
      * {@link com.android.build.OutputFile.OutputType#MAIN} or
      * {@link com.android.build.OutputFile.OutputType#FULL_SPLIT}
      */
-    @NonNull
+    @Nullable
     OutputFile getMainOutputFile();
 
     /**
