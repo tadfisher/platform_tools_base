@@ -14,19 +14,25 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.managed;
+package com.android.build.gradle;
 
-import org.gradle.model.Managed;
+import com.android.annotations.NonNull;
+import com.android.build.gradle.api.TestVariant;
+import com.android.build.gradle.api.UnitTestVariant;
+
+import org.gradle.api.DomainObjectSet;
 
 /**
- * A Managed ApiVersion.
+ * User configuration settings for android plugin with test component.
  */
-@Managed
-public interface ApiVersion {
+public interface TestedAndroidConfig extends AndroidConfig {
 
-    Integer getApiLevel();
-    void setApiLevel(Integer apiLevel);
+    @NonNull
+    String getTestBuildType();
 
-    String getCodename();
-    void setCodename(String codename);
+    @NonNull
+    DomainObjectSet<TestVariant> getTestVariants();
+
+    @NonNull
+    DomainObjectSet<UnitTestVariant> getUnitTestVariants();
 }

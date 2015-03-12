@@ -16,11 +16,9 @@
 
 package com.android.build.gradle.model;
 
-import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.builder.model.SigningConfig;
 
-import org.gradle.nativeplatform.NativeLibrary;
 import org.gradle.nativeplatform.NativeLibrarySpec;
 import org.gradle.platform.base.component.BaseComponentSpec;
 
@@ -28,7 +26,7 @@ import org.gradle.platform.base.component.BaseComponentSpec;
  * Implementation for Android component spec.
  */
 public class DefaultAndroidComponentSpec extends BaseComponentSpec implements AndroidComponentSpec{
-    BaseExtension extension;
+    AndroidConfig extension;
 
     VariantManager variantManager;
 
@@ -37,11 +35,11 @@ public class DefaultAndroidComponentSpec extends BaseComponentSpec implements An
     NativeLibrarySpec nativeLibrary;
 
     @Override
-    public BaseExtension getExtension() {
+    public AndroidConfig getExtension() {
         return extension;
     }
 
-    public void setExtension(BaseExtension extension) {
+    public void setExtension(AndroidConfig extension) {
         this.extension = extension;
     }
 

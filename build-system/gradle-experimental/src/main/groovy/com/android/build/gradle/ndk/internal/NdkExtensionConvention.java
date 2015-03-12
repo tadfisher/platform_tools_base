@@ -23,15 +23,6 @@ public class NdkExtensionConvention {
      * Validate the NdkExtension and provide default values.
      */
     public static void setExtensionDefault(NdkConfig ndkConfig) {
-        if (!ndkConfig.getCompileSdkVersion().isEmpty()) {
-            try {
-                int version = Integer.parseInt(ndkConfig.getCompileSdkVersion());
-                ndkConfig.setCompileSdkVersion("android-" + ndkConfig.getCompileSdkVersion());
-            } catch (NumberFormatException ignored) {
-            }
-        }
-
-
         if (ndkConfig.getToolchain().isEmpty()) {
             ndkConfig.setToolchain(DEFAULT_TOOLCHAIN);
         } else {

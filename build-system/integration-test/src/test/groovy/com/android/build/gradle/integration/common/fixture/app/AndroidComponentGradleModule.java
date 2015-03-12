@@ -45,7 +45,7 @@ public class AndroidComponentGradleModule extends GradleModule {
         return "apply plugin: 'com.android.model.library'\n" +
                 "\n" +
                 "model {\n" +
-                "    android.config {\n" +
+                "    android {\n" +
                 "        compileSdkVersion " + DEFAULT_COMPILE_SDK_VERSION + "\n" +
                 "        buildToolsVersion '" + DEFAULT_BUILD_TOOL_VERSION + "'\n" +
                 "    }\n" +

@@ -16,9 +16,6 @@ public interface NdkConfig {
     String getModuleName();
     void setModuleName(@NonNull String moduleName);
 
-    String getCompileSdkVersion();
-    void setCompileSdkVersion(@NonNull String target);
-
     String getToolchain();
     void setToolchain(@NonNull String toolchain);
 
