@@ -14,22 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.model;
-
-import com.android.annotations.NonNull;
-import com.android.build.gradle.BaseExtension;
-import com.android.builder.model.SigningConfig;
-
-import java.util.Collection;
+package com.android.build.gradle;
 
 /**
- * Collections of configurations for Android plugin.
+ * User configuration settings for 'com.android.test' project.
  */
-public interface AndroidConfig {
+public interface TestAndroidConfig extends AndroidConfig {
 
-    @NonNull
-    BaseExtension getExtension();
+    String getTargetProjectPath();
 
-    @NonNull
-    Collection<? extends SigningConfig> getSigningConfigs();
+    String getTargetVariant();
 }
