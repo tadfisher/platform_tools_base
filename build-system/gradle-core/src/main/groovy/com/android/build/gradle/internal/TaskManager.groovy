@@ -20,7 +20,7 @@ import com.android.SdkConstants
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable
 import com.android.build.OutputFile
-import com.android.build.gradle.BaseExtension
+import com.android.build.gradle.AndroidConfig
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.coverage.JacocoInstrumentTask
 import com.android.build.gradle.internal.coverage.JacocoPlugin
@@ -184,7 +184,7 @@ abstract class TaskManager {
 
     protected SdkHandler sdkHandler
 
-    protected BaseExtension extension
+    protected AndroidConfig extension
 
     protected ToolingModelBuilderRegistry toolingRegistry
 
@@ -222,7 +222,7 @@ abstract class TaskManager {
     public TaskManager(
             Project project,
             AndroidBuilder androidBuilder,
-            BaseExtension extension,
+            AndroidConfig extension,
             SdkHandler sdkHandler,
             DependencyManager dependencyManager,
             ToolingModelBuilderRegistry toolingRegistry) {
@@ -281,7 +281,7 @@ abstract class TaskManager {
         return Collections.singleton(variantData.ndkCompileTask.soFolder)
     }
 
-    private BaseExtension getExtension() {
+    private AndroidConfig getExtension() {
         return extension
     }
 
@@ -314,6 +314,7 @@ abstract class TaskManager {
         tasks.create(MAIN_PREBUILD)
 
         tasks.create(SOURCE_SETS, SourceSetsTask) {
+            it.config = extension
             it.description = "Prints out all the source sets defined in this project."
             it.group = ANDROID_GROUP
         }
@@ -1784,7 +1785,7 @@ abstract class TaskManager {
                 BaseVariantOutputData variantOutputData = variantData.outputs.get(0)
 
                 List<File> proguardFiles = config.getProguardFiles(true /*includeLibs*/,
-                        [getExtension().getDefaultProguardFile(DEFAULT_PROGUARD_CONFIG_FILE)])
+                        [getDefaultProguardFile(DEFAULT_PROGUARD_CONFIG_FILE)])
                 File proguardResFile = variantOutputData.processResourcesTask.proguardOutputFile
                 if (proguardResFile != null) {
                     proguardFiles.add(proguardResFile)
@@ -2285,5 +2286,13 @@ abstract class TaskManager {
     @NonNull
     protected Logger getLogger() {
         return logger
+    }
+
+    private File getDefaultProguardFile(String name) {
+        File sdkDir = sdkHandler.getAndCheckSdkFolder()
+        return new File(sdkDir,
+                SdkConstants.FD_TOOLS + File.separatorChar
+                        + SdkConstants.FD_PROGUARD + File.separatorChar
+                        + name);
     }
 }
