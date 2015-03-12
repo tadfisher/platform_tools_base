@@ -31,7 +31,7 @@ import java.util.Collection;
 import java.util.Map;
 
 /**
- * An adaptor to convert a ManagedProductFlavor to GradleProductFlavor.
+ * An adaptor to convert a ProductFlavor to CoreProductFlavor.
  */
 public class ProductFlavorAdaptor implements CoreProductFlavor {
 
@@ -70,13 +70,6 @@ public class ProductFlavorAdaptor implements CoreProductFlavor {
 
     @NonNull
     @Override
-    public Collection<File> getTestProguardFiles() {
-        // TODO: To be implemented
-        return Lists.newArrayList();
-    }
-
-    @NonNull
-    @Override
     public Collection<File> getProguardFiles() {
         // TODO: To be implemented
         return Lists.newArrayList();
@@ -85,6 +78,13 @@ public class ProductFlavorAdaptor implements CoreProductFlavor {
     @NonNull
     @Override
     public Collection<File> getConsumerProguardFiles() {
+        // TODO: To be implemented
+        return Lists.newArrayList();
+    }
+
+    @NonNull
+    @Override
+    public Collection<File> getTestProguardFiles() {
         // TODO: To be implemented
         return Lists.newArrayList();
     }

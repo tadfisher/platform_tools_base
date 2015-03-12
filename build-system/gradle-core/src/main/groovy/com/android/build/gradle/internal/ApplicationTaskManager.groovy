@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal
 
 import com.android.annotations.NonNull
-import com.android.build.gradle.BaseExtension
+import com.android.build.gradle.AndroidConfig
 import com.android.build.gradle.internal.profile.SpanRecorders
 import com.android.build.gradle.internal.variant.ApplicationVariantData
 import com.android.build.gradle.internal.variant.BaseVariantData
@@ -35,7 +35,7 @@ class ApplicationTaskManager extends TaskManager {
     public ApplicationTaskManager (
             Project project,
             AndroidBuilder androidBuilder,
-            BaseExtension extension,
+            AndroidConfig extension,
             SdkHandler sdkHandler,
             DependencyManager dependencyManager,
             ToolingModelBuilderRegistry toolingRegistry) {

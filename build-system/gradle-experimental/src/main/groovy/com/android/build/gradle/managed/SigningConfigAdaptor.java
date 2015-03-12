@@ -22,7 +22,7 @@ import com.android.annotations.Nullable;
 import java.io.File;
 
 /**
- * An adaptor to convert a ManagedSigningConfig to a SigningConfig.
+ * An adaptor to convert a managed.SigningConfig to a model.SigningConfig.
  */
 public class SigningConfigAdaptor implements com.android.builder.model.SigningConfig {
 
