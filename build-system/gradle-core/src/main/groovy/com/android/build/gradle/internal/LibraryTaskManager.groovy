@@ -138,6 +138,8 @@ class LibraryTaskManager extends TaskManager {
         }
 
         SpanRecorders.record(ExecutionType.LIB_TASK_MANAGER_CREATE_PROCESS_RES_TASK) {
+            createBackportResourcesTask(variantData)
+
             // Add a task to generate resource source files, directing the location
             // of the r.txt file to be directly in the bundle.
             createProcessResTask(variantData,
