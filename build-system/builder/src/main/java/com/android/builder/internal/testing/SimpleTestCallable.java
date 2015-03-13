@@ -146,7 +146,7 @@ public class SimpleTestCallable implements Callable<Boolean> {
             isInstalled = true;
 
             RemoteAndroidTestRunner runner = new RemoteAndroidTestRunner(
-                    testData.getApplicationId(),
+                    testData.getTestedApplicationId(),
                     testData.getInstrumentationRunner(),
                     device);
 
