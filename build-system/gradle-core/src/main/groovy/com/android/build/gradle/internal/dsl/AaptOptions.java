@@ -43,6 +43,9 @@ public class AaptOptions implements com.android.builder.model.AaptOptions {
 
     private boolean failOnMissingConfigEntry = false;
 
+	@Nullable
+	private List<String> additionalParameters;
+
     public void setIgnoreAssetsPattern(@Nullable String ignoreAssetsPattern) {
         this.ignoreAssetsPattern = ignoreAssetsPattern;
     }
@@ -131,5 +134,22 @@ public class AaptOptions implements com.android.builder.model.AaptOptions {
 
     public void noCompress(String... noCompress) {
         noCompressList = Arrays.asList(noCompress);
+    }
+
+	
+    public void setAdditionalParameters(String param) {
+        additionalParameters = Collections.singletonList(param);
+    }
+
+    public void setAdditionalParameters(String... params) {
+        additionalParameters = Arrays.asList(params);
+    }
+
+	@Nullable
+    @Override
+	@Optional
+	@Input
+    public List<String> getAdditionalParameters() {
+        return additionalParameters;
     }
 }
