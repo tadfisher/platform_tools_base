@@ -51,5 +51,5 @@
                    to="${testOut}/ApplicationTest.java" />
 
     <instantiate from="test/app_package/ExampleUnitTest.java.ftl"
-                   to="${unitTestOut}/ExampleUnitTest.java" />
+                   to="${testOut}/ExampleUnitTest.java" />
 </recipe>
