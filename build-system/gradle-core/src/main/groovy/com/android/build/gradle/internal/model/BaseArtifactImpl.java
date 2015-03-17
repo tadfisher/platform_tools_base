@@ -43,6 +43,8 @@ abstract class BaseArtifactImpl implements BaseArtifact, Serializable {
     @NonNull
     private final File classesFolder;
     @NonNull
+    private final File runtimeJavaResourcesFolder;
+    @NonNull
     private final Dependencies dependencies;
     @Nullable
     private final SourceProvider variantSourceProvider;
@@ -54,6 +56,7 @@ abstract class BaseArtifactImpl implements BaseArtifact, Serializable {
             @NonNull String assembleTaskName,
             @NonNull String compileTaskName,
             @NonNull File classesFolder,
+            @NonNull File runtimeJavaResourcesFolder,
             @NonNull Dependencies dependencies,
             @Nullable SourceProvider variantSourceProvider,
             @Nullable SourceProvider multiFlavorSourceProviders,
@@ -62,6 +65,7 @@ abstract class BaseArtifactImpl implements BaseArtifact, Serializable {
         this.assembleTaskName = assembleTaskName;
         this.compileTaskName = compileTaskName;
         this.classesFolder = classesFolder;
+        this.runtimeJavaResourcesFolder = runtimeJavaResourcesFolder;
         this.dependencies = dependencies;
         this.variantSourceProvider = variantSourceProvider;
         this.multiFlavorSourceProviders = multiFlavorSourceProviders;
@@ -90,6 +94,12 @@ abstract class BaseArtifactImpl implements BaseArtifact, Serializable {
     @Override
     public File getClassesFolder() {
         return classesFolder;
+    }
+
+    @NonNull
+    @Override
+    public File getRuntimeJavaResourcesFolder() {
+        return runtimeJavaResourcesFolder;
     }
 
     @NonNull
