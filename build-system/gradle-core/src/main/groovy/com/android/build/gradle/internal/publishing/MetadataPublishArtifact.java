@@ -14,25 +14,29 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.tasks;
+package com.android.build.gradle.internal.publishing;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.FilterData;
-import com.google.common.base.Supplier;
-
-import org.gradle.api.Task;
-
-import java.io.File;
+import com.android.build.gradle.internal.tasks.FileSupplier;
 
 /**
- * Denotes a supplier of a file. The supplier also provides a link to the task generating the file.
+ * custom implementation of PublishArtifact for published metadata files.
  */
-public interface FileSupplier extends Supplier<File> {
+public class MetadataPublishArtifact extends BasePublishArtifact {
 
-    /**
-     * Returns the task generating the file.
-     */
-    @NonNull
-    Task getTask();
+    public MetadataPublishArtifact(@NonNull String name, @Nullable String classifier,
+            @NonNull FileSupplier outputFileSupplier) {
+        super(name, classifier, outputFileSupplier);
+    }
+
+    @Override
+    public String getExtension() {
+        return "mtd";
+    }
+
+    @Override
+    public String getType() {
+        return "mtd";
+    }
 }
