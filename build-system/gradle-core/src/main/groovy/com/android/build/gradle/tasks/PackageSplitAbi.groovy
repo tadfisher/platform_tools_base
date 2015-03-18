@@ -74,6 +74,11 @@ class PackageSplitAbi extends SplitRelatedTask {
         return getOutputSplitFiles()*.getOutputFile();
     }
 
+    @Override
+    File getApkMetadataFile() {
+        return null;
+    }
+
     @NonNull
     public synchronized  ImmutableList<ApkOutputFile> getOutputSplitFiles() {
 
