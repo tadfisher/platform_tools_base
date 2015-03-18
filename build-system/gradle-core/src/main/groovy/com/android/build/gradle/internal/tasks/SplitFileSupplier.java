@@ -17,22 +17,13 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.FilterData;
-import com.google.common.base.Supplier;
-
-import org.gradle.api.Task;
-
-import java.io.File;
 
 /**
- * Denotes a supplier of a file. The supplier also provides a link to the task generating the file.
+ * Created by jedo on 3/13/15.
  */
-public interface FileSupplier extends Supplier<File> {
+public interface SplitFileSupplier extends FileSupplier {
 
-    /**
-     * Returns the task generating the file.
-     */
     @NonNull
-    Task getTask();
+    FilterData getFilterData();
 }

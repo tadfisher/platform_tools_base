@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
+import com.android.build.gradle.internal.publishing.FilterDataPersistence;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
@@ -27,6 +28,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.concurrent.Callable;
@@ -72,7 +75,6 @@ public class ApkOutputFile implements OutputFile, Serializable {
             throw new RuntimeException(e);
         }
     }
-
 
     /**
      * String identifying the splits within all the filters dimension. For instance, for a {@link

@@ -65,6 +65,9 @@ class SplitZipAlign extends SplitRelatedTask {
         getOutputSplitFiles()*.getOutputFile()
     }
 
+    @org.gradle.api.tasks.OutputFile
+    File apkMetadataFile
+
     @NonNull
     public synchronized  ImmutableList<ApkOutputFile> getOutputSplitFiles() {
 
@@ -103,6 +106,9 @@ class SplitZipAlign extends SplitRelatedTask {
                     return density
                 }
             }
+        }
+        if (type == FilterType.LANGUAGE) {
+            return filterWithPossibleSuffix.replaceAll('_', ',').replaceAll("-", "-r")
         }
         return filterWithPossibleSuffix
     }
@@ -166,6 +172,7 @@ class SplitZipAlign extends SplitRelatedTask {
         }
         forEachUnalignedInput(zipAlignIt)
         forEachUnsignedInput(zipAlignIt)
+        saveApkMetadataFile()
     }
 
     @Override
