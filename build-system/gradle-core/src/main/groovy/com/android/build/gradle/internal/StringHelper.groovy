@@ -17,10 +17,12 @@
 package com.android.build.gradle.internal
 
 import com.android.annotations.NonNull
+import groovy.transform.CompileStatic
 
 /**
  * Helper to give access to Groovy string methods from Java classes.
  */
+@CompileStatic
 class StringHelper {
 
     @NonNull

@@ -13,36 +13,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.build.gradle.internal.tasks
-import com.android.build.gradle.internal.LoggerWrapper
-import com.android.builder.core.AndroidBuilder
-import com.android.sdklib.BuildToolInfo
-import com.android.utils.ILogger
-import org.gradle.api.DefaultTask
+package com.android.build.gradle.internal.tasks;
+import com.android.build.gradle.internal.LoggerWrapper;
+import com.android.builder.core.AndroidBuilder;
+import com.android.sdklib.BuildToolInfo;
+import com.android.utils.FileUtils;
+import com.android.utils.ILogger;
+
+import org.gradle.api.DefaultTask;
+
+import java.io.File;
 
 public abstract class BaseTask extends DefaultTask {
 
-    AndroidBuilder androidBuilder
+    public AndroidBuilder androidBuilder;
 
-    private ILogger iLogger
+    private ILogger iLogger;
 
     protected AndroidBuilder getBuilder() {
-        return androidBuilder
+        return androidBuilder;
     }
 
     protected ILogger getILogger() {
         if (iLogger == null) {
-            iLogger = new LoggerWrapper(getLogger())
+            iLogger = new LoggerWrapper(getLogger());
         }
-        return iLogger
+        return iLogger;
     }
 
     protected void emptyFolder(File folder) {
-        logger.info("deleteDir(" + folder + ") returned: " + folder.deleteDir());
-        folder.mkdirs()
+        getLogger().info("deleteDir(" + folder + ") returned: " + FileUtils.deleteFolder(folder));
+        folder.mkdirs();
     }
 
     protected BuildToolInfo getBuildTools() {
-        androidBuilder.getTargetInfo().getBuildTools()
+        return androidBuilder.getTargetInfo().getBuildTools();
     }
 }
