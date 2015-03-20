@@ -50,7 +50,7 @@ public class PrepareDependenciesTask extends BaseTask {
         boolean foundError = false;
 
         for (DependencyChecker checker : checkers) {
-            for (Integer api : checker.foundAndroidApis) {
+            for (Integer api : checker.legacyApiLevels) {
                 if (api > minSdk) {
                     foundError = true;
                     logger.error(String.format(
