@@ -70,10 +70,20 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
                                 "path", testExtension.getTargetProjectPath(),
                                 "configuration", testExtension.getTargetVariant())));
 
-        TestData testData = new TestApplicationTestData(variantData, testTarget, androidBuilder);
+        // and create the configuration for the project's metadata.
+        Configuration testTargetMetadata = project.getConfigurations().create("testTargetMetadata");
+
+        dependencyHandler.add("testTargetMetadata", dependencyHandler.project(
+                        ImmutableMap.of(
+                                "path", testExtension.getTargetProjectPath(),
+                                "configuration", testExtension.getTargetVariant() + "-metadata"
+                        )));
+
+        TestData testData = new TestApplicationTestData(
+                variantData, testTarget, testTargetMetadata, androidBuilder);
 
         // create the test connected check task.
-        DeviceProviderInstrumentTestTask testConnectedCheck =
+         DeviceProviderInstrumentTestTask testConnectedCheck =
                 createDeviceProviderInstrumentTestTask(
                         project.getName() + "ConnectedCheck",
                         "Installs and runs the tests for ${baseVariantData.description} on connected devices.",
