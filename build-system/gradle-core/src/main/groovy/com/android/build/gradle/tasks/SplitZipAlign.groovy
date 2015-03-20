@@ -42,7 +42,10 @@ import java.util.regex.Pattern
 class SplitZipAlign extends SplitRelatedTask {
 
     @InputFiles
-    List<File> inputFiles = new ArrayList<>();
+    List<File> densityOrLanguageInputFiles = new ArrayList<>();
+
+    @InputFiles
+    List<File> abiInputFiles = new ArrayList<>()
 
     @Input
     String outputBaseName;
@@ -69,6 +72,14 @@ class SplitZipAlign extends SplitRelatedTask {
     @org.gradle.api.tasks.OutputFile
     @Nullable
     File apkMetadataFile
+
+    @NonNull
+    List<File> getInputFiles() {
+        List<File> files = new ArrayList<>();
+        files.addAll(getDensityOrLanguageInputFiles());
+        files.addAll(getAbiInputFiles());
+        return files;
+    }
 
     @NonNull
     public synchronized  ImmutableList<ApkOutputFile> getOutputSplitFiles() {
@@ -110,7 +121,7 @@ class SplitZipAlign extends SplitRelatedTask {
             }
         }
         if (type == FilterType.LANGUAGE) {
-            return filterWithPossibleSuffix.replaceAll('_', ',').replaceAll("-", "-r")
+            return PackageSplitRes.unMangleSplitName(filterWithPossibleSuffix)
         }
         return filterWithPossibleSuffix
     }
