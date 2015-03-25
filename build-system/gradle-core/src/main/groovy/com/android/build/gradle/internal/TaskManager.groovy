@@ -2500,6 +2500,7 @@ abstract class TaskManager {
 
         boolean multiOutput = variantData.outputs.size() > 1
 
+
         // loop on all outputs. The only difference will be the name of the task, and location
         // of the generated data.
         for (ApkVariantOutputData vod : variantData.outputs) {
@@ -2513,6 +2514,9 @@ abstract class TaskManager {
             PackageApplication packageApp = project.tasks.
                     create("package${outputName.capitalize()}",
                             PackageApplication)
+
+            variantOutputData.apkPackage.builtBy(packageApp);
+
             variantOutputData.packageApplicationTask = packageApp
             packageApp.dependsOn variantOutputData.processResourcesTask,
                     variantData.processJavaResourcesTask
@@ -2610,18 +2614,13 @@ abstract class TaskManager {
                     "$projectBaseName-${outputBaseName}-unaligned.apk" :
                     "$projectBaseName-${outputBaseName}-unsigned.apk"
 
+            variantOutputData.apkPackage.apk = (!signedApk || !variantData.zipAlignEnabled) ?
+                project.file("$apkLocation/${apkName}") :
+                project.file("$defaultLocation/${apkName}")
+
             conventionMapping(packageApp).map("packagingOptions") { getExtension().packagingOptions }
 
-            conventionMapping(packageApp).map("outputFile") {
-                // if this is the final task then the location is
-                // the potentially overridden one.
-                if (!signedApk || !variantData.zipAlignEnabled) {
-                    project.file("$apkLocation/${apkName}")
-                } else {
-                    // otherwise default one.
-                    project.file("$defaultLocation/${apkName}")
-                }
-            }
+            conventionMapping(packageApp).map("outputFile") { variantOutputData.apkPackage.apk }
 
             Task appTask = packageApp
 
@@ -2633,8 +2632,8 @@ abstract class TaskManager {
                             ZipAlign)
                     variantOutputData.zipAlignTask = zipAlignTask
 
-                    zipAlignTask.dependsOn packageApp
-                    conventionMapping(zipAlignTask).map("inputFile") { packageApp.outputFile }
+                    zipAlignTask.dependsOn variantOutputData.apkPackage
+                    conventionMapping(zipAlignTask).map("inputFile") { variantOutputData.apkPackage.apk }
                     conventionMapping(zipAlignTask).map("outputFile") {
                         project.file(
                                 "$apkLocation/$projectBaseName-${outputBaseName}.apk")
