@@ -2500,11 +2500,14 @@ abstract class TaskManager {
 
         boolean multiOutput = variantData.outputs.size() > 1
 
+
         // loop on all outputs. The only difference will be the name of the task, and location
         // of the generated data.
         for (ApkVariantOutputData vod : variantData.outputs) {
             // create final var inside the loop to ensure the closures will work.
             final ApkVariantOutputData variantOutputData = vod
+
+            variantOutputData.androidPackage.builtBy(variantOutputData.apkPackage)
 
             String outputName = variantOutputData.fullName
             String outputBaseName = variantOutputData.baseName
@@ -2513,6 +2516,9 @@ abstract class TaskManager {
             PackageApplication packageApp = project.tasks.
                     create("package${outputName.capitalize()}",
                             PackageApplication)
+
+            variantOutputData.apkPackage.builtBy(packageApp);
+
             variantOutputData.packageApplicationTask = packageApp
             packageApp.dependsOn variantOutputData.processResourcesTask,
                     variantData.processJavaResourcesTask
@@ -2610,20 +2616,13 @@ abstract class TaskManager {
                     "$projectBaseName-${outputBaseName}-unaligned.apk" :
                     "$projectBaseName-${outputBaseName}-unsigned.apk"
 
+            variantOutputData.apkPackage.apk = (!signedApk || !variantData.zipAlignEnabled) ?
+                project.file("$apkLocation/${apkName}") :
+                project.file("$defaultLocation/${apkName}")
+
             conventionMapping(packageApp).map("packagingOptions") { getExtension().packagingOptions }
 
-            conventionMapping(packageApp).map("outputFile") {
-                // if this is the final task then the location is
-                // the potentially overridden one.
-                if (!signedApk || !variantData.zipAlignEnabled) {
-                    project.file("$apkLocation/${apkName}")
-                } else {
-                    // otherwise default one.
-                    project.file("$defaultLocation/${apkName}")
-                }
-            }
-
-            Task appTask = packageApp
+            conventionMapping(packageApp).map("outputFile") { variantOutputData.apkPackage.apk }
 
             if (signedApk) {
                 if (variantData.zipAlignEnabled) {
@@ -2633,8 +2632,8 @@ abstract class TaskManager {
                             ZipAlign)
                     variantOutputData.zipAlignTask = zipAlignTask
 
-                    zipAlignTask.dependsOn packageApp
-                    conventionMapping(zipAlignTask).map("inputFile") { packageApp.outputFile }
+                    zipAlignTask.dependsOn variantOutputData.apkPackage
+                    conventionMapping(zipAlignTask).map("inputFile") { variantOutputData.apkPackage.apk }
                     conventionMapping(zipAlignTask).map("outputFile") {
                         project.file(
                                 "$apkLocation/$projectBaseName-${outputBaseName}.apk")
@@ -2651,7 +2650,7 @@ abstract class TaskManager {
                         zipAlignTask.dependsOn variantOutputData.splitZipAlign
                     }
 
-                    appTask = zipAlignTask
+                    variantOutputData.androidPackage.builtBy(zipAlignTask)
                 }
             }
 
@@ -2679,10 +2678,10 @@ abstract class TaskManager {
                 copyTask.destinationDir = new File(apkLocation as String);
                 copyTask.from(variantOutputData.packageSplitResourcesTask.getOutputDirectory())
                 variantOutputData.assembleTask.dependsOn(copyTask)
-                copyTask.mustRunAfter(appTask)
+                copyTask.mustRunAfter(variantOutputData.androidPackage)
             }
 
-            variantOutputData.assembleTask.dependsOn appTask
+            variantOutputData.androidPackage.setBuildTask(variantOutputData.assembleTask)
 
             if (publishApk) {
                 // if this variant is the default publish config or we also should publish non

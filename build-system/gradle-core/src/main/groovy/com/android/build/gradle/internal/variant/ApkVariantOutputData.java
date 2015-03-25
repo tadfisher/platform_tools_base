@@ -41,6 +41,9 @@ import java.util.List;
  */
 public class ApkVariantOutputData extends BaseVariantOutputData {
 
+    public ApkPackage apkPackage = new ApkPackage();
+    public AndroidPackage androidPackage = new AndroidPackage();
+
     public PackageApplication packageApplicationTask;
     public ZipAlign zipAlignTask;
     public SplitZipAlign splitZipAlign;
