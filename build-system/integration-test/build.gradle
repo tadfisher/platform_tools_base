@@ -13,6 +13,7 @@ dependencies {
     compile project(':base:sdk-common')
     compile "com.google.truth:truth:0.24"
     testCompile "org.jacoco:org.jacoco.agent:0.7.1.201405082137"
+	compile 'org.jdeferred:jdeferred-android-aar:1.2.2'
 }
 
 // These tasks will not depend on publishLocal, so they will run integration
