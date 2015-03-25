@@ -82,7 +82,7 @@ public class GradleTestProject implements TestRule {
     public static final int DEFAULT_COMPILE_SDK_VERSION = 21;
     public static final String DEFAULT_BUILD_TOOL_VERSION = "21.0.1";
 
-    public static final String GRADLE_TEST_VERSION = "2.2.1";
+    public static final String GRADLE_TEST_VERSION = "2.4-20150319230020+0000";
     public static final String GRADLE_EXP_TEST_VERSION = "2.4-20150121230028+0000";
 
     private static final String ANDROID_GRADLE_VERSION = "1.2.0-alpha1";
