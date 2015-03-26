@@ -19,8 +19,13 @@ package com.android.builder.internal;
 import com.android.annotations.NonNull;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.testing.api.DeviceConnector;
+import com.android.builder.testing.api.DeviceException;
+import com.android.ddmlib.IDevice;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.utils.ILogger;
+import com.google.common.collect.Lists;
+
+import java.util.List;
 
 public class InstallUtils {
 
@@ -74,5 +79,40 @@ public class InstallUtils {
         } else {
             return true;
         }
+    }
+
+    /**
+     * Filters out all devices not in the ONLINE state.
+     * @param devices the unfiltered device list.
+     * @param logger ignored devices are logged at info level.
+     * @return
+     * @throws DeviceException if there are no online devices.
+     */
+    public static List<DeviceConnector> keepOnlineDevices(
+            @NonNull final List<? extends DeviceConnector> devices,
+            @NonNull ILogger logger) throws DeviceException {
+        if (devices.isEmpty()) {
+            throw new DeviceException("No devices found.");
+        }
+        final List<DeviceConnector> activeDevices =
+                Lists.newArrayListWithCapacity(devices.size());
+        for (DeviceConnector device : devices) {
+            if (device.getState() != IDevice.DeviceState.ONLINE) {
+                logger.info(
+                        "Skipping device '%s' (%s): Device is %s%s",
+                        device.getName(), device.getSerialNumber(), device.getState(),
+                        device.getState().equals(IDevice.DeviceState.UNAUTHORIZED) ?
+                                ", see http://developer.android.com/tools/help/adb.html#Enabling." : ".");
+                continue;
+            }
+            activeDevices.add(device);
+        }
+
+        if (activeDevices.isEmpty()) {
+            throw new DeviceException("No online devices found.\n"
+                    + "see http://developer.android.com/tools/help/adb.html#Enabling.\n");
+        }
+
+        return activeDevices;
     }
 }

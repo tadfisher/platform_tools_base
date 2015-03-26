@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal
 
+import com.android.annotations.NonNull
 import com.android.ide.common.res2.MergingException
 import com.android.utils.ILogger
 import org.gradle.api.logging.LogLevel
@@ -27,8 +28,17 @@ class LoggerWrapper implements ILogger {
 
     private final Logger logger
 
-    LoggerWrapper(Logger logger) {
-        this.logger = logger;
+    private final LogLevel infoLogLevel
+
+    LoggerWrapper(@NonNull Logger logger) {
+        this(logger, LogLevel.INFO)
+    }
+
+    /* Allow info level messages to be remapped to e.g. LIFECYCLE rather than INFO.
+       As Gradle has more granularity in log level than ILogger. */
+    LoggerWrapper(@NonNull Logger logger, @NonNull LogLevel infoLogLevel) {
+        this.logger = logger
+        this.infoLogLevel = infoLogLevel
     }
 
     @Override
@@ -74,13 +84,13 @@ class LoggerWrapper implements ILogger {
 
     @Override
     void info(String s, Object... objects) {
-        if (!logger.isEnabled(LogLevel.INFO)) {
+        if (!logger.isEnabled(infoLogLevel)) {
             return
         }
         if (objects == null || objects.length == 0) {
-            logger.log(LogLevel.INFO, s)
+            logger.log(infoLogLevel, s)
         } else {
-            logger.log(LogLevel.INFO, String.format(s, objects))
+            logger.log(infoLogLevel, String.format(s, objects))
         }
     }
 
