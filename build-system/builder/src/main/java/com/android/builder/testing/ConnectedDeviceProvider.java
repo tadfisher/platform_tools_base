@@ -72,13 +72,13 @@ public class ConnectedDeviceProvider extends DeviceProvider {
             }
 
             if (timeOut <= 0 && !bridge.hasInitialDeviceList()) {
-                throw new RuntimeException("Timeout getting device list.", null);
+                throw new DeviceException("Timeout getting device list.");
             }
 
             IDevice[] devices = bridge.getDevices();
 
             if (devices.length == 0) {
-                throw new RuntimeException("No connected devices!", null);
+                throw new DeviceException("No connected devices!");
             }
 
             final String androidSerial = System.getenv("ANDROID_SERIAL");
@@ -89,11 +89,11 @@ public class ConnectedDeviceProvider extends DeviceProvider {
                 }
             }
 
-            if (isValidSerial && (localDevices.size() == 0)) {
-                throw new RuntimeException("Connected device with serial " + androidSerial
-                        + " not found!", null);
+            if (localDevices.isEmpty()) {
+                throw new DeviceException(
+                        String.format("Connected device with serial %s not found!", androidSerial));
             }
-        } catch (Exception e) {
+        } catch (InterruptedException e) {
             throw new DeviceException(e);
         }
     }

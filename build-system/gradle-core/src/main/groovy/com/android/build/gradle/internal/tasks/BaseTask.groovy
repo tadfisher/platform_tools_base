@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package com.android.build.gradle.internal.tasks
+
+import com.android.annotations.Nullable
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.builder.core.AndroidBuilder
 import com.android.sdklib.BuildToolInfo
@@ -22,6 +24,7 @@ import org.gradle.api.DefaultTask
 
 public abstract class BaseTask extends DefaultTask {
 
+    @Nullable
     AndroidBuilder androidBuilder
 
     private ILogger iLogger

@@ -28,4 +28,8 @@ public class DeviceException extends Exception {
     public DeviceException(@NonNull Throwable cause) {
         super(cause);
     }
+
+    public DeviceException(@NonNull String message) {
+        super(message);
+    }
 }
