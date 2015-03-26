@@ -110,6 +110,7 @@ import com.android.sdklib.AndroidTargetHash
 import com.android.sdklib.BuildToolInfo
 import com.android.sdklib.IAndroidTarget
 import com.android.sdklib.SdkVersionInfo
+import com.android.utils.ILogger
 import com.google.common.base.CharMatcher
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
@@ -196,6 +197,7 @@ abstract class TaskManager {
     private ToolingModelBuilderRegistry toolingRegistry
 
     private Logger logger
+    private ILogger iLogger
 
     protected boolean isNdkTaskNeeded = true
 
@@ -235,6 +237,7 @@ abstract class TaskManager {
         this.toolingRegistry = toolingRegistry
         this.dependencyManager = dependencyManager
         logger = Logging.getLogger(this.class)
+        iLogger = new LoggerWrapper(logger)
     }
 
     private boolean isVerbose() {
@@ -1798,7 +1801,7 @@ abstract class TaskManager {
                         testType.taskType,
                         testData,
                         artifactsTasks,
-                        new ConnectedDeviceProvider(sdkHandler.getSdkInfo().adb),
+                        new ConnectedDeviceProvider(sdkHandler.getSdkInfo().adb, getILogger()),
                         CONNECTED
                 )
 
@@ -2800,7 +2803,8 @@ abstract class TaskManager {
         uninstallTask.description = "Uninstalls the ${variantData.description}."
         uninstallTask.group = INSTALL_GROUP
         uninstallTask.variant = variantData
-        conventionMapping(uninstallTask).map("adbExe") { sdkHandler.getSdkInfo()?.adb }
+        uninstallTask.androidBuilder = androidBuilder
+        uninstallTask.timeOutInMs = getExtension().getAdbOptions().getTimeOutInMs()
 
         variantData.uninstallTask = uninstallTask
         tasks.named(UNINSTALL_ALL) {
@@ -3195,6 +3199,11 @@ abstract class TaskManager {
         }
 
         return list
+    }
+
+    @NonNull
+    protected ILogger getILogger() {
+        return iLogger
     }
 
     @NonNull
