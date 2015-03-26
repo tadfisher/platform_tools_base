@@ -2755,22 +2755,10 @@ abstract class TaskManager {
                             InstallVariantTask)
             installTask.description = "Installs the ${variantData.description}."
             installTask.group = INSTALL_GROUP
-            installTask.projectName = project.name
             installTask.variantData = variantData
-            installTask.timeOutInMs = getExtension().getAdbOptions().getTimeOutInMs()
+            //installTask.timeOutInMs = getExtension().getAdbOptions().getTimeOutInMs()
+            installTask.androidBuilder = androidBuilder
             installTask.installOptions = getExtension().getAdbOptions().getInstallOptions()
-            installTask.processExecutor = androidBuilder.getProcessExecutor()
-            conventionMapping(installTask).map("adbExe") { sdkHandler.sdkInfo?.adb }
-            conventionMapping(installTask).map("splitSelectExe") {
-                String path = androidBuilder.targetInfo?.buildTools?.getPath(
-                        BuildToolInfo.PathId.SPLIT_SELECT)
-                if (path != null) {
-                    File splitSelectExe = new File(path)
-                    return splitSelectExe.exists() ? splitSelectExe : null;
-                } else {
-                    return null;
-                }
-            }
             installTask.dependsOn variantData.assembleVariantTask
             variantData.installTask = installTask
         }
@@ -2787,7 +2775,8 @@ abstract class TaskManager {
         uninstallTask.description = "Uninstalls the ${variantData.description}."
         uninstallTask.group = INSTALL_GROUP
         uninstallTask.variant = variantData
-        conventionMapping(uninstallTask).map("adbExe") { sdkHandler.getSdkInfo()?.adb }
+        uninstallTask.androidBuilder = androidBuilder
+        uninstallTask.timeOutInMs = getExtension().getAdbOptions().getTimeOutInMs()
 
         variantData.uninstallTask = uninstallTask
         tasks.named(UNINSTALL_ALL) {
