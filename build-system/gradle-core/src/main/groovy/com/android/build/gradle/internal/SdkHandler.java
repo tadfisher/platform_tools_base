@@ -210,7 +210,8 @@ public class SdkHandler {
                 // ignore since we check up front and we don't want to fail on it anyway
                 // in case there's an env var.
             } catch (IOException e) {
-                throw new RuntimeException("Unable to read ${localProperties}", e);
+                throw new RuntimeException(
+                        String.format("Unable to read %s.", localProperties.getAbsolutePath()), e);
             } finally {
                 try {
                     Closeables.close(reader, true /* swallowIOException */);
