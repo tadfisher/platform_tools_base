@@ -29,6 +29,7 @@ import java.util.List;
 public class RenderResources {
 
     public static final String REFERENCE_NULL = "@null";
+    public static final String REFERENCE_EMPTY = "@empty";
 
     public static class FrameworkResourceIdProvider {
         public Integer getId(ResourceType resType, String resName) {
