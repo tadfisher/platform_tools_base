@@ -38,6 +38,12 @@ public class DeviceConfigProviderImpl implements DeviceConfigProvider {
 
     @NonNull
     @Override
+    public String getConfigForAllAbis() {
+        return deviceConfig.getConfigForAllAbis();
+    }
+
+    @NonNull
+    @Override
     public String getConfigFor(String abi) {
         return deviceConfig.getConfigFor(abi);
     }

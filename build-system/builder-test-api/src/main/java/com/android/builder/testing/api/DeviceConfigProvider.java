@@ -27,6 +27,9 @@ import java.util.List;
 public interface DeviceConfigProvider {
 
     @NonNull
+    String getConfigForAllAbis();
+
+    @NonNull
     String getConfigFor(String abi);
 
     int getDensity();
