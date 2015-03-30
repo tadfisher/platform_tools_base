@@ -20,7 +20,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+
 import org.junit.Test;
+
+import java.util.concurrent.CountDownLatch;
 
 /**
  */
@@ -36,13 +40,19 @@ public class CreatingCacheTest {
 
     private static class DelayedFactory implements CreatingCache.ValueFactory<String, String> {
 
+        @NonNull
+        private final CountDownLatch mLatch;
+
+        public DelayedFactory(@NonNull CountDownLatch latch) {
+            mLatch = latch;
+        }
+
         @Override
         @NonNull
         public String create(@NonNull String key) {
             try {
-                Thread.sleep(3000);
+                mLatch.await();
             } catch (InterruptedException ignored) {
-
             }
             return key;
         }
@@ -62,27 +72,19 @@ public class CreatingCacheTest {
 
     private static class CacheRunnable implements Runnable {
 
+        @NonNull
         private final CreatingCache<String, String> mCache;
-        private final long mSleep;
 
         private String mResult;
         private InterruptedException mException;
 
-        public CacheRunnable(
-                CreatingCache<String, String> cache,
-                long sleep) {
+        CacheRunnable(@NonNull CreatingCache<String, String> cache) {
             mCache = cache;
-            mSleep = sleep;
         }
 
         @Override
         public void run() {
-            try {
-                Thread.sleep(mSleep);
-                mResult = mCache.get("foo");
-            } catch (InterruptedException e) {
-                mException = e;
-            }
+            mResult = mCache.get("foo");
         }
 
         public String getResult() {
@@ -96,16 +98,20 @@ public class CreatingCacheTest {
 
     @Test
     public void testMultiThread() throws Exception {
-        final CreatingCache<String, String>
-                cache = new CreatingCache<String, String>(new DelayedFactory());
+        CountDownLatch factoryLatch = new CountDownLatch(1);
 
-        CacheRunnable runnable1 = new CacheRunnable(cache, 0);
+        CreatingCache<String, String>
+                cache = new CreatingCache<String, String>(new DelayedFactory(factoryLatch));
+
+        CacheRunnable runnable1 = new CacheRunnable(cache);
         Thread t1 = new Thread(runnable1);
         t1.start();
 
-        CacheRunnable runnable2 = new CacheRunnable(cache, 1000);
+        CacheRunnable runnable2 = new CacheRunnable(cache);
         Thread t2 = new Thread(runnable2);
         t2.start();
+
+        factoryLatch.countDown();
 
         t1.join();
         t2.join();
@@ -118,15 +124,12 @@ public class CreatingCacheTest {
 
     @Test(expected = IllegalStateException.class)
     public void testClear() throws Exception {
-        final CreatingCache<String, String>
-                cache = new CreatingCache<String, String>(new DelayedFactory());
+        CountDownLatch factoryLatch = new CountDownLatch(1);
 
-        new Thread() {
-            @Override
-            public void run() {
-                cache.get("foo");
-            }
-        }.start();
+        final CreatingCache<String, String>
+                cache = new CreatingCache<String, String>(new DelayedFactory(factoryLatch));
+
+        new Thread(new CacheRunnable(cache)).start();
 
         Thread.sleep(1000);
 

@@ -37,6 +37,8 @@ import java.util.concurrent.CountDownLatch;
  * This is extracted from the PreDexCache of the Gradle plugin which has different requirements
  * (reloading cached info from disk)
  *
+ * This class is thread-safe.
+ *
  * TODO Move PreDexCache to be based on this.
  *
  */
