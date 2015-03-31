@@ -54,4 +54,18 @@ public abstract class LegacyCallback implements IProjectCallback,
     public final String resolveResourceValue(int[] id) {
         return resolveResourceId(id);
     }
+
+    /**
+     * Like {@link #loadView(String, Class[], Object[])}, but intended for loading classes that may
+     * not be custom views.
+     *
+     * @param name className in binary format (see {@link ClassLoader})
+     * @return an new instance created by calling the given constructor.
+     * @throws ClassNotFoundException any exceptions thrown when creating the instance is wrapped in
+     * ClassNotFoundException.
+     */
+    public Object loadClass(String name, Class[] constructorSignature, Object[] constructorArgs)
+            throws ClassNotFoundException {
+        return loadView(name, constructorSignature, constructorArgs);
+    }
 }
