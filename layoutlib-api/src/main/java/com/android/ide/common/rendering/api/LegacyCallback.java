@@ -15,6 +15,8 @@
  */
 package com.android.ide.common.rendering.api;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
 import com.android.util.Pair;
 
@@ -53,5 +55,19 @@ public abstract class LegacyCallback implements IProjectCallback,
     @Override
     public final String resolveResourceValue(int[] id) {
         return resolveResourceId(id);
+    }
+
+    /**
+     * Like {@link #loadView(String, Class[], Object[])}, but intended for loading classes that may
+     * not be custom views.
+     *
+     * @param name className in binary format (see {@link ClassLoader})
+     * @return an new instance created by calling the given constructor.
+     * @throws ClassNotFoundException any exceptions thrown when creating the instance is wrapped in
+     * ClassNotFoundException.
+     */
+    public Object loadClass(@NonNull String name, @Nullable Class[] constructorSignature,
+            @Nullable Object[] constructorArgs) throws ClassNotFoundException {
+        return loadView(name, constructorSignature, constructorArgs);
     }
 }
