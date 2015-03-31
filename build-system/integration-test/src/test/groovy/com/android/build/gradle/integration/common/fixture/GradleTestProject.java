@@ -25,12 +25,12 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.app.AbstractAndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
-import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.FileHelper;
 import com.android.build.gradle.integration.common.utils.JacocoAgent;
 import com.android.build.gradle.integration.common.utils.SdkHelper;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.model.SyncIssue;
 import com.android.io.StreamException;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
@@ -595,6 +595,25 @@ public class GradleTestProject implements TestRule {
      */
     @NonNull
     public Map<String, AndroidProject> getAllModels() {
+        Map<String, AndroidProject> allModels = getAllModels(new GetAndroidModelAction(), false);
+        for (AndroidProject project : allModels.values()) {
+            if (!project.getSyncIssues().isEmpty()) {
+                StringBuilder msg = new StringBuilder();
+                msg.append("Project ")
+                    .append(project.getName())
+                    .append(" had sync issues :\n");
+                for (SyncIssue syncIssue : project.getSyncIssues()) {
+                    msg.append(syncIssue);
+                    msg.append("\n");
+                }
+                fail(msg.toString());
+            }
+        }
+        return allModels;
+    }
+
+    @NonNull
+    public Map<String, AndroidProject> getAllModelsIgnoringSyncIssues() {
         return getAllModels(new GetAndroidModelAction(), false);
     }
 
