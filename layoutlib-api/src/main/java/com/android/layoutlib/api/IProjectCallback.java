@@ -17,9 +17,7 @@
 package com.android.layoutlib.api;
 
 /**
- *
- * @deprecated
- *
+ * @deprecated use {@link com.android.ide.common.rendering.api.LegacyCallback}
  */
 @Deprecated
 public interface IProjectCallback  {
