@@ -70,4 +70,10 @@ public abstract class LegacyCallback implements IProjectCallback,
             @Nullable Object[] constructorArgs) throws ClassNotFoundException {
         return loadView(name, constructorSignature, constructorArgs);
     }
+
+    /**
+     * Returns if the IDE supports the requested feature.
+     * @see IdeFeatures
+     */
+    public abstract boolean supports(int ideFeature);
 }
