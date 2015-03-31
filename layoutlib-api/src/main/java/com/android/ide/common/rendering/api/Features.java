@@ -79,6 +79,11 @@ public class Features {
      */
     public static final int SIMULATE_PLATFORM = 13;
     /**
+     * The last feature supported by the LayoutLib using the {@link Capability}
+     * class. Newer features should be listed here.
+     */
+    public static final int LAST_CAPABILITY = SIMULATE_PLATFORM;
+    /**
      * Ability to render preferences.
      */
     public static final int PREFERENCES_RENDERING = 14;
