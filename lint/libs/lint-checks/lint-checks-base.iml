@@ -9,7 +9,7 @@
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="inheritedJdk" />
-    <orderEntry type="module" module-name="sdk-common-base" />
     <orderEntry type="module" module-name="lint-api-base" />
+    <orderEntry type="module" module-name="sdk-common" />
   </component>
 </module>

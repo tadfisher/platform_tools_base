@@ -17,8 +17,8 @@
     <orderEntry type="library" name="easymock-tools" level="project" />
     <orderEntry type="library" name="ecj" level="project" />
     <orderEntry type="library" scope="TEST" name="groovy" level="project" />
-    <orderEntry type="module" module-name="sdk-common-base" />
     <orderEntry type="module" module-name="lint-checks-base" />
     <orderEntry type="module" module-name="lint-api-base" />
+    <orderEntry type="module" module-name="sdk-common" />
   </component>
 </module>

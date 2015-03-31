@@ -1250,7 +1250,7 @@
     <orderEntry type="module" module-name="lint-cli" exported="" />
     <orderEntry type="library" name="groovy" level="project" />
     <orderEntry type="module" module-name="gradle-core" />
-    <orderEntry type="module" module-name="sdk-common-base" />
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
+    <orderEntry type="module" module-name="sdk-common" />
   </component>
 </module>

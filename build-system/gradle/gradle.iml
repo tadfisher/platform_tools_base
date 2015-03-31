@@ -12,7 +12,7 @@
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
     <orderEntry type="library" name="groovy" level="project" />
     <orderEntry type="module" module-name="gradle-core" exported="" />
-    <orderEntry type="module" module-name="sdk-common-base" />
     <orderEntry type="module" module-name="project-test-lib" />
+    <orderEntry type="module" module-name="sdk-common" />
   </component>
 </module>
