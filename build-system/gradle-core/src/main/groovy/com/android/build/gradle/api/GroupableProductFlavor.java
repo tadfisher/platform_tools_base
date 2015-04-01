@@ -24,9 +24,6 @@ import com.android.builder.model.ProductFlavor;
  */
 public interface GroupableProductFlavor extends ProductFlavor {
 
-    /**
-     * Returns the flavor dimension or null if non are set.
-     */
-    @Nullable
-    String getFlavorDimension();
+    // TODO: Remove interface now ProductFlavor has flavorDimension.
+
 }

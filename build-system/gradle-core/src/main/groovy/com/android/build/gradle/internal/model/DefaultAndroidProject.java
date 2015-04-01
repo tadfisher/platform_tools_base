@@ -78,9 +78,13 @@ class DefaultAndroidProject implements AndroidProject, Serializable {
 
     private ProductFlavorContainer defaultConfig;
 
+    @NonNull
+    private final Collection<String> flavorDimension;
+
     DefaultAndroidProject(
             @NonNull String modelVersion,
             @NonNull String name,
+            @NonNull Collection<String> flavorDimension,
             @NonNull String compileTarget,
             @NonNull Collection<String> bootClasspath,
             @NonNull Collection<File> frameworkSource,
@@ -97,6 +101,7 @@ class DefaultAndroidProject implements AndroidProject, Serializable {
             int apiVersion) {
         this.modelVersion = modelVersion;
         this.name = name;
+        this.flavorDimension = flavorDimension;
         this.compileTarget = compileTarget;
         this.bootClasspath = bootClasspath;
         this.frameworkSource = frameworkSource;
@@ -177,6 +182,12 @@ class DefaultAndroidProject implements AndroidProject, Serializable {
     @NonNull
     public Collection<Variant> getVariants() {
         return variants;
+    }
+
+    @NonNull
+    @Override
+    public Collection<String> getFlavorDimension() {
+        return flavorDimension;
     }
 
     @NonNull
