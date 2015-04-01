@@ -17,9 +17,19 @@
 package com.android.tools.lint.checks;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.builder.model.AndroidLibrary;
+import com.android.builder.model.MavenCoordinates;
+import com.android.ide.common.repository.ResourceVisibilityLookup;
+import com.android.ide.common.resources.ResourceUrl;
+import com.android.resources.ResourceType;
+import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Category;
+import com.android.tools.lint.detector.api.Detector.JavaScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -30,10 +40,20 @@ import org.w3c.dom.Attr;
 
 import java.util.Collection;
 
+import lombok.ast.AstVisitor;
+import lombok.ast.Node;
+
 /**
  * Check which looks for access of private resources.
  */
-public class PrivateResourceDetector extends ResourceXmlDetector {
+public class PrivateResourceDetector extends ResourceXmlDetector implements JavaScanner {
+    @SuppressWarnings("unchecked")
+    private static final Implementation IMPLEMENTATION = new Implementation(
+            PrivateResourceDetector.class,
+            Scope.JAVA_AND_RESOURCE_FILES,
+            Scope.JAVA_FILE_SCOPE,
+            Scope.RESOURCE_FILE_SCOPE);
+
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
             "PrivateResource", //$NON-NLS-1$
@@ -42,14 +62,13 @@ public class PrivateResourceDetector extends ResourceXmlDetector {
             "Private resources should not be referenced; the may not be present everywhere, and " +
             "even where they are they may disappear without notice.\n" +
             "\n" +
-            "To fix this, copy the resource into your own project. You can find the platform " +
-            "resources under `$ANDROID_SK/platforms/android-$VERSION/data/res/.`",
+            "To fix this, copy the resource into your own project instead.",
+
             Category.CORRECTNESS,
             3,
-            Severity.FATAL,
-            new Implementation(
-                    PrivateResourceDetector.class,
-                    Scope.RESOURCE_FILE_SCOPE));
+            Severity.WARNING,
+            IMPLEMENTATION);
+
 
     /** Constructs a new detector */
     public PrivateResourceDetector() {
@@ -61,6 +80,41 @@ public class PrivateResourceDetector extends ResourceXmlDetector {
         return Speed.FAST;
     }
 
+    // ---- Implements JavaScanner ----
+
+    @Override
+    public boolean appliesToResourceRefs() {
+        return true;
+    }
+
+    @Override
+    public void visitResourceReference(
+            @NonNull JavaContext context,
+            @Nullable AstVisitor visitor,
+            @NonNull Node node,
+            @NonNull String type,
+            @NonNull String name,
+            boolean isFramework) {
+        if (context.getProject().isGradleProject() && !isFramework) {
+            Project project = context.getProject();
+            if (project.getGradleProjectModel() != null && project.getCurrentVariant() != null) {
+                ResourceType resourceType = ResourceType.getEnum(type);
+                if (resourceType != null) {
+                    LintClient client = context.getClient();
+                    ResourceVisibilityLookup lookup = client.getResourceVisibilityProvider().get(
+                            project.getGradleProjectModel(), project.getCurrentVariant());
+                    if (lookup.isPrivate(resourceType, name)) {
+                        ResourceUrl url = ResourceUrl.create(resourceType, name, false, false);
+                        String message = createErrorMessage(url, lookup);
+                        context.report(ISSUE, node, context.getLocation(node), message);
+                    }
+                }
+            }
+        }
+    }
+
+    // ---- Implements XmlScanner ----
+
     @Override
     public Collection<String> getApplicableAttributes() {
         return ALL;
@@ -69,10 +123,43 @@ public class PrivateResourceDetector extends ResourceXmlDetector {
     @Override
     public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
         String value = attribute.getNodeValue();
-        if (value.startsWith("@*android:")) { //$NON-NLS-1$
-            context.report(ISSUE, attribute, context.getLocation(attribute),
-                    "Illegal resource reference: `@*android` resources are private and " +
-                    "not always present");
+        if (context.getProject().isGradleProject()) {
+            Project project = context.getProject();
+            if (project.getGradleProjectModel() != null && project.getCurrentVariant() != null) {
+                ResourceUrl url = ResourceUrl.parse(value);
+                if (url != null && !url.framework) {
+                    ResourceVisibilityLookup lookup = project.getResourceVisibility();
+                    if (lookup.isPrivate(url)) {
+                        String message = createErrorMessage(url, lookup);
+                        context.report(ISSUE, attribute, context.getValueLocation(attribute),
+                            message);
+                    }
+                }
+            }
         }
+    }
+
+    private static String createErrorMessage(@NonNull ResourceUrl url,
+            @NonNull ResourceVisibilityLookup lookup) {
+        String libraryName = getLibraryName(url.type, url.name, lookup);
+        return String.format("The resource `%1$s` is marked as private in %2$s", url, libraryName);
+    }
+
+    /** Pick a suitable name to describe the library defining the private resource */
+    @Nullable
+    private static String getLibraryName(@NonNull ResourceType type, @NonNull String name,
+            @NonNull ResourceVisibilityLookup visibility) {
+        AndroidLibrary library = visibility.getPrivateIn(type, name);
+        if (library != null) {
+            String libraryName = library.getProject();
+            if (libraryName != null) {
+                return libraryName;
+            }
+            MavenCoordinates coordinates = library.getResolvedCoordinates();
+            if (coordinates != null) {
+                return coordinates.getGroupId() + ':' + coordinates.getArtifactId();
+            }
+        }
+        return "the library";
     }
 }
