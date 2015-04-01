@@ -26,9 +26,6 @@ import org.gradle.internal.reflect.Instantiator
 public class GroupableProductFlavor
         extends ProductFlavor implements com.android.build.gradle.api.GroupableProductFlavor {
 
-    /** Name of the dimension this product flavor belongs to. */
-    String flavorDimension
-
     public GroupableProductFlavor(
             @NonNull String name,
             @NonNull Project project,
