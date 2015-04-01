@@ -83,6 +83,7 @@ import com.android.sdklib.repository.FullRevision;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
 import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
@@ -1196,9 +1197,14 @@ public class AndroidBuilder {
 
     public Set<String> createMainDexList(
             @NonNull File allClassesJarFile,
-            @NonNull File jarOfRoots) throws ProcessException {
-
+            @NonNull File jarOfRoots,
+            boolean disableAnnotationResolutionWorkaround) throws ProcessException {
         BuildToolInfo buildToolInfo = mTargetInfo.getBuildTools();
+
+        checkArgument(disableAnnotationResolutionWorkaround &&
+                        buildToolInfo.getRevision().compareTo(new FullRevision(22, 0, 2)) > 1,
+                "--disable-annotation-resolution-workaround requires Build Tools 22.0.2 or later");
+
         ProcessInfoBuilder builder = new ProcessInfoBuilder();
 
         String dx = buildToolInfo.getPath(BuildToolInfo.PathId.DX_JAR);
@@ -1208,6 +1214,10 @@ public class AndroidBuilder {
 
         builder.setClasspath(dx);
         builder.setMain("com.android.multidex.ClassReferenceListBuilder");
+
+        if (disableAnnotationResolutionWorkaround) {
+            builder.addArgs("--disable-annotation-resolution-workaround");
+        }
 
         builder.addArgs(jarOfRoots.getAbsolutePath());
         builder.addArgs(allClassesJarFile.getAbsolutePath());

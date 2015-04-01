@@ -2133,6 +2133,9 @@ abstract class TaskManager {
             createMainDexListTask.mainDexListFile = multiDexKeepFile
             createMainDexListTask.outputFile = project.file(
                     "${project.buildDir}/${FD_INTERMEDIATES}/multi-dex/${config.dirName}/maindexlist.txt")
+            conventionMapping(createMainDexListTask).map("disableAnnotationResolutionWorkaround") {
+                getExtension().dexOptions.getDisableAnnotationResolutionWorkaround()
+            }
 
             // update dependencies
             dexTask.dependsOn createMainDexListTask

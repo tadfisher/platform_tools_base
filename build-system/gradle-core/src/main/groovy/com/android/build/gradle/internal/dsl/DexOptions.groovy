@@ -34,6 +34,8 @@ public class DexOptions implements com.android.builder.core.DexOptions {
 
     private int threadCount = 4
 
+    private disableAnnotationResolutionWorkaround = false
+
     @Input
     @Optional
     private String javaMaxHeapSize
@@ -105,4 +107,11 @@ public class DexOptions implements com.android.builder.core.DexOptions {
         return threadCount
     }
 
+    public boolean getDisableAnnotationResolutionWorkaround() {
+        return disableAnnotationResolutionWorkaround
+    }
+
+    public void setDisableAnnotationResolutionWorkaround(disableAnnotationResolutionWorkaround) {
+        this.disableAnnotationResolutionWorkaround = disableAnnotationResolutionWorkaround
+    }
 }

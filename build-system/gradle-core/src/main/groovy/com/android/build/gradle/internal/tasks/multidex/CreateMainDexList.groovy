@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.tasks.BaseTask
 import com.google.common.base.Charsets
 import com.google.common.base.Joiner
 import com.google.common.io.Files
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
@@ -52,6 +53,9 @@ public class CreateMainDexList extends BaseTask {
     File getDxJar() {
         return builder.getDxJar()
     }
+
+    @Input
+    boolean disableAnnotationResolutionWorkaround
 
     @TaskAction
     void output() {
@@ -90,6 +94,7 @@ public class CreateMainDexList extends BaseTask {
     }
 
     private Set<String> callDx(File allClassesJarFile, File jarOfRoots) {
-        return androidBuilder.createMainDexList(allClassesJarFile, jarOfRoots)
+        return androidBuilder.createMainDexList(allClassesJarFile, jarOfRoots,
+                getDisableAnnotationResolutionWorkaround())
     }
 }
