@@ -283,7 +283,9 @@ public class ModelBuilder implements ToolingModelBuilder {
                 Sets.newHashSet(variantData.prepareDependenciesTask.getName(),
                         taskManager.createMockableJar.getName()),
                 extraGeneratedSourceFolders != null ? extraGeneratedSourceFolders : Collections.<File>emptyList(),
-                variantData.javaCompileTask.getDestinationDir(),
+                (variantData.javaCompileTask != null) ?
+                        variantData.javaCompileTask.getDestinationDir() :
+                        variantData.getScope().getJavaOutputDir(),
                 variantData.processJavaResourcesTask.getDestinationDir(),
                 dependencies,
                 sourceProviders.variantSourceProvider,
@@ -352,7 +354,9 @@ public class ModelBuilder implements ToolingModelBuilder {
                 variantData.compileTask.getName(),
                 getGeneratedSourceFolders(variantData),
                 getGeneratedResourceFolders(variantData),
-                variantData.javaCompileTask.getDestinationDir(),
+                (variantData.javaCompileTask != null) ?
+                        variantData.javaCompileTask.getDestinationDir() :
+                        variantData.getScope().getJavaOutputDir(),
                 variantData.processJavaResourcesTask.getDestinationDir(),
                 DependenciesImpl.cloneDependencies(variantData, androidBuilder),
                 sourceProviders.variantSourceProvider,

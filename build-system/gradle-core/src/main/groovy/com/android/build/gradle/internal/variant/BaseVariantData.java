@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.coverage.JacocoInstrumentTask;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.FileSupplier;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
@@ -85,6 +86,9 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
     private final GradleVariantConfiguration variantConfiguration;
 
     private VariantDependencies variantDependency;
+
+    // Needed for ModelBuilder.  Should be removed once VariantScope can replace BaseVariantData.
+    private VariantScope scope;
 
     public Task preBuildTask;
     public PrepareDependenciesTask prepareDependenciesTask;
@@ -294,7 +298,7 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
         addJavaSourceFoldersToModel(generatedSourceFolders);
     }
 
-   public void registerResGeneratingTask(@NonNull Task task, @NonNull File... generatedResFolders) {
+    public void registerResGeneratingTask(@NonNull Task task, @NonNull File... generatedResFolders) {
         // no need add the folders anywhere, the convention mapping closure for the MergeResources
         // action will pick them up from here
         resourceGenTask.dependsOn(task);
@@ -432,5 +436,14 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
     @Nullable
     public File getMappingFile() {
         return mappingFileProviderTask != null ? mappingFileProviderTask.get() : null;
+    }
+
+    @Nullable
+    public VariantScope getScope() {
+        return scope;
+    }
+
+    public void setScope(@NonNull VariantScope scope) {
+        this.scope = scope;
     }
 }
