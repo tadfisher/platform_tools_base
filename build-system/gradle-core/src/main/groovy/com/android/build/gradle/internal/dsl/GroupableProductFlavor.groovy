@@ -23,11 +23,9 @@ import org.gradle.internal.reflect.Instantiator
 /**
  * A version of {@link ProductFlavor} that can receive a dimension name.
  */
+// TODO: Remove interface now ProductFlavor has flavorDimensions.
 public class GroupableProductFlavor
         extends ProductFlavor implements com.android.build.gradle.api.GroupableProductFlavor {
-
-    /** Name of the dimension this product flavor belongs to. */
-    String flavorDimension
 
     public GroupableProductFlavor(
             @NonNull String name,

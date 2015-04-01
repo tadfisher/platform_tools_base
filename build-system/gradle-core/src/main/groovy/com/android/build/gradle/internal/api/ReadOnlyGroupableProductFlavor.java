@@ -33,6 +33,7 @@ import com.android.build.gradle.api.GroupableProductFlavor;
  * This wrapper ensures that the returned instance is actually just a strict implementation
  * of the base interface and is read-only.
  */
+// TODO: Remove once GroupableProductFlavor interface is removed.
 public class ReadOnlyGroupableProductFlavor extends ReadOnlyProductFlavor implements
         GroupableProductFlavor {
 
@@ -40,11 +41,5 @@ public class ReadOnlyGroupableProductFlavor extends ReadOnlyProductFlavor implem
             @NonNull GroupableProductFlavor productFlavor,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider) {
         super(productFlavor, readOnlyObjectProvider);
-    }
-
-    @Nullable
-    @Override
-    public String getFlavorDimension() {
-        return ((GroupableProductFlavor) productFlavor).getFlavorDimension();
     }
 }
