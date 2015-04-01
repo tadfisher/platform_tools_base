@@ -39,20 +39,37 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
     private static final long serialVersionUID = 1L;
 
     private final String mName;
+    @Nullable
+    private String mFlavorDimension;
+    @Nullable
     private ApiVersion mMinSdkVersion;
+    @Nullable
     private ApiVersion mTargetSdkVersion;
+    @Nullable
     private Integer mMaxSdkVersion;
+    @Nullable
     private Integer mRenderscriptTargetApi;
+    @Nullable
     private Boolean mRenderscriptSupportModeEnabled;
+    @Nullable
     private Boolean mRenderscriptNdkModeEnabled;
+    @Nullable
     private Integer mVersionCode;
+    @Nullable
     private String mVersionName;
+    @Nullable
     private String mApplicationId;
+    @Nullable
     private String mTestApplicationId;
+    @Nullable
     private String mTestInstrumentationRunner;
+    @Nullable
     private Boolean mTestHandleProfiling;
+    @Nullable
     private Boolean mTestFunctionalTest;
+    @Nullable
     private SigningConfig mSigningConfig;
+    @Nullable
     private Set<String> mResourceConfiguration;
 
     /**
@@ -71,6 +88,17 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
     @NonNull
     public String getName() {
         return mName;
+    }
+
+    public void setFlavorDimension(@NonNull String flavorDimension) {
+        mFlavorDimension = flavorDimension;
+    }
+
+    /** Name of the dimension this product flavor belongs to. */
+    @Nullable
+    @Override
+    public String getFlavorDimension() {
+        return mFlavorDimension;
     }
 
     /**
@@ -151,6 +179,7 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
     /**
      * Min SDK version.
      */
+    @Nullable
     @Override
     public ApiVersion getMinSdkVersion() {
         return mMinSdkVersion;
@@ -166,6 +195,7 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
     /**
      * Target SDK version.
      */
+    @Nullable
     @Override
     public ApiVersion getTargetSdkVersion() {
         return mTargetSdkVersion;
@@ -177,6 +207,7 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
         return this;
     }
 
+    @Nullable
     @Override
     public Integer getMaxSdkVersion() {
         return mMaxSdkVersion;
@@ -436,7 +467,7 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
     static ProductFlavor clone(@NonNull ProductFlavor productFlavor) {
         DefaultProductFlavor flavor = new DefaultProductFlavor(productFlavor.getName());
         flavor._initWith(productFlavor);
-
+        flavor.mFlavorDimension = productFlavor.getFlavorDimension();
         flavor.mMinSdkVersion = productFlavor.getMinSdkVersion();
         flavor.mTargetSdkVersion = productFlavor.getTargetSdkVersion();
         flavor.mMaxSdkVersion = productFlavor.getMaxSdkVersion();
@@ -487,6 +518,11 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
         }
 
         DefaultProductFlavor that = (DefaultProductFlavor) o;
+
+        if (mFlavorDimension !=null ? !mFlavorDimension.equals(that.mFlavorDimension) :
+                that.mFlavorDimension != null) {
+            return false;
+        }
 
         if (mApplicationId != null ? !mApplicationId.equals(that.mApplicationId)
                 : that.mApplicationId != null) {
@@ -564,6 +600,7 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
     public int hashCode() {
         int result = super.hashCode();
         result = 31 * result + mName.hashCode();
+        result = 31 * result + (mFlavorDimension != null ? mFlavorDimension.hashCode() : 0);
         result = 31 * result + (mMinSdkVersion != null ? mMinSdkVersion.hashCode() : 0);
         result = 31 * result + (mTargetSdkVersion != null ? mTargetSdkVersion.hashCode() : 0);
         result = 31 * result + (mMaxSdkVersion != null ? mMaxSdkVersion.hashCode() : 0);
@@ -592,6 +629,7 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
     public String toString() {
         return Objects.toStringHelper(this)
                 .add("name", mName)
+                .add("flavorDimension", mFlavorDimension)
                 .add("minSdkVersion", mMinSdkVersion)
                 .add("targetSdkVersion", mTargetSdkVersion)
                 .add("renderscriptTargetApi", mRenderscriptTargetApi)
