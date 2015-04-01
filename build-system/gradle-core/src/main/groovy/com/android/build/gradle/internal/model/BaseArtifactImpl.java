@@ -111,7 +111,6 @@ abstract class BaseArtifactImpl implements BaseArtifact, Serializable {
     }
 
     @NonNull
-    @Override
     public Collection<File> getGeneratedSourceFolders() {
         return generatedSourceFolders;
     }

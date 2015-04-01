@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 
 import java.io.File;
-import java.util.Collection;
 import java.util.Set;
 
 /**
@@ -94,14 +93,4 @@ public interface BaseArtifact {
      */
     @NonNull
     Set<String> getIdeSetupTaskNames();
-
-    /**
-     * Returns all the source folders that are generated. This is typically folders for the R,
-     * the aidl classes, and the renderscript classes.
-     *
-     * @return a list of folders.
-     * @since 1.2, it was in AndroidArtifact before.
-     */
-    @NonNull
-    Collection<File> getGeneratedSourceFolders();
 }
