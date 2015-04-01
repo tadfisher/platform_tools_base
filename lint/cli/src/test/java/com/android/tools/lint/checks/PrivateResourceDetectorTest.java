@@ -16,7 +16,21 @@
 
 package com.android.tools.lint.checks;
 
+import static org.easymock.EasyMock.createNiceMock;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.replay;
+
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.builder.model.AndroidArtifact;
+import com.android.builder.model.AndroidLibrary;
+import com.android.builder.model.Variant;
+import com.android.testutils.TestUtils;
 import com.android.tools.lint.detector.api.Detector;
+import com.android.tools.lint.detector.api.Project;
+
+import java.io.File;
+import java.util.Collections;
 
 @SuppressWarnings("javadoc")
 public class PrivateResourceDetectorTest extends AbstractCheckTest {
@@ -25,13 +39,64 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
         return new PrivateResourceDetector();
     }
 
-    public void testPrivate() throws Exception {
-        assertEquals(
-            "res/layout/private.xml:3: Error: Illegal resource reference: @*android resources are private and not always present [PrivateResource]\n" +
-            "    <ImageView android:id=\"@+id/android_logo\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@*android:drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" />\n" +
-            "                                                                                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "1 errors, 0 warnings\n" +
-            "",
-            lintProject("res/layout/private.xml"));
+    public void testPrivateInXml() throws Exception {
+        assertEquals(""
+                + "res/layout/private.xml:11: Warning: The resource @string/my_private_string is marked as private in the library [PrivateResource]\n"
+                + "            android:text=\"@string/my_private_string\" />\n"
+                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 1 warnings\n",
+                lintProject("res/layout/private.xml"));
+    }
+
+    public void testPrivateInJava() throws Exception {
+        assertEquals(""
+                + ""
+                + "src/test/pkg/Private.java:3: Warning: The resource @string/my_private_string is marked as private in the library [PrivateResource]\n"
+                + "        int x = R.string.my_private_string; // ERROR\n"
+                + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 1 warnings\n",
+                lintProject("src/test/pkg/Private.java.txt=>src/test/pkg/Private.java"));
+    }
+
+    @Override
+    protected TestLintClient createClient() {
+        return new TestLintClient() {
+            @NonNull
+            @Override
+            protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
+                return new Project(this, dir, referenceDir) {
+                    @Override
+                    public boolean isGradleProject() {
+                        return true;
+                    }
+
+                    @Nullable
+                    @Override
+                    public Variant getCurrentVariant() {
+                        try {
+                            AndroidLibrary library = TestUtils.createMockLibrary(
+                                    ""
+                                            + "int string my_private_string 0x7f040000\n"
+                                            + "int string my_public_string 0x7f040001\n",
+                                    ""
+                                            + ""
+                                            + "string my_public_string\n",
+                                    Collections.<AndroidLibrary>emptyList()
+                            );
+                            AndroidArtifact artifact = TestUtils.createMockArtifact(
+                                    Collections.singletonList(library));
+
+                            Variant variant = createNiceMock(Variant.class);
+                            expect(variant.getMainArtifact()).andReturn(artifact).anyTimes();
+                            replay(variant);
+                            return variant;
+                        } catch (Exception e) {
+                            fail(e.toString());
+                            return null;
+                        }
+                    }
+                };
+            }
+        };
     }
 }

@@ -1,0 +1,7 @@
+public class Private {
+    void test() {
+        int x = R.string.my_private_string; // ERROR
+        int y = R.string.my_public_string; // OK
+        int y = android.R.string.my_private_string; // OK (not in project namespace)
+    }
+}

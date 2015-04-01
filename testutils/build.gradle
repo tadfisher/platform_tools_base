@@ -6,7 +6,9 @@ version = rootProject.ext.baseVersion
 
 dependencies {
     compile project(':base:common')
+    compile project(':base:builder-model')
     compile 'junit:junit:4.12'
+    compile 'org.easymock:easymock:3.3'
 }
 
 sourceSets {
