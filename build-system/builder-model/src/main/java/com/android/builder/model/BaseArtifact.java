@@ -43,7 +43,7 @@ public interface BaseArtifact {
     /**
      * Returns the name of the task used to generate the artifact output(s).
      *
-     * @return the name of the task.
+     * @returnA the name of the task.
      */
     @NonNull
     String getAssembleTaskName();
@@ -102,13 +102,16 @@ public interface BaseArtifact {
     @NonNull
     Set<String> getIdeSetupTaskNames();
 
+
     /**
      * Returns all the source folders that are generated. This is typically folders for the R,
      * the aidl classes, and the renderscript classes.
      *
+     * maintained here for compatibility reasons with pre 1.2 releases.
+     *
      * @return a list of folders.
-     * @since 1.2, it was in AndroidArtifact before.
      */
     @NonNull
+    @Deprecated
     Collection<File> getGeneratedSourceFolders();
 }
