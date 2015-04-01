@@ -23,6 +23,8 @@ import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import com.google.common.io.InputSupplier;
 
+import junit.framework.TestCase;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,8 +34,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
-
-import junit.framework.TestCase;
 
 /**
  * Common test case for SDK unit tests. Contains a number of general utility methods
@@ -326,13 +326,7 @@ public abstract class SdkTestCase extends TestCase {
     }
 
     protected void deleteFile(File dir) {
-        if (dir.isDirectory()) {
-            for (File f : dir.listFiles()) {
-                deleteFile(f);
-            }
-        } else if (dir.isFile()) {
-            assertTrue(dir.getPath(), dir.delete());
-        }
+        TestUtils.deleteFile(dir);
     }
 
     protected File makeTestFile(String name, String relative,

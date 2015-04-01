@@ -16,10 +16,27 @@
 
 package com.android.testutils;
 
+import static com.android.SdkConstants.FN_PUBLIC_TXT;
+import static com.android.SdkConstants.FN_RESOURCE_TEXT;
+import static org.easymock.EasyMock.createNiceMock;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.replay;
+import static org.junit.Assert.assertTrue;
+
+import com.android.builder.model.AndroidArtifact;
+import com.android.builder.model.AndroidLibrary;
+import com.android.builder.model.Dependencies;
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
+
 import junit.framework.TestCase;
+
+import org.easymock.IExpectationSetters;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Utility methods to deal with loading the test data.
@@ -81,5 +98,72 @@ public class TestUtils {
     public static File getCanonicalRoot(String... names) throws IOException {
         File root = getRoot(names);
         return root.getCanonicalFile();
+    }
+
+    public static void deleteFile(File dir) {
+        if (dir.isDirectory()) {
+            File[] files = dir.listFiles();
+            if (files != null) {
+                for (File f : files) {
+                    deleteFile(f);
+                }
+            }
+        } else if (dir.isFile()) {
+            assertTrue(dir.getPath(), dir.delete());
+        }
+    }
+
+    public static File createTempDirDeletedOnExit() {
+        final File tempDir = Files.createTempDir();
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                deleteFile(tempDir);
+            }
+        });
+
+        return tempDir;
+    }
+
+    public static AndroidArtifact createMockArtifact(List<AndroidLibrary> libraries) {
+        Dependencies dependencies = createNiceMock(Dependencies.class);
+        expect(dependencies.getLibraries()).andReturn(libraries).anyTimes();
+        replay(dependencies);
+
+        AndroidArtifact artifact = createNiceMock(AndroidArtifact.class);
+        expect(artifact.getDependencies()).andReturn(dependencies).anyTimes();
+        replay(artifact);
+
+        return artifact;
+    }
+
+    public static AndroidLibrary createMockLibrary(String allResources, String publicResources)
+            throws IOException {
+        return createMockLibrary(allResources, publicResources,
+                Collections.<AndroidLibrary>emptyList());
+    }
+
+    public static AndroidLibrary createMockLibrary(String allResources, String publicResources,
+            List<AndroidLibrary> dependencies)
+            throws IOException {
+        final File tempDir = TestUtils.createTempDirDeletedOnExit();
+
+        Files.write(allResources, new File(tempDir, FN_RESOURCE_TEXT), Charsets.UTF_8);
+        File publicTxtFile = new File(tempDir, FN_PUBLIC_TXT);
+        if (publicResources != null) {
+            Files.write(publicResources, publicTxtFile, Charsets.UTF_8);
+        }
+        AndroidLibrary library = createNiceMock(AndroidLibrary.class);
+        expect(library.getPublicResources()).andReturn(publicTxtFile).anyTimes();
+
+        // Work around wildcard capture
+        //expect(mock.getLibraryDependencies()).andReturn(dependencies).anyTimes();
+        IExpectationSetters setter = expect(library.getLibraryDependencies());
+        //noinspection unchecked
+        setter.andReturn(dependencies);
+        setter.anyTimes();
+
+        replay(library);
+        return library;
     }
 }
