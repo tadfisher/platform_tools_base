@@ -266,7 +266,7 @@ public class ModelBuilder implements ToolingModelBuilder {
     private JavaArtifactImpl createUnitTestsJavaArtifact(
             @NonNull VariantType variantType,
             @NonNull BaseVariantData variantData) {
-        def sourceProviders = determineSourceProviders(variantType.artifactName, variantData, extraModelInfo)
+        def sourceProviders = determineSourceProviders(variantData)
         def dependencies = DependenciesImpl.cloneDependencies(variantData, androidBuilder)
 
         // Add the mockable JAR path. It will be created before tests are actually run from the IDE.
@@ -301,7 +301,7 @@ public class ModelBuilder implements ToolingModelBuilder {
             signingConfigName = signingConfig.name
         }
 
-        def sourceProviders = determineSourceProviders(name, variantData, extraModelInfo)
+        def sourceProviders = determineSourceProviders(variantData)
 
         // get the outputs
         List<? extends BaseVariantOutputData> variantOutputs = variantData.outputs
@@ -357,25 +357,11 @@ public class ModelBuilder implements ToolingModelBuilder {
                 variantConfiguration.getMergedResValues())
     }
 
-    private static SourceProviders determineSourceProviders(
-            @NonNull String name,
-            @NonNull BaseVariantData variantData,
-            @NonNull ExtraModelInfo extraModelInfo) {
-        SourceProvider variantSourceProvider = null
-        SourceProvider multiFlavorSourceProvider = null
-
-        if (ARTIFACT_MAIN.equals(name)) {
-            variantSourceProvider = variantData.variantConfiguration.variantSourceProvider
-            multiFlavorSourceProvider = variantData.variantConfiguration.multiFlavorSourceProvider
-        } else {
-            SourceProviderContainer container = getSourceProviderContainer(
-                    extraModelInfo.getExtraVariantSourceProviders(
-                            variantData.getVariantConfiguration().getFullName()),
-                    name)
-            if (container != null) {
-                variantSourceProvider = container.sourceProvider
-            }
-        }
+    private static SourceProviders determineSourceProviders(@NonNull BaseVariantData variantData) {
+        SourceProvider variantSourceProvider =
+                variantData.variantConfiguration.variantSourceProvider
+        SourceProvider multiFlavorSourceProvider =
+                variantData.variantConfiguration.multiFlavorSourceProvider
 
         return new SourceProviders(
                 variantSourceProvider: variantSourceProvider != null ?
