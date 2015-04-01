@@ -41,10 +41,4 @@ public class ReadOnlyGroupableProductFlavor extends ReadOnlyProductFlavor implem
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider) {
         super(productFlavor, readOnlyObjectProvider);
     }
-
-    @Nullable
-    @Override
-    public String getFlavorDimension() {
-        return ((GroupableProductFlavor) productFlavor).getFlavorDimension();
-    }
 }

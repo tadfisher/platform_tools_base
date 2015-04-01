@@ -39,6 +39,7 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
     private static final long serialVersionUID = 1L;
 
     private final String mName;
+    private String mFlavorDimension;
     private ApiVersion mMinSdkVersion;
     private ApiVersion mTargetSdkVersion;
     private Integer mMaxSdkVersion;
@@ -71,6 +72,16 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
     @NonNull
     public String getName() {
         return mName;
+    }
+
+    public void setFlavorDimension(@NonNull String flavorDimension) {
+        mFlavorDimension = flavorDimension;
+    }
+
+    @Nullable
+    @Override
+    public String getFlavorDimension() {
+        return mFlavorDimension;
     }
 
     /**
@@ -436,7 +447,7 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
     static ProductFlavor clone(@NonNull ProductFlavor productFlavor) {
         DefaultProductFlavor flavor = new DefaultProductFlavor(productFlavor.getName());
         flavor._initWith(productFlavor);
-
+        flavor.mFlavorDimension = productFlavor.getFlavorDimension();
         flavor.mMinSdkVersion = productFlavor.getMinSdkVersion();
         flavor.mTargetSdkVersion = productFlavor.getTargetSdkVersion();
         flavor.mMaxSdkVersion = productFlavor.getMaxSdkVersion();
@@ -487,6 +498,11 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
         }
 
         DefaultProductFlavor that = (DefaultProductFlavor) o;
+
+        if (mFlavorDimension !=null ? !mFlavorDimension.equals(that.mFlavorDimension) :
+                that.mFlavorDimension != null) {
+            return false;
+        }
 
         if (mApplicationId != null ? !mApplicationId.equals(that.mApplicationId)
                 : that.mApplicationId != null) {
@@ -564,6 +580,7 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
     public int hashCode() {
         int result = super.hashCode();
         result = 31 * result + mName.hashCode();
+        result = 31 * result + mFlavorDimension.hashCode();
         result = 31 * result + (mMinSdkVersion != null ? mMinSdkVersion.hashCode() : 0);
         result = 31 * result + (mTargetSdkVersion != null ? mTargetSdkVersion.hashCode() : 0);
         result = 31 * result + (mMaxSdkVersion != null ? mMaxSdkVersion.hashCode() : 0);
@@ -592,6 +609,7 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
     public String toString() {
         return Objects.toStringHelper(this)
                 .add("name", mName)
+                .add("flavorDimension", mFlavorDimension)
                 .add("minSdkVersion", mMinSdkVersion)
                 .add("targetSdkVersion", mTargetSdkVersion)
                 .add("renderscriptTargetApi", mRenderscriptTargetApi)
