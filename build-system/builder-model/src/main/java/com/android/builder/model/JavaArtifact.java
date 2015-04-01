@@ -16,9 +16,24 @@
 
 package com.android.builder.model;
 
+import com.android.annotations.NonNull;
+
+import java.io.File;
+import java.util.Collection;
+
 /**
  * The information for a generated Java artifact.
  */
 public interface JavaArtifact extends BaseArtifact {
 
+    /**
+     * Returns all the source folders that are generated. This is typically folders for the R,
+     * the aidl classes, and the renderscript classes.
+     *
+     * @return a list of folders.
+     * @since 1.2, it was only in AndroidArtifact before.
+     */
+    @NonNull
+    @Override
+    Collection<File> getGeneratedSourceFolders();
 }
