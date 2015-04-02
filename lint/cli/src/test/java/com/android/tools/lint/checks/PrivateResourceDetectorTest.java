@@ -53,7 +53,7 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
         assertEquals(""
                 + "res/layout/private.xml:11: Warning: The resource @string/my_private_string is marked as private in the library [PrivateResource]\n"
                 + "            android:text=\"@string/my_private_string\" />\n"
-                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "                          ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "0 errors, 1 warnings\n",
                 lintProject("res/layout/private.xml"));
     }
