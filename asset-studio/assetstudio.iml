@@ -11,7 +11,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="common" exported="" />
-    <orderEntry type="module" module-name="layoutlib-api" exported="" />
+    <orderEntry type="module" module-name="layoutlib-api-base" exported="" />
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
   </component>
 </module>

@@ -13,7 +13,7 @@
       <excludeFolder url="file://$MODULE_DIR$/ddmlib/.settings" />
       <excludeFolder url="file://$MODULE_DIR$/files" />
       <excludeFolder url="file://$MODULE_DIR$/jobb" />
-      <excludeFolder url="file://$MODULE_DIR$/layoutlib-api/.settings" />
+      <excludeFolder url="file://$MODULE_DIR$/layoutlib-api-base/.settings" />
       <excludeFolder url="file://$MODULE_DIR$/manifest-merger/.settings" />
       <excludeFolder url="file://$MODULE_DIR$/misc" />
       <excludeFolder url="file://$MODULE_DIR$/rule-api/.settings" />

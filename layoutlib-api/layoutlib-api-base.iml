@@ -14,6 +14,6 @@
     <orderEntry type="library" exported="" name="kxml2" level="project" />
     <orderEntry type="library" exported="" scope="TEST" name="JUnit4" level="project" />
     <orderEntry type="module" module-name="android-annotations" exported="" />
-    <orderEntry type="module" module-name="annotations" />
+    <orderEntry type="library" name="intellij-annotations" level="project" />
   </component>
 </module>
