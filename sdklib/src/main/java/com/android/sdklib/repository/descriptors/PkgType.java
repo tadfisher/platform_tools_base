@@ -19,7 +19,6 @@ package com.android.sdklib.repository.descriptors;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.sdklib.AndroidVersion;
-import com.android.sdklib.internal.repository.LocalSdkParser;
 import com.android.sdklib.repository.FullRevision;
 import com.android.sdklib.repository.MajorRevision;
 import com.android.sdklib.repository.local.LocalSdk;
@@ -30,7 +29,7 @@ import java.util.EnumSet;
  * Package types handled by the {@link LocalSdk}.
  * <p/>
  * Integer bit values are provided via {@link #getIntValue()} for backward
- * compatibility with the older {@link LocalSdkParser} class.
+ * compatibility with the older LocalSdkParser class.
  * The integer bit values also indicate the natural ordering of the packages.
  */
 public enum PkgType implements IPkgCapabilities {
