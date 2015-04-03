@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 The Android Open Source Project
+ * Copyright (C) 2009 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,27 @@
  * limitations under the License.
  */
 
-package com.android.sdklib.internal.repository;
+package com.android.sdklib.repository;
 
 /**
  * Interface for elements that can provide a description of themselves.
  */
-public interface IListDescription {
+public interface IDescription {
 
     /**
-     * Returns a description of this package that is suitable for a list display.
-     * Should not be empty. Must never be null.
+     * Returns a description of the given element. Cannot be null.
      * <p/>
-     * Note that this is the "base" name for the package
-     * with no specific revision nor API mentioned.
-     * In contrast, {@link IDescription#getShortDescription()} should be used if you
-     * want more details such as the package revision number or the API, if applicable.
+     * A description is a multi-line of text, typically much more
+     * elaborate than what {@link Object#toString()} would provide.
      */
-    public abstract String getListDescription();
+    public abstract String getShortDescription();
+
+    /**
+     * Returns a description of the given element. Cannot be null.
+     * <p/>
+     * A description is a multi-line of text, typically much more
+     * elaborate than what {@link Object#toString()} would provide.
+     */
+    public abstract String getLongDescription();
+
 }
