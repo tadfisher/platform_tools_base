@@ -202,8 +202,8 @@ public class PreDexCacheTest extends TestCase {
         }
 
         @Override
-        public int getThreadCount() {
-            return 1;
+        public Integer getThreadCount() {
+            return null;
         }
     }
 
