@@ -20,8 +20,8 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.SdkManager;
-import com.android.sdklib.repository.IDescription;
 import com.android.sdklib.internal.repository.sources.SdkSource;
+import com.android.sdklib.repository.IDescription;
 import com.android.sdklib.repository.MajorRevision;
 import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.sdklib.repository.descriptors.IPkgDesc;
@@ -34,54 +34,51 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * Represents a doc XML node in an SDK repository.
- * <p/>
- * Note that a doc package has a version and thus implements {@link IAndroidVersionProvider}.
- * However there is no mandatory dependency that limits installation so this does not
- * implement {@link IPlatformDependency}.
+ * Represents a doc XML node in an SDK repository. <p/> Note that a doc package has a version and
+ * thus implements {@link IAndroidVersionProvider}. However there is no mandatory dependency that
+ * limits installation so this does not implement {@link IPlatformDependency}.
  */
 public class DocPackage extends MajorRevisionPackage implements IAndroidVersionProvider {
 
     private final AndroidVersion mVersion;
+
     private final IPkgDesc mPkgDesc;
 
     /**
-     * Creates a new doc package from the attributes and elements of the given XML node.
-     * This constructor should throw an exception if the package cannot be created.
+     * Creates a new doc package from the attributes and elements of the given XML node. This
+     * constructor should throw an exception if the package cannot be created.
      *
-     * @param source The {@link SdkSource} where this is loaded from.
+     * @param source      The {@link SdkSource} where this is loaded from.
      * @param packageNode The XML element being parsed.
-     * @param nsUri The namespace URI of the originating XML document, to be able to deal with
-     *          parameters that vary according to the originating XML schema.
-     * @param licenses The licenses loaded from the XML originating document.
+     * @param nsUri       The namespace URI of the originating XML document, to be able to deal with
+     *                    parameters that vary according to the originating XML schema.
+     * @param licenses    The licenses loaded from the XML originating document.
      */
     public DocPackage(SdkSource source,
             Node packageNode,
             String nsUri,
-            Map<String,String> licenses) {
+            Map<String, String> licenses) {
         super(source, packageNode, nsUri, licenses);
 
         int apiLevel =
-            PackageParserUtils.getXmlInt   (packageNode, SdkRepoConstants.NODE_API_LEVEL, 0);
+                PackageParserUtils.getXmlInt(packageNode, SdkRepoConstants.NODE_API_LEVEL, 0);
         String codeName =
-            PackageParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_CODENAME);
+                PackageParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_CODENAME);
         if (codeName.length() == 0) {
             codeName = null;
         }
         mVersion = new AndroidVersion(apiLevel, codeName);
 
-        mPkgDesc = PkgDesc.Builder
-                .newDoc(mVersion, (MajorRevision) getRevision())
-                .setDescriptions(this)
+        mPkgDesc = setDescriptions(
+                PkgDesc.Builder.newDoc(mVersion, (MajorRevision) getRevision()))
                 .create();
     }
 
     /**
-     * Manually create a new package with one archive and the given attributes.
-     * This is used to create packages from local directories in which case there must be
-     * one archive which URL is the actual target location.
-     * <p/>
-     * By design, this creates a package with one and only one archive.
+     * Manually create a new package with one archive and the given attributes. This is used to
+     * create packages from local directories in which case there must be one archive which URL is
+     * the actual target location. <p/> By design, this creates a package with one and only one
+     * archive.
      */
     public static Package create(SdkSource source,
             Properties props,
@@ -114,9 +111,7 @@ public class DocPackage extends MajorRevisionPackage implements IAndroidVersionP
                 archiveOsPath);
         mVersion = new AndroidVersion(props, apiLevel, codename);
 
-        mPkgDesc = PkgDesc.Builder
-                .newDoc(mVersion, (MajorRevision) getRevision())
-                .setDescriptions(this)
+        mPkgDesc = setDescriptions(PkgDesc.Builder.newDoc(mVersion, (MajorRevision) getRevision()))
                 .create();
     }
 
@@ -127,8 +122,8 @@ public class DocPackage extends MajorRevisionPackage implements IAndroidVersionP
     }
 
     /**
-     * Save the properties of the current packages in the given {@link Properties} object.
-     * These properties will later be give the constructor that takes a {@link Properties} object.
+     * Save the properties of the current packages in the given {@link Properties} object. These
+     * properties will later be give the constructor that takes a {@link Properties} object.
      */
     @Override
     public void saveProperties(Properties props) {
@@ -138,19 +133,18 @@ public class DocPackage extends MajorRevisionPackage implements IAndroidVersionP
     }
 
     /**
-     * Returns the version, for platform, add-on and doc packages.
-     * Can be 0 if this is a local package of unknown api-level.
+     * Returns the version, for platform, add-on and doc packages. Can be 0 if this is a local
+     * package of unknown api-level.
      */
-    @Override @NonNull
+    @Override
+    @NonNull
     public AndroidVersion getAndroidVersion() {
         return mVersion;
     }
 
     /**
-     * Returns a string identifier to install this package from the command line.
-     * For docs, we use "doc-N" where N is the API or the preview codename.
-     * <p/>
-     * {@inheritDoc}
+     * Returns a string identifier to install this package from the command line. For docs, we use
+     * "doc-N" where N is the API or the preview codename. <p/> {@inheritDoc}
      */
     @Override
     public String installId() {
@@ -158,8 +152,7 @@ public class DocPackage extends MajorRevisionPackage implements IAndroidVersionP
     }
 
     /**
-     * Returns a description of this package that is suitable for a list display.
-     * <p/>
+     * Returns a description of this package that is suitable for a list display. <p/>
      * {@inheritDoc}
      */
     @Override
@@ -208,8 +201,8 @@ public class DocPackage extends MajorRevisionPackage implements IAndroidVersionP
     /**
      * Returns a long description for an {@link IDescription}.
      *
-     * The long description is whatever the XML contains for the &lt;description&gt; field,
-     * or the short description if the former is empty.
+     * The long description is whatever the XML contains for the &lt;description&gt; field, or the
+     * short description if the former is empty.
      */
     @Override
     public String getLongDescription() {
@@ -228,12 +221,10 @@ public class DocPackage extends MajorRevisionPackage implements IAndroidVersionP
     }
 
     /**
-     * Computes a potential installation folder if an archive of this package were
-     * to be installed right away in the given SDK root.
-     * <p/>
-     * A "doc" package should always be located in SDK/docs.
+     * Computes a potential installation folder if an archive of this package were to be installed
+     * right away in the given SDK root. <p/> A "doc" package should always be located in SDK/docs.
      *
-     * @param osSdkRoot The OS path of the SDK root folder.
+     * @param osSdkRoot  The OS path of the SDK root folder.
      * @param sdkManager An existing SDK manager to list current platforms and addons.
      * @return A new {@link File} corresponding to the directory to use to install this package.
      */
@@ -243,8 +234,8 @@ public class DocPackage extends MajorRevisionPackage implements IAndroidVersionP
     }
 
     /**
-     * Consider doc packages to be the same if they cover the same API level,
-     * regardless of their revision number.
+     * Consider doc packages to be the same if they cover the same API level, regardless of their
+     * revision number.
      */
     @Override
     public boolean sameItemAs(Package pkg) {
@@ -257,16 +248,11 @@ public class DocPackage extends MajorRevisionPackage implements IAndroidVersionP
     }
 
     /**
-     * {@inheritDoc}
-     * <hr>
-     * Doc packages are a bit different since there can only be one doc installed at
-     * the same time.
-     * <p/>
-     * We now consider that docs for different APIs are NOT updates, e.g. doc for API N+1
-     * is no longer considered an update for doc API N.
-     * However docs that have the same API version (API level + codename) are considered
-     * updates if they have a higher revision number (so 15 rev 2 is an update for 15 rev 1,
-     * but is not an update for 14 rev 1.)
+     * {@inheritDoc} <hr> Doc packages are a bit different since there can only be one doc installed
+     * at the same time. <p/> We now consider that docs for different APIs are NOT updates, e.g. doc
+     * for API N+1 is no longer considered an update for doc API N. However docs that have the same
+     * API version (API level + codename) are considered updates if they have a higher revision
+     * number (so 15 rev 2 is an update for 15 rev 1, but is not an update for 14 rev 1.)
      */
     @Override
     public UpdateInfo canBeUpdatedBy(Package replacementPackage) {
@@ -275,7 +261,7 @@ public class DocPackage extends MajorRevisionPackage implements IAndroidVersionP
             return UpdateInfo.INCOMPATIBLE;
         }
 
-        DocPackage replacementDoc = (DocPackage)replacementPackage;
+        DocPackage replacementDoc = (DocPackage) replacementPackage;
 
         AndroidVersion replacementVersion = replacementDoc.getAndroidVersion();
 
