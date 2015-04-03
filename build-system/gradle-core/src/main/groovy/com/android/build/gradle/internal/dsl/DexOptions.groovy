@@ -32,7 +32,7 @@ public class DexOptions implements com.android.builder.core.DexOptions {
     @Input
     private boolean isJumboModeFlag = false
 
-    private int threadCount = 4
+    private Integer threadCount = null
 
     @Input
     @Optional
@@ -101,7 +101,7 @@ public class DexOptions implements com.android.builder.core.DexOptions {
      * TODO: Document.
      */
     @Override
-    int getThreadCount() {
+    Integer getThreadCount() {
         return threadCount
     }
 
