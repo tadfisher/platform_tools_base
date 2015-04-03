@@ -24,9 +24,9 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 import com.android.sdklib.SdkManager;
-import com.android.sdklib.repository.IDescription;
 import com.android.sdklib.internal.repository.sources.SdkSource;
 import com.android.sdklib.repository.AddonManifestIniProps;
+import com.android.sdklib.repository.IDescription;
 import com.android.sdklib.repository.MajorRevision;
 import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.SdkAddonConstants;
@@ -208,12 +208,10 @@ public class AddonPackage extends MajorRevisionPackage
 
         mLayoutlibVersion = new LayoutlibVersionMixin(packageNode);
 
-        mPkgDesc = PkgDesc.Builder
-                .newAddon(mVersion,
-                          (MajorRevision) getRevision(),
-                          new IdDisplay(mVendorId, mVendorDisplay),
-                          new IdDisplay(mNameId, mDisplayName))
-                .setDescriptions(this)
+        mPkgDesc = setDescriptions(
+                PkgDesc.Builder.newAddon(mVersion, (MajorRevision) getRevision(),
+                        new IdDisplay(mVendorId, mVendorDisplay),
+                        new IdDisplay(mNameId, mDisplayName)))
                 .create();
     }
 
@@ -310,12 +308,10 @@ public class AddonPackage extends MajorRevisionPackage
             }
         }
 
-        mPkgDesc = PkgDesc.Builder
-                .newAddon(mVersion,
-                          (MajorRevision) getRevision(),
-                          new IdDisplay(mVendorId, mVendorDisplay),
-                          new IdDisplay(mNameId, mDisplayName))
-                .setDescriptions(this)
+        mPkgDesc = setDescriptions(
+                PkgDesc.Builder.newAddon(mVersion, (MajorRevision) getRevision(),
+                        new IdDisplay(mVendorId, mVendorDisplay),
+                        new IdDisplay(mNameId, mDisplayName)))
                 .create();
     }
 
@@ -389,18 +385,20 @@ public class AddonPackage extends MajorRevisionPackage
 
         try {
             apiLevel = Integer.parseInt(api);
-        } catch(NumberFormatException ignore) {}
+        } catch (NumberFormatException ignore) {
+        }
 
         int intRevision = MajorRevision.MISSING_MAJOR_REV;
         try {
             intRevision = Integer.parseInt(revision);
-        } catch (NumberFormatException ignore) {}
+        } catch (NumberFormatException ignore) {
+        }
 
         IPkgDesc desc = PkgDesc.Builder
                 .newAddon(new AndroidVersion(apiLevel, null),
-                          new MajorRevision(intRevision),
-                          new IdDisplay(vendorId, vendorDisp),
-                          new IdDisplay(nameId, nameDisp))
+                        new MajorRevision(intRevision),
+                        new IdDisplay(vendorId, vendorDisp),
+                        new IdDisplay(nameId, nameDisp))
                 .setDescriptionShort(shortDesc)
                 .create();
 
@@ -417,8 +415,8 @@ public class AddonPackage extends MajorRevisionPackage
     }
 
     /**
-     * Save the properties of the current packages in the given {@link Properties} object.
-     * These properties will later be given to a constructor that takes a {@link Properties} object.
+     * Save the properties of the current packages in the given {@link Properties} object. These
+     * properties will later be given to a constructor that takes a {@link Properties} object.
      */
     @Override
     public void saveProperties(Properties props) {
@@ -427,9 +425,9 @@ public class AddonPackage extends MajorRevisionPackage
         mVersion.saveProperties(props);
         mLayoutlibVersion.saveProperties(props);
 
-        props.setProperty(PkgProps.ADDON_NAME_ID,        mNameId);
-        props.setProperty(PkgProps.ADDON_NAME_DISPLAY,   mDisplayName);
-        props.setProperty(PkgProps.ADDON_VENDOR_ID,      mVendorId);
+        props.setProperty(PkgProps.ADDON_NAME_ID, mNameId);
+        props.setProperty(PkgProps.ADDON_NAME_DISPLAY, mDisplayName);
+        props.setProperty(PkgProps.ADDON_VENDOR_ID, mVendorId);
         props.setProperty(PkgProps.ADDON_VENDOR_DISPLAY, mVendorDisplay);
     }
 
@@ -441,9 +439,9 @@ public class AddonPackage extends MajorRevisionPackage
 
         if (libsNode != null) {
             String nsUri = libsNode.getNamespaceURI();
-            for(Node child = libsNode.getFirstChild();
-                child != null;
-                child = child.getNextSibling()) {
+            for (Node child = libsNode.getFirstChild();
+                    child != null;
+                    child = child.getNextSibling()) {
 
                 if (child.getNodeType() == Node.ELEMENT_NODE &&
                         nsUri.equals(child.getNamespaceURI()) &&
@@ -461,58 +459,64 @@ public class AddonPackage extends MajorRevisionPackage
      */
     private Lib parseLib(Node libNode) {
         return new Lib(PackageParserUtils.getXmlString(libNode, SdkRepoConstants.NODE_NAME),
-                       PackageParserUtils.getXmlString(libNode, SdkRepoConstants.NODE_DESCRIPTION));
+                PackageParserUtils.getXmlString(libNode, SdkRepoConstants.NODE_DESCRIPTION));
     }
 
-    /** Returns the vendor id, a string, for add-on packages. */
+    /**
+     * Returns the vendor id, a string, for add-on packages.
+     */
     @NonNull
     public String getVendorId() {
         return mVendorId;
     }
 
-    /** Returns the vendor, a string for display purposes. */
+    /**
+     * Returns the vendor, a string for display purposes.
+     */
     @NonNull
     public String getDisplayVendor() {
         return mVendorDisplay;
     }
 
-    /** Returns the name id, a string, for add-on packages or for libraries. */
+    /**
+     * Returns the name id, a string, for add-on packages or for libraries.
+     */
     @NonNull
     public String getNameId() {
         return mNameId;
     }
 
-    /** Returns the name, a string for display purposes. */
+    /**
+     * Returns the name, a string for display purposes.
+     */
     @NonNull
     public String getDisplayName() {
         return mDisplayName;
     }
 
     /**
-     * Returns the version of the platform dependency of this package.
-     * <p/>
-     * An add-on has the same {@link AndroidVersion} as the platform it depends on.
+     * Returns the version of the platform dependency of this package. <p/> An add-on has the same
+     * {@link AndroidVersion} as the platform it depends on.
      */
-    @Override @NonNull
+    @Override
+    @NonNull
     public AndroidVersion getAndroidVersion() {
         return mVersion;
     }
 
-    /** Returns the libs defined in this add-on. Can be an empty array but not null. */
+    /**
+     * Returns the libs defined in this add-on. Can be an empty array but not null.
+     */
     @NonNull
     public Lib[] getLibs() {
         return mLibs;
     }
 
     /**
-     * Returns the layoutlib version.
-     * <p/>
-     * The first integer is the API of layoublib, which should be > 0.
-     * It will be equal to {@link ILayoutlibVersion#LAYOUTLIB_API_NOT_SPECIFIED} (0)
-     * if the layoutlib version isn't specified.
-     * <p/>
-     * The second integer is the revision for that given API. It is >= 0
-     * and works as a minor revision number, incremented for the same API level.
+     * Returns the layoutlib version. <p/> The first integer is the API of layoublib, which should
+     * be > 0. It will be equal to {@link ILayoutlibVersion#LAYOUTLIB_API_NOT_SPECIFIED} (0) if the
+     * layoutlib version isn't specified. <p/> The second integer is the revision for that given
+     * API. It is >= 0 and works as a minor revision number, incremented for the same API level.
      *
      * @since sdk-addon-2.xsd
      */
@@ -523,10 +527,8 @@ public class AddonPackage extends MajorRevisionPackage
     }
 
     /**
-     * Returns a string identifier to install this package from the command line.
-     * For add-ons, we use "addon-vendor-name-N" where N is the base platform API.
-     * <p/>
-     * {@inheritDoc}
+     * Returns a string identifier to install this package from the command line. For add-ons, we
+     * use "addon-vendor-name-N" where N is the base platform API. <p/> {@inheritDoc}
      */
     @NonNull
     @Override
@@ -535,8 +537,7 @@ public class AddonPackage extends MajorRevisionPackage
     }
 
     /**
-     * Returns a description of this package that is suitable for a list display.
-     * <p/>
+     * Returns a description of this package that is suitable for a list display. <p/>
      * {@inheritDoc}
      */
     @Override
@@ -574,8 +575,8 @@ public class AddonPackage extends MajorRevisionPackage
     /**
      * Returns a long description for an {@link IDescription}.
      *
-     * The long description is whatever the XML contains for the &lt;description&gt; field,
-     * or the short description if the former is empty.
+     * The long description is whatever the XML contains for the &lt;description&gt; field, or the
+     * short description if the former is empty.
      */
     @Override
     public String getLongDescription() {
@@ -597,15 +598,13 @@ public class AddonPackage extends MajorRevisionPackage
     }
 
     /**
-     * Computes a potential installation folder if an archive of this package were
-     * to be installed right away in the given SDK root.
-     * <p/>
-     * An add-on package is typically installed in SDK/add-ons/"addon-name"-"api-level".
-     * The name needs to be sanitized to be acceptable as a directory name.
-     * However if we can find a different directory under SDK/add-ons that already
+     * Computes a potential installation folder if an archive of this package were to be installed
+     * right away in the given SDK root. <p/> An add-on package is typically installed in
+     * SDK/add-ons/"addon-name"-"api-level". The name needs to be sanitized to be acceptable as a
+     * directory name. However if we can find a different directory under SDK/add-ons that already
      * has this add-ons installed, we'll use that one.
      *
-     * @param osSdkRoot The OS path of the SDK root folder.
+     * @param osSdkRoot  The OS path of the SDK root folder.
      * @param sdkManager An existing SDK manager to list current platforms and addons.
      * @return A new {@link File} corresponding to the directory to use to install this package.
      */
@@ -621,9 +620,9 @@ public class AddonPackage extends MajorRevisionPackage
                 // on the manifest.ini does not so we need to cover both cases.
                 // TODO fix when we get rid of manifest.ini for addons
                 if ((target.getName().equals(getNameId()) &&
-                     target.getVendor().equals(getVendorId())) ||
-                    (target.getName().equals(getDisplayName()) &&
-                     target.getVendor().equals(getDisplayVendor()))) {
+                        target.getVendor().equals(getVendorId())) ||
+                        (target.getName().equals(getDisplayName()) &&
+                                target.getVendor().equals(getDisplayVendor()))) {
                     return new File(target.getLocation());
                 }
             }
@@ -646,7 +645,7 @@ public class AddonPackage extends MajorRevisionPackage
 
     private String encodeAddonName() {
         String name = String.format("addon-%s-%s-%s",     //$NON-NLS-1$
-                                    getNameId(), getVendorId(), mVersion.getApiString());
+                getNameId(), getVendorId(), mVersion.getApiString());
         name = name.toLowerCase(Locale.US);
         name = name.replaceAll("[^a-z0-9_-]+", "_");      //$NON-NLS-1$ //$NON-NLS-2$
         name = name.replaceAll("_+", "_");                //$NON-NLS-1$ //$NON-NLS-2$
@@ -656,7 +655,7 @@ public class AddonPackage extends MajorRevisionPackage
     @Override
     public boolean sameItemAs(Package pkg) {
         if (pkg instanceof AddonPackage) {
-            AddonPackage newPkg = (AddonPackage)pkg;
+            AddonPackage newPkg = (AddonPackage) pkg;
 
             // check they are the same add-on.
             if (getNameId().equals(newPkg.getNameId()) &&
@@ -737,10 +736,8 @@ public class AddonPackage extends MajorRevisionPackage
     }
 
     /**
-     * For addon packages, we want to add vendor|name to the sorting key
-     * <em>before<em/> the revision number.
-     * <p/>
-     * {@inheritDoc}
+     * For addon packages, we want to add vendor|name to the sorting key <em>before<em/> the
+     * revision number. <p/> {@inheritDoc}
      */
     @Override
     protected String comparisonKey() {
@@ -748,9 +745,9 @@ public class AddonPackage extends MajorRevisionPackage
         int pos = s.indexOf("|r:");         //$NON-NLS-1$
         assert pos > 0;
         s = s.substring(0, pos) +
-            "|vid:" + getVendorId() +          //$NON-NLS-1$
-            "|nid:" + getNameId() +            //$NON-NLS-1$
-            s.substring(pos);
+                "|vid:" + getVendorId() +          //$NON-NLS-1$
+                "|nid:" + getNameId() +            //$NON-NLS-1$
+                s.substring(pos);
         return s;
     }
 }
