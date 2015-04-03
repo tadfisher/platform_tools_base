@@ -779,12 +779,13 @@ public class GradleTestProject implements TestRule {
         if (!emulateStudio_1_0) {
             arguments.add("-P" + AndroidProject.PROPERTY_BUILD_MODEL_ONLY_ADVANCED + "=true");
         }
-        executer.withArguments(Iterables.toArray(arguments, String.class));
 
         List<String> debugJvmArguments = getDebugJvmArguments();
         if (!debugJvmArguments.isEmpty()) {
-            executer.setJvmArguments(Iterables.toArray(debugJvmArguments, String.class));
+            arguments.add("-Dorg.gradle.jvmargs=" + Joiner.on(' ').join(debugJvmArguments));
         }
+
+        executer.withArguments(Iterables.toArray(arguments, String.class));
 
         executer.setStandardOutput(System.out);
         executer.setStandardError(System.err);
