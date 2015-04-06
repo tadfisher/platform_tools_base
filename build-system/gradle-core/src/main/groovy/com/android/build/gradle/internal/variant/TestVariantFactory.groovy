@@ -17,12 +17,20 @@
 package com.android.build.gradle.internal.variant
 
 import com.android.annotations.NonNull
+import com.android.annotations.Nullable
 import com.android.build.gradle.BaseExtension
+import com.android.build.gradle.internal.BuildTypeData
+import com.android.build.gradle.internal.ProductFlavorData
+import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
+import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.GroupableProductFlavor
+import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.TestExtension
 import com.android.builder.core.AndroidBuilder
+import com.android.builder.core.VariantType
+import com.android.builder.model.SourceProvider
 import org.gradle.api.GradleException
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
@@ -32,7 +40,7 @@ import org.gradle.internal.reflect.Instantiator
 import static com.android.builder.core.BuilderConstants.DEBUG
 
 /**
- * Customization of ApplcationVariantFactory for test-only projects.
+ * Customization of ApplicationVariantFactory for test-only projects.
  */
 public class TestVariantFactory extends ApplicationVariantFactory {
 
@@ -64,7 +72,7 @@ public class TestVariantFactory extends ApplicationVariantFactory {
         String variant = "${testExtension.targetVariant}-classes"
 
         DependencyHandler handler = project.getDependencies()
-        handler.add("compile", handler.project(path: path, configuration: variant))
+        handler.add("provided", handler.project(path: path, configuration: variant))
     }
 
     @Override
@@ -77,5 +85,35 @@ public class TestVariantFactory extends ApplicationVariantFactory {
         // with the debug signing config.
         signingConfigs.create(DEBUG);
         buildTypes.create(DEBUG);
+    }
+
+    @NonNull
+    @Override
+    TestModuleGradleVariantConfiguration createVariantConfig(
+            @NonNull ProductFlavorData<ProductFlavor> defaultConfigData,
+            @NonNull BuildTypeData buildTypeData,
+            @Nullable SigningConfig signingOverride) {
+
+        return new TestModuleGradleVariantConfiguration(
+                defaultConfigData.getProductFlavor(),
+                defaultConfigData.getSourceSet(),
+                buildTypeData.getBuildType(),
+                buildTypeData.getSourceSet(),
+                getVariantConfigurationType(),
+                signingOverride);
+    }
+
+    private class TestModuleGradleVariantConfiguration extends GradleVariantConfiguration {
+
+        TestModuleGradleVariantConfiguration(
+                @NonNull ProductFlavor defaultConfig,
+                @NonNull SourceProvider defaultSourceProvider,
+                @NonNull BuildType buildType,
+                @Nullable SourceProvider buildTypeSourceProvider,
+                @NonNull VariantType type,
+                @Nullable SigningConfig signingConfigOverride) {
+            super(defaultConfig, defaultSourceProvider, buildType, buildTypeSourceProvider, type,
+                    signingConfigOverride)
+        }
     }
 }

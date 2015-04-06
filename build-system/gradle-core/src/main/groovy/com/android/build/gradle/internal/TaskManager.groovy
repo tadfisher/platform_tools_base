@@ -2081,14 +2081,15 @@ abstract class TaskManager {
         }
 
         // ----- Minify next ----
+        BaseVariantData<? extends BaseVariantOutputData> testedVariantData =
+                (variantData instanceof TestVariantData ? variantData.testedVariantData :
+                        null) as BaseVariantData
 
-        if (isMinifyEnabled) {
-            // first proguard task.
-            BaseVariantData<? extends BaseVariantOutputData> testedVariantData =
-                    (variantData instanceof TestVariantData ? variantData.testedVariantData :
-                            null) as BaseVariantData
-            createProguardTasks(variantData, testedVariantData, pcData)
-
+        File outFile = createProguardTasks(variantData, testedVariantData, pcData);
+        if (outFile != null) {
+            pcData.inputFiles = { [outFile] }
+            pcData.inputDir = null
+            pcData.inputLibraries = { [] }
         } else if ((getExtension().dexOptions.preDexLibraries && !isMultiDexEnabled) ||
                 (isMultiDexEnabled && !isLegacyMultiDexMode)) {
             def preDexTaskName = "preDex${config.fullName.capitalize()}"
@@ -2247,6 +2248,7 @@ abstract class TaskManager {
         // ----- Dex Task ----
 
         // dependencies, some of these could be null
+        optionalDependsOn(dexTask, variantData.obfuscationTask)
         optionalDependsOn(dexTask, pcData.classGeneratingTask)
         optionalDependsOn(dexTask, pcData.libraryGeneratingTask,)
 
@@ -2875,13 +2877,18 @@ abstract class TaskManager {
      * @param variantData the variant data.
      * @param testedVariantData optional. variant data representing the tested variant, null if the
      *                          variant is not a test variant
-     * @return outFile file outputted by proguard
+     * @return null if the proguard task was not created, otherwise the intented outputFile.
      */
-    @NonNull
-    public void createProguardTasks(
+    @Nullable
+    public File createProguardTasks(
             final @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData,
             final @Nullable BaseVariantData<? extends BaseVariantOutputData> testedVariantData,
             final @NonNull PostCompilationData pcData) {
+
+        if (!variantData.getVariantConfiguration().isMinifyEnabled()) {
+            return null;
+        }
+
         final VariantConfiguration variantConfig = variantData.variantConfiguration
 
         // use single output for now.
@@ -3026,9 +3033,21 @@ abstract class TaskManager {
         // --- Out files ---
 
         proguardTask.outjars(outFile)
+        setOutputMapping(proguardTask, variantData.variantConfiguration.dirName);
 
+        // update dependency.
+        optionalDependsOn(proguardTask, pcData.classGeneratingTask)
+        optionalDependsOn(proguardTask, pcData.libraryGeneratingTask)
+        pcData.libraryGeneratingTask = [proguardTask]
+        pcData.classGeneratingTask = [proguardTask]
+
+        // Update the inputs
+        return outFile;
+    }
+
+    protected File setOutputMapping(ProGuardTask proguardTask, String dirName) {
         final File proguardOut = project.file(
-                "${project.buildDir}/${FD_OUTPUTS}/mapping/${variantData.variantConfiguration.dirName}")
+                "${project.buildDir}/${FD_OUTPUTS}/mapping/${dirName}")
 
         proguardTask.dump(new File(proguardOut, "dump.txt"))
         proguardTask.printseeds(new File(proguardOut, "seeds.txt"))
@@ -3040,17 +3059,7 @@ abstract class TaskManager {
         proguardTask.doFirst {
             proguardOut.mkdirs()
         }
-
-        // update dependency.
-        optionalDependsOn(proguardTask, pcData.classGeneratingTask)
-        optionalDependsOn(proguardTask, pcData.libraryGeneratingTask)
-        pcData.libraryGeneratingTask = [proguardTask]
-        pcData.classGeneratingTask = [proguardTask]
-
-        // Update the inputs
-        pcData.inputFiles = { [outFile] }
-        pcData.inputDir = null
-        pcData.inputLibraries = { [] }
+        return proguardOut
     }
 
     private ShrinkResources createShrinkResourcesTask(ApkVariantOutputData variantOutputData) {
