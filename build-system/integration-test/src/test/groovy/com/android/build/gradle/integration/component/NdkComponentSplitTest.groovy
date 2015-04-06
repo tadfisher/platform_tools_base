@@ -25,11 +25,8 @@ import org.junit.ClassRule
 import org.junit.Test
 import org.junit.experimental.categories.Category
 
-import java.util.zip.ZipFile
-
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatZip
-import static org.junit.Assert.assertNotNull
-import static org.junit.Assert.assertNull
 
 /**
  * Integration test of the native plugin with multiple variants.
@@ -84,6 +81,11 @@ model {
 
     @Test
     public void assembleDebug() {
+        project.execute("compileDebugSources");
+        assertThat(project.file("build/intermediates/binaries/x86DebugHello-jniSharedLibrary/" +
+                "debug/lib/x86/libhello-jni.so"))
+                .exists();
+
         project.execute("assembleDebug");
 
         // Verify .so are built for all platform.
