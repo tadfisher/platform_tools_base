@@ -17,35 +17,28 @@
 package com.android.build.gradle.model
 
 import com.android.annotations.NonNull
-import com.android.annotations.Nullable
-import com.android.build.gradle.api.AndroidSourceDirectorySet
-import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.AndroidConfigHelper
-import com.android.build.gradle.internal.BuildTypeData
 import com.android.build.gradle.internal.ExtraModelInfo
 import com.android.build.gradle.internal.LibraryCache
 import com.android.build.gradle.internal.LoggerWrapper
-import com.android.build.gradle.internal.ProductFlavorData
 import com.android.build.gradle.internal.SdkHandler
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.coverage.JacocoPlugin
-import com.android.build.gradle.internal.model.ModelBuilder
 import com.android.build.gradle.internal.process.GradleJavaProcessExecutor
 import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.build.gradle.internal.tasks.DependencyReportTask
 import com.android.build.gradle.internal.tasks.SigningReportTask
 import com.android.build.gradle.internal.variant.VariantFactory
-import com.android.build.gradle.managed.BuildTypeAdaptor
 import com.android.build.gradle.managed.BuildType
-import com.android.build.gradle.managed.SigningConfig
+import com.android.build.gradle.managed.BuildTypeAdaptor
 import com.android.build.gradle.managed.ProductFlavor
 import com.android.build.gradle.managed.ProductFlavorAdaptor
+import com.android.build.gradle.managed.SigningConfig
 import com.android.build.gradle.managed.adaptor.AndroidConfigAdaptor
 import com.android.build.gradle.tasks.JillTask
 import com.android.build.gradle.tasks.PreDex
 import com.android.builder.core.AndroidBuilder
-import com.android.builder.core.BuilderConstants
 import com.android.builder.internal.compiler.JackConversionCache
 import com.android.builder.internal.compiler.PreDexCache
 import com.android.builder.sdk.TargetInfo
@@ -63,12 +56,10 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ConfigurationContainer
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.execution.TaskExecutionGraph
-import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.internal.reflect.Instantiator
 import org.gradle.internal.service.ServiceRegistry
-import org.gradle.language.base.FunctionalSourceSet
 import org.gradle.language.base.LanguageSourceSet
 import org.gradle.language.base.internal.SourceTransformTaskConfig
 import org.gradle.language.base.internal.registry.LanguageTransform
@@ -87,8 +78,9 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 
 import javax.inject.Inject
 
+import static com.android.build.gradle.model.ModelConstants.ANDROID_BUILDER
+import static com.android.build.gradle.model.ModelConstants.EXTRA_MODEL_INFO
 import static com.android.builder.core.BuilderConstants.DEBUG
-import static com.android.builder.core.VariantType.ANDROID_TEST
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES
 
 @CompileStatic
@@ -144,6 +136,11 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
                         ModelReference.of("projectModel", Project), project)
                         .descriptor("Model of project.")
                         .build())
+
+        toolingRegistry.register(new ComponentModelBuilder(modelRegistry))
+
+        // Inserting the ToolingModelBuilderRegistry into the model so that it can be use to create
+        // TaskManager in child classes.
         modelRegistry.create(
                 ModelCreators.bridgedInstance(
                         ModelReference.of("toolingRegistry", ToolingModelBuilderRegistry), toolingRegistry)
@@ -153,7 +150,6 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
 
     @SuppressWarnings("GrMethodMayBeStatic")
     static class Rules extends RuleSource {
-
         @Mutate
         void configureAndroidModel(
                 AndroidConfig androidModel,
@@ -171,7 +167,7 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
         }
 
         // TODO: Remove code duplicated from BasePlugin.
-        @Model
+        @Model(EXTRA_MODEL_INFO)
         ExtraModelInfo createExtraModelInfo(Project project) {
             return new ExtraModelInfo(project)
         }
@@ -217,7 +213,7 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
             return sdkHandler
         }
 
-        @Model
+        @Model(ANDROID_BUILDER)
         AndroidBuilder createAndroidBuilder(Project project) {
             String creator = "Android Gradle"
             ILogger logger = new LoggerWrapper(project.logger)
@@ -306,7 +302,6 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
                 AndroidBuilder androidBuilder,
                 SdkHandler sdkHandler,
                 ExtraModelInfo extraModelInfo,
-                ToolingModelBuilderRegistry toolingRegistry,
                 @Path("isApplication") Boolean isApplication) {
             Instantiator instantiator = serviceRegistry.get(Instantiator.class);
 
@@ -334,17 +329,7 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
                 variantManager.addProductFlavor(new ProductFlavorAdaptor(productFlavor))
             }
 
-            ModelBuilder modelBuilder = new ModelBuilder(
-                    androidBuilder,
-                    variantManager,
-                    taskManager,
-                    adaptedModel,
-                    extraModelInfo,
-                    !isApplication);
-            toolingRegistry.register(modelBuilder);
-
-
-            DefaultAndroidComponentSpec spec = (DefaultAndroidComponentSpec) androidSpec
+            def spec = androidSpec as DefaultAndroidComponentSpec
             spec.extension = androidExtension
             spec.variantManager = variantManager
         }
