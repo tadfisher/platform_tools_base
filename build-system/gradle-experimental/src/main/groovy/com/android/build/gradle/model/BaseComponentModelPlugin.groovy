@@ -87,6 +87,8 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 
 import javax.inject.Inject
 
+import static com.android.build.gradle.model.ModelConstants.ANDROID_BUILDER
+import static com.android.build.gradle.model.ModelConstants.EXTRA_MODEL_INFO
 import static com.android.builder.core.BuilderConstants.DEBUG
 import static com.android.builder.core.VariantType.ANDROID_TEST
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES
@@ -138,6 +140,10 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
 
         project.apply plugin: NdkComponentModelPlugin
 
+        toolingRegistry.register(new ComponentModelBuilder(modelRegistry))
+
+        // Inserting the ToolingModelBuilderRegistry into the model so that it can be use to create
+        // TaskManager in child classes.
         modelRegistry.create(
                 ModelCreators.bridgedInstance(
                         ModelReference.of("toolingRegistry", ToolingModelBuilderRegistry), toolingRegistry)
@@ -147,7 +153,6 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
 
     @SuppressWarnings("GrMethodMayBeStatic")
     static class Rules extends RuleSource {
-
         @Mutate
         void configureAndroidModel(
                 AndroidModel androidModel,
@@ -158,7 +163,7 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
         }
 
         // TODO: Remove code duplicated from BasePlugin.
-        @Model
+        @Model(EXTRA_MODEL_INFO)
         ExtraModelInfo createExtraModelInfo(Project project) {
             return new ExtraModelInfo(project)
         }
@@ -204,7 +209,7 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
             return sdkHandler
         }
 
-        @Model
+        @Model(ANDROID_BUILDER)
         AndroidBuilder createAndroidBuilder(Project project) {
             String creator = "Android Gradle"
             ILogger logger = new LoggerWrapper(project.logger)
@@ -295,7 +300,6 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
                 AndroidBuilder androidBuilder,
                 SdkHandler sdkHandler,
                 ExtraModelInfo extraModelInfo,
-                ToolingModelBuilderRegistry toolingRegistry,
                 @Path("isApplication") Boolean isApplication) {
             Instantiator instantiator = serviceRegistry.get(Instantiator.class);
 
@@ -325,12 +329,6 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
             productFlavorContainer.all { GroupableProductFlavor productFlavor ->
                 variantManager.addProductFlavor(productFlavor)
             }
-
-            ModelBuilder modelBuilder = new ModelBuilder(
-                    androidBuilder, variantManager, taskManager,
-                    androidExtension, extraModelInfo, !isApplication);
-            toolingRegistry.register(modelBuilder);
-
 
             def spec = androidSpec as DefaultAndroidComponentSpec
             spec.extension = androidExtension
