@@ -118,6 +118,10 @@ class ApplicationTaskManager extends TaskManager {
             SpanRecorders.record(ExecutionType.APP_TASK_MANAGER_CREATE_NDK_TASK) {
                 createNdkTasks(variantData);
             }
+        } else {
+            println variantData.compileTask
+            println getNdkBuildable(variantData)
+            variantData.compileTask.dependsOn(getNdkBuildable(variantData))
         }
 
         if (variantData.getSplitHandlingPolicy() ==

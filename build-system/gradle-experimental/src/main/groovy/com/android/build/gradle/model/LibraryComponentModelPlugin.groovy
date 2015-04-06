@@ -51,7 +51,7 @@ public class LibraryComponentModelPlugin implements Plugin<Project> {
             return false
         }
 
-        @Model
+        @Model("taskManager")
         TaskManager createTaskManager(
                 BaseExtension androidExtension,
                 Project project,

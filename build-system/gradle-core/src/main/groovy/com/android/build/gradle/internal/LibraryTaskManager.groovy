@@ -181,6 +181,8 @@ class LibraryTaskManager extends TaskManager {
                 packageJniLibs.dependsOn variantData.ndkCompileTask
                 packageJniLibs.from(variantData.ndkCompileTask.soFolder).include("**/*.so")
             }
+        } else {
+            variantData.compileTask.dependsOn(getNdkBuildable(variantData))
         }
 
         Sync packageRenderscript = SpanRecorders.record(ExecutionType.LIB_TASK_MANAGER_CREATE_PACKAGING_TASK) {
