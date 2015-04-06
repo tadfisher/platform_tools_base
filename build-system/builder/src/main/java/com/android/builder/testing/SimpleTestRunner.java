@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.android.builder.internal.InstallUtils;
 import com.android.builder.internal.testing.CustomTestRunListener;
 import com.android.builder.internal.testing.SimpleTestCallable;
-import com.android.builder.testing.api.DeviceConfig;
 import com.android.builder.testing.api.DeviceConfigProviderImpl;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceException;
@@ -30,12 +29,11 @@ import com.android.ddmlib.IDevice;
 import com.android.ddmlib.testrunner.TestIdentifier;
 import com.android.builder.testing.api.DeviceConfigProvider;
 import com.android.ide.common.internal.WaitableExecutor;
-import com.android.ide.common.process.ProcessException;
-import com.android.ide.common.process.ProcessExecutor;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -48,17 +46,9 @@ public class SimpleTestRunner implements TestRunner {
 
     @NonNull
     private final File mAdbExec;
-    @Nullable
-    private final File mSplitSelectExec;
-    @NonNull
-    private final ProcessExecutor mProcessExecutor;
 
-    public SimpleTestRunner(@NonNull File adbExec,
-            @Nullable File splitSelectExec,
-            @NonNull ProcessExecutor processExecutor) {
+    public SimpleTestRunner(@NonNull File adbExec) {
         mAdbExec = adbExec;
-        mSplitSelectExec = splitSelectExec;
-        mProcessExecutor = processExecutor;
     }
 
     @Override
@@ -94,15 +84,11 @@ public class SimpleTestRunner implements TestRunner {
                     }
 
                     // now look for a matching output file
-                    ImmutableList<File> testedApks = ImmutableList.of();
+                    List<File> testedApks = ImmutableList.of();
                     if (!testData.isLibrary()) {
                         try {
-                            testedApks = testData.getTestedApks(
-                                    mProcessExecutor,
-                                    mSplitSelectExec,
-                                    deviceConfigProvider,
-                                    logger);
-                        } catch (ProcessException e) {
+                            testedApks = testData.getTestedApks(deviceConfigProvider);
+                        } catch (IOException e) {
                             throw new TestException(e);
                         }
 
