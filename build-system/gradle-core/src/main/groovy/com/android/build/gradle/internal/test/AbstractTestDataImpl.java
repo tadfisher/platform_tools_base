@@ -17,10 +17,16 @@
 package com.android.build.gradle.internal.test;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.model.ApiVersion;
+import com.android.builder.sdk.TargetInfo;
 import com.android.builder.testing.TestData;
+import com.android.ide.common.process.ProcessExecutor;
+import com.android.sdklib.BuildToolInfo;
 
+import java.io.File;
 import java.util.Locale;
 
 /**
@@ -32,8 +38,13 @@ public abstract class AbstractTestDataImpl implements TestData {
     @NonNull
     private final VariantConfiguration testVariantConfig;
 
-    public AbstractTestDataImpl(@NonNull VariantConfiguration testVariantConfig) {
+    @NonNull
+    private final AndroidBuilder androidBuilder;
+
+    public AbstractTestDataImpl(@NonNull VariantConfiguration testVariantConfig,
+            @NonNull AndroidBuilder androidBuilder) {
         this.testVariantConfig = testVariantConfig;
+        this.androidBuilder = androidBuilder;
     }
 
     @NonNull
@@ -57,5 +68,24 @@ public abstract class AbstractTestDataImpl implements TestData {
     @Override
     public String getFlavorName() {
         return testVariantConfig.getFlavorName().toUpperCase(Locale.getDefault());
+    }
+
+    @Nullable
+    protected File getBuildTool(BuildToolInfo.PathId pathId) {
+        TargetInfo targetInfo = androidBuilder.getTargetInfo();
+        if (targetInfo == null) {
+            return null;
+        }
+        String path = targetInfo.getBuildTools().getPath(pathId);
+        if (path == null) {
+            return null;
+        }
+        File specificBuildToolExe = new File(path);
+        return specificBuildToolExe.exists() ? specificBuildToolExe : null;
+    }
+
+    @NonNull
+    protected AndroidBuilder getAndroidBuilder() {
+        return androidBuilder;
     }
 }

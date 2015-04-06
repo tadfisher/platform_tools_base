@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.android.builder.internal.InstallUtils;
 import com.android.builder.internal.testing.CustomTestRunListener;
 import com.android.builder.internal.testing.SimpleTestCallable;
-import com.android.builder.testing.api.DeviceConfig;
 import com.android.builder.testing.api.DeviceConfigProviderImpl;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceException;
@@ -48,17 +47,9 @@ public class SimpleTestRunner implements TestRunner {
 
     @NonNull
     private final File mAdbExec;
-    @Nullable
-    private final File mSplitSelectExec;
-    @NonNull
-    private final ProcessExecutor mProcessExecutor;
 
-    public SimpleTestRunner(@NonNull File adbExec,
-            @Nullable File splitSelectExec,
-            @NonNull ProcessExecutor processExecutor) {
+    public SimpleTestRunner(@NonNull File adbExec) {
         mAdbExec = adbExec;
-        mSplitSelectExec = splitSelectExec;
-        mProcessExecutor = processExecutor;
     }
 
     @Override
@@ -97,11 +88,7 @@ public class SimpleTestRunner implements TestRunner {
                     ImmutableList<File> testedApks = ImmutableList.of();
                     if (!testData.isLibrary()) {
                         try {
-                            testedApks = testData.getTestedApks(
-                                    mProcessExecutor,
-                                    mSplitSelectExec,
-                                    deviceConfigProvider,
-                                    logger);
+                            testedApks = testData.getTestedApks(deviceConfigProvider);
                         } catch (ProcessException e) {
                             throw new TestException(e);
                         }

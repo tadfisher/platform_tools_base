@@ -80,7 +80,7 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
                         )));
 
         TestData testData = new TestApplicationTestData(
-                variantData, testTarget, testTargetMetadata, androidBuilder);
+                variantData, testTarget, testTargetMetadata, androidBuilder, getILogger());
 
         // create the test connected check task.
         DeviceProviderInstrumentTestTask testConnectedCheck =

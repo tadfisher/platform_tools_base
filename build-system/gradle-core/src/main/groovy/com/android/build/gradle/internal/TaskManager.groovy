@@ -110,6 +110,7 @@ import com.android.sdklib.AndroidTargetHash
 import com.android.sdklib.BuildToolInfo
 import com.android.sdklib.IAndroidTarget
 import com.android.sdklib.SdkVersionInfo
+import com.android.utils.ILogger
 import com.google.common.base.CharMatcher
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
@@ -196,6 +197,7 @@ abstract class TaskManager {
     private ToolingModelBuilderRegistry toolingRegistry
 
     private Logger logger
+    private ILogger iLogger
 
     protected boolean isNdkTaskNeeded = true
 
@@ -235,6 +237,7 @@ abstract class TaskManager {
         this.toolingRegistry = toolingRegistry
         this.dependencyManager = dependencyManager
         logger = Logging.getLogger(this.class)
+        iLogger = new LoggerWrapper(logger);
     }
 
     private boolean isVerbose() {
@@ -1782,7 +1785,7 @@ abstract class TaskManager {
         String connectedTaskName =
                 "${connectedRootName}${baseVariantData.variantConfiguration.fullName.capitalize()}"
 
-        TestData testData = new TestDataImpl(testVariantData)
+        TestData testData = new TestDataImpl(testVariantData, androidBuilder, iLogger)
         BaseVariantData<? extends BaseVariantOutputData> testedVariantData =
                 baseVariantData as BaseVariantData
         // create the check tasks for this test
@@ -1946,19 +1949,6 @@ abstract class TaskManager {
         conventionMapping(testTask).map("adbExec") {
             return sdkHandler.getSdkInfo().getAdb()
         }
-
-        conventionMapping(testTask).map("splitSelectExec") {
-            String path = androidBuilder.targetInfo?.buildTools?.getPath(
-                    BuildToolInfo.PathId.SPLIT_SELECT)
-            if (path != null) {
-                File splitSelectExe = new File(path)
-                return splitSelectExe.exists() ? splitSelectExe : null;
-            } else {
-                return null;
-            }
-        }
-        testTask.processExecutor = androidBuilder.getProcessExecutor()
-
 
         conventionMapping(testTask).map("reportsDir") {
             String rootLocation = getExtension().testOptions.reportDir != null ?
@@ -3216,5 +3206,9 @@ abstract class TaskManager {
         }
 
         return null
+    }
+
+    protected ILogger getILogger() {
+        return iLogger;
     }
 }
