@@ -40,6 +40,7 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
+import org.gradle.api.logging.Logger;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
@@ -93,7 +94,7 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
                         )));
 
         TestData testData = new TestApplicationTestData(
-                variantData, testTarget, testTargetMetadata, androidBuilder);
+                variantData, testTarget, testTargetMetadata, androidBuilder, getLogger());
 
         // create the test connected check task.
         DeviceProviderInstrumentTestTask testConnectedCheck =
