@@ -12,6 +12,7 @@ apply plugin: 'clone-artifacts'
 
 dependencies {
     compile project(':base:ddmlib')
+    compile project(':base:builder-model')
 
     testCompile 'junit:junit:4.12'
 }
