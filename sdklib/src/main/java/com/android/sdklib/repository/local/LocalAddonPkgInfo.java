@@ -28,7 +28,6 @@ import com.android.sdklib.internal.androidTarget.AddOnTarget;
 import com.android.sdklib.internal.androidTarget.PlatformTarget;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.repository.packages.AddonPackage;
-import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.io.FileOp;
 import com.android.sdklib.io.IFileOp;
 import com.android.sdklib.repository.AddonManifestIniProps;
@@ -121,22 +120,6 @@ public class LocalAddonPkgInfo extends LocalPlatformPkgInfo {
     }
 
     //-----
-
-    /**
-     * Creates an AddonPackage wrapping the IAndroidTarget if defined.
-     * Invoked by {@link #getPackage()}.
-     *
-     * @return A Package or null if target isn't available.
-     */
-    @Override
-    @Nullable
-    protected Package createPackage() {
-        IAndroidTarget target = getAndroidTarget();
-        if (target != null) {
-            return AddonPackage.create(target, getSourceProperties());
-        }
-        return null;
-    }
 
     /**
      * Creates the AddOnTarget. Invoked by {@link #getAndroidTarget()}.
