@@ -29,20 +29,17 @@ import com.android.builder.model.SourceProvider;
 import com.android.builder.testing.TestData;
 import com.android.builder.testing.api.DeviceConfigProvider;
 import com.android.ide.common.build.SplitOutputMatcher;
-import com.android.ide.common.build.SplitSelectTool;
 import com.android.ide.common.process.ProcessException;
-import com.android.ide.common.process.ProcessExecutor;
 import com.android.sdklib.BuildToolInfo;
 import com.android.utils.ILogger;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.logging.Logger;
 
 import java.io.File;
 import java.io.FileReader;
@@ -57,23 +54,24 @@ import java.util.Set;
 /**
  * Implementation of {@link TestData} for separate test modules.
  */
-public class TestApplicationTestData extends  AbstractTestDataImpl {
+public class TestApplicationTestData extends AbstractTestDataImpl {
 
     private final Configuration testedConfiguration;
     private final Configuration testedMetadata;
-    private final AndroidBuilder androidBuilder;
+    private final Logger logger;
+
     private final BaseVariantData testVariant;
 
     public TestApplicationTestData(
-            BaseVariantData<? extends BaseVariantOutputData>  testVariantData,
+            BaseVariantData<? extends BaseVariantOutputData> testVariantData,
             Configuration testedConfiguration,
             Configuration testedMetadata,
-            AndroidBuilder androidBuilder) {
-        super(testVariantData.getVariantConfiguration());
+            AndroidBuilder androidBuilder, Logger logger) {
+        super(testVariantData.getVariantConfiguration(), androidBuilder);
         this.testVariant = testVariantData;
         this.testedConfiguration = testedConfiguration;
         this.testedMetadata = testedMetadata;
-        this.androidBuilder = androidBuilder;
+        this.logger = logger;
     }
 
     @NonNull
@@ -97,11 +95,9 @@ public class TestApplicationTestData extends  AbstractTestDataImpl {
     @NonNull
     @Override
     public ImmutableList<File> getTestedApks(
-            @NonNull ProcessExecutor processExecutor,
-            @Nullable File splitSelectExe,
-            @NonNull DeviceConfigProvider deviceConfigProvider,
-            @NonNull ILogger logger) throws ProcessException {
+            @NonNull DeviceConfigProvider deviceConfigProvider) throws IOException {
 
+        File splitSelectExe = getBuildTool(BuildToolInfo.PathId.SPLIT_SELECT);
         // use a Set to remove duplicate entries.
         ImmutableList.Builder<File> testedApks = ImmutableList.builder();
         // retrieve all the published files.
@@ -117,17 +113,22 @@ public class TestApplicationTestData extends  AbstractTestDataImpl {
                             return file != null ? file.getAbsolutePath() : null;
                         }
                     });
-            testedApks.addAll(
-                    SplitOutputMatcher.computeBestOutput(processExecutor,
-                            splitSelectExe,
-                            deviceConfigProvider,
-                            getMainApk(),
-                            testedSplitApksPath));
+            try {
+                testedApks.addAll(
+                        SplitOutputMatcher.computeBestOutput(
+                                getAndroidBuilder().getProcessExecutor(),
+                                splitSelectExe,
+                                deviceConfigProvider,
+                                getMainApk(),
+                                testedSplitApksPath));
+            } catch (ProcessException e) {
+                throw new IOException(e);
+            }
         } else {
             // if we have only one or no split-select tool available, just install them all
             // it's not efficient but it's correct.
             if (testedApkFiles.size() > 1) {
-                logger.warning("split-select tool unavailable, all split APKs will be installed");
+                logger.warn("split-select tool unavailable, all split APKs will be installed");
             }
             testedApks.addAll(testedApkFiles);
         }
@@ -157,10 +158,9 @@ public class TestApplicationTestData extends  AbstractTestDataImpl {
 
     private ApkInfoParser.ApkInfo loadTestedApkInfo() {
 
-        File aaptFile = new File(androidBuilder.getTargetInfo().getBuildTools()
-                .getPath(BuildToolInfo.PathId.AAPT));
+        File aaptFile = getBuildTool(BuildToolInfo.PathId.AAPT);
         ApkInfoParser apkInfoParser =
-                new ApkInfoParser(aaptFile, androidBuilder.getProcessExecutor());
+                new ApkInfoParser(aaptFile, getAndroidBuilder().getProcessExecutor());
         try {
             return apkInfoParser.parseApk(getMainApk());
         } catch (ProcessException e) {
