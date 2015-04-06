@@ -242,6 +242,10 @@ abstract class TaskManager {
                 toolingRegistry);
     }
 
+    public GlobalScope getGlobalScope() {
+        return globalScope
+    }
+
     private boolean isVerbose() {
         return project.logger.isEnabled(LogLevel.INFO)
     }
@@ -2277,8 +2281,10 @@ abstract class TaskManager {
     }
 
     @NonNull
-    protected VariantScope createVariantScope(BaseVariantData variantData) {
-        variantData.scope = new VariantScope(globalScope, variantData)
+    public VariantScope createVariantScope(BaseVariantData variantData) {
+        if (variantData.scope == null) {
+            variantData.scope = new VariantScope(globalScope, variantData)
+        }
         return variantData.scope
     }
 

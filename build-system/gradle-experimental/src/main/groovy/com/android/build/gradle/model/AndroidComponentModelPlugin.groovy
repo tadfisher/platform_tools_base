@@ -53,6 +53,7 @@ import javax.inject.Inject
 
 import static com.android.builder.core.VariantType.ANDROID_TEST
 import static com.android.builder.core.VariantType.UNIT_TEST
+import static com.android.build.gradle.model.ModelConstants.ANDROID_COMPONENT_SPEC
 
 /**
  * Plugin to set up infrastructure for other android plugins.
@@ -147,8 +148,8 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
             androidComponents.create(COMPONENT_NAME)
         }
 
-        @Model
-        AndroidComponentSpec androidComponentSpec(ComponentSpecContainer specs) {
+        @Model(ANDROID_COMPONENT_SPEC)
+        AndroidComponentSpec createAndroidComponentSpec(ComponentSpecContainer specs) {
             return (AndroidComponentSpec) specs.getByName(COMPONENT_NAME)
         }
 
