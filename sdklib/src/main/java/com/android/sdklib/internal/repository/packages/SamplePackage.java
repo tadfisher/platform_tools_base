@@ -49,6 +49,7 @@ import java.util.Properties;
 /**
  * Represents a sample XML node in an SDK repository.
  */
+@Deprecated
 public class SamplePackage extends MinToolsPackage
         implements IAndroidVersionProvider, IMinApiLevelDependency {
 

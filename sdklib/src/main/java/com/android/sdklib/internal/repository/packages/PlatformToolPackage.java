@@ -40,6 +40,7 @@ import java.util.Set;
 /**
  * Represents a platform-tool XML node in an SDK repository.
  */
+@Deprecated
 public class PlatformToolPackage extends FullRevisionPackage {
 
     /** The value returned by {@link PlatformToolPackage#installId()}. */

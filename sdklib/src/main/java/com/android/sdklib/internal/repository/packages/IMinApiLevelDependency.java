@@ -25,6 +25,7 @@ import com.android.sdklib.repository.SdkRepoConstants;
  * A package that has this dependency can only be installed if a platform with at least the
  * requested API level is present or installed at the same time.
  */
+@Deprecated
 public interface IMinApiLevelDependency {
 
     /**

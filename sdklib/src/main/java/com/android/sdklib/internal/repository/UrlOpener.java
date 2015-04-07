@@ -74,6 +74,7 @@ import java.util.Properties;
  * to pass down a {@link DownloadCache} instance, which will let us override the implementation
  * later on (for testing, for example.)
  */
+@Deprecated
 class UrlOpener {
 
     private static final boolean DEBUG =

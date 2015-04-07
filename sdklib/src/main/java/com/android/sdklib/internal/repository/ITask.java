@@ -21,6 +21,7 @@ package com.android.sdklib.internal.repository;
  * A task that executes and can update a monitor to display its status.
  * The task will generally be run in a separate thread.
  */
+@Deprecated
 public interface ITask {
     public abstract void run(ITaskMonitor monitor);
 }

@@ -27,6 +27,7 @@ import com.android.utils.ILogger;
  * Interface used to retrieve some parameters from an {@link UpdaterData} instance.
  * Useful mostly for unit tests purposes.
  */
+@Deprecated
 public interface IUpdaterData {
 
     public abstract ITaskFactory getTaskFactory();

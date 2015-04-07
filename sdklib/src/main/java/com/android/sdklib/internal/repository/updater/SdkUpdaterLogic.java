@@ -58,6 +58,7 @@ import java.util.Set;
  * When the user doesn't provide a selection, looks at local package to find
  * those that can be updated and compute dependencies too.
  */
+@Deprecated
 public class SdkUpdaterLogic {
 
     private final IUpdaterData mUpdaterData;

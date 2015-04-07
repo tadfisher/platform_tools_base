@@ -30,6 +30,7 @@ import com.android.sdklib.repository.RepoConstants;
  * Such package requires the {@code <api-level>} element. It is not an optional
  * property, however it can be invalid.
  */
+@Deprecated
 public interface IExactApiLevelDependency {
 
     /**

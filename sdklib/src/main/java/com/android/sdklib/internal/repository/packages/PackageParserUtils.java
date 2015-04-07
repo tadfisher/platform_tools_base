@@ -36,6 +36,7 @@ import java.util.Properties;
 /**
  * Misc utilities to help extracting elements and attributes out of a repository XML document.
  */
+@Deprecated
 public class PackageParserUtils {
 
     /**

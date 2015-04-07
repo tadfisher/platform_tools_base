@@ -40,6 +40,7 @@ import java.util.Properties;
  * <p/>
  * Settings are enumerated by constants in {@link ISettingsPage}.
  */
+@Deprecated
 public class SettingsController {
 
     private static final String SETTINGS_FILENAME = "androidtool.cfg"; //$NON-NLS-1$

@@ -47,6 +47,7 @@ import com.android.utils.ILogger;
  * <p/>
  * A monitor is also an {@link ILogger} implementation.
  */
+@Deprecated
 public interface ITaskMonitor extends ILogger {
 
     /**

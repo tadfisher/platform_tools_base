@@ -49,6 +49,7 @@ import java.util.Properties;
 /**
  * Represents an add-on XML node in an SDK repository.
  */
+@Deprecated
 public class AddonPackage extends MajorRevisionPackage
         implements IAndroidVersionProvider, IPlatformDependency,
                    IExactApiLevelDependency, ILayoutlibVersion {

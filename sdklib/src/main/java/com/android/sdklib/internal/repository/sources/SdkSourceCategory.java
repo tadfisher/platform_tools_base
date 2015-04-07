@@ -22,6 +22,7 @@ import com.android.sdklib.repository.IDescription;
 /**
  * The category of a given {@link SdkSource} (which represents a download site).
  */
+@Deprecated
 public enum SdkSourceCategory implements IDescription {
 
     /**

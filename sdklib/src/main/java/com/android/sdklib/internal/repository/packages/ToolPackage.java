@@ -45,6 +45,7 @@ import java.util.Properties;
 /**
  * Represents a tool XML node in an SDK repository.
  */
+@Deprecated
 public class ToolPackage extends FullRevisionPackage implements IMinPlatformToolsDependency {
 
     /** The value returned by {@link ToolPackage#installId()}. */

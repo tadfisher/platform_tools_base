@@ -40,6 +40,7 @@ import java.util.Set;
 /**
  * Represents a build-tool XML node in an SDK repository.
  */
+@Deprecated
 public class BuildToolPackage extends FullRevisionPackage {
 
     /** The base value returned by {@link BuildToolPackage#installId()}. */

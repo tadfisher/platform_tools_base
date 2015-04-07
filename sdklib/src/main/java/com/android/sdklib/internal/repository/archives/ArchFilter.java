@@ -25,6 +25,7 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Deprecated
 public class ArchFilter {
 
     private static final String PROP_HOST_OS         = "Archive.HostOs";      //$NON-NLS-1$

@@ -28,6 +28,7 @@ package com.android.sdklib.internal.repository.archives;
  *
  * @see HostOs
  */
+@Deprecated
 public enum LegacyArch {
     ANY("Any"),
     PPC("PowerPC"),

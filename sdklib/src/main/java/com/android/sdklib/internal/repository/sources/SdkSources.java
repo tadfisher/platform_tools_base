@@ -34,6 +34,7 @@ import java.util.Map.Entry;
 /**
  * A list of sdk-repository and sdk-addon sources, sorted by {@link SdkSourceCategory}.
  */
+@Deprecated
 public class SdkSources {
 
     private static final String KEY_COUNT = "count";

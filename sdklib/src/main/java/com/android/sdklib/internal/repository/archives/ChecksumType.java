@@ -20,6 +20,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 /** The checksum type. */
+@Deprecated
 public enum ChecksumType {
     /** A SHA1 checksum, represented as a 40-hex string. */
     SHA1("SHA-1");  //$NON-NLS-1$

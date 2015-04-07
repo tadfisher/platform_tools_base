@@ -24,6 +24,7 @@ import com.android.sdklib.internal.repository.packages.Package;
  * Represents an archive that we want to install and the archive that it is
  * going to replace, if any.
  */
+@Deprecated
 public class ArchiveReplacement implements IDescription {
 
     private final Archive mNewArchive;

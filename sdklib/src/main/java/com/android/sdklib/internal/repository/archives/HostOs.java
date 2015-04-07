@@ -29,6 +29,7 @@ import java.util.Locale;
  * The actual OS requirements for the SDK are listed at
  * <a href="http://d.android.com/sdk">http://d.android.com/sdk</a>
  */
+@Deprecated
 public enum HostOs {
     /** Any of the Unix-like host OSes. */
     LINUX("Linux"),

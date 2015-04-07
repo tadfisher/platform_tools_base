@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 
 /** The Architecture that this archive can be downloaded on. */
+@Deprecated
 public enum BitSize {
     _32(32),
     _64(64);

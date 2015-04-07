@@ -20,6 +20,7 @@ package com.android.sdklib.internal.repository;
  * Exception thrown by {@link DownloadCache} and {@link UrlOpener} when a user
  * cancels an HTTP Basic authentication or NTML authentication dialog.
  */
+@Deprecated
 public class CanceledByUserException extends Exception {
     private static final long serialVersionUID = -7669346110926032403L;
 

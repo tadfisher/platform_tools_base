@@ -28,6 +28,7 @@ import java.util.Properties;
 /**
  * Represents an XML node in an SDK repository that has a min-tools-rev requirement.
  */
+@Deprecated
 class MinToolsMixin implements IMinToolsDependency {
 
     /**

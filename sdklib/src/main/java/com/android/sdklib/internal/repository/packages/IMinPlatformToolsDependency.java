@@ -27,6 +27,7 @@ import com.android.sdklib.repository.SdkRepoConstants;
  * A package that has this dependency can only be installed if the requested platform-tools
  * revision is present or installed at the same time.
  */
+@Deprecated
 public interface IMinPlatformToolsDependency {
 
     /**

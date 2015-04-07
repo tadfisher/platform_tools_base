@@ -25,6 +25,7 @@ import java.io.IOException;
  * A lightweight wrapper to start & stop ADB.
  * This is <b>specific</b> to the SDK Manager install process.
  */
+@Deprecated
 public class AdbWrapper {
 
     /*

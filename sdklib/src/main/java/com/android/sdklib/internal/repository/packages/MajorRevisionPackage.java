@@ -31,6 +31,7 @@ import java.util.Properties;
  * Represents a package in an SDK repository that has a {@link MajorRevision},
  * which is a single major revision number (not minor, micro or previews).
  */
+@Deprecated
 public abstract class MajorRevisionPackage extends Package {
 
     private final MajorRevision mRevision;

@@ -24,6 +24,7 @@ import java.util.Properties;
 /**
  * Interface that a settings page must implement.
  */
+@Deprecated
 public interface ISettingsPage {
 
     /**

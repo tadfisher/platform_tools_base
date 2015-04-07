@@ -44,6 +44,7 @@ import java.util.regex.Pattern;
 /**
  * Represents a system-image XML node in an SDK repository.
  */
+@Deprecated
 public class SystemImagePackage extends MajorRevisionPackage
         implements IAndroidVersionProvider, IPlatformDependency {
 

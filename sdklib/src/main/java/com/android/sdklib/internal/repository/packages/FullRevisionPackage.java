@@ -31,6 +31,7 @@ import java.util.Properties;
  * Represents a package in an SDK repository that has a {@link FullRevision},
  * which is a multi-part revision number (major.minor.micro) and an optional preview revision.
  */
+@Deprecated
 public abstract class FullRevisionPackage extends Package
         implements IFullRevisionProvider {
 

@@ -47,6 +47,7 @@ import java.util.Properties;
  * However there is no mandatory dependency that limits installation so this does not
  * implement {@link IPlatformDependency}.
  */
+@Deprecated
 public class SourcePackage extends MajorRevisionPackage implements IAndroidVersionProvider {
 
     /** The package version, for platform, add-on and doc packages. */

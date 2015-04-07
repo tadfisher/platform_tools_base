@@ -27,6 +27,7 @@ import java.util.Properties;
 /**
  * Helper class to handle the layoutlib version provided by a package.
  */
+@Deprecated
 public class LayoutlibVersionMixin implements ILayoutlibVersion {
 
     /**

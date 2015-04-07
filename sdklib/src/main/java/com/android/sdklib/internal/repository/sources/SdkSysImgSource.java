@@ -29,6 +29,7 @@ import java.io.InputStream;
  * An sdk-sys-img source, i.e. a download site for system-image packages.
  * A repository describes one or more {@link Package}s available for download.
  */
+@Deprecated
 public class SdkSysImgSource extends SdkSource {
 
     /**

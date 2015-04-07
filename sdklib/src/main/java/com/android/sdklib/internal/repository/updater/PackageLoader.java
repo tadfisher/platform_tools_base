@@ -44,6 +44,7 @@ import java.util.Map;
  * Loads packages fetched from the remote SDK Repository and keeps track
  * of their state compared with the current local SDK installation.
  */
+@Deprecated
 public class PackageLoader {
 
     /** The update data context. Never null. */

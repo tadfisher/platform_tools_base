@@ -30,6 +30,7 @@ import com.android.utils.NullLogger;
  * A custom {@link ILogger} is used. Clients could use {@link NullLogger} if
  * they really don't care about the logging either.
  */
+@Deprecated
 public class NullTaskMonitor implements ITaskMonitor {
 
     private final ILogger mLog;

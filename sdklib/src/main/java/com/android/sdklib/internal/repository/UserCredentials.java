@@ -16,6 +16,7 @@
 
 package com.android.sdklib.internal.repository;
 
+@Deprecated
 public class UserCredentials {
     private final String mUserName;
     private final String mPassword;

@@ -43,6 +43,7 @@ import java.util.Collection;
  *
  * @see ArchiveInfo#ArchiveInfo(Archive, Archive, ArchiveInfo[])
  */
+@Deprecated
 public class ArchiveInfo extends ArchiveReplacement implements Comparable<ArchiveInfo> {
 
     private final ArchiveInfo[] mDependsOn;

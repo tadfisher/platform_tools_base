@@ -75,6 +75,7 @@ import java.util.TreeSet;
 /**
  * Data shared by the SDK Manager updaters.
  */
+@Deprecated
 public class UpdaterData implements IUpdaterData {
 
     public static final int NO_TOOLS_MSG = 0;

@@ -43,6 +43,7 @@ import java.util.Properties;
 /**
  * Represents a platform XML node in an SDK repository.
  */
+@Deprecated
 public class PlatformPackage extends MinToolsPackage
         implements IAndroidVersionProvider, ILayoutlibVersion {
 

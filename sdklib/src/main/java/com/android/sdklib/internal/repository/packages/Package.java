@@ -56,6 +56,7 @@ import java.util.Properties;
  * <p/>
  * Derived classes must implement the {@link IDescription} methods.
  */
+@Deprecated
 public abstract class Package implements IDescription, IListDescription, Comparable<Package> {
 
     private final String mObsolete;

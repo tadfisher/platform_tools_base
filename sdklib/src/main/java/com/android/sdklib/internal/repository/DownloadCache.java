@@ -59,6 +59,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * either ETag or Last-Modified, and finally server-cache is a strategy to always serve
  * cached entries if present.)
  */
+@Deprecated
 public class DownloadCache {
 
     /*

@@ -20,6 +20,7 @@ package com.android.sdklib.internal.repository;
 /**
  * A factory that can start and run new {@link ITask}s.
  */
+@Deprecated
 public interface ITaskFactory {
 
     /**

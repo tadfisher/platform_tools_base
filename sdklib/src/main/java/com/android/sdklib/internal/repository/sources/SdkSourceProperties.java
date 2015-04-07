@@ -39,6 +39,7 @@ import java.util.Properties;
  * The persisted setting file is loaded as necessary, however callers must persist
  * it at some point by calling {@link #save()}.
  */
+@Deprecated
 public class SdkSourceProperties {
 
     /**

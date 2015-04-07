@@ -30,6 +30,7 @@ import java.util.Properties;
  * Represents a package in an SDK repository that has a {@link NoPreviewRevision},
  * which is a single major.minor.micro revision number and no preview.
  */
+@Deprecated
 public abstract class NoPreviewRevisionPackage extends Package {
 
     private final NoPreviewRevision mRevision;

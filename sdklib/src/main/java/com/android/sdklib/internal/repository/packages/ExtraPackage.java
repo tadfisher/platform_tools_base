@@ -48,6 +48,7 @@ import java.util.regex.Pattern;
 /**
  * Represents a extra XML node in an SDK repository.
  */
+@Deprecated
 public class ExtraPackage extends NoPreviewRevisionPackage
     implements IMinApiLevelDependency, IMinToolsDependency {
 

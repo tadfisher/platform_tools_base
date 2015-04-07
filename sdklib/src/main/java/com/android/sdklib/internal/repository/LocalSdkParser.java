@@ -56,6 +56,7 @@ import java.util.Properties;
 /**
  * Scans a local SDK to find which packages are currently installed.
  */
+@Deprecated
 public class LocalSdkParser {
 
     private Package[] mPackages;

@@ -30,6 +30,7 @@ import com.android.sdklib.repository.FullRevision.PreviewComparison;
  * {@link FullRevision} instead of a limited {@link MajorRevision}. <br/>
  * The preview version number is available via {@link Package#getRevision()}.
  */
+@Deprecated
 public interface IFullRevisionProvider {
 
     /**

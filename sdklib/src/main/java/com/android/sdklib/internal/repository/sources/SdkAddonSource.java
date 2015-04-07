@@ -29,6 +29,7 @@ import java.io.InputStream;
  * An sdk-addon source, i.e. a download site for addons and extra packages.
  * A repository describes one or more {@link Package}s available for download.
  */
+@Deprecated
 public class SdkAddonSource extends SdkSource {
 
     /**

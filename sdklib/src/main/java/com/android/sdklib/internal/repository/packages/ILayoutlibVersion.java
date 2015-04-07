@@ -21,6 +21,7 @@ import com.android.utils.Pair;
 /**
  * Interface used to decorate a {@link Package} that provides a version for layout lib.
  */
+@Deprecated
 public interface ILayoutlibVersion {
 
     public static final int LAYOUTLIB_API_NOT_SPECIFIED = 0;

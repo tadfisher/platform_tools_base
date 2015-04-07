@@ -27,6 +27,7 @@ import com.android.sdklib.AndroidVersion;
  * requested platform is present, whereas this interface denotes that the given package simply
  * has a version, which is not necessarily a dependency.
  */
+@Deprecated
 public interface IAndroidVersionProvider {
 
     /**

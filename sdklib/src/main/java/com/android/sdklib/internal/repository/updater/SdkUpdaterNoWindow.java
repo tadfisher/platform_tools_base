@@ -41,6 +41,7 @@ import java.util.Properties;
 /**
  * Performs an update using only a non-interactive console output with no GUI.
  */
+@Deprecated
 public class SdkUpdaterNoWindow {
 
     /** The {@link UpdaterData} to use. */

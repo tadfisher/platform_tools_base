@@ -74,6 +74,7 @@ import javax.xml.validation.Validator;
  * It may be a full repository or an add-on only repository.
  * A repository describes one or {@link Package}s available for download.
  */
+@Deprecated
 public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
 
     private String mUrl;

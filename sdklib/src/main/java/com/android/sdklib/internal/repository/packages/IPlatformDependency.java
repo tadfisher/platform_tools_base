@@ -29,6 +29,7 @@ import com.android.sdklib.AndroidVersion;
  * not convey the same semantic since {@link IAndroidVersionProvider} does <em>not</em>
  * imply any dependency being a limiting factor as far as installation is concerned.
  */
+@Deprecated
 public interface IPlatformDependency {
 
     /** Returns the version of the platform dependency of this package. */

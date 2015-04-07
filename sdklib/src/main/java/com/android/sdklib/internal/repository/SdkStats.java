@@ -55,6 +55,7 @@ import javax.xml.validation.Validator;
  * This returns information stored on the repository in a different XML file
  * and isn't directly tied to the existence of the listed platforms.
  */
+@Deprecated
 public class SdkStats {
 
     public static class PlatformStatBase {

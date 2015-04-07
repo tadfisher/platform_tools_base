@@ -33,6 +33,7 @@ import com.android.sdklib.repository.FullRevision;
  * The main package is final and cannot change since it's what "defines" this PkgItem.
  * The state or update package can change later.
  */
+@Deprecated
 public class PkgItem implements Comparable<PkgItem> {
     private final PkgState mState;
     private final Package mMainPkg;
