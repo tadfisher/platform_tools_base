@@ -843,10 +843,10 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             version = getNewerRevision(dependency, new PreciseRevision(18, 0));
         } else if ("com.google.code.gson".equals(dependency.getGroupId()) &&
                 "gson".equals(dependency.getArtifactId())) {
-            version = getNewerRevision(dependency, new PreciseRevision(2, 3));
+            version = getNewerRevision(dependency, new PreciseRevision(2, 3, 1));
         } else if ("org.apache.httpcomponents".equals(dependency.getGroupId()) &&
                 "httpclient".equals(dependency.getArtifactId())) {
-            version = getNewerRevision(dependency, new PreciseRevision(4, 3, 5));
+            version = getNewerRevision(dependency, new PreciseRevision(4, 4, 1));
         }
 
         // Network check for really up to date libraries? Only done in batch mode
