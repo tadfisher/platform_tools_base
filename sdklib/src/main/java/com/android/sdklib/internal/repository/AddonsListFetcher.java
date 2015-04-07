@@ -57,6 +57,7 @@ import javax.xml.validation.Validator;
  * The XML must conform to the sdk-addons-list-N.xsd. <br/>
  * Constants used in the XML are defined in {@link SdkAddonsListConstants}.
  */
+@Deprecated
 public class AddonsListFetcher {
 
     public enum SiteType {
