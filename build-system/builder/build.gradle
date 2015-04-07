@@ -52,3 +52,35 @@ apply from: "$rootDir/buildSrc/base/bintray.gradle"
 apply from: "$rootDir/buildSrc/base/javadoc.gradle"
 
 jar.manifest.attributes("Builder-Version": version)
+
+
+def generated = new File("${project.buildDir}/generated/java")
+
+sourceSets {
+    main {
+        java {
+            srcDir generated
+        }
+    }
+}
+
+task generateVersionJava () {
+        def versionFilePackage = new File(generated, "com/android/builder")
+        versionFilePackage.mkdirs()
+        def versionFile = new File(versionFilePackage, "Version.java")
+        versionFile.delete()
+        versionFile << """
+package com.android.builder;
+
+public class Version {
+    private Version() {}
+    public static final String ANDROID_GRADLE_PLUGIN_VERSION = "$version";
+    public static final int BUILDER_MODEL_API_VERSION = $apiVersion;
+}
+"""
+}
+
+generateVersionJava.outputs.upToDateWhen { false }
+
+
+tasks.assemble.dependsOn generateVersionJava
