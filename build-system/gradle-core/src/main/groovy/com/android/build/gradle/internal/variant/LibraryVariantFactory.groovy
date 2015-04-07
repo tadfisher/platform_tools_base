@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.variant
 import com.android.annotations.NonNull
+import com.android.annotations.Nullable
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.LibraryVariant
@@ -29,6 +30,7 @@ import com.android.build.gradle.internal.api.ReadOnlyObjectProvider
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.GroupableProductFlavor
+import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.VariantType
@@ -158,5 +160,19 @@ public class LibraryVariantFactory implements VariantFactory {
         signingConfigs.create(DEBUG);
         buildTypes.create(DEBUG);
         buildTypes.create(RELEASE);
+    }
+
+    @Override
+    GradleVariantConfiguration createVariantConfig(
+            @NonNull ProductFlavorData<ProductFlavor> defaultConfigData,
+            @NonNull BuildTypeData buildTypeData, @Nullable SigningConfig signingOverride) {
+
+        return new GradleVariantConfiguration(
+                defaultConfigData.getProductFlavor(),
+                defaultConfigData.getSourceSet(),
+                buildTypeData.getBuildType(),
+                buildTypeData.getSourceSet(),
+                getVariantConfigurationType(),
+                signingOverride);
     }
 }
