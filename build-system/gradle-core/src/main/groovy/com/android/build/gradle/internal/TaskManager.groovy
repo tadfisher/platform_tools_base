@@ -2881,7 +2881,7 @@ abstract class TaskManager {
     public void createProguardTasks(
             final @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData,
             final @Nullable BaseVariantData<? extends BaseVariantOutputData> testedVariantData,
-            final @NonNull PostCompilationData pcData) {
+            final @NonNull PostCompilationData u) {
         final VariantConfiguration variantConfig = variantData.variantConfiguration
 
         // use single output for now.
