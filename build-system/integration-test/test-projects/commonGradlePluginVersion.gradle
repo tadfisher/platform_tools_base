@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright (C) 2015 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
-def env = new Object() { String gradleVersion };
-apply from: "commonGradlePluginVersion.gradle", to: env
+gradleVersion = System.env.CUSTOM_GRADLE
 
-apply from: "commonLocalRepo.gradle"
+if (gradleVersion == null && System.env.CUSTOM_REPO != null) {
+    def env = new Expando(project: new Expando(ext: new Expando()));
+    apply from: "$System.env.CUSTOM_REPO/../../tools/buildSrc/base/version.gradle", to: env
+    gradleVersion = env.project.ext.buildVersion
+}
 
-dependencies {
-    classpath "com.android.tools.build:gradle:$env.gradleVersion"
+if (gradleVersion == null) {
+    throw new RuntimeException("Android Gradle plugin version for tests 'CUSTOM_GRADLE' not set.")
 }
