@@ -15,7 +15,8 @@
  */
 package com.android.ide.common.blame.parser;
 
-import com.android.ide.common.blame.SourceFragmentPositionRange;
+import com.android.utils.SourceFragmentPositionRange;
+import com.android.ide.common.blame.SourceFragmentPositionRangeSerializer;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -47,7 +48,7 @@ public class SourceFragmentPositionRangeJsonTest extends TestCase {
         gsonSerializer = new GsonBuilder()
                 .registerTypeAdapter(
                         SourceFragmentPositionRange.class,
-                        new SourceFragmentPositionRange.Serializer())
+                        new SourceFragmentPositionRangeSerializer())
                 .create();
         gsonDeserializer = new GsonBuilder()
                 .registerTypeAdapter(

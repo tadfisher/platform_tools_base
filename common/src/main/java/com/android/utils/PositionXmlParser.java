@@ -18,7 +18,6 @@ package com.android.utils;
 
 import static com.android.SdkConstants.UTF_8;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 
@@ -40,7 +39,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -292,7 +290,7 @@ public class PositionXmlParser {
             xml = new String(data, offset, length, charset);
         } catch (UnsupportedEncodingException e) {
             try {
-                if (charset != defaultCharset) {
+                if (!charset.equals(defaultCharset)) {
                     xml = new String(data, offset, length, defaultCharset);
                 }
             } catch (UnsupportedEncodingException u) {
@@ -714,39 +712,12 @@ public class PositionXmlParser {
      * @return a new position
      */
     @NonNull
-    protected Position createPosition(int line, int column, int offset) {
-        return new DefaultPosition(line, column, offset);
+    private Position createPosition(int line, int column, int offset) {
+        return new Position(line, column, offset);
     }
 
-    public interface Position {
-        /**
-         * Linked position: for a begin position this will point to the
-         * corresponding end position. For an end position this will be null.
-         *
-         * @return the end position, or null
-         */
-        @Nullable
-        public Position getEnd();
 
-        /**
-         * Linked position: for a begin position this will point to the
-         * corresponding end position. For an end position this will be null.
-         *
-         * @param end the end position
-         */
-        public void setEnd(@NonNull Position end);
-
-        /** @return the line number, 0-based */
-        public int getLine();
-
-        /** @return the offset number, 0-based */
-        public int getOffset();
-
-        /** @return the column number, 0-based, and -1 if the column number if not known */
-        public int getColumn();
-    }
-
-    protected static class DefaultPosition implements Position {
+    private static class Position {
         /** The line number (0-based where the first line is line 0) */
         private final int mLine;
         private final int mColumn;
@@ -760,33 +731,28 @@ public class PositionXmlParser {
          * @param column the 0-based column number, or -1 if unknown
          * @param offset the offset, or -1 if unknown
          */
-        public DefaultPosition(int line, int column, int offset) {
+        public Position(int line, int column, int offset) {
             this.mLine = line;
             this.mColumn = column;
             this.mOffset = offset;
         }
 
-        @Override
         public int getLine() {
             return mLine;
         }
 
-        @Override
         public int getOffset() {
             return mOffset;
         }
 
-        @Override
         public int getColumn() {
             return mColumn;
         }
 
-        @Override
         public Position getEnd() {
             return mEnd;
         }
 
-        @Override
         public void setEnd(@NonNull Position end) {
             mEnd = end;
         }

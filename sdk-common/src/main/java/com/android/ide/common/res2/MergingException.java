@@ -18,11 +18,9 @@ package com.android.ide.common.res2;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.blame.FilePosition;
-import com.android.ide.common.blame.SourceFragmentPositionRange;
-import com.google.common.base.Function;
+import com.android.utils.FilePosition;
+import com.android.utils.SourceFragmentPositionRange;
 import com.google.common.base.Joiner;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import org.xml.sax.SAXParseException;

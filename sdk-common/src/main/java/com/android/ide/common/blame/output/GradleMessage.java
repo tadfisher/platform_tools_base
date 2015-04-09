@@ -18,7 +18,7 @@ package com.android.ide.common.blame.output;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.blame.SourceFragmentPositionRange;
+import com.android.utils.SourceFragmentPositionRange;
 import com.google.common.base.Objects;
 import com.google.gson.annotations.SerializedName;
 

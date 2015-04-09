@@ -16,8 +16,8 @@
 
 package com.android.ide.common.res2;
 
-import com.android.ide.common.blame.FilePosition;
-import com.android.ide.common.blame.SourceFragmentPositionRange;
+import com.android.utils.FilePosition;
+import com.android.utils.SourceFragmentPositionRange;
 
 import junit.framework.TestCase;
 
