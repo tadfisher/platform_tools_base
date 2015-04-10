@@ -852,12 +852,11 @@ abstract class TaskManager {
 
             generatePngs.dependsOn variantData.mergeResourcesTask
 
-            File resDirectory = variantData.mergeResourcesTask.outputDir
+            generatePngs.mergedResDirectory = variantData.mergeResourcesTask.outputDir
+            generatePngs.generatedResDirectory = project.file("$project.buildDir/${FD_GENERATED}/res/pngs/${variantData.variantConfiguration.dirName}")
+            generatePngs.outputResDirectory = project.file("$project.buildDir/${FD_INTERMEDIATES}/res/preprocessed/${variantData.variantConfiguration.dirName}")
+            generatePngs.incrementalFolder = project.file("$project.buildDir/${FD_INTERMEDIATES}/incremental/generatePngs/${variantData.variantConfiguration.dirName}")
 
-            generatePngs.xmlFiles =  project.fileTree(
-                    dir: resDirectory,
-                    includes: ["drawable*/*.xml"])
-            generatePngs.outputResDirectory = resDirectory
             // TODO: configure this in the extension.
             generatePngs.densitiesToGenerate = [Density.HIGH, Density.XHIGH]
 
