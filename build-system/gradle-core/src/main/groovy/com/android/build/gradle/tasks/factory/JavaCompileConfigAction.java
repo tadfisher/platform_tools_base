@@ -6,6 +6,7 @@ import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 
 import com.android.build.gradle.internal.CompileOptions;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
+import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.sdklib.AndroidTargetHash;
@@ -26,7 +27,7 @@ import groovy.lang.Closure;
 /**
  * Configuration Action for a JavaCompile task.
  */
-public class JavaCompileConfigAction implements Action<JavaCompile> {
+public class JavaCompileConfigAction implements TaskConfigAction<JavaCompile> {
 
     private VariantScope scope;
 
@@ -35,10 +36,19 @@ public class JavaCompileConfigAction implements Action<JavaCompile> {
     }
 
     @Override
+    public String getName() {
+        return scope.getTaskName("compile", "Java");
+    }
+
+    @Override
+    public Class<JavaCompile> getType() {
+        return JavaCompile.class;
+    }
+
+    @Override
     public void execute(final JavaCompile javaCompileTask) {
         final BaseVariantData testedVariantData = scope.getTestedVariantData();
         scope.getVariantData().javaCompileTask = javaCompileTask;
-        scope.getVariantData().compileTask.dependsOn(javaCompileTask);
 
         javaCompileTask.setSource(scope.getVariantData().getJavaSources());
 
@@ -50,7 +60,7 @@ public class JavaCompileConfigAction implements Action<JavaCompile> {
                                         .getCompileClasspath(
                                                 scope.getVariantData().getVariantConfiguration()));
 
-                        if (DefaultGroovyMethods.asBoolean(testedVariantData)) {
+                        if (testedVariantData != null) {
                             // For libraries, the classpath from androidBuilder includes the library output
                             // (bundle/classes.jar) as a normal dependency. In unit tests we don't want to package
                             // the jar at every run, so we use the *.class files instead.
@@ -81,15 +91,6 @@ public class JavaCompileConfigAction implements Action<JavaCompile> {
                     }
 
                 });
-
-        javaCompileTask.dependsOn(scope.getVariantData().prepareDependenciesTask);
-        javaCompileTask.dependsOn(scope.getVariantData().processJavaResourcesTask);
-
-        // TODO - dependency information for the compile classpath is being lost.
-        // Add a temporary approximation
-        javaCompileTask.dependsOn(
-                scope.getVariantData().getVariantDependency().getCompileConfiguration()
-                        .getBuildDependencies());
 
         ConventionMappingHelper
                 .map(javaCompileTask, "destinationDir", new Closure<File>(this, this) {

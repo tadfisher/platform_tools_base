@@ -88,7 +88,7 @@ public class AndroidTask<T extends Task> {
      * @param taskFactory TaskFactory used to configure the task for dependencies.
      * @param other The task that this depends on.
      */
-    public void dependsOn(final TaskFactory taskFactory, final AndroidTask<? extends Task> other) {
+    public void dependsOn(final TaskFactory taskFactory, final AndroidTask<?> other) {
         taskFactory.named(name, new Action<Task>() {
             @Override
             public void execute(Task task) {
@@ -107,6 +107,15 @@ public class AndroidTask<T extends Task> {
      * @param dependencies Objects accepted by {@link Task#dependsOn}.
      */
     public void dependsOn(final TaskFactory taskFactory, final Object... dependencies) {
+        for (Object dependency : dependencies) {
+            if (dependency == null) {
+                try {
+                    throw new RuntimeException();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
         taskFactory.named(name, new Action<Task>() {
             @Override
             public void execute(Task task) {
