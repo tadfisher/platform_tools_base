@@ -732,6 +732,10 @@ public final class SdkConstants {
     public static final String TAG_USES_LIBRARY = "uses-library";      //$NON-NLS-1$
     public static final String TAG_APPLICATION = "application";        //$NON-NLS-1$
     public static final String TAG_INTENT_FILTER = "intent-filter";    //$NON-NLS-1$
+    public static final String TAG_DATA = "data";                      //$NON-NLS-1$
+    public static final String TAG_ACTION = "action";                  //$NON-NLS-1$
+    public static final String TAG_CATEGORY = "category";              //$NON-NLS-1$
+    public static final String TAG_META_DATA = "meta-data";            //$NON-NLS-1$
     public static final String TAG_USES_SDK = "uses-sdk";              //$NON-NLS-1$
     public static final String TAG_ACTIVITY = "activity";              //$NON-NLS-1$
     public static final String TAG_RECEIVER = "receiver";              //$NON-NLS-1$
@@ -830,6 +834,8 @@ public final class SdkConstants {
     public static final String ATTR_PACKAGE = "package";               //$NON-NLS-1$
     public static final String ATTR_CORE_APP = "coreApp";              //$NON-NLS-1$
     public static final String ATTR_THEME = "theme";                   //$NON-NLS-1$
+    public static final String ATTR_SCHEME = "scheme";                 //$NON_NLS-1$
+    public static final String ATTR_HOST = "host";                     //$NON_NLS-1$
     public static final String ATTR_PATH = "path";                     //$NON-NLS-1$
     public static final String ATTR_PATH_PREFIX = "pathPrefix";        //$NON-NLS-1$
     public static final String ATTR_PATH_PATTERN = "pathPattern";      //$NON-NLS-1$
