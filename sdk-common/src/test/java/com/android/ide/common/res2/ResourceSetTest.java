@@ -58,7 +58,7 @@ public class ResourceSetTest extends BaseTestCase {
                 "attr/flagAttr",
                 "declare-styleable/declare_styleable",
                 "dimen/dimen",
-                "dimen-sw600dp-v13/offset",
+                "dimen-sw600dp/offset",
                 "id/item_id",
                 "integer/integer",
                 "plurals/plurals"
