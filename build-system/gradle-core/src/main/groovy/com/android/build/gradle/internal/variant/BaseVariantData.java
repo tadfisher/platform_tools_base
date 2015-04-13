@@ -374,8 +374,8 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
      */
     private List<File> getGeneratedResFolders() {
         List<File> generatedResFolders = Lists.newArrayList(
-                renderscriptCompileTask.getResOutputDir(),
-                generateResValuesTask.getResOutputDir());
+                scope.getRenderscriptResOutputDir(),
+                scope.getGeneratedResOutputDir());
         if (extraGeneratedResFolders != null) {
             generatedResFolders.addAll(extraGeneratedResFolders);
         }
@@ -534,23 +534,25 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
                 sourceList.add(((AndroidSourceSet) provider).getJava().getSourceFiles());
             }
 
+            assert getScope() != null;
+
             // then all the generated src folders.
-            if (generateRClassTask != null) {
-                sourceList.add(generateRClassTask.getSourceOutputDir());
+            if (getScope().getGenerateRClassTask() != null) {
+                sourceList.add(getScope().getRClassSourceOutputDir());
             }
 
             // for the other, there's no duplicate so no issue.
-            if (generateBuildConfigTask != null) {
-                sourceList.add(generateBuildConfigTask.getSourceOutputDir());
+            if (getScope().getGenerateBuildConfigTask() != null) {
+                sourceList.add(scope.getBuildConfigSourceOutputDir());
             }
 
-            if (aidlCompileTask != null) {
-                sourceList.add(aidlCompileTask.getSourceOutputDir());
+            if (getScope().getAidlCompileTask() != null) {
+                sourceList.add(scope.getAidlSourceOutputDir());
             }
 
             if (!variantConfiguration.getRenderscriptNdkModeEnabled()
-                    && renderscriptCompileTask != null) {
-                sourceList.add(renderscriptCompileTask.getSourceOutputDir());
+                    && getScope().getRenderscriptCompileTask() != null) {
+                sourceList.add(scope.getRenderscriptSourceOutputDir());
             }
 
             javaSources = sourceList.toArray();
