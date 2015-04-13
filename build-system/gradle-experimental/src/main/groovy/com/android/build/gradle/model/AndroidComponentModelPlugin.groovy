@@ -173,7 +173,7 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
 
         @Model
         AndroidComponentSpec androidComponentSpec(ComponentSpecContainer specs) {
-            return (AndroidComponentSpec) specs.getByName(COMPONENT_NAME)
+            return (AndroidComponentSpec) specs.get(COMPONENT_NAME)
         }
 
         @Model

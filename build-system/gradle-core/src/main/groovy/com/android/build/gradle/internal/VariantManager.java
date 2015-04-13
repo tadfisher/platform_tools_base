@@ -205,7 +205,6 @@ public class VariantManager implements VariantModel {
 
         BuildTypeData buildTypeData = new BuildTypeData(
                 buildType, project, mainSourceSet, unitTestSourceSet);
-        project.getTasks().getByName("assemble").dependsOn(buildTypeData.getAssembleTask());
 
         buildTypes.put(name, buildTypeData);
     }
@@ -280,6 +279,14 @@ public class VariantManager implements VariantModel {
                 });
 
         for (final BaseVariantData<? extends BaseVariantOutputData> variantData : variantDataList) {
+
+            tasks.named("assemble", new Action<Task>() {
+                @Override
+                public void execute(Task task) {
+                    task.dependsOn(buildTypes.get(
+                            variantData.getVariantConfiguration().getBuildType().getName()).getAssembleTask());
+                }
+            });
             SpanRecorders.record(project, ExecutionType.VARIANT_MANAGER_CREATE_TASKS_FOR_VARIANT,
                     new Recorder.Block<Void>() {
                         @Override

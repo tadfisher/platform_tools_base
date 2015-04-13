@@ -17,7 +17,6 @@
 
 package com.android.build.gradle.model
 
-import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.ProductFlavorCombo
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.ndk.NdkExtension
@@ -26,6 +25,7 @@ import com.android.build.gradle.ndk.internal.NdkExtensionConvention
 import com.android.build.gradle.ndk.internal.NdkHandler
 import com.android.build.gradle.ndk.internal.ToolchainConfiguration
 import com.android.builder.core.VariantConfiguration
+import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -41,6 +41,7 @@ import org.gradle.model.Model
 import org.gradle.model.Mutate
 import org.gradle.model.Path
 import org.gradle.model.RuleSource
+import org.gradle.model.collection.CollectionBuilder
 import org.gradle.nativeplatform.BuildTypeContainer
 import org.gradle.nativeplatform.FlavorContainer
 import org.gradle.nativeplatform.NativeLibraryBinarySpec
@@ -151,24 +152,34 @@ class NdkComponentModelPlugin implements Plugin<Project> {
                 @Path("android.sources") AndroidComponentModelSourceSet sources,
                 @Path("buildDir") File buildDir) {
             if (!extension.moduleName.isEmpty()) {
-                NativeLibrarySpec library = specs.create(extension.moduleName, NativeLibrarySpec)
-                specs.withType(DefaultAndroidComponentSpec) { androidSpec ->
-                    androidSpec.nativeLibrary = library
-                    NdkConfiguration.configureProperties(
-                            library, sources, buildDir, extension, ndkHandler)
-                }
+                specs.create(extension.moduleName, NativeLibrarySpec)
+                NativeLibrarySpec library = (NativeLibrarySpec) specs.get(extension.moduleName)
+                specs.afterEach(AndroidComponentSpec, new Action<AndroidComponentSpec>() {
+                    @Override
+                    void execute(AndroidComponentSpec androidComponentSpec) {
+                        DefaultAndroidComponentSpec androidSpec =
+                                (DefaultAndroidComponentSpec) androidComponentSpec
+                        androidSpec.nativeLibrary = library
+                        NdkConfiguration.configureProperties(
+                                library, sources, buildDir, extension, ndkHandler)
+
+                    }
+                })
             }
         }
+
         @Mutate
         void createAdditionalTasksForNatives(
-                TaskContainer tasks,
-                ComponentSpecContainer specs,
+                CollectionBuilder<Task> tasks,
+                AndroidComponentSpec spec,
                 NdkExtension extension,
                 NdkHandler ndkHandler,
+                BinaryContainer binaries,
                 @Path("buildDir") File buildDir) {
-            specs.withType(DefaultAndroidComponentSpec) { androidSpec ->
-                if (androidSpec.nativeLibrary != null) {
-                    androidSpec.nativeLibrary.binaries.withType(SharedLibraryBinarySpec) { binary ->
+            DefaultAndroidComponentSpec androidSpec = (DefaultAndroidComponentSpec) spec
+            if (androidSpec.nativeLibrary != null) {
+                binaries.withType(SharedLibraryBinarySpec) { binary ->
+                    if (binary.getComponent() == androidSpec.nativeLibrary) {
                         NdkConfiguration.createTasks(
                                 tasks, binary, buildDir, extension, ndkHandler)
                     }
@@ -178,33 +189,47 @@ class NdkComponentModelPlugin implements Plugin<Project> {
 
         @Mutate
         void attachNativeBinaryToAndroid(
-                BinaryContainer binaries,
+                CollectionBuilder<AndroidBinary> binaries,
+                //BinaryContainer binaries,
                 ComponentSpecContainer specs,
                 AndroidComponentSpec androidSpec,
                 @Path("android.ndk") NdkExtension extension) {
             if (!extension.moduleName.isEmpty()) {
                 NativeLibrarySpec library =
-                        specs.withType(NativeLibrarySpec).getByName(extension.moduleName);
-                binaries.withType(DefaultAndroidBinary).each { binary ->
-                    def nativeBinaries = getNativeBinaries(library, binary.buildType, binary.productFlavors)
-                    binary.getNativeBinaries().addAll(nativeBinaries)
-                }
+                        specs.withType(NativeLibrarySpec).get(extension.moduleName);
+                binaries.afterEach(
+                        new Action<AndroidBinary>() {
+                            @Override
+                            void execute(AndroidBinary androidBinary) {
+                                DefaultAndroidBinary binary = (DefaultAndroidBinary) androidBinary
+                                def nativeBinaries = getNativeBinaries(library, binary.buildType, binary.productFlavors)
+                                binary.getNativeBinaries().addAll(nativeBinaries)
+                            }
+                })
             }
         }
 
         @Finalize
-        void attachNativeTasksToAssembleTasks(BinaryContainer binaries) {
-            binaries.withType(DefaultAndroidBinary) { binary ->
-                if (binary.targetAbi.isEmpty())  {
-                    binary.builtBy(binary.nativeBinaries)
-                } else {
-                    for (NativeLibraryBinarySpec nativeBinary : binary.nativeBinaries) {
-                        if (binary.targetAbi.contains(nativeBinary.targetPlatform.name)) {
-                            binary.builtBy(nativeBinary)
+        void attachNativeTasksToAssembleTasks(
+                CollectionBuilder<AndroidBinary> binaries) {
+            binaries.afterEach(
+                    new Action<AndroidBinary>() {
+                        @Override
+                        void execute(AndroidBinary androidBinary) {
+                            DefaultAndroidBinary binary = (DefaultAndroidBinary) androidBinary
+                            if (binary.targetAbi.isEmpty())  {
+                                binary.builtBy(binary.nativeBinaries)
+                            } else {
+                                for (NativeLibraryBinarySpec nativeBinary : binary.nativeBinaries) {
+                                    if (binary.targetAbi.contains(nativeBinary.targetPlatform.name)) {
+                                        binary.builtBy(nativeBinary)
+                                    }
+                                }
+                            }
+
                         }
                     }
-                }
-            }
+            )
         }
 
         /**

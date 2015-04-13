@@ -20,12 +20,10 @@ import com.android.build.gradle.model.AndroidComponentModelSourceSet
 import com.android.build.gradle.ndk.NdkExtension
 import com.android.build.gradle.tasks.GdbSetupTask
 import com.android.builder.core.BuilderConstants
-import org.gradle.api.tasks.TaskContainer
 import org.gradle.language.base.FunctionalSourceSet
-import org.gradle.language.c.CSourceSet
-import org.gradle.language.cpp.CppSourceSet
 import org.gradle.api.Task
 import org.gradle.api.tasks.Copy
+import org.gradle.model.collection.CollectionBuilder
 import org.gradle.nativeplatform.NativeBinarySpec
 import org.gradle.nativeplatform.NativeLibrarySpec
 import org.gradle.nativeplatform.SharedLibraryBinarySpec
@@ -101,16 +99,20 @@ class NdkConfiguration {
             for (String ldLibs : ndkExtension.getLdLibs()) {
                 linker.args "-l$ldLibs"
             }
+
+            StlNativeToolSpecification stlConfig =
+                    new StlNativeToolSpecification(ndkHandler, ndkExtension.stl, binary.targetPlatform)
+            stlConfig.apply(binary)
         }
     }
 
     public static void createTasks(
-            TaskContainer tasks,
+            CollectionBuilder<Task> tasks,
             SharedLibraryBinarySpec binary,
             File buildDir,
             NdkExtension ndkExtension,
             NdkHandler ndkHandler) {
-        StlConfiguration.apply(ndkHandler, ndkExtension.getStl(), tasks, buildDir, binary)
+        StlConfiguration.createStlCopyTask(ndkHandler, ndkExtension.getStl(), tasks, buildDir, binary)
 
         if (binary.buildType.name.equals(BuilderConstants.DEBUG)) {
             setupNdkGdbDebug(tasks, binary, buildDir, ndkExtension, ndkHandler)
@@ -134,29 +136,28 @@ class NdkConfiguration {
      * Setup tasks to create gdb.setup and copy gdbserver for NDK debugging.
      */
     private static void setupNdkGdbDebug(
-            TaskContainer tasks,
+            CollectionBuilder<Task> tasks,
             NativeBinarySpec binary,
             File buildDir,
             NdkExtension ndkExtension,
             NdkHandler handler) {
-        Task copyGdbServerTask = tasks.create(
-                name: NdkNamingScheme.getTaskName(binary, "copy", "GdbServer"),
-                type: Copy) {
-            from(new File(
+
+        String copyGdbServerTaskName = NdkNamingScheme.getTaskName(binary, "copy", "GdbServer")
+        tasks.create(copyGdbServerTaskName, Copy) {
+            it.from(new File(
                     handler.getPrebuiltDirectory(binary.targetPlatform),
                     "gdbserver/gdbserver"))
-            into(new File(buildDir, NdkNamingScheme.getOutputDirectoryName(binary)))
+            it.into(new File(buildDir, NdkNamingScheme.getOutputDirectoryName(binary)))
         }
-        binary.builtBy copyGdbServerTask
+        binary.buildTask.dependsOn(copyGdbServerTaskName)
 
-        Task createGdbSetupTask = tasks.create(
-                name: NdkNamingScheme.getTaskName(binary, "create", "Gdbsetup"),
-                type: GdbSetupTask) { def task ->
+        String createGdbSetupTaskName = NdkNamingScheme.getTaskName(binary, "create", "Gdbsetup")
+        tasks.create(createGdbSetupTaskName, GdbSetupTask) { def task ->
             task.ndkHandler = handler
             task.extension = ndkExtension
             task.binary = binary
             task.outputDir = new File(buildDir, NdkNamingScheme.getOutputDirectoryName(binary))
         }
-        binary.builtBy createGdbSetupTask
+        binary.buildTask.dependsOn(createGdbSetupTaskName)
     }
 }
