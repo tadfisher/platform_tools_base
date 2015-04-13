@@ -68,7 +68,7 @@ public class ResourceMergerTest extends BaseTestCase {
     public void testMergeByCount() throws Exception {
         ResourceMerger merger = getResourceMerger();
 
-        assertEquals(31, merger.size());
+        assertEquals(32, merger.size());
     }
 
     public void testMergedResourcesByName() throws Exception {
@@ -76,7 +76,7 @@ public class ResourceMergerTest extends BaseTestCase {
 
         verifyResourceExists(merger,
                 "drawable/icon",
-                "drawable-ldpi-v4/icon",
+                "drawable-ldpi/icon",
                 "drawable/icon2",
                 "drawable/patch",
                 "raw/foo",
@@ -102,7 +102,7 @@ public class ResourceMergerTest extends BaseTestCase {
                 "attr/flagAttr",
                 "declare-styleable/declare_styleable",
                 "dimen/dimen",
-                "dimen-sw600dp-v13/offset",
+                "dimen-sw600dp/offset",
                 "id/item_id",
                 "integer/integer"
         );
@@ -475,7 +475,7 @@ public class ResourceMergerTest extends BaseTestCase {
         assertTrue(newOverlay.isTouched());
 
         // check new alternate: one objects, last one is TOUCHED
-        List<ResourceItem> drawableHdpiNewAlternate = mergedMap.get("drawable-hdpi-v4/new_alternate");
+        List<ResourceItem> drawableHdpiNewAlternate = mergedMap.get("drawable-hdpi/new_alternate");
         assertEquals(1, drawableHdpiNewAlternate.size());
         ResourceItem newAlternate = drawableHdpiNewAlternate.get(0);
         assertEquals(overlayDrawableHdpiNewAlternate, newAlternate.getSource().getFile());
@@ -499,9 +499,9 @@ public class ResourceMergerTest extends BaseTestCase {
                 (int) 0xFF00FF00);
         checkImageColor(new File(resFolder, "drawable" + File.separator + "removed_overlay.png"),
                 (int) 0xFF00FF00);
-        checkImageColor(new File(resFolder, "drawable-hdpi-v4" + File.separator + "new_alternate.png"),
+        checkImageColor(new File(resFolder, "drawable-hdpi" + File.separator + "new_alternate.png"),
                 (int) 0xFF00FF00);
-        assertFalse(new File(resFolder, "drawable-ldpi-v4" + File.separator + "removed.png").isFile());
+        assertFalse(new File(resFolder, "drawable-ldpi" + File.separator + "removed.png").isFile());
     }
 
     public void testUpdateWithBasicValues() throws Exception {
