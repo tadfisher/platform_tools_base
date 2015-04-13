@@ -746,7 +746,7 @@ public class PositionXmlParser {
         public int getColumn();
     }
 
-    protected static class DefaultPosition implements Position {
+    private static class DefaultPosition implements Position {
         /** The line number (0-based where the first line is line 0) */
         private final int mLine;
         private final int mColumn;
