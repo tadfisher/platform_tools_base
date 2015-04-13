@@ -16,7 +16,12 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.dependency.DependencyChecker
+import com.android.build.gradle.internal.dependency.LibraryDependencyImpl
+import com.android.build.gradle.internal.dependency.VariantDependencies
+import com.android.build.gradle.internal.scope.TaskConfigAction
+import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
+import com.android.build.gradle.internal.variant.BaseVariantOutputData
 import com.android.builder.model.ApiVersion
 import com.android.builder.model.SyncIssue
 import com.android.sdklib.SdkVersionInfo

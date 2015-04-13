@@ -22,6 +22,7 @@ import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.api.ApkOutputFile;
+import com.android.build.gradle.internal.scope.VariantOutputScope;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.PackageSplitAbi;
 import com.android.build.gradle.tasks.PackageSplitRes;
@@ -59,6 +60,9 @@ public abstract class BaseVariantOutputData implements VariantOutput {
     public PackageSplitAbi packageSplitAbiTask;
 
     public Task assembleTask;
+
+    @Nullable
+    private VariantOutputScope scope;
 
     public BaseVariantOutputData(
             @NonNull OutputFile.OutputType outputType,
@@ -151,5 +155,14 @@ public abstract class BaseVariantOutputData implements VariantOutput {
 
     void setMultiOutput(boolean multiOutput) {
         this.multiOutput = multiOutput;
+    }
+
+    @NonNull
+    public VariantOutputScope getScope() {
+        if (scope == null) {
+            assert variantData.getScope() != null;
+            scope = new VariantOutputScope(variantData.getScope(), this);
+        }
+        return scope;
     }
 }
