@@ -64,6 +64,10 @@ class PackageParserUtils {
   public static MajorRevision getPropertyMajor(
           @Nullable Properties props,
           @NonNull String propKey) {
+    FullRevision fullRevision = getPropertyFull(props, propKey);
+    if (fullRevision != null) {
+      return new MajorRevision(fullRevision);
+    }
     String revStr = getProperty(props, propKey, null);
 
     MajorRevision rev = null;

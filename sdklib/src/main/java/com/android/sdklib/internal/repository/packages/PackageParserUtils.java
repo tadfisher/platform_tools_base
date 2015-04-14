@@ -387,6 +387,10 @@ public class PackageParserUtils {
     public static MajorRevision getPropertyMajor(
             @Nullable Properties props,
             @NonNull String propKey) {
+        FullRevision fullRevision = getPropertyFull(props, propKey);
+        if (fullRevision != null) {
+            return new MajorRevision(fullRevision);
+        }
         String revStr = getProperty(props, propKey, null);
 
         MajorRevision rev = null;
@@ -412,8 +416,12 @@ public class PackageParserUtils {
     public static NoPreviewRevision getPropertyNoPreview(
             @Nullable Properties props,
             @NonNull String propKey) {
-        String revStr = getProperty(props, propKey, null);
 
+        FullRevision fullRevision = getPropertyFull(props, propKey);
+        if (fullRevision != null) {
+            return new NoPreviewRevision(fullRevision.getMajor(), fullRevision.getMinor(), fullRevision.getMicro());
+        }
+        String revStr = getProperty(props, propKey, null);
         NoPreviewRevision rev = null;
         if (revStr != null) {
             try {
