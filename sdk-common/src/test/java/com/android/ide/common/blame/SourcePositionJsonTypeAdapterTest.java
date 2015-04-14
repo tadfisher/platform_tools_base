@@ -13,10 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.ide.common.blame.parser;
+package com.android.ide.common.blame;
 
-import com.android.ide.common.blame.SourcePosition;
-import com.android.ide.common.blame.SourcePositionJsonTypeAdapter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -24,11 +22,7 @@ import junit.framework.TestCase;
 
 public class SourcePositionJsonTypeAdapterTest extends TestCase {
 
-    private Gson gsonSerializer;
-
-    private Gson gsonDeserializer;
-
-    private SourcePosition[] mExamples = new SourcePosition[]{
+    /* package */ static SourcePosition[] mExamples = new SourcePosition[]{
             new SourcePosition(-1, -1, -1),
             new SourcePosition(11, 22, 34),
             new SourcePosition(11, 22, -1),
@@ -43,14 +37,11 @@ public class SourcePositionJsonTypeAdapterTest extends TestCase {
             new SourcePosition(-1, -1, 33, -1, -1, 33),
             new SourcePosition(11, 22, 33, 11, 22, 33)};
 
+    private Gson mGson;
+
     @Override
     public void setUp() {
-        gsonSerializer = new GsonBuilder()
-                .registerTypeAdapter(
-                        SourcePosition.class,
-                        new SourcePositionJsonTypeAdapter())
-                .create();
-        gsonDeserializer = new GsonBuilder()
+        mGson = new GsonBuilder()
                 .registerTypeAdapter(
                         SourcePosition.class,
                         new SourcePositionJsonTypeAdapter())
@@ -65,9 +56,9 @@ public class SourcePositionJsonTypeAdapterTest extends TestCase {
     }
 
     private void testRoundTripExample(SourcePosition m1) {
-        String json = gsonSerializer.toJson(m1);
+        String json = mGson.toJson(m1);
         SourcePosition m2 =
-                gsonDeserializer.fromJson(json, SourcePosition.class);
+                mGson.fromJson(json, SourcePosition.class);
         assertEquals(m1, m2);
     }
 
@@ -75,15 +66,16 @@ public class SourcePositionJsonTypeAdapterTest extends TestCase {
     public void testSimpleDeserialize() {
         String json2 = "{\"startLine\":245}";
         SourcePosition range2 =
-                gsonDeserializer.fromJson(json2, SourcePosition.class);
+                mGson.fromJson(json2, SourcePosition.class);
         assertEquals(new SourcePosition(245, -1, -1), range2);
     }
 
     public void testDeserialize() {
         String json
-                = "{\"startLine\":11,\"startColumn\":22,\"startOffset\":33,\"endLine\":66,\"endColumn\":77,\"endOffset\":88}";
+                = "{\"startLine\":11,\"startColumn\":22,\"startOffset\":33,"
+                + "\"endLine\":66,\"endColumn\":77,\"endOffset\":88}";
         SourcePosition range =
-                gsonDeserializer.fromJson(json, SourcePosition.class);
+                mGson.fromJson(json, SourcePosition.class);
         assertEquals(range, new SourcePosition(11, 22, 33, 66, 77, 88));
     }
 }
