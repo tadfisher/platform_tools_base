@@ -31,6 +31,8 @@ import com.google.common.io.Files;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 
+import org.gradle.api.logging.Logger;
+import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.OutputDirectory;
@@ -62,6 +64,9 @@ public class PreprocessResourcesTask extends IncrementalTask {
     @Override
     protected void doIncrementalTaskAction(Map<File, FileStatus> changedInputs) {
         try {
+            File incrementalMarker = new File(getIncrementalFolder(), "build_was_incremental");
+            Files.touch(incrementalMarker);
+
             File stateFile = getStateFile();
             if (!stateFile.exists()) {
                 doFullTaskAction();
@@ -73,11 +78,14 @@ public class PreprocessResourcesTask extends IncrementalTask {
                 switch (entry.getValue()) {
                     case NEW:
                     case CHANGED:
+                        getLogger().debug("Incremental change to {}.",
+                                entry.getKey().getAbsolutePath());
                         handleFile(entry.getKey(), state);
                         break;
                     case REMOVED:
                         for (String path : state.get(entry.getKey().getAbsolutePath())) {
                             File file = new File(path);
+                            getLogger().debug("Deleting {}.", file.getAbsolutePath());
                             file.delete();
                         }
                         state.removeAll(entry.getKey());
@@ -98,6 +106,7 @@ public class PreprocessResourcesTask extends IncrementalTask {
         SetMultimap<String, String> state = HashMultimap.create();
         emptyFolder(getOutputResDirectory());
         emptyFolder(getGeneratedResDirectory());
+        emptyFolder(getIncrementalFolder());
 
         try {
             for (File resourceFile : getProject().fileTree(getMergedResDirectory())) {
@@ -135,15 +144,18 @@ public class PreprocessResourcesTask extends IncrementalTask {
     private void handleFile(@NonNull File resourceFile, @NonNull SetMultimap<String, String> state)
             throws IOException {
         if (renderer.isVectorDrawable(resourceFile)) {
+            getLogger().debug("Generating files for {}.", resourceFile.getAbsolutePath());
             Collection<File> generatedFiles = renderer.createPngFiles(
                     resourceFile,
                     getGeneratedResDirectory(),
                     getDensitiesToGenerate());
 
             for (File generatedFile : generatedFiles) {
+                getLogger().debug("Copying generated file: {}.", generatedFile.getAbsolutePath());
                 copyFile(generatedFile, resourceFile, getGeneratedResDirectory(), state);
             }
         } else {
+            getLogger().debug("Copying as-is: {}", resourceFile.getAbsolutePath());
             copyFile(resourceFile, resourceFile, getMergedResDirectory(), state);
         }
     }
@@ -212,4 +224,9 @@ public class PreprocessResourcesTask extends IncrementalTask {
         this.densitiesToGenerate = densitiesToGenerate;
     }
 
+    @NonNull
+    @Override
+    public Logger getLogger() {
+        return Logging.getLogger(getClass());
+    }
 }
