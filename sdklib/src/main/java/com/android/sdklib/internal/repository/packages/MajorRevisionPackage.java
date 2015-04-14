@@ -78,20 +78,7 @@ public abstract class MajorRevisionPackage extends Package {
             String descUrl,
             String archiveOsPath) {
         super(source, props, revision, license, description, descUrl, archiveOsPath);
-
-        String revStr = getProperty(props, PkgProps.PKG_REVISION, null);
-
-        MajorRevision rev = null;
-        if (revStr != null) {
-            try {
-                rev = MajorRevision.parseRevision(revStr);
-            } catch (NumberFormatException ignore) {}
-        }
-        if (rev == null) {
-            rev = new MajorRevision(revision);
-        }
-
-        mRevision = rev;
+        mRevision = PackageParserUtils.getPropertyMajor(props, PkgProps.PKG_REVISION);
     }
 
     /**
