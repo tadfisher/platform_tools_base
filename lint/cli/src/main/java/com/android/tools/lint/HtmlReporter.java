@@ -240,7 +240,7 @@ public class HtmlReporter extends Reporter {
                             String message = l.getMessage();
                             if (message != null && !message.isEmpty()) {
                                 Position start = l.getStart();
-                                int line = start != null ? start.getLine() : -1;
+                                int line = start != null ? start.getStartLine() : -1;
                                 String path = mClient.getDisplayPath(warning.project, l.getFile());
                                 writeLocation(l.getFile(), path, line);
                                 mWriter.write(':');
@@ -255,7 +255,7 @@ public class HtmlReporter extends Reporter {
                                     String s = mClient.readFile(l.getFile());
                                     if (s != null && !s.isEmpty()) {
                                         mWriter.write("<pre class=\"errorlines\">\n");   //$NON-NLS-1$
-                                        int offset = start != null ? start.getOffset() : -1;
+                                        int offset = start != null ? start.getStartOffset() : -1;
                                         appendCodeBlock(s, line, offset);
                                         mWriter.write("\n</pre>");                       //$NON-NLS-1$
                                     }
@@ -286,7 +286,7 @@ public class HtmlReporter extends Reporter {
                             l = warning.location.getSecondary();
                             while (l != null) {
                                 Position start = l.getStart();
-                                int line = start != null ? start.getLine() : -1;
+                                int line = start != null ? start.getStartLine() : -1;
                                 String path = mClient.getDisplayPath(warning.project, l.getFile());
                                 mWriter.write("<li> "); //$NON-NLS-1$
                                 writeLocation(l.getFile(), path, line);

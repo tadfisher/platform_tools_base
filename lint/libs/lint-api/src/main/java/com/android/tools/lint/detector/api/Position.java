@@ -31,14 +31,14 @@ public abstract class Position {
      *
      * @return the 0-based line number
      */
-    public abstract int getLine();
+    public abstract int getStartLine();
 
     /**
      * The character offset
      *
      * @return the 0-based character offset
      */
-    public abstract int getOffset();
+    public abstract int getStartOffset();
 
     /**
      * Returns the column number (where the first character on the line is 0),
@@ -46,5 +46,5 @@ public abstract class Position {
      *
      * @return the 0-based column number
      */
-    public abstract int getColumn();
+    public abstract int getStartColumn();
 }

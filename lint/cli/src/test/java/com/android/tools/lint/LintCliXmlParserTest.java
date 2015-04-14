@@ -96,11 +96,11 @@ public class LintCliXmlParserTest extends TestCase {
         Position end = location.getEnd();
         assertNotNull(start);
         assertNotNull(end);
-        assertEquals(2, start.getLine());
-        assertEquals(xml.indexOf("android:layout_width"), start.getOffset());
-        assertEquals(2, end.getLine());
+        assertEquals(2, start.getStartLine());
+        assertEquals(xml.indexOf("android:layout_width"), start.getStartOffset());
+        assertEquals(2, end.getStartLine());
         String target = "android:layout_width=\"match_parent\"";
-        assertEquals(xml.indexOf(target) + target.length(), end.getOffset());
+        assertEquals(xml.indexOf(target) + target.length(), end.getStartOffset());
 
         // Check attribute name positions
         location = parser.getNameLocation(context, attr);
@@ -109,8 +109,8 @@ public class LintCliXmlParserTest extends TestCase {
         assertNotNull(start);
         assertNotNull(end);
         target = "android:layout_width";
-        assertEquals(target, xml.substring(start.getOffset(), end.getOffset()));
-        assertEquals(xml.indexOf(target) + target.length(), end.getOffset());
+        assertEquals(target, xml.substring(start.getStartOffset(), end.getStartOffset()));
+        assertEquals(xml.indexOf(target) + target.length(), end.getStartOffset());
 
         // Check attribute value positions
         location = parser.getValueLocation(context, attr);
@@ -119,8 +119,8 @@ public class LintCliXmlParserTest extends TestCase {
         assertNotNull(start);
         assertNotNull(end);
         target = "match_parent";
-        assertEquals(target, xml.substring(start.getOffset(), end.getOffset()));
-        assertEquals(xml.indexOf(target) + target.length(), end.getOffset());
+        assertEquals(target, xml.substring(start.getStartOffset(), end.getStartOffset()));
+        assertEquals(xml.indexOf(target) + target.length(), end.getStartOffset());
 
         // Check element positions
         Element button = (Element) buttons.item(0);
@@ -129,11 +129,11 @@ public class LintCliXmlParserTest extends TestCase {
         end = location.getEnd();
         assertNotNull(start);
         assertNotNull(end);
-        assertEquals(6, start.getLine());
-        assertEquals(xml.indexOf("<Button"), start.getOffset());
-        assertEquals(xml.indexOf("/>") + 2, end.getOffset());
-        assertEquals(10, end.getLine());
-        int button1End = end.getOffset();
+        assertEquals(6, start.getStartLine());
+        assertEquals(xml.indexOf("<Button"), start.getStartOffset());
+        assertEquals(xml.indexOf("/>") + 2, end.getStartOffset());
+        assertEquals(10, end.getStartLine());
+        int button1End = end.getStartOffset();
 
         // Check element name positions
         location = parser.getNameLocation(context, button);
@@ -142,16 +142,16 @@ public class LintCliXmlParserTest extends TestCase {
         assertNotNull(start);
         assertNotNull(end);
         target = "Button";
-        assertEquals(target, xml.substring(start.getOffset(), end.getOffset()));
-        assertEquals(xml.indexOf(target) + target.length(), end.getOffset());
+        assertEquals(target, xml.substring(start.getStartOffset(), end.getStartOffset()));
+        assertEquals(xml.indexOf(target) + target.length(), end.getStartOffset());
 
         Handle handle = parser.createLocationHandle(context, button);
         Location location2 = handle.resolve();
         assertSame(location.getFile(), location.getFile());
         assertNotNull(location2.getStart());
         assertNotNull(location2.getEnd());
-        assertEquals(6, location2.getStart().getLine());
-        assertEquals(10, location2.getEnd().getLine());
+        assertEquals(6, location2.getStart().getStartLine());
+        assertEquals(10, location2.getEnd().getStartLine());
 
         Element button2 = (Element) buttons.item(1);
         location = parser.getLocation(context, button2);
@@ -159,10 +159,10 @@ public class LintCliXmlParserTest extends TestCase {
         end = location.getEnd();
         assertNotNull(start);
         assertNotNull(end);
-        assertEquals(12, start.getLine());
-        assertEquals(xml.indexOf("<Button", button1End), start.getOffset());
-        assertEquals(xml.indexOf("/>", start.getOffset()) + 2, end.getOffset());
-        assertEquals(16, end.getLine());
+        assertEquals(12, start.getStartLine());
+        assertEquals(xml.indexOf("<Button", button1End), start.getStartOffset());
+        assertEquals(xml.indexOf("/>", start.getStartOffset()) + 2, end.getStartOffset());
+        assertEquals(16, end.getStartLine());
 
         parser.dispose(context, document);
 

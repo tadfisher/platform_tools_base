@@ -52,7 +52,7 @@ public class ManifestModelTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(
+                TestUtils.sourceFile(
                         getClass(), "testNoUseFeaturesDeclaration"), input);
 
         XmlElement xmlElement = xmlDocument.getRootNode().getMergeableElements().get(0);
@@ -73,7 +73,7 @@ public class ManifestModelTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(
+                TestUtils.sourceFile(
                         getClass(), "testNoUseFeaturesDeclaration"), input);
 
         XmlElement xmlElement = xmlDocument.getRootNode().getMergeableElements().get(0);
@@ -174,7 +174,7 @@ public class ManifestModelTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(
+                TestUtils.sourceFile(
                         getClass(), "testNoUseFeaturesDeclaration"), input);
 
         XmlElement xmlElement = xmlDocument.getRootNode().getMergeableElements().get(0);
@@ -201,7 +201,7 @@ public class ManifestModelTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(
+                TestUtils.sourceFile(
                         getClass(), "testNoUseFeaturesDeclaration"), input);
 
         XmlElement xmlElement = xmlDocument.getRootNode().getMergeableElements().get(0);

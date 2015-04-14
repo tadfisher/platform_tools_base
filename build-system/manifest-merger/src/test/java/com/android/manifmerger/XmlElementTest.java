@@ -72,7 +72,7 @@ public class XmlElementTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "testToolsNodeInstructions()"), input);
+                TestUtils.sourceFile(getClass(), "testToolsNodeInstructions()"), input);
         Optional<XmlElement> activity = xmlDocument.getRootNode().getNodeByTypeAndKey(
                 ManifestModel.NodeTypes.ACTIVITY, "com.example.lib3.activityOne");
         assertTrue(activity.isPresent());
@@ -106,7 +106,7 @@ public class XmlElementTest extends TestCase {
 
         try {
             XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                    new TestUtils.TestSourceLocation(
+                    TestUtils.sourceFile(
                             getClass(), "testInvalidNodeInstruction()"), input);
             xmlDocument.getRootNode();
             fail("Exception not thrown");
@@ -152,7 +152,7 @@ public class XmlElementTest extends TestCase {
 
         // ActivityOne, remove operation.
         XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "testAttributeInstructions()"), input);
+                TestUtils.sourceFile(getClass(), "testAttributeInstructions()"), input);
         Optional<XmlElement> activityOptional = xmlDocument.getRootNode().getNodeByTypeAndKey(
                 ManifestModel.NodeTypes.ACTIVITY, "com.example.lib3.activityOne");
         assertTrue(activityOptional.isPresent());
@@ -229,7 +229,7 @@ public class XmlElementTest extends TestCase {
 
         // ActivityOne, remove operation.
         XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "testAttributeInstructions()"), input);
+                TestUtils.sourceFile(getClass(), "testAttributeInstructions()"), input);
         Optional<XmlElement> activityOptional = xmlDocument.getRootNode().getNodeByTypeAndKey(
                 ManifestModel.NodeTypes.ACTIVITY, "com.example.lib3.activityOne");
         assertTrue(activityOptional.isPresent());
@@ -254,7 +254,7 @@ public class XmlElementTest extends TestCase {
 
         // ActivityOne, remove operation.
         XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "testAttributeInstructions()"), input);
+                TestUtils.sourceFile(getClass(), "testAttributeInstructions()"), input);
         Optional<XmlElement> activityOptional = xmlDocument.getRootNode().getNodeByTypeAndKey(
                 ManifestModel.NodeTypes.ACTIVITY, "com.example.lib3.activityOne");
         assertTrue(activityOptional.isPresent());
@@ -282,7 +282,7 @@ public class XmlElementTest extends TestCase {
 
         try {
             XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                    new TestUtils.TestSourceLocation(getClass(), "testDiff6()"), input);
+                    TestUtils.sourceFile(getClass(), "testDiff6()"), input);
             xmlDocument.getRootNode();
             fail("Exception not thrown");
         } catch (RuntimeException expected) {
@@ -305,7 +305,7 @@ public class XmlElementTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "testOtherToolsInstruction"), input);
+                TestUtils.sourceFile(getClass(), "testOtherToolsInstruction"), input);
         xmlDocument.getRootNode();
     }
 
@@ -335,9 +335,9 @@ public class XmlElementTest extends TestCase {
                 + "\n"
                 + "</manifest>";
         XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "testDiff1()"), reference);
+                TestUtils.sourceFile(getClass(), "testDiff1()"), reference);
         XmlDocument otherDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "testDiff1()"), other);
+                TestUtils.sourceFile(getClass(), "testDiff1()"), other);
 
         assertFalse(refDocument.getRootNode().getNodeByTypeAndKey(ManifestModel.NodeTypes.ACTIVITY,
                 "com.example.lib3.activityOne").get()
@@ -372,9 +372,9 @@ public class XmlElementTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "testDiff2()"), reference);
+                TestUtils.sourceFile(getClass(), "testDiff2()"), reference);
         XmlDocument otherDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "testDiff2()"), other);
+                TestUtils.sourceFile(getClass(), "testDiff2()"), other);
 
         assertTrue(refDocument.getRootNode().getNodeByTypeAndKey(
                 ManifestModel.NodeTypes.ACTIVITY, "com.example.lib3.activityOne").get()
@@ -411,9 +411,9 @@ public class XmlElementTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "testDiff3()"), reference);
+                TestUtils.sourceFile(getClass(), "testDiff3()"), reference);
         XmlDocument otherDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "testDiff3()"), other);
+                TestUtils.sourceFile(getClass(), "testDiff3()"), other);
 
         assertTrue(refDocument.getRootNode().getNodeByTypeAndKey(
                 ManifestModel.NodeTypes.ACTIVITY, "com.example.lib3.activityOne").get()
@@ -450,9 +450,9 @@ public class XmlElementTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "testDiff4()"), reference);
+                TestUtils.sourceFile(getClass(), "testDiff4()"), reference);
         XmlDocument otherDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "testDiff4()"), other);
+                TestUtils.sourceFile(getClass(), "testDiff4()"), other);
         assertTrue(refDocument.getRootNode().getNodeByTypeAndKey(
                 ManifestModel.NodeTypes.ACTIVITY, "com.example.lib3.activityOne").get()
                 .compareTo(
@@ -489,9 +489,9 @@ public class XmlElementTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "testDiff5()"), reference);
+                TestUtils.sourceFile(getClass(), "testDiff5()"), reference);
         XmlDocument otherDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "testDiff5()"), other);
+                TestUtils.sourceFile(getClass(), "testDiff5()"), other);
 
         assertFalse(refDocument.compareTo(otherDocument).isPresent());
     }
@@ -525,9 +525,9 @@ public class XmlElementTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "testDiff6()"), reference);
+                TestUtils.sourceFile(getClass(), "testDiff6()"), reference);
         XmlDocument otherDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "testDiff6()"), other);
+                TestUtils.sourceFile(getClass(), "testDiff6()"), other);
         assertTrue(
                 refDocument.getRootNode().getNodeByTypeAndKey(
                         ManifestModel.NodeTypes.ACTIVITY, "com.example.lib3.activityOne").get()
@@ -568,9 +568,9 @@ public class XmlElementTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "testMerge()"), reference);
+                TestUtils.sourceFile(getClass(), "testMerge()"), reference);
         XmlDocument otherDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "testMerge()"), other);
+                TestUtils.sourceFile(getClass(), "testMerge()"), other);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
                 new StdLogger(StdLogger.Level.VERBOSE));
@@ -618,9 +618,9 @@ public class XmlElementTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "higherPriority"), higherPriority);
+                TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
         XmlDocument otherDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "lowerPriority"), lowerPriority);
+                TestUtils.sourceFile(getClass(), "lowerPriority"), lowerPriority);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
                 new StdLogger(StdLogger.Level.VERBOSE));
@@ -669,9 +669,9 @@ public class XmlElementTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "higherPriority"), higherPriority);
+                TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
         XmlDocument otherDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "lowerPriority"), lowerPriority);
+                TestUtils.sourceFile(getClass(), "lowerPriority"), lowerPriority);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
                 new StdLogger(StdLogger.Level.VERBOSE));
@@ -717,9 +717,9 @@ public class XmlElementTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "higherPriority"), higherPriority);
+                TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
         XmlDocument otherDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "lowerPriority"), lowerPriority);
+                TestUtils.sourceFile(getClass(), "lowerPriority"), lowerPriority);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
                 new StdLogger(StdLogger.Level.VERBOSE));
@@ -772,9 +772,9 @@ public class XmlElementTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "higherPriority"), higherPriority);
+                TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
         XmlDocument otherDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "lowerPriority"), lowerPriority);
+                TestUtils.sourceFile(getClass(), "lowerPriority"), lowerPriority);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
                 new StdLogger(StdLogger.Level.VERBOSE));
@@ -827,9 +827,9 @@ public class XmlElementTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "higherPriority"), higherPriority);
+                TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
         XmlDocument otherDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "lowerPriority"), lowerPriority);
+                TestUtils.sourceFile(getClass(), "lowerPriority"), lowerPriority);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
                 new StdLogger(StdLogger.Level.VERBOSE));
@@ -875,9 +875,9 @@ public class XmlElementTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "higherPriority"), higherPriority);
+                TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
         XmlDocument otherDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "lowerPriority"), lowerPriority);
+                TestUtils.sourceFile(getClass(), "lowerPriority"), lowerPriority);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
                 new StdLogger(StdLogger.Level.VERBOSE));
@@ -929,9 +929,9 @@ public class XmlElementTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "higherPriority"), higherPriority);
+                TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
         XmlDocument otherDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "lowerPriority"), lowerPriority);
+                TestUtils.sourceFile(getClass(), "lowerPriority"), lowerPriority);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
                 new StdLogger(StdLogger.Level.VERBOSE));
@@ -976,9 +976,9 @@ public class XmlElementTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "higherPriority"), higherPriority);
+                TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
         XmlDocument otherDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "lowerPriority"), lowerPriority);
+                TestUtils.sourceFile(getClass(), "lowerPriority"), lowerPriority);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
                 new StdLogger(StdLogger.Level.VERBOSE));
@@ -1029,9 +1029,9 @@ public class XmlElementTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "higherPriority"), higherPriority);
+                TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
         XmlDocument otherDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "lowerPriority"), lowerPriority);
+                TestUtils.sourceFile(getClass(), "lowerPriority"), lowerPriority);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
                 new StdLogger(StdLogger.Level.VERBOSE));
@@ -1078,9 +1078,9 @@ public class XmlElementTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "higherPriority"), higherPriority);
+                TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
         XmlDocument otherDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "lowerPriority"), lowerPriority);
+                TestUtils.sourceFile(getClass(), "lowerPriority"), lowerPriority);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
                 new StdLogger(StdLogger.Level.VERBOSE));
@@ -1128,9 +1128,9 @@ public class XmlElementTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "higherPriority"), higherPriority);
+                TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
         XmlDocument otherDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "lowerPriority"), lowerPriority);
+                TestUtils.sourceFile(getClass(), "lowerPriority"), lowerPriority);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
                 new StdLogger(StdLogger.Level.VERBOSE));
@@ -1172,9 +1172,9 @@ public class XmlElementTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "higherPriority"), higherPriority);
+                TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
         XmlDocument otherDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "lowerPriority"), lowerPriority);
+                TestUtils.sourceFile(getClass(), "lowerPriority"), lowerPriority);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
                 new StdLogger(StdLogger.Level.VERBOSE));
@@ -1216,9 +1216,9 @@ public class XmlElementTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "higherPriority"), higherPriority);
+                TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
         XmlDocument otherDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "lowerPriority"), lowerPriority);
+                TestUtils.sourceFile(getClass(), "lowerPriority"), lowerPriority);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
                 new StdLogger(StdLogger.Level.VERBOSE));
@@ -1266,9 +1266,9 @@ public class XmlElementTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "higherPriority"), higherPriority);
+                TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
         XmlDocument otherDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "lowerPriority"), lowerPriority);
+                TestUtils.sourceFile(getClass(), "lowerPriority"), lowerPriority);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
                 new StdLogger(StdLogger.Level.VERBOSE));
@@ -1309,9 +1309,9 @@ public class XmlElementTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "higherPriority"), higherPriority);
+                TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
         XmlDocument otherDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "lowerPriority"), lowerPriority);
+                TestUtils.sourceFile(getClass(), "lowerPriority"), lowerPriority);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
                 new StdLogger(StdLogger.Level.VERBOSE));
@@ -1348,9 +1348,9 @@ public class XmlElementTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "higherPriority"), higherPriority);
+                TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
         XmlDocument otherDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "lowerPriority"), lowerPriority);
+                TestUtils.sourceFile(getClass(), "lowerPriority"), lowerPriority);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
                 new StdLogger(StdLogger.Level.VERBOSE));
@@ -1395,9 +1395,9 @@ public class XmlElementTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "higherPriority"), higherPriority);
+                TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
         XmlDocument otherDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "lowerPriority"), lowerPriority);
+                TestUtils.sourceFile(getClass(), "lowerPriority"), lowerPriority);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
                 new StdLogger(StdLogger.Level.VERBOSE));
@@ -1480,11 +1480,11 @@ public class XmlElementTest extends TestCase {
         KeyResolver<String> keyResolver = (KeyResolver<String>) Mockito.mock(KeyResolver.class);
         when(keyResolver.resolve(any(String.class))).thenReturn("valid");
         XmlDocument refDocument = TestUtils.xmlDocumentFromString(keyResolver,
-                new TestUtils.TestSourceLocation(getClass(), "higherPriority"), higherPriority);
+                TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
         XmlDocument firstLibrary = TestUtils.xmlDocumentFromString(keyResolver,
-                new TestUtils.TestSourceLocation(getClass(), "lowerPriorityOne"), lowerPriorityOne);
+                TestUtils.sourceFile(getClass(), "lowerPriorityOne"), lowerPriorityOne);
         XmlDocument secondLibrary = TestUtils.xmlDocumentFromString(keyResolver,
-                new TestUtils.TestSourceLocation(getClass(), "lowerPriorityTwo"), lowerPriorityTwo);
+                TestUtils.sourceFile(getClass(), "lowerPriorityTwo"), lowerPriorityTwo);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
                 new StdLogger(StdLogger.Level.VERBOSE));
@@ -1547,11 +1547,11 @@ public class XmlElementTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "higherPriority"), higherPriority);
+                TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
         XmlDocument firstLibrary = TestUtils.xmlLibraryFromString(
-                new TestUtils.TestSourceLocation(getClass(), "lowerPriorityOne"), lowerPriorityOne);
+                TestUtils.sourceFile(getClass(), "lowerPriorityOne"), lowerPriorityOne);
         XmlDocument secondLibrary = TestUtils.xmlLibraryFromString(
-                new TestUtils.TestSourceLocation(getClass(), "lowerPriorityTwo"), lowerPriorityTwo);
+                TestUtils.sourceFile(getClass(), "lowerPriorityTwo"), lowerPriorityTwo);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
                 new StdLogger(StdLogger.Level.VERBOSE));
@@ -1601,9 +1601,9 @@ public class XmlElementTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "higherPriority"), higherPriority);
+                TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
         XmlDocument firstLibrary = TestUtils.xmlLibraryFromString(
-                new TestUtils.TestSourceLocation(getClass(), "lowerPriorityOne"), lowerPriorityOne);
+                TestUtils.sourceFile(getClass(), "lowerPriorityOne"), lowerPriorityOne);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
                 new StdLogger(StdLogger.Level.VERBOSE));
@@ -1675,11 +1675,11 @@ public class XmlElementTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "higherPriority"), higherPriority);
+                TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
         XmlDocument firstLibrary = TestUtils.xmlLibraryFromString(
-                new TestUtils.TestSourceLocation(getClass(), "lowerPriorityOne"), lowerPriorityOne);
+                TestUtils.sourceFile(getClass(), "lowerPriorityOne"), lowerPriorityOne);
         XmlDocument secondLibrary = TestUtils.xmlLibraryFromString(
-                new TestUtils.TestSourceLocation(getClass(), "lowerPriorityTwo"), lowerPriorityTwo);
+                TestUtils.sourceFile(getClass(), "lowerPriorityTwo"), lowerPriorityTwo);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
                 new StdLogger(StdLogger.Level.VERBOSE));
@@ -1756,10 +1756,10 @@ public class XmlElementTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "higherPriority"), higherPriority);
+                TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
 
         XmlDocument firstLibrary = TestUtils.xmlLibraryFromString(
-                new TestUtils.TestSourceLocation(getClass(), "lowerPriorityOne"), lowerPriorityOne);
+                TestUtils.sourceFile(getClass(), "lowerPriorityOne"), lowerPriorityOne);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
                 new StdLogger(StdLogger.Level.VERBOSE));

@@ -223,7 +223,7 @@ public class ControlFlowGraph {
 
             if (instruction instanceof LabelNode) {
                 //LabelNode l = (LabelNode) instruction;
-                //sb.append('L' + l.getLabel().getOffset() + ":");
+                //sb.append('L' + l.getLabel().getStartOffset() + ":");
                 //sb.append('L' + l.getLabel().info + ":");
                 sb.append("LABEL");
             } else if (instruction instanceof LineNumberNode) {

@@ -140,7 +140,7 @@ public class Warning implements Comparable<Warning> {
         // such that all the errors end up on the same line.
         if (location != null && other.location != null &&
                 location.getStart() != null && other.location.getStart() != null) {
-                delta = location.getStart().getColumn() - other.location.getStart().getColumn();
+                delta = location.getStart().getStartColumn() - other.location.getStart().getStartColumn();
             if (delta != 0) {
                 return delta;
             }
@@ -200,7 +200,7 @@ public class Warning implements Comparable<Warning> {
         //noinspection RedundantIfStatement
         if (location != null && warning.location != null &&
                 location.getStart() != null && warning.location.getStart() != null &&
-                location.getStart().getColumn() != warning.location.getStart().getColumn()) {
+                location.getStart().getStartColumn() != warning.location.getStart().getStartColumn()) {
             return false;
         }
 

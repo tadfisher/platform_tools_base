@@ -72,7 +72,7 @@ public class ActionRecorderTest extends TestCase {
             throws ParserConfigurationException, SAXException, IOException {
 
         XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(),
+                TestUtils.sourceFile(getClass(),
                         REFEFENCE_DOCUMENT), REFERENCE);
 
         XmlElement xmlElement = xmlDocument.getRootNode().getNodeByTypeAndKey(
@@ -111,11 +111,11 @@ public class ActionRecorderTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(),
+                TestUtils.sourceFile(getClass(),
                         REFEFENCE_DOCUMENT), REFERENCE);
 
         XmlDocument otherDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(),
+                TestUtils.sourceFile(getClass(),
                         "other_document"), other);
 
         XmlElement xmlElement = xmlDocument.getRootNode().getNodeByTypeAndKey(
@@ -152,7 +152,7 @@ public class ActionRecorderTest extends TestCase {
             throws ParserConfigurationException, SAXException, IOException {
 
         XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(),
+                TestUtils.sourceFile(getClass(),
                         REFEFENCE_DOCUMENT), REFERENCE);
 
         XmlElement xmlElement = xmlDocument.getRootNode().getNodeByTypeAndKey(
@@ -189,7 +189,7 @@ public class ActionRecorderTest extends TestCase {
             throws ParserConfigurationException, SAXException, IOException {
 
         XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(),
+                TestUtils.sourceFile(getClass(),
                         REFEFENCE_DOCUMENT), REFERENCE);
 
         XmlElement xmlElement = xmlDocument.getRootNode();
@@ -237,11 +237,11 @@ public class ActionRecorderTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(),
+                TestUtils.sourceFile(getClass(),
                         REFEFENCE_DOCUMENT), REFERENCE);
 
         XmlDocument otherDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(),
+                TestUtils.sourceFile(getClass(),
                         "other_document"), other);
 
         XmlElement activityElement = xmlDocument.getRootNode().getNodeByTypeAndKey(

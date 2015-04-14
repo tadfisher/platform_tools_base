@@ -1837,14 +1837,14 @@ public class ApiDetector extends ResourceXmlDetector
                         ImportDeclaration d = (ImportDeclaration) node;
                         int startOffset = d.astParts().first().getPosition().getStart();
                         Position start = location.getStart();
-                        int startColumn = start.getColumn();
-                        int startLine = start.getLine();
+                        int startColumn = start.getStartColumn();
+                        int startLine = start.getStartLine();
                         start = new DefaultPosition(startLine,
-                                startColumn + startOffset - start.getOffset(), startOffset);
+                                startColumn + startOffset - start.getStartOffset(), startOffset);
                         int fqcnLength = fqcn.length();
                         Position end = new DefaultPosition(startLine,
-                                start.getColumn() + fqcnLength,
-                                start.getOffset() + fqcnLength);
+                                start.getStartColumn() + fqcnLength,
+                                start.getStartOffset() + fqcnLength);
                         location = Location.create(location.getFile(), start, end);
                     }
 
@@ -1887,7 +1887,7 @@ public class ApiDetector extends ResourceXmlDetector
                                 Position start = location.getStart();
                                 Position existingStart = existingLocation.getStart();
                                 if (start != null && existingStart != null
-                                        && start.getLine() == existingStart.getLine()) {
+                                        && start.getStartLine() == existingStart.getStartLine()) {
                                     return true;
                                 }
                             }

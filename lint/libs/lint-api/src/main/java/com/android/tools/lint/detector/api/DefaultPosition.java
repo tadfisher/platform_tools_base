@@ -52,17 +52,17 @@ public class DefaultPosition extends Position {
     }
 
     @Override
-    public int getLine() {
+    public int getStartLine() {
         return mLine;
     }
 
     @Override
-    public int getOffset() {
+    public int getStartOffset() {
         return mOffset;
     }
 
     @Override
-    public int getColumn() {
+    public int getStartColumn() {
         return mColumn;
     }
 }

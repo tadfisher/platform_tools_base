@@ -134,8 +134,8 @@ public class XmlReporter extends Reporter {
                         writeAttribute(mWriter, 3, "file", path);  //$NON-NLS-1$
                         Position start = location.getStart();
                         if (start != null) {
-                            int line = start.getLine();
-                            int column = start.getColumn();
+                            int line = start.getStartLine();
+                            int column = start.getStartColumn();
                             if (line >= 0) {
                                 // +1: Line numbers internally are 0-based, report should be
                                 // 1-based.

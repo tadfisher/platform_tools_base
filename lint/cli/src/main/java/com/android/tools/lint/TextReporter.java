@@ -149,7 +149,7 @@ public class TextReporter extends Reporter {
 
                             Position start = location.getStart();
                             if (start != null) {
-                                int line = start.getLine();
+                                int line = start.getStartLine();
                                 if (line >= 0) {
                                     output.append(':');
                                     output.append(Integer.toString(line + 1));
@@ -189,7 +189,7 @@ public class TextReporter extends Reporter {
 
                                 Position start = location.getStart();
                                 if (start != null) {
-                                    int line = start.getLine();
+                                    int line = start.getStartLine();
                                     if (line >= 0) {
                                         sb.append(':');
                                         sb.append(Integer.toString(line + 1));

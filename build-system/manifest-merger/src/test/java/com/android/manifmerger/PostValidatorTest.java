@@ -18,6 +18,7 @@ package com.android.manifmerger;
 
 import com.android.SdkConstants;
 import com.android.utils.ILogger;
+import com.google.common.base.Joiner;
 
 import junit.framework.TestCase;
 
@@ -68,16 +69,17 @@ public class PostValidatorTest extends TestCase {
                 + "\n"
                 + "    <application android:label=\"@string/lib_name\" />\n"
                 + "\n"
+                + "\n"
                 + "        <activity android:name=\"activityOne\"/>"
                 + "\n"
                 + "</manifest>";
 
         XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(
+                TestUtils.sourceFile(
                         getClass(), "testIncorrectRemoveMain"), main);
 
         XmlDocument libraryDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(
+                TestUtils.sourceFile(
                         getClass(), "testIncorrectRemoveLib"), library);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mILogger);
@@ -90,7 +92,8 @@ public class PostValidatorTest extends TestCase {
                 return;
             }
         }
-        fail("No reference to faulty PostValidatorTest#testIncorrectRemoveMain:8 found");
+        fail("No reference to faulty PostValidatorTest#testIncorrectRemoveMain:8 found in: \n" +
+                Joiner.on("\n    ").join(mergingReportBuilder.build().getLoggingRecords()));
     }
 
     public void testIncorrectReplace()
@@ -123,11 +126,11 @@ public class PostValidatorTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(
+                TestUtils.sourceFile(
                         getClass(), "testIncorrectReplaceMain"), main);
 
         XmlDocument libraryDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(
+                TestUtils.sourceFile(
                         getClass(), "testIncorrectReplaceLib"), library);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mILogger);
@@ -140,7 +143,8 @@ public class PostValidatorTest extends TestCase {
                 return;
             }
         }
-        fail("No reference to faulty PostValidatorTest#testIncorrectRemoveMain:8 found");
+        fail("No reference to faulty PostValidatorTest#testIncorrectRemoveMain:8 found in: \n" +
+                Joiner.on("\n    ").join(mergingReportBuilder.build().getLoggingRecords()));
     }
 
     public void testApplicationInvalidOrder()
@@ -161,7 +165,7 @@ public class PostValidatorTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "testApplicationInvalidOrder"), input);
+                TestUtils.sourceFile(getClass(), "testApplicationInvalidOrder"), input);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mILogger);
         PostValidator.validate(xmlDocument, mergingReportBuilder);
@@ -193,7 +197,7 @@ public class PostValidatorTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "testApplicationInvalidOrder"), input);
+                TestUtils.sourceFile(getClass(), "testApplicationInvalidOrder"), input);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mILogger);
         PostValidator.validate(xmlDocument, mergingReportBuilder);
@@ -227,7 +231,7 @@ public class PostValidatorTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "testApplicationValidOrder"), input);
+                TestUtils.sourceFile(getClass(), "testApplicationValidOrder"), input);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mILogger);
         PostValidator.validate(xmlDocument, mergingReportBuilder);
@@ -258,7 +262,7 @@ public class PostValidatorTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "testUsesSdkInvalidOrder"), input);
+                TestUtils.sourceFile(getClass(), "testUsesSdkInvalidOrder"), input);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mILogger);
         PostValidator.validate(xmlDocument, mergingReportBuilder);
@@ -290,7 +294,7 @@ public class PostValidatorTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "testUsesSdkInvalidOrder"), input);
+                TestUtils.sourceFile(getClass(), "testUsesSdkInvalidOrder"), input);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mILogger);
         PostValidator.validate(xmlDocument, mergingReportBuilder);
@@ -324,7 +328,7 @@ public class PostValidatorTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "testUsesSdkValidOrder"), input);
+                TestUtils.sourceFile(getClass(), "testUsesSdkValidOrder"), input);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mILogger);
         PostValidator.validate(xmlDocument, mergingReportBuilder);
@@ -353,7 +357,7 @@ public class PostValidatorTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "testApplicationInvalidOrder"), input);
+                TestUtils.sourceFile(getClass(), "testApplicationInvalidOrder"), input);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mILogger);
         PostValidator.validate(xmlDocument, mergingReportBuilder);
@@ -378,7 +382,7 @@ public class PostValidatorTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "testApplicationInvalidOrder"), input);
+                TestUtils.sourceFile(getClass(), "testApplicationInvalidOrder"), input);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mILogger);
         PostValidator.validate(xmlDocument, mergingReportBuilder);
@@ -399,7 +403,7 @@ public class PostValidatorTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "testApplicationInvalidOrder"), input);
+                TestUtils.sourceFile(getClass(), "testApplicationInvalidOrder"), input);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mILogger);
         PostValidator.validate(xmlDocument, mergingReportBuilder);

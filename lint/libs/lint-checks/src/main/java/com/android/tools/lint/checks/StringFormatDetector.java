@@ -43,7 +43,6 @@ import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.res2.AbstractResourceRepository;
 import com.android.ide.common.res2.ResourceItem;
-import com.android.ide.common.resources.configuration.LocaleQualifier;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.tools.lint.client.api.JavaParser;
@@ -721,8 +720,8 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
         Position startLocation = location.getStart();
         Position endLocation = location.getEnd();
         if (startLocation != null && endLocation != null) {
-            int startOffset = startLocation.getOffset();
-            int endOffset = endLocation.getOffset();
+            int startOffset = startLocation.getStartOffset();
+            int endOffset = endLocation.getStartOffset();
             if (startOffset >= 0) {
                 String contents = context.getClient().readFile(location.getFile());
                 if (endOffset <= contents.length() && startOffset < endOffset) {

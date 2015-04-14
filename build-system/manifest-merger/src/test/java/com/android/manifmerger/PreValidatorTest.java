@@ -51,7 +51,7 @@ public class PreValidatorTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(
+                TestUtils.sourceFile(
                         getClass(), "testIncorrectRemove"), input);
 
         MergingReport.Builder mergingReport = new MergingReport.Builder(mockLog);
@@ -78,7 +78,7 @@ public class PreValidatorTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(
+                TestUtils.sourceFile(
                         getClass(), "testIncorrectRemove"), input);
 
         MergingReport.Builder mergingReport = new MergingReport.Builder(mockLog);
@@ -107,7 +107,7 @@ public class PreValidatorTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(
+                TestUtils.sourceFile(
                         getClass(), "testIncorrectRemove"), input);
 
         MergingReport.Builder mergingReport = new MergingReport.Builder(mockLog);
@@ -136,7 +136,7 @@ public class PreValidatorTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(
+                TestUtils.sourceFile(
                         getClass(), "testIncorrectRemove"), input);
 
         MergingReport.Builder mergingReport = new MergingReport.Builder(mockLog);
@@ -166,7 +166,7 @@ public class PreValidatorTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(
+                TestUtils.sourceFile(
                         getClass(), "testIncorrectRemove"), input);
 
         MergingReport.Builder mergingReport = new MergingReport.Builder(mockLog);
@@ -200,7 +200,7 @@ public class PreValidatorTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(
+                TestUtils.sourceFile(
                         getClass(), "testScreenMerging"), input);
 
         MergingReport.Builder mergingReport = new MergingReport.Builder(mockLog);
@@ -239,7 +239,7 @@ public class PreValidatorTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(
+                TestUtils.sourceFile(
                         getClass(), "testMultipleIntentFilterWithSameKeyValue"), input);
 
         MergingReport.Builder mergingReport = new MergingReport.Builder(mockLog);

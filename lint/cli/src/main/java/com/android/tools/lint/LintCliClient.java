@@ -244,9 +244,9 @@ public class LintCliClient extends LintClient {
 
             Position startPosition = location.getStart();
             if (startPosition != null) {
-                int line = startPosition.getLine();
+                int line = startPosition.getStartLine();
                 warning.line = line;
-                warning.offset = startPosition.getOffset();
+                warning.offset = startPosition.getStartOffset();
                 if (line >= 0) {
                     if (context.file == location.getFile()) {
                         warning.fileContents = context.getContents();
@@ -262,7 +262,7 @@ public class LintCliClient extends LintClient {
                             // Replace tabs with spaces such that the column
                             // marker (^) lines up properly:
                             warning.errorLine = warning.errorLine.replace('\t', ' ');
-                            int column = startPosition.getColumn();
+                            int column = startPosition.getStartColumn();
                             if (column < 0) {
                                 column = 0;
                                 for (int i = 0; i < warning.errorLine.length(); i++, column++) {
@@ -281,8 +281,8 @@ public class LintCliClient extends LintClient {
                             boolean displayCaret = true;
                             Position endPosition = location.getEnd();
                             if (endPosition != null) {
-                                int endLine = endPosition.getLine();
-                                int endColumn = endPosition.getColumn();
+                                int endLine = endPosition.getStartLine();
+                                int endColumn = endPosition.getStartColumn();
                                 if (endLine == line && endColumn > column) {
                                     for (int i = column; i < endColumn; i++) {
                                         sb.append('~');

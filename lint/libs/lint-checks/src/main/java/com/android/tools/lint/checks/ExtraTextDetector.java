@@ -105,9 +105,9 @@ public class ExtraTextDetector extends ResourceXmlDetector {
                         // line and the indentation)
                         Position start = location.getStart();
                         if (start != null) {
-                            int line = start.getLine();
-                            int column = start.getColumn();
-                            int offset = start.getOffset();
+                            int line = start.getStartLine();
+                            int column = start.getStartColumn();
+                            int offset = start.getStartOffset();
 
                             for (int j = 0; j < i; j++) {
                                 offset++;

@@ -1,0 +1,117 @@
+/*
+ * Copyright (C) 2015 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.ide.common.blame;
+
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.Immutable;
+import com.google.common.base.Objects;
+
+import java.io.File;
+
+/**
+ * Represents a source file.
+ */
+@Immutable
+public class SourceFile {
+
+    public static final SourceFile UNKNOWN = new SourceFile(null, null);
+
+    @Nullable
+    private final File mSourceFile;
+
+    /**
+     * A human readable description
+     *
+     * Usually the file name is OK for the short output, but for the manifest merger,
+     * where all of the files will be named AndroidManifest.xml the variant name is more useful.
+     */
+    @Nullable
+    private final String mDescription;
+
+    private SourceFile(
+            @Nullable File sourceFile,
+            @Nullable String description) {
+        mSourceFile = sourceFile;
+        mDescription = description;
+    }
+
+
+    public static SourceFile of(@NonNull File file) {
+        return new SourceFile(file, null);
+    }
+
+    public static SourceFile of(@NonNull File file, @NonNull String description) {
+        return new SourceFile(file, description);
+    }
+
+    public static SourceFile of(@NonNull String description) {
+        return new SourceFile(null, description);
+    }
+
+    @Nullable
+    public File getSourceFile() {
+        return mSourceFile;
+    }
+
+    @Nullable
+    public String getDescription() {
+        return mDescription;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof SourceFile)) {
+            return false;
+        }
+        SourceFile other = (SourceFile) obj;
+
+        return Objects.equal(mDescription, other.mDescription) &&
+                Objects.equal(mSourceFile, other.mSourceFile);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(mSourceFile, mDescription);
+    }
+
+    @Override
+    public String toString() {
+        return print(true);
+    }
+
+    public String toShortString() {
+        return print(true);
+    }
+
+    public String print(boolean shortFormat) {
+        if (mSourceFile == null) {
+            if (mDescription == null) {
+                return "Unknown";
+            }
+            return mDescription;
+        }
+        String fileName = mSourceFile.getName();
+        String fileDisplayName = shortFormat ? fileName : mSourceFile.getAbsolutePath();
+        if (mDescription == null || mDescription.equals(fileName)) {
+            return fileDisplayName;
+        } else {
+            return String.format("[%1$s] %2$s", mDescription, fileDisplayName);
+        }
+    }
+
+}

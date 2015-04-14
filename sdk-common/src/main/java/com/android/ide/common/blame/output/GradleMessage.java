@@ -48,7 +48,7 @@ public class GradleMessage {
     private final String mOriginal;
 
     public GradleMessage(@NonNull Kind kind, @NonNull String text) {
-        this(kind, text, null /* sourcePath */, new SourcePosition(), text);
+        this(kind, text, null /* sourcePath */, SourcePosition.UNKNOWN, text);
     }
 
 

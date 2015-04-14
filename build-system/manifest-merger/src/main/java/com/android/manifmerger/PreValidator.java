@@ -259,7 +259,7 @@ public class PreValidator {
                                         + "do you want to use tools:replace instead ?",
                                 xmlElement.getLine(),
                                 attributeOperationTypeEntry.getKey(),
-                                attribute.get().getPosition().getLine()
+                                attribute.get().getPosition().getStartLine() + 1
                         ));
                     }
                     break;

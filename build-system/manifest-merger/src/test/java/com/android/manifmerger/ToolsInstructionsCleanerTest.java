@@ -53,7 +53,7 @@ public class ToolsInstructionsCleanerTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(
+                TestUtils.sourceFile(
                         getClass(), "testNodeRemoveOperation"), main);
 
         Element rootElement = mainDocument.getRootNode().getXml();
@@ -87,7 +87,7 @@ public class ToolsInstructionsCleanerTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(
+                TestUtils.sourceFile(
                         getClass(), "testNodeRemoveWithChildrenOperation"), main);
 
         Element rootElement = mainDocument.getRootNode().getXml();
@@ -117,7 +117,7 @@ public class ToolsInstructionsCleanerTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(
+                TestUtils.sourceFile(
                         getClass(), "testNodeRemoveOperation"), main);
 
         assertNull(ToolsInstructionsCleaner.cleanToolsReferences(mainDocument, mockLog));
@@ -136,7 +136,7 @@ public class ToolsInstructionsCleanerTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(
+                TestUtils.sourceFile(
                         getClass(), "testNodeRemoveOperation"), main);
 
         assertNull(ToolsInstructionsCleaner.cleanToolsReferences(mainDocument, mockLog));
@@ -158,7 +158,7 @@ public class ToolsInstructionsCleanerTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(
+                TestUtils.sourceFile(
                         getClass(), "testNodeReplaceOperation"), main);
 
         Element rootElement = mainDocument.getRootNode().getXml();
@@ -187,7 +187,7 @@ public class ToolsInstructionsCleanerTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(
+                TestUtils.sourceFile(
                         getClass(), "testAttributeRemoveOperation"), main);
 
         Element rootElement = mainDocument.getRootNode().getXml();
@@ -220,7 +220,7 @@ public class ToolsInstructionsCleanerTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(
+                TestUtils.sourceFile(
                         getClass(), "testSelectorRemoval"), main);
 
         Element rootElement = mainDocument.getRootNode().getXml();
@@ -251,7 +251,7 @@ public class ToolsInstructionsCleanerTest extends TestCase {
                 + "</manifest>";
 
         XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(
+                TestUtils.sourceFile(
                         getClass(), "testNodeReplaceOperation"), main);
 
         Element rootElement = mainDocument.getRootNode().getXml();
