@@ -178,6 +178,8 @@ public class SupportAnnotationDetector extends Detector implements Detector.Java
     public static final String INT_RANGE_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "IntRange"; //$NON-NLS-1$
     public static final String FLOAT_RANGE_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "FloatRange"; //$NON-NLS-1$
     public static final String SIZE_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "Size"; //$NON-NLS-1$
+    public static final String NONNULL_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "NonNull"; //$NON-NLS-1$
+    public static final String NULLABLE_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "Nullable"; //$NON-NLS-1$
 
     public static final String RES_SUFFIX = "Res";       //$NON-NLS-1$
     public static final String ATTR_SUGGEST = "suggest"; //$NON-NLS-1$
