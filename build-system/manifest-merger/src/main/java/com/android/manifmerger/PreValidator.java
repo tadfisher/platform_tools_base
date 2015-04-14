@@ -257,9 +257,9 @@ public class PreValidator {
                                 "tools:remove specified at line:%d for attribute %s, but "
                                         + "attribute also declared at line:%d, "
                                         + "do you want to use tools:replace instead ?",
-                                xmlElement.getLine(),
+                                xmlElement.getPosition().getStartLine() + 1,
                                 attributeOperationTypeEntry.getKey(),
-                                attribute.get().getPosition().getLine()
+                                attribute.get().getPosition().getStartLine() + 1
                         ));
                     }
                     break;
@@ -269,7 +269,7 @@ public class PreValidator {
                         xmlElement.addMessage(mergingReport, ERROR, String.format(
                                 "tools:replace specified at line:%d for attribute %s, but "
                                         + "no new value specified",
-                                xmlElement.getLine(),
+                                xmlElement.getPosition().getStartLine() + 1,
                                 attributeOperationTypeEntry.getKey()
                         ));
                     }
