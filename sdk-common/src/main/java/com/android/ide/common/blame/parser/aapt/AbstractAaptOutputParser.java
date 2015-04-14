@@ -555,7 +555,7 @@ public abstract class AbstractAaptOutputParser implements PatternAwareOutputPars
             }
         }
 
-        return new FilePosition(sourceFile, new SourcePosition());
+        return new FilePosition(sourceFile, SourcePosition.UNKNOWN);
     }
 
     private static class FilePosition {

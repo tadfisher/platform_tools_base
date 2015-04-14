@@ -18,9 +18,9 @@ package com.android.utils;
 
 import static com.android.SdkConstants.UTF_8;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.blame.SourcePosition;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Comment;
@@ -40,7 +40,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -313,8 +312,8 @@ public class PositionXmlParser {
      * @return the position, or null if the node type is not supported for
      *         position info
      */
-    @Nullable
-    public Position getPosition(@NonNull Node node) {
+    @NonNull
+    public SourcePosition getPosition(@NonNull Node node) {
         return getPosition(node, -1, -1);
     }
 
@@ -332,8 +331,15 @@ public class PositionXmlParser {
      * @return the position, or null if the node type is not supported for
      *         position info
      */
+
+    @NonNull
+    public SourcePosition getPosition(@NonNull Node node, int start, int end) {
+        Position p = getPositionHelper(node, start, end);
+        return p == null ? SourcePosition.UNKNOWN : p.toSourcePosition();
+    }
+
     @Nullable
-    public Position getPosition(@NonNull Node node, int start, int end) {
+    private Position getPositionHelper(@NonNull Node node, int start, int end) {
         // Look up the position information stored while parsing for the given node.
         // Note however that we only store position information for elements (because
         // there is no SAX callback for individual attributes).
@@ -347,8 +353,8 @@ public class PositionXmlParser {
             Attr attr = (Attr) node;
             Position pos = (Position) attr.getOwnerElement().getUserData(POS_KEY);
             if (pos != null) {
-                int startOffset = pos.getOffset();
-                int endOffset = pos.getEnd().getOffset();
+                int startOffset = pos.getStartOffset();
+                int endOffset = pos.getEnd().getStartOffset();
                 if (start != -1) {
                     startOffset += start;
                     if (end != -1) {
@@ -372,9 +378,9 @@ public class PositionXmlParser {
                 if (matcher.find(startOffset) && matcher.start(1) <= endOffset) {
                     int index = matcher.start(1);
                     // Adjust the line and column to this new offset
-                    int line = pos.getLine();
-                    int column = pos.getColumn();
-                    for (int offset = pos.getOffset(); offset < index; offset++) {
+                    int line = pos.getStartLine();
+                    int column = pos.getStartColumn();
+                    for (int offset = pos.getStartOffset(); offset < index; offset++) {
                         char t = contents.charAt(offset);
                         if (t == '\n') {
                             line++;
@@ -383,6 +389,7 @@ public class PositionXmlParser {
                             column++;
                         }
                     }
+
 
                     Position attributePosition = createPosition(line, column, index);
                     // Also set end range for retrieval in getLocation
@@ -405,10 +412,10 @@ public class PositionXmlParser {
             }
             if (pos != null) {
                 // Attempt to point forward to the actual text node
-                int startOffset = pos.getOffset();
-                int endOffset = pos.getEnd().getOffset();
-                int line = pos.getLine();
-                int column = pos.getColumn();
+                int startOffset = pos.getStartOffset();
+                int endOffset = pos.getEnd().getStartOffset();
+                int line = pos.getStartLine();
+                int column = pos.getStartColumn();
 
                 // Find attribute in the text
                 String contents = (String) node.getOwnerDocument().getUserData(CONTENT_KEY);
@@ -620,13 +627,13 @@ public class PositionXmlParser {
          * @return the opening tag position or startPosition if cannot be found.
          */
         private Position findOpeningTag(Position startingPosition) {
-            for (int offset = startingPosition.getOffset() - 1; offset >= 0; offset--) {
+            for (int offset = startingPosition.getStartOffset() - 1; offset >= 0; offset--) {
                 char c = mXml.charAt(offset);
 
                 if (c == '<') {
                     // Adjust line position
-                    int line = startingPosition.getLine();
-                    for (int i = offset, n = startingPosition.getOffset(); i < n; i++) {
+                    int line = startingPosition.getStartLine();
+                    for (int i = offset, n = startingPosition.getStartOffset(); i < n; i++) {
                         if (mXml.charAt(i) == '\n') {
                             line--;
                         }
@@ -715,38 +722,10 @@ public class PositionXmlParser {
      */
     @NonNull
     protected Position createPosition(int line, int column, int offset) {
-        return new DefaultPosition(line, column, offset);
+        return new Position(line, column, offset);
     }
 
-    public interface Position {
-        /**
-         * Linked position: for a begin position this will point to the
-         * corresponding end position. For an end position this will be null.
-         *
-         * @return the end position, or null
-         */
-        @Nullable
-        public Position getEnd();
-
-        /**
-         * Linked position: for a begin position this will point to the
-         * corresponding end position. For an end position this will be null.
-         *
-         * @param end the end position
-         */
-        public void setEnd(@NonNull Position end);
-
-        /** @return the line number, 0-based */
-        public int getLine();
-
-        /** @return the offset number, 0-based */
-        public int getOffset();
-
-        /** @return the column number, 0-based, and -1 if the column number if not known */
-        public int getColumn();
-    }
-
-    private static class DefaultPosition implements Position {
+    private static class Position {
         /** The line number (0-based where the first line is line 0) */
         private final int mLine;
         private final int mColumn;
@@ -760,35 +739,42 @@ public class PositionXmlParser {
          * @param column the 0-based column number, or -1 if unknown
          * @param offset the offset, or -1 if unknown
          */
-        public DefaultPosition(int line, int column, int offset) {
+        public Position(int line, int column, int offset) {
             this.mLine = line;
             this.mColumn = column;
             this.mOffset = offset;
         }
 
-        @Override
-        public int getLine() {
+        public int getStartLine() {
             return mLine;
         }
 
-        @Override
-        public int getOffset() {
+        public int getStartOffset() {
             return mOffset;
         }
 
-        @Override
-        public int getColumn() {
+        public int getStartColumn() {
             return mColumn;
         }
 
-        @Override
         public Position getEnd() {
             return mEnd;
         }
 
-        @Override
         public void setEnd(@NonNull Position end) {
             mEnd = end;
+        }
+
+        public SourcePosition toSourcePosition() {
+           int endLine = mLine, endColumn = mColumn, endOffset = mOffset;
+
+            if (mEnd != null) {
+                endLine = mEnd.getStartLine();
+                endColumn = mEnd.getStartColumn();
+                endOffset = mEnd.getStartOffset();
+            }
+
+            return new SourcePosition(mLine, mColumn, mOffset, endLine, endColumn, endOffset);
         }
     }
 }

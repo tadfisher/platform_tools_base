@@ -16,16 +16,17 @@
 
 package com.android.manifmerger;
 
-import static com.android.manifmerger.Actions.ActionLocation;
 import static com.android.manifmerger.Actions.DecisionTreeRecord;
 import static com.android.manifmerger.XmlNode.NodeKey;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.android.SdkConstants;
+import com.android.ide.common.blame.SourceFile;
+import com.android.ide.common.blame.SourceFilePosition;
+import com.android.ide.common.blame.SourcePosition;
 import com.android.sdklib.mock.MockLog;
 import com.android.utils.ILogger;
-import com.android.utils.PositionXmlParser;
 import com.android.utils.StdLogger;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -73,8 +74,7 @@ public class ActionsTest extends TestCase {
         DecisionTreeRecord activityDecisionTree = new DecisionTreeRecord();
         activityDecisionTree.addNodeRecord(new Actions.NodeRecord(
                 Actions.ActionType.ADDED,
-                new ActionLocation(mock(XmlLoader.SourceLocation.class), mock(
-                        PositionXmlParser.Position.class)),
+                new SourceFilePosition(mock(SourceFile.class), mock(SourcePosition.class)),
                 new NodeKey("nodeKey"),
                 null, /* reason */
                 NodeOperationType.MERGE));
@@ -98,8 +98,7 @@ public class ActionsTest extends TestCase {
         DecisionTreeRecord activityDecisionTree = new DecisionTreeRecord();
         activityDecisionTree.addNodeRecord(new Actions.NodeRecord(
                 Actions.ActionType.ADDED,
-                new ActionLocation(mock(XmlLoader.SourceLocation.class), mock(
-                        PositionXmlParser.Position.class)),
+                new SourceFilePosition(mock(SourceFile.class), mock(SourcePosition.class)),
                 new NodeKey("nodeKey"),
                 null, /* reason */
                 NodeOperationType.MERGE));
@@ -107,8 +106,7 @@ public class ActionsTest extends TestCase {
         activityDecisionTree.mAttributeRecords.put(attributeName,
                 ImmutableList.of(
                     new Actions.AttributeRecord(Actions.ActionType.INJECTED,
-                            new ActionLocation(mock(XmlLoader.SourceLocation.class),
-                                    mock(PositionXmlParser.Position.class)),
+                            new SourceFilePosition(mock(SourceFile.class), mock(SourcePosition.class)),
                             new NodeKey("nodeKey"),
                             null, /* reason */
                             AttributeOperationType.STRICT)));
@@ -183,11 +181,11 @@ public class ActionsTest extends TestCase {
                 + "</manifest>";                                                            // 13
 
         XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                new TestUtils.TestSourceLocation(getClass(), "higherPriority"), higherPriority);
+                TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
         XmlDocument firstLibrary = TestUtils.xmlLibraryFromString(
-                new TestUtils.TestSourceLocation(getClass(), "lowerPriorityOne"), lowerPriorityOne);
+                TestUtils.sourceFile(getClass(), "lowerPriorityOne"), lowerPriorityOne);
         XmlDocument secondLibrary = TestUtils.xmlLibraryFromString(
-                new TestUtils.TestSourceLocation(getClass(), "lowerPriorityTwo"), lowerPriorityTwo);
+                TestUtils.sourceFile(getClass(), "lowerPriorityTwo"), lowerPriorityTwo);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
                 new StdLogger(StdLogger.Level.VERBOSE));
@@ -274,12 +272,7 @@ public class ActionsTest extends TestCase {
             Actions.NodeRecord nodeRecord,
             List<Actions.NodeRecord> nodeRecordList) {
         for (Actions.NodeRecord record : nodeRecordList) {
-            if (record.getActionLocation().getPosition().getLine()
-                    == nodeRecord.getActionLocation().getPosition().getLine()
-                    && record.getActionLocation().getPosition().getColumn()
-                    == nodeRecord.getActionLocation().getPosition().getColumn()
-                    && record.getActionLocation().getPosition().getOffset()
-                    == nodeRecord.getActionLocation().getPosition().getOffset()
+            if (record.getActionLocation().equals(nodeRecord.getActionLocation())
                     && record.getActionType() == nodeRecord.getActionType()) {
                 return true;
             }
@@ -294,12 +287,7 @@ public class ActionsTest extends TestCase {
         for (Actions.AttributeRecord record : attributeRecordList) {
             if (record.getOperationType() == attributeRecord.getOperationType()
                     && record.getActionType() == attributeRecord.getActionType()
-                    && record.getActionLocation().getPosition().getLine()
-                    == attributeRecord.getActionLocation().getPosition().getLine()
-                    && record.getActionLocation().getPosition().getColumn()
-                    == attributeRecord.getActionLocation().getPosition().getColumn()
-                    && record.getActionLocation().getPosition().getOffset()
-                    == attributeRecord.getActionLocation().getPosition().getOffset()) {
+                    && record.getActionLocation().equals(attributeRecord.getActionLocation())) {
                 return true;
             }
         }
