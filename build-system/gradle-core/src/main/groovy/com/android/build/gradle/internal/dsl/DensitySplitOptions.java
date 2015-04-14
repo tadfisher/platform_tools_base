@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.dsl;
 import static com.android.build.OutputFile.NO_FILTER;
 
 import com.android.annotations.NonNull;
+import com.android.resources.Density;
 import com.google.common.collect.Sets;
 
 import java.util.Arrays;
@@ -34,6 +35,36 @@ public class DensitySplitOptions extends SplitOptions {
 
     private boolean strict = true;
     private Set<String> compatibleScreens;
+
+    @Override
+    protected Set<String> getDefaultValues() {
+        Density[] values = Density.values();
+        Set<String> fullList = Sets.newHashSetWithExpectedSize(values.length - 2);
+        for (Density value : values) {
+            if (value != Density.NODPI && value != Density.ANYDPI && value.isRecommended()) {
+                fullList.add(value.getResourceValue());
+            }
+        }
+
+        System.out.println("DEFAULT: " + fullList);
+
+        return fullList;
+    }
+
+    @Override
+    protected Set<String> getAllowedValues() {
+        Density[] values = Density.values();
+        Set<String> fullList = Sets.newHashSetWithExpectedSize(values.length - 2);
+        for (Density value : values) {
+            if (value != Density.NODPI && value != Density.ANYDPI) {
+                fullList.add(value.getResourceValue());
+            }
+        }
+
+        System.out.println("ALLOWED: " + fullList);
+
+        return fullList;
+    }
 
     /**
      * TODO: Document.
@@ -72,7 +103,7 @@ public class DensitySplitOptions extends SplitOptions {
 
     @NonNull
     @Override
-    public Set<String> getApplicableFilters(@NonNull Set<String> allFilters) {
+    public Set<String> getApplicableFilters() {
         // use a LinkedHashSet so iteration order follows insertion order.
         LinkedHashSet<String> filters = new LinkedHashSet<String>();
 
@@ -82,7 +113,7 @@ public class DensitySplitOptions extends SplitOptions {
             filters.add(NO_FILTER);
         }
 
-        filters.addAll(super.getApplicableFilters(allFilters));
+        filters.addAll(super.getApplicableFilters());
         return filters;
     }
 }
