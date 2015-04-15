@@ -20,10 +20,6 @@ android {
       enable true
       exclude "ldpi", "tvdpi", "xxxhdpi"
     }
-    language {
-        enable true
-        include "fr,fr-rBE", "fr-rCA", "en"
-    }
   }
 }
 

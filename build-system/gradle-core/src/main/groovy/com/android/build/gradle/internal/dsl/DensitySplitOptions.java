@@ -107,9 +107,8 @@ public class DensitySplitOptions extends SplitOptions {
         // add it FIRST, since code assume that the first variant output will be the universal one.
         if (isEnable()) {
             filters.add(NO_FILTER);
+            filters.addAll(super.getApplicableFilters());
         }
-
-        filters.addAll(super.getApplicableFilters());
         return filters;
     }
 }
