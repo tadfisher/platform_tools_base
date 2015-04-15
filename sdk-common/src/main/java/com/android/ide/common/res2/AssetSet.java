@@ -17,8 +17,8 @@
 package com.android.ide.common.res2;
 
 import com.android.annotations.NonNull;
-import com.android.ide.common.packaging.PackagingUtils;
 import com.android.utils.ILogger;
+import com.google.common.io.Files;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Node;
@@ -86,21 +86,9 @@ public class AssetSet extends DataSet<AssetItem, AssetFile> {
     @Override
     protected void readSourceFolder(@NonNull File sourceFolder, @NonNull ILogger logger)
             throws MergingException {
-        readFiles(sourceFolder, sourceFolder, logger);
-    }
-
-    private void readFiles(@NonNull File sourceFolder, @NonNull File folder, @NonNull ILogger logger)
-            throws MergingException {
-        File[] files = folder.listFiles();
-        if (files != null && files.length > 0) {
-            for (File file : files) {
-                if (!isIgnored(file)) {
-                    if (file.isFile()) {
-                        handleNewFile(sourceFolder, file, logger);
-                    } else if (file.isDirectory()) {
-                        readFiles(sourceFolder, file, logger);
-                    }
-                }
+        for (File file : Files.fileTreeTraverser().preOrderTraversal(sourceFolder)) {
+            if (file.isFile() && !isIgnored(file)) {
+                handleNewFile(sourceFolder, file, logger);
             }
         }
     }
