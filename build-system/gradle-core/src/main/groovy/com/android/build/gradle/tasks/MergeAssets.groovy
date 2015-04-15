@@ -134,7 +134,6 @@ public class MergeAssets extends IncrementalTask {
             // No exception? Write the known state.
             merger.writeBlobTo(getIncrementalFolder(), writer)
         } catch (MergingException e) {
-            println e.getMessage()
             merger.cleanBlob(getIncrementalFolder())
             throw new ResourceException(e.getMessage(), e)
         }

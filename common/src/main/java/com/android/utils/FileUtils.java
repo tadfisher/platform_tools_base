@@ -16,6 +16,9 @@
 
 package com.android.utils;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
+import com.android.annotations.NonNull;
 import com.google.common.io.Files;
 
 import java.io.File;
@@ -55,5 +58,12 @@ public class FileUtils {
         } else if (from.isFile()) {
             Files.copy(from, to);
         }
+    }
+
+    public static String relativePath(@NonNull File file, @NonNull File dir) {
+        checkArgument(file.isFile(), "%s is not a file.", file.getPath());
+        checkArgument(dir.isDirectory(), "%s is not a directory.", dir.getPath());
+
+        return dir.toURI().relativize(file.toURI()).getPath();
     }
 }

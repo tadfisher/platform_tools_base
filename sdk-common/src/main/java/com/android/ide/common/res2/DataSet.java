@@ -486,7 +486,7 @@ abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>> implements 
      * @param file the file to check
      * @return true if it is a valid file, false if it should be ignored.
      */
-    protected boolean checkFileForAndroidRes(@NonNull File file) {
+    protected static boolean checkFileForAndroidRes(@NonNull File file) {
         return !isIgnored(file);
     }
 

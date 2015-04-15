@@ -49,7 +49,8 @@ public class VectorDrawableRenderer {
             // Sketch implementation.
 
             // TODO: add the density to all other qualifiers of the original file.
-            File directory = new File(outputResDirectory, "drawable-" + density.getResourceValue());
+            // TODO: handle the version suffix.
+            File directory = new File(outputResDirectory, "drawable-" + density.getResourceValue() + "-v4");
             File pngFile = new File(directory, inputXmlFile.getName().replace(".xml", ".png"));
 
             Files.createParentDirs(pngFile);

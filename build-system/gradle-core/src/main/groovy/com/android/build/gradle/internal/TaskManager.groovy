@@ -850,6 +850,7 @@ abstract class TaskManager {
 
             preprocessResourcesTask.dependsOn variantData.mergeResourcesTask
 
+            preprocessResourcesTask.variantName = variantData.name
             preprocessResourcesTask.mergedResDirectory =
                     variantData.mergeResourcesTask.outputDir
             preprocessResourcesTask.generatedResDirectory =
