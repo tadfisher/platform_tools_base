@@ -71,4 +71,9 @@ public abstract class MergeWriter<I extends DataItem> implements MergeConsumer<I
     protected File getRootFolder() {
         return mRootFolder;
     }
+
+    @NonNull
+    protected File getFileFromKey(@NonNull AssetItem item) {
+        return new File(getRootFolder(), item.getKey().replace('/', File.separatorChar));
+    }
 }
