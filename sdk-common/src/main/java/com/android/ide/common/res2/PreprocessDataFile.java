@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 The Android Open Source Project
+ * Copyright (C) 2015 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,30 +17,20 @@
 package com.android.ide.common.res2;
 
 import com.android.annotations.NonNull;
-import com.android.utils.FileUtils;
 
 import java.io.File;
 
 /**
- * An asset.
+ * {@link DataFile} for preprocessing resources.
  *
- * This includes the name and source file as a {@link AssetFile}.
- *
+ * <p>Source is the "input" resource from the merged resources directory. Data items can be one of:
+ * <ul>
+ *     <li>The same file as source, if there's no need to preprocess it.
+ *     <li>One or more generated "replacement" files, from the generated resources directory.
+*  </ul>
  */
-class AssetItem extends DataItem<AssetFile> {
-
-    /**
-     * Constructs the object with a name
-     *
-     * Note that the object is not fully usable as-is. It must be added to an AssetFile first.
-     *
-     * @param name the name of the asset
-     */
-    AssetItem(@NonNull String name) {
-        super(name);
-    }
-
-    static AssetItem create(@NonNull File sourceFolder, @NonNull File file) {
-        return new AssetItem(FileUtils.relativePath(file, sourceFolder));
+public class PreprocessDataFile extends DataFile<PreprocessDataItem> {
+    PreprocessDataFile(@NonNull File file, FileType fileType) {
+        super(file, fileType);
     }
 }
