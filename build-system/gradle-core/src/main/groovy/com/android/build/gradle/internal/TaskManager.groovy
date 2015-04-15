@@ -161,6 +161,7 @@ import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS
 import static com.android.builder.model.AndroidProject.PROPERTY_APK_LOCATION
 import static com.android.sdklib.BuildToolInfo.PathId.ZIP_ALIGN
+import static com.google.common.base.Preconditions.checkArgument
 import static com.google.common.base.Preconditions.checkNotNull
 
 /**
@@ -181,6 +182,15 @@ abstract class TaskManager {
     public static final String BUILD_GROUP = BasePlugin.BUILD_GROUP
 
     public static final String ANDROID_GROUP = "Android"
+
+    /**
+     * The first version of build tools that normalizes resources when packaging the APK.
+     *
+     * <p>This means that e.g. drawable-hdpi becomes drawable-hdpi-v4 to make it clear it was not
+     * available before API 4.
+     */
+    public static final FullRevision NORMALIZE_RESOURCES_BUILD_TOOLS = new FullRevision(21, 0, 0)
+
 
     final Map<SigningConfig, ValidateSigningTask> validateSigningTaskMap = [:]
 
@@ -693,7 +703,7 @@ abstract class TaskManager {
 
         mergeResourcesTask.process9Patch = process9Patch
         mergeResourcesTask.crunchPng = extension.aaptOptions.getCruncherEnabled()
-        mergeResourcesTask.normalizeResources = extension.buildToolsRevision.compareTo(new FullRevision(21, 0, 0)) < 0
+        mergeResourcesTask.normalizeResources = extension.buildToolsRevision < NORMALIZE_RESOURCES_BUILD_TOOLS
 
         conventionMapping(mergeResourcesTask).
                 map("useNewCruncher") { getExtension().aaptOptions.useNewCruncher }
@@ -845,6 +855,12 @@ abstract class TaskManager {
         int minSdk = variantData.variantConfiguration.minSdkVersion.getApiLevel()
 
         if (extension.preprocessResources  && minSdk < PreprocessResourcesTask.MIN_SDK) {
+            // Otherwise mergeResources will rename files when merging and it's hard to keep track
+            // of PNGs that the user wanted to use instead of the generated ones.
+            checkArgument(
+                    extension.buildToolsRevision >= NORMALIZE_RESOURCES_BUILD_TOOLS,
+                    "To preprocess resources, you have to use build tools >= ${NORMALIZE_RESOURCES_BUILD_TOOLS}")
+
             PreprocessResourcesTask preprocessResourcesTask = project.tasks.create(
                     "preprocess${variantName}Resources",
                     PreprocessResourcesTask)
@@ -852,6 +868,7 @@ abstract class TaskManager {
 
             preprocessResourcesTask.dependsOn variantData.mergeResourcesTask
 
+            preprocessResourcesTask.variantName = variantData.name
             preprocessResourcesTask.mergedResDirectory =
                     variantData.mergeResourcesTask.outputDir
             preprocessResourcesTask.generatedResDirectory =
