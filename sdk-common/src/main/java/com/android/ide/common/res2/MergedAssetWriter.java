@@ -16,6 +16,8 @@
 
 package com.android.ide.common.res2;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.io.Files;
@@ -39,18 +41,14 @@ public class MergedAssetWriter extends MergeWriter<AssetItem> {
             getExecutor().execute(new Callable<Void>() {
                 @Override
                 public Void call() throws Exception {
-                    AssetFile assetFile = item.getSource();
-
+                    AssetFile assetFile = checkNotNull(item.getSource());
                     File fromFile = assetFile.getFile();
 
                     // the out file is computed from the item key since that includes the
                     // relative folder.
                     File toFile = new File(getRootFolder(),
                             item.getKey().replace('/', File.separatorChar));
-
-                    // make sure the folders are created
-                    toFile.getParentFile().mkdirs();
-
+                    Files.createParentDirs(toFile);
                     Files.copy(fromFile, toFile);
 
                     return null;
@@ -64,6 +62,7 @@ public class MergedAssetWriter extends MergeWriter<AssetItem> {
             throws ConsumerException {
         if (replacedBy == null) {
             File removedFile = new File(getRootFolder(), removedItem.getName());
+            //noinspection ResultOfMethodCallIgnored
             removedFile.delete();
         }
     }
