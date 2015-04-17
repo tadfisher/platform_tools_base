@@ -23,6 +23,7 @@ import static com.android.SdkConstants.REFERENCE_STYLE;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.rendering.api.ItemResourceValue;
 import com.android.ide.common.rendering.api.LayoutLog;
 import com.android.ide.common.rendering.api.RenderResources;
 import com.android.ide.common.rendering.api.ResourceValue;
@@ -69,6 +70,11 @@ public class ResourceResolver extends RenderResources {
     private Map<String, String> mReverseFrameworkStyles;
     @Nullable
     private Map<String, String> mReverseProjectStyles;
+
+    @Nullable
+    private StyleResourceValue myOverrideStyle;
+    @Nullable
+    private ItemResourceValue myOverrideItem;
 
     private ResourceResolver(
             Map<ResourceType, Map<String, ResourceValue>> projectResources,
@@ -251,8 +257,19 @@ public class ResourceResolver extends RenderResources {
         return findItemInStyle(style, itemName, isFrameworkAttr, 0);
     }
 
+    public void setAttributeOverride(StyleResourceValue overrideStyle, ItemResourceValue overrideItem) {
+        myOverrideStyle = overrideStyle;
+        myOverrideItem = overrideItem;
+    }
+
     private ResourceValue findItemInStyle(StyleResourceValue style, String itemName,
                                           boolean isFrameworkAttr, int depth) {
+
+        //check for overriden value and return it if found
+        if (style.equals(myOverrideStyle) && isFrameworkAttr == myOverrideItem.isFrameworkAttr() && itemName.equals(myOverrideItem.getName())) {
+          return myOverrideItem;
+        }
+
         ResourceValue item = style.getItem(itemName, isFrameworkAttr);
 
         // if we didn't find it, we look in the parent style (if applicable)
