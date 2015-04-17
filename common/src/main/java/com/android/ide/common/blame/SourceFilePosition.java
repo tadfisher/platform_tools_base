@@ -20,6 +20,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.concurrency.Immutable;
 import com.google.common.base.Objects;
 
+import java.io.File;
+
 @Immutable
 public class SourceFilePosition {
 
@@ -33,6 +35,11 @@ public class SourceFilePosition {
             @NonNull SourcePosition sourcePosition) {
         mSourceFile = sourceFile;
         mSourcePosition = sourcePosition;
+    }
+
+    public SourceFilePosition(@NonNull File file,
+            @NonNull SourcePosition sourcePosition) {
+        this(new SourceFile(file), sourcePosition);
     }
 
     @NonNull
