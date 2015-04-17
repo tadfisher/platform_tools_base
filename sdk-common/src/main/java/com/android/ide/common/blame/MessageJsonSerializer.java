@@ -28,6 +28,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 
+import java.io.File;
 import java.lang.reflect.Type;
 import java.util.List;
 
@@ -41,6 +42,12 @@ public class MessageJsonSerializer
 
     private static final String SOURCE_FILE_POSITIONS = "sources";
 
+    private static final String RAW_MESSAGE = "original";
+
+    private static final String LEGACY_SOURCE_PATH = "sourcePath";
+
+    private static final String LEGACY_POSITION = "position";
+
     private static final BiMap<Message.Kind, String> KIND_STRING_ENUM_MAP;
 
     static {
@@ -50,17 +57,21 @@ public class MessageJsonSerializer
         map.put(Message.Kind.INFO, "info");
         map.put(Message.Kind.STATISTICS, "statistics");
         map.put(Message.Kind.UNKNOWN, "unknown");
+        map.put(Message.Kind.SIMPLE, "simple");
         KIND_STRING_ENUM_MAP = Maps.unmodifiableBiMap(map);
     }
 
     @Override
-    public JsonElement serialize(Message position, Type type,
+    public JsonElement serialize(Message message, Type type,
             JsonSerializationContext jsonSerializationContext) {
         JsonObject result = new JsonObject();
-        result.addProperty(KIND, KIND_STRING_ENUM_MAP.get(position.getKind()));
-        result.addProperty(TEXT, position.getText());
+        result.addProperty(KIND, KIND_STRING_ENUM_MAP.get(message.getKind()));
+        result.addProperty(TEXT, message.getText());
         result.add(SOURCE_FILE_POSITIONS,
-                jsonSerializationContext.serialize(position.getSourceFilePositions()));
+                jsonSerializationContext.serialize(message.getSourceFilePositions()));
+        if (!message.getRawMessage().equals(message.getText())) {
+            result.addProperty(RAW_MESSAGE, message.getRawMessage());
+        }
         return result;
     }
 
@@ -80,6 +91,9 @@ public class MessageJsonSerializer
 
         final String text = object.has(TEXT) ? object.get(TEXT).getAsString() : "";
 
+        final String rawMessage = object.has(RAW_MESSAGE) ?
+                object.get(RAW_MESSAGE).getAsString() : "";
+
         final List<SourceFilePosition> sourceFilePositions;
         if (object.has(SOURCE_FILE_POSITIONS)) {
             JsonElement e = object.get(SOURCE_FILE_POSITIONS);
@@ -93,11 +107,23 @@ public class MessageJsonSerializer
             } else {
                 sourceFilePositions = ImmutableList.of();
             }
+        } else if (object.has(LEGACY_SOURCE_PATH) || object.has(LEGACY_POSITION)) {
+            SourceFile sourceFile = SourceFile.UNKNOWN;
+            if (object.has(LEGACY_SOURCE_PATH)) {
+                sourceFile = new SourceFile(new File(object.get(LEGACY_SOURCE_PATH).getAsString()));
+            }
+            SourcePosition sourcePosition = SourcePosition.UNKNOWN;
+            if (object.has(LEGACY_POSITION)) {
+                sourcePosition = context.<SourcePosition>deserialize(
+                        object.get(LEGACY_POSITION), SourcePosition.class);
+            }
+            sourceFilePositions = ImmutableList.of(
+                    new SourceFilePosition(sourceFile, sourcePosition));
         } else {
             sourceFilePositions = ImmutableList.of();
         }
 
-        return new Message(kind, text, sourceFilePositions);
+        return new Message(kind, text, sourceFilePositions, rawMessage);
     }
 
     public static void registerTypeAdapters(GsonBuilder builder) {

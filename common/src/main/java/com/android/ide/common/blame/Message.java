@@ -17,11 +17,13 @@
 package com.android.ide.common.blame;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
+import java.io.File;
 import java.util.List;
 
 @Immutable
@@ -36,16 +38,45 @@ public class Message {
     @NonNull
     private final List<SourceFilePosition> mSourceFilePositions;
 
-    public Message(@NonNull Kind kind, @NonNull String text, @NonNull SourceFilePosition... sourceFilePositions) {
+    @NonNull
+    private final String mRawMessage;
+    private String mySourcePath;
+    private long myLineNumber;
+
+    public Message(@NonNull Kind kind, @NonNull String text,
+            @NonNull SourceFilePosition... sourceFilePositions) {
         mKind = kind;
         mText = text;
+        mRawMessage = text;
         mSourceFilePositions = ImmutableList.copyOf(sourceFilePositions);
     }
 
-    public Message(@NonNull Kind kind, @NonNull String text, @NonNull List<SourceFilePosition> sourceFilePositions) {
+    public Message(@NonNull Kind kind, @NonNull String text,
+            @NonNull List<SourceFilePosition> sourceFilePositions) {
         mKind = kind;
         mText = text;
+        mRawMessage = text;
         mSourceFilePositions = ImmutableList.copyOf(sourceFilePositions);
+    }
+
+    public Message(@NonNull Kind kind, @NonNull String text,
+            @NonNull SourceFilePosition sourceFilePosition, @NonNull String rawMessage)  {
+        mKind = kind;
+        mText = text;
+        mRawMessage = rawMessage;
+        mSourceFilePositions = ImmutableList.of(sourceFilePosition);
+    }
+
+    public Message(@NonNull Kind kind, @NonNull String text,
+            @NonNull List<SourceFilePosition> sourceFilePositions, @NonNull String rawMessage)  {
+        mKind = kind;
+        mText = text;
+        mRawMessage = rawMessage;
+        mSourceFilePositions = sourceFilePositions;
+    }
+
+    public Message(Kind kind, String message, String sourcePath, int lineNumber, int columnNumber) {
+        this(kind, message, new SourceFilePosition(new SourceFile(new File(sourcePath)), new SourcePosition(lineNumber, columnNumber, -1)));
     }
 
     @NonNull
@@ -63,8 +94,61 @@ public class Message {
         return mSourceFilePositions;
     }
 
+    @NonNull
+    public String getRawMessage() {
+        return mRawMessage;
+    }
+
+    @Nullable
+    public String getSourcePath() {
+        if (mSourceFilePositions.isEmpty()) {
+            return null;
+        }
+        File file = mSourceFilePositions.get(0).getFile().getSourceFile();
+        if (file == null) {
+            return null;
+        }
+        return file.getAbsolutePath();
+    }
+
+    /**
+     * Returns a legacy 1-based line number.
+     */
+    @Deprecated
+    public int getLineNumber() {
+        if (mSourceFilePositions.isEmpty()) {
+            return -1;
+        }
+        return mSourceFilePositions.get(0).getPosition().getStartLine() + 1;
+    }
+
+    /**
+     * Returns a legacy 1-based column number.
+     * @return
+     */
+    @Deprecated
+    public int getColumn() {
+        if (mSourceFilePositions.isEmpty()) {
+            return -1;
+        }
+        return mSourceFilePositions.get(0).getPosition().getStartColumn() + 1;
+    }
+
     public enum Kind {
-        ERROR, WARNING, INFO, STATISTICS, UNKNOWN
+        ERROR, WARNING, INFO, STATISTICS, UNKNOWN, SIMPLE;
+
+        public static Kind findIgnoringCase(String s, Kind defaultKind) {
+            for (Kind kind : values()) {
+                if (kind.toString().equalsIgnoreCase(s)) {
+                    return kind;
+                }
+            }
+            return defaultKind;
+        }
+
+        public static Kind findIgnoringCase(String s) {
+            return findIgnoringCase(s, null);
+        }
     }
 
     @Override
