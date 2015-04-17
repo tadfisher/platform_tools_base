@@ -22,11 +22,9 @@ import static com.android.SdkConstants.ATTR_PATH_PREFIX;
 import static com.android.SdkConstants.ATTR_SCHEME;
 import static com.android.SdkConstants.TAG_ACTION;
 import static com.android.SdkConstants.TAG_ACTIVITY;
-import static com.android.SdkConstants.TAG_APPLICATION;
 import static com.android.SdkConstants.TAG_CATEGORY;
 import static com.android.SdkConstants.TAG_DATA;
 import static com.android.SdkConstants.TAG_INTENT_FILTER;
-import static com.android.SdkConstants.TAG_META_DATA;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -40,12 +38,12 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.collect.Sets;
+
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
@@ -57,38 +55,44 @@ import java.util.Set;
 public class AppIndexingApiDetector extends Detector implements Detector.XmlScanner {
 
     public static final Issue ISSUE = Issue.create("AppIndexing", //$NON-NLS-1$
-        "Wrong usage of AppIndexing.",
-        "Ensure the app can correctly handle deep link and integrate with Google AppIndexing Api.",
-        Category.CORRECTNESS, 5, Severity.WARNING,
-        new Implementation(AppIndexingApiDetector.class, Scope.MANIFEST_SCOPE))
-        .addMoreInfo("https://developers.google.com/app-indexing/webmasters/details");
+            "Wrong usage of AppIndexing.",
+            "Ensure the app can correctly handle deep link and integrate with Google AppIndexing Api.",
+            Category.CORRECTNESS, 5, Severity.WARNING,
+            new Implementation(AppIndexingApiDetector.class, Scope.MANIFEST_SCOPE))
+            .addMoreInfo("https://developers.google.com/app-indexing/webmasters/details");
 
     private boolean mHasActionView;
+
     private Set<Location> mActivityLocations;
 
     public AppIndexingApiDetector() {
         mActivityLocations = Sets.newHashSet();
     }
 
-    @Override @Nullable public Collection<String> getApplicableElements() {
+    @Override
+    @Nullable
+    public Collection<String> getApplicableElements() {
         return Collections.singletonList(TAG_ACTIVITY);
     }
 
-    @Override public void beforeCheckProject(@NonNull Context context) {
+    @Override
+    public void beforeCheckProject(@NonNull Context context) {
         mHasActionView = false;
         mActivityLocations.clear();
     }
 
-    @Override public void afterCheckProject(@NonNull Context context) {
+    @Override
+    public void afterCheckProject(@NonNull Context context) {
         if (mActivityLocations.size() > 0 && !mHasActionView) {
             for (Location location : mActivityLocations) {
                 context.report(ISSUE, location,
-                    "Need an <action> tag that specifies the ACTION_VIEW intent action.");
+                        "Need an <action> tag that specifies the ACTION_VIEW intent action.");
             }
         }
     }
 
-    @Override public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
+    @Override
+    public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         mActivityLocations.add(context.getLocation(element));
         if (element.hasChildNodes()) {
             NodeList children = element.getChildNodes();
@@ -104,7 +108,7 @@ public class AppIndexingApiDetector extends Detector implements Detector.XmlScan
                             for (int j = 0; j < grandChildren.getLength(); j++) {
                                 Node grandChild = grandChildren.item(j);
                                 if (grandChild.getNodeType() == Node.ELEMENT_NODE && grandChild
-                                    .getNodeName().equals(TAG_ACTION)) {
+                                        .getNodeName().equals(TAG_ACTION)) {
                                     Element e = (Element) grandChild;
                                     if (e.hasAttributeNS(ANDROID_URI, ATTR_NAME)) {
                                         Attr attr = e.getAttributeNodeNS(ANDROID_URI, ATTR_NAME);
@@ -127,9 +131,10 @@ public class AppIndexingApiDetector extends Detector implements Detector.XmlScan
                                         } else if (e.getNodeName().equals(TAG_CATEGORY)) {
                                             if (e.hasAttributeNS(ANDROID_URI, ATTR_NAME)) {
                                                 Attr attr =
-                                                    e.getAttributeNodeNS(ANDROID_URI, ATTR_NAME);
+                                                        e.getAttributeNodeNS(ANDROID_URI,
+                                                                ATTR_NAME);
                                                 if (attr.getNodeValue()
-                                                    .equals("android.intent.category.BROWSABLE")) {
+                                                        .equals("android.intent.category.BROWSABLE")) {
                                                     isBrowsable = true;
                                                 }
                                             }
@@ -139,7 +144,7 @@ public class AppIndexingApiDetector extends Detector implements Detector.XmlScan
                                 }
                                 if (!isBrowsable) {
                                     context.report(ISSUE, child, context.getLocation(child),
-                                        "Activity supporting ACTION_VIEW is not set as browsable");
+                                            "Activity supporting ACTION_VIEW is not set as browsable");
                                 }
                             }
                         }
@@ -152,19 +157,19 @@ public class AppIndexingApiDetector extends Detector implements Detector.XmlScan
     private void checkData(XmlContext context, Element element) {
         if (!element.hasAttributeNS(ANDROID_URI, ATTR_SCHEME)) {
             context.report(ISSUE, element, context.getLocation(element),
-                "At least one android:scheme attribute should be set for the intent filter");
+                    "At least one android:scheme attribute should be set for the intent filter");
         }
 
         if (!element.hasAttributeNS(ANDROID_URI, ATTR_HOST)) {
             context.report(ISSUE, element, context.getLocation(element),
-                "android:host attribute must be set for the intent filter");
+                    "android:host attribute must be set for the intent filter");
         }
 
         if (element.hasAttributeNS(ANDROID_URI, ATTR_PATH_PREFIX)) {
             Attr pathPrefix = element.getAttributeNodeNS(ANDROID_URI, ATTR_PATH_PREFIX);
             if (!pathPrefix.getValue().startsWith("/")) {
                 context.report(ISSUE, pathPrefix, context.getLocation(pathPrefix),
-                    "android:pathPrefix attribute should start with /");
+                        "android:pathPrefix attribute should start with /");
             }
         }
     }
