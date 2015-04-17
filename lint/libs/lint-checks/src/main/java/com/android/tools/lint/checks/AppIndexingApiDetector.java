@@ -20,11 +20,12 @@ import static com.android.SdkConstants.ATTR_HOST;
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_PATH_PREFIX;
 import static com.android.SdkConstants.ATTR_SCHEME;
-import static com.android.SdkConstants.TAG_ACTION;
-import static com.android.SdkConstants.TAG_ACTIVITY;
-import static com.android.SdkConstants.TAG_CATEGORY;
-import static com.android.SdkConstants.TAG_DATA;
-import static com.android.SdkConstants.TAG_INTENT_FILTER;
+
+import static com.android.xml.AndroidManifest.NODE_ACTIVITY;
+import static com.android.xml.AndroidManifest.NODE_ACTION;
+import static com.android.xml.AndroidManifest.NODE_DATA;
+import static com.android.xml.AndroidManifest.NODE_INTENT;
+import static com.android.xml.AndroidManifest.NODE_CATEGORY;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -55,9 +56,9 @@ import java.util.Set;
 public class AppIndexingApiDetector extends Detector implements Detector.XmlScanner {
 
     public static final Issue ISSUE = Issue.create("AppIndexing", //$NON-NLS-1$
-            "Wrong usage of AppIndexing.",
-            "Ensure the app can correctly handle deep link and integrate with Google AppIndexing Api.",
-            Category.CORRECTNESS, 5, Severity.WARNING,
+            "Wrong usage of AppIndexing",
+            "Ensure the app can correctly handle deep links and integrate with Google AppIndexing Api",
+            Category.USABILITY, 5, Severity.WARNING,
             new Implementation(AppIndexingApiDetector.class, Scope.MANIFEST_SCOPE))
             .addMoreInfo("https://developers.google.com/app-indexing/webmasters/details");
 
@@ -72,7 +73,7 @@ public class AppIndexingApiDetector extends Detector implements Detector.XmlScan
     @Override
     @Nullable
     public Collection<String> getApplicableElements() {
-        return Collections.singletonList(TAG_ACTIVITY);
+        return Collections.singletonList(NODE_ACTIVITY);
     }
 
     @Override
@@ -99,7 +100,7 @@ public class AppIndexingApiDetector extends Detector implements Detector.XmlScan
             for (int i = 0; i < children.getLength(); i++) {
                 Node child = children.item(i);
                 if (child.getNodeType() == Node.ELEMENT_NODE) {
-                    if (child.getNodeName().equals(TAG_INTENT_FILTER)) {
+                    if (child.getNodeName().equals(NODE_INTENT)) {
                         if (child.hasChildNodes()) {
                             NodeList grandChildren = child.getChildNodes();
                             boolean isActionView = false;
@@ -108,7 +109,7 @@ public class AppIndexingApiDetector extends Detector implements Detector.XmlScan
                             for (int j = 0; j < grandChildren.getLength(); j++) {
                                 Node grandChild = grandChildren.item(j);
                                 if (grandChild.getNodeType() == Node.ELEMENT_NODE && grandChild
-                                        .getNodeName().equals(TAG_ACTION)) {
+                                        .getNodeName().equals(NODE_ACTION)) {
                                     Element e = (Element) grandChild;
                                     if (e.hasAttributeNS(ANDROID_URI, ATTR_NAME)) {
                                         Attr attr = e.getAttributeNodeNS(ANDROID_URI, ATTR_NAME);
@@ -126,9 +127,9 @@ public class AppIndexingApiDetector extends Detector implements Detector.XmlScan
                                     Node grandChild = grandChildren.item(j);
                                     if (grandChild.getNodeType() == Node.ELEMENT_NODE) {
                                         Element e = (Element) grandChild;
-                                        if (e.getNodeName().equals(TAG_DATA)) {
+                                        if (e.getNodeName().equals(NODE_DATA)) {
                                             checkData(context, e);
-                                        } else if (e.getNodeName().equals(TAG_CATEGORY)) {
+                                        } else if (e.getNodeName().equals(NODE_CATEGORY)) {
                                             if (e.hasAttributeNS(ANDROID_URI, ATTR_NAME)) {
                                                 Attr attr =
                                                         e.getAttributeNodeNS(ANDROID_URI,
