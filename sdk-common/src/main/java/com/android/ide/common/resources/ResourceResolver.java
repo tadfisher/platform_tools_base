@@ -23,6 +23,7 @@ import static com.android.SdkConstants.REFERENCE_STYLE;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.rendering.api.ItemResourceValue;
 import com.android.ide.common.rendering.api.LayoutLog;
 import com.android.ide.common.rendering.api.RenderResources;
 import com.android.ide.common.rendering.api.ResourceValue;
@@ -69,6 +70,11 @@ public class ResourceResolver extends RenderResources {
     private Map<String, String> mReverseFrameworkStyles;
     @Nullable
     private Map<String, String> mReverseProjectStyles;
+
+    @Nullable
+    private StyleResourceValue myOverrideStyle;
+    @Nullable
+    private ItemResourceValue myOverrideItem;
 
     private ResourceResolver(
             Map<ResourceType, Map<String, ResourceValue>> projectResources,
@@ -251,8 +257,24 @@ public class ResourceResolver extends RenderResources {
         return findItemInStyle(style, itemName, isFrameworkAttr, 0);
     }
 
+    /**
+     * Sets a temporary override value for a single Style item.
+     * This is used in the theme editor for live color preview when selecting a color.
+     * Either both args should be null, or neither should be null.
+     */
+    public void setStyleItemOverride(@Nullable StyleResourceValue overrideStyle, @Nullable ItemResourceValue overrideItem) {
+        myOverrideStyle = overrideStyle;
+        myOverrideItem = overrideItem;
+    }
+
     private ResourceValue findItemInStyle(StyleResourceValue style, String itemName,
                                           boolean isFrameworkAttr, int depth) {
+
+        //check for overriden value and return it if found (either both myOverrideStyle and myOverrideItem are null, or neither are null)
+        if (style.equals(myOverrideStyle) && isFrameworkAttr == myOverrideItem.isFrameworkAttr() && itemName.equals(myOverrideItem.getName())) {
+          return myOverrideItem;
+        }
+
         ResourceValue item = style.getItem(itemName, isFrameworkAttr);
 
         // if we didn't find it, we look in the parent style (if applicable)
