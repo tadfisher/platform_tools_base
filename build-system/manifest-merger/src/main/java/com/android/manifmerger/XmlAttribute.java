@@ -345,7 +345,9 @@ public class XmlAttribute extends XmlNode {
                 higherPriority.getId(),
                 higherPriority.getValue(),
                 attributeRecord != null
-                        ? attributeRecord.getActionLocation().toString()
+                        ? String.format("%1$s:%2$s",
+                            attributeRecord.getActionLocation().getFile().toShortString(),
+                            attributeRecord.getActionLocation().getPosition().toString())
                         : "(unknown)",
                 printPosition(),
                 getValue(),
