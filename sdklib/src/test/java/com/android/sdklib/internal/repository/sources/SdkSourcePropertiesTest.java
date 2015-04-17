@@ -18,7 +18,6 @@ package com.android.sdklib.internal.repository.sources;
 
 
 import com.android.sdklib.internal.repository.sources.SdkSourceProperties;
-
 import junit.framework.TestCase;
 
 public class SdkSourcePropertiesTest extends TestCase {
