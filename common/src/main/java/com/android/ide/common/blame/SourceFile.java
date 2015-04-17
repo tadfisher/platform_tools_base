@@ -96,7 +96,7 @@ public class SourceFile {
 
     @Override
     public String toString() {
-        return print(true);
+        return print(false);
     }
 
     public String toShortString() {
