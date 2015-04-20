@@ -23,6 +23,7 @@ import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
 import org.junit.experimental.categories.Category
+import org.truth0.Truth
 
 /**
  * Assemble tests for multiDexWithLib.
@@ -45,6 +46,8 @@ class MultiDexWithLibTest {
 
     @Test
     void lint() {
+        Truth.ASSERT.withFailureMessage("Lint does not yet work with Jack.")
+                .that(GradleTestProject.CUSTOM_JACK.toLowerCase()).matches("false")
         project.execute("lint")
     }
 
