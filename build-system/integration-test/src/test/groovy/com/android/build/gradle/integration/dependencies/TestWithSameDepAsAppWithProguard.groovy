@@ -45,6 +45,7 @@ android {
   buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
 
   defaultConfig {
+    useJack $GradleTestProject.CUSTOM_JACK
     minSdkVersion 21
   }
 
