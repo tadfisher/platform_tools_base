@@ -63,6 +63,7 @@ class BuildConfigTest {
                     buildConfigField "int", "VALUE_DEBUG",   "1"
                     buildConfigField "int", "VALUE_FLAVOR",  "1"
                     buildConfigField "int", "VALUE_VARIANT", "1"
+                    useJack $GradleTestProject.CUSTOM_JACK
                 }
 
                 buildTypes {

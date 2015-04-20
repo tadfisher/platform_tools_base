@@ -106,6 +106,9 @@ class AndroidTestResourcesTest {
                 android {
                     compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
                     buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
+                    defaultConfig {
+                        useJack $GradleTestProject.CUSTOM_JACK
+                    }
                 }
                 """.stripIndent()
         appProject.execute("assembleDebugAndroidTest")
@@ -115,6 +118,9 @@ class AndroidTestResourcesTest {
                 android {
                     compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
                     buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
+                    defaultConfig {
+                        useJack $GradleTestProject.CUSTOM_JACK
+                    }
                 }
                 """.stripIndent()
         libProject.execute("assembleDebugAndroidTest")

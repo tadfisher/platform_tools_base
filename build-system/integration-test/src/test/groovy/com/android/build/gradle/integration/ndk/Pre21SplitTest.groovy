@@ -46,6 +46,7 @@ android {
     generatePureSplits false
 
     defaultConfig {
+        useJack $GradleTestProject.CUSTOM_JACK
         minSdkVersion 15
         ndk {
             moduleName "hello-jni"

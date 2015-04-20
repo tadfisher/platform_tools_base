@@ -64,6 +64,7 @@ class ResValueTest {
                     resValue "string", "VALUE_DEBUG",   "1"
                     resValue "string", "VALUE_FLAVOR",  "1"
                     resValue "string", "VALUE_VARIANT", "1"
+                    useJack $GradleTestProject.CUSTOM_JACK
                 }
 
                 buildTypes {

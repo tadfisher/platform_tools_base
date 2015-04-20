@@ -40,6 +40,9 @@ apply plugin: 'com.android.library'
 android {
     compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
     buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
+    defaultConfig {
+        useJack $GradleTestProject.CUSTOM_JACK
+    }
 }
 """
     }
@@ -50,6 +53,7 @@ android {
 android {
     defaultConfig {
         applicationId = 'foo'
+        useJack $GradleTestProject.CUSTOM_JACK
     }
 }
 """
@@ -71,6 +75,9 @@ android {
     public void applicationIdSuffix() {
         project.getBuildFile() << """
 android {
+    defaultConfig {
+        useJack $GradleTestProject.CUSTOM_JACK
+    }
     buildTypes {
         debug {
             applicationIdSuffix = 'foo'
@@ -100,6 +107,9 @@ android {
         myFlavor {
             applicationId = 'foo'
         }
+    }
+    defaultConfig {
+        useJack $GradleTestProject.CUSTOM_JACK
     }
 }
 """

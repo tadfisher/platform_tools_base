@@ -66,7 +66,9 @@ class VariantDependencyTest {
             android {
                 compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
                 buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-
+                defaultConfig {
+                    useJack $GradleTestProject.CUSTOM_JACK
+                }
                 flavorDimensions 'model', 'api'
                 productFlavors {
                     Lollipop {
