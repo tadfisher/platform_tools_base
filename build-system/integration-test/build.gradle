@@ -21,6 +21,8 @@ def testEnvironment = [
     CUSTOM_GRADLE: System.env.CUSTOM_GRADLE ?: rootProject.ext.buildVersion,
     ANDROID_HOME: System.env.ANDROID_HOME,
     ANDROID_NDK_HOME: System.env.ANDROID_NDK_HOME,
+    CUSTOM_BUILDTOOLS: System.env.CUSTOM_BUILDTOOLS,
+    CUSTOM_JACK: System.env.CUSTOM_JACK,
 ]
 
 // These tasks will not depend on publishLocal, so they will run integration
