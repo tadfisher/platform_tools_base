@@ -27,10 +27,12 @@ import com.android.builder.model.SigningConfig
 import com.android.builder.model.Variant
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
+import org.junit.Assume
 import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
 import org.junit.experimental.categories.Category
+import org.truth0.Truth
 
 import static com.android.builder.core.BuilderConstants.DEBUG
 import static org.junit.Assert.assertEquals
@@ -150,12 +152,13 @@ class BasicTest {
     @Test
     @Category(DeviceTests.class)
     void install() {
+        GradleTestProject.assumeLocalDevice();
         project.execute("installDebug", "uninstallAll")
     }
 
     @Test
     @Category(DeviceTests.class)
     void connectedCheck() {
-        project.execute("connectedCheck")
+        project.executeConnectedCheck()
     }
 }

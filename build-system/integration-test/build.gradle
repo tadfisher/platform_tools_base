@@ -23,6 +23,9 @@ def testEnvironment = [
     ANDROID_NDK_HOME: System.env.ANDROID_NDK_HOME,
     CUSTOM_BUILDTOOLS: System.env.CUSTOM_BUILDTOOLS,
     CUSTOM_JACK: System.env.CUSTOM_JACK,
+    TEST_CLASSPATH_DEPENDENCY: System.env.TEST_CLASSPATH_DEPENDENCY,
+    REMOTE_TEST_PROVIDER: System.env.REMOTE_TEST_PROVIDER,
+    ADDITIONAL_TEST_CUSTOM_REPO: System.env.ADDITIONAL_TEST_CUSTOM_REPO,
 ].findAll { it.value != null }
 
 // These tasks will not depend on publishLocal, so they will run integration
@@ -37,7 +40,7 @@ configure([test, testPrebuilts]) {
             "Runs the project integration tests. This requires an SDK either from the Android " +
                     "source tree, under out/..., or an env var ANDROID_HOME."
     systemProperties['jar.path'] = jar.archivePath
-    environment = testEnvironment
+    environment testEnvironment
 
     forkEvery = 1
     maxParallelForks = Runtime.runtime.availableProcessors() / 2
@@ -59,7 +62,12 @@ configure([connectedIntegrationTest, connectedIntegrationTestPrebuilts]) {
                     "and a device."
     group = "verification"
     systemProperties['jar.path'] = jar.archivePath
-    environment = testEnvironment
+    environment testEnvironment
+
+    forkEvery= 1
+    maxParallelForks = testEnvironment.containsKey("REMOTE_TEST_PROVIDER") ?
+            Runtime.runtime.availableProcessors() : 1
+
     useJUnit {
         includeCategories "com.android.build.gradle.integration.common.category.DeviceTests"
     }
@@ -76,7 +84,7 @@ task performanceTest(type: Test) {
                     "from the Android source tree, under out/..., or an env var ANDROID_HOME."
     group = "verification"
     systemProperties['jar.path'] = jar.archivePath
-    environment = testEnvironment
+    environment testEnvironment
 
     reports {
         junitXml.destination "${project.buildDir}/perf-results"

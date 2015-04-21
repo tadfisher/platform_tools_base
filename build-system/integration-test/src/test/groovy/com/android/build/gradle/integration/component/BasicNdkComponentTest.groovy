@@ -108,6 +108,6 @@ model {
     @Test
     @Category(DeviceTests.class)
     public void connnectedAndroidTest() {
-        project.execute("connectedAndroidTest");
+        project.executeConnectedCheck();
     }
 }

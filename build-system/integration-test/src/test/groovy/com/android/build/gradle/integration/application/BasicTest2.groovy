@@ -40,6 +40,7 @@ import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
 import org.junit.experimental.categories.Category
+import org.truth0.Truth
 
 import static com.android.builder.core.BuilderConstants.DEBUG
 import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST
@@ -282,12 +283,13 @@ class BasicTest2 {
     @Test
     @Category(DeviceTests.class)
     void install() {
+        GradleTestProject.assumeLocalDevice();
         project.execute("installDebug", "uninstallAll")
     }
 
     @Test
     @Category(DeviceTests.class)
     void connectedCheck() {
-        project.execute("connectedCheck")
+        project.executeConnectedCheck()
     }
 }
