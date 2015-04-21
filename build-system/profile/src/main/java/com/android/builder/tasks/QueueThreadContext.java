@@ -23,7 +23,7 @@ import java.io.IOException;
 /**
  * Notification of queue events, creation, task running and destruction
  */
-public interface QueueThreadContext<T> {
+public interface  QueueThreadContext<T> {
 
     /**
      * Notification of a new worker thread association with the queue
