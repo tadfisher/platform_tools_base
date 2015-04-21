@@ -15,6 +15,8 @@
  */
 
 package com.android.build.gradle.integration.application
+
+import com.android.build.gradle.integration.common.category.Lint
 import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.TruthHelper
@@ -49,7 +51,7 @@ class MinifyTest {
     @BeforeClass
     static void setUp() {
         project.execute("clean", "assembleMinified",
-                "assembleMinifiedAndroidTest", "jarDebugClasses")
+                "assembleAndroidTest", "jarDebugClasses")
     }
 
     @AfterClass
@@ -58,6 +60,7 @@ class MinifyTest {
     }
 
     @Test
+    @Category(Lint.class)
     void lint() {
         project.execute("lint")
     }

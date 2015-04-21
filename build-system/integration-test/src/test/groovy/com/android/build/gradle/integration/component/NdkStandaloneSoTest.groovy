@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.component
 
+import com.android.build.gradle.integration.common.category.Lint
 import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import groovy.transform.CompileStatic
@@ -49,6 +50,7 @@ class NdkStandaloneSoTest {
     }
 
     @Test
+    @Category(Lint.class)
     void lint() {
         project.execute("lint")
     }

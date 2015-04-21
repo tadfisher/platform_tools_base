@@ -26,6 +26,9 @@ android {
             testProguardFile "test-proguard-rules.pro"
             testCoverageEnabled true
         }
+        debug {
+            useJack false
+        }
     }
 
     dexOptions {

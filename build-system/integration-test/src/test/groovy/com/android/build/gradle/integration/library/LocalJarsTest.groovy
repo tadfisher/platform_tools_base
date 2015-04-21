@@ -15,6 +15,8 @@
  */
 
 package com.android.build.gradle.integration.library
+
+import com.android.build.gradle.integration.common.category.Lint
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.ModelHelper
 import com.android.builder.model.AndroidProject
@@ -26,6 +28,7 @@ import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
+import org.junit.experimental.categories.Category
 
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertNotNull
@@ -52,6 +55,7 @@ class LocalJarsTest {
     }
 
     @Test
+    @Category(Lint.class)
     void lint() {
         project.execute("lint")
     }

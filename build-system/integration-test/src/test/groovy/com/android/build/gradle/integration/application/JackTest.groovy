@@ -35,6 +35,9 @@ class JackTest {
             "-PCUSTOM_JACK=1",
             "-PCUSTOM_BUILDTOOLS=21.1.0")
 
+    private final static List<String> JAVAC_DX_OPTIONS = ImmutableList.of(
+            "-PCUSTOM_JACK=false")
+
     @ClassRule
     static public GradleTestProject basic = GradleTestProject.builder()
             .withName("basic")
