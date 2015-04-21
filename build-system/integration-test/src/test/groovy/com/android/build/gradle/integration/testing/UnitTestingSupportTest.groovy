@@ -15,10 +15,13 @@
  */
 
 package com.android.build.gradle.integration.testing
+
+import com.android.build.gradle.integration.common.category.UnitTesting
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import org.junit.AfterClass
 import org.junit.ClassRule
 import org.junit.Test
+import org.junit.experimental.categories.Category
 
 import static com.android.build.gradle.integration.testing.JUnitResults.Outcome.PASSED
 import static com.android.build.gradle.integration.testing.JUnitResults.Outcome.SKIPPED
@@ -26,6 +29,7 @@ import static com.google.common.truth.Truth.assertThat
 /**
  * Meta-level tests for the app-level unit testing support. Checks the default values mode.
  */
+@Category(UnitTesting.class)
 class UnitTestingSupportTest {
     @ClassRule
     public static GradleTestProject appProject = GradleTestProject.builder()

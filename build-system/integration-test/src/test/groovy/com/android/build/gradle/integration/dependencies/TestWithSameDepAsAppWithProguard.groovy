@@ -23,6 +23,7 @@ import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
+import org.truth0.Truth
 
 /**
  * Tests the handling of test dependency.
@@ -39,6 +40,8 @@ class TestWithSameDepAsAppWithProguard {
 
     @BeforeClass
     public static void setUp() {
+        // Disable for Jack for the moment
+        Truth.ASSUME.that(GradleTestProject.CUSTOM_JACK.toLowerCase()).matches("false");
         project.getBuildFile() << """
 apply plugin: 'com.android.application'
 

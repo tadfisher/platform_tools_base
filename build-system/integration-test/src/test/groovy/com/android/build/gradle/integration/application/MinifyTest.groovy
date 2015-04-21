@@ -15,6 +15,8 @@
  */
 
 package com.android.build.gradle.integration.application
+
+import com.android.build.gradle.integration.common.category.Lint
 import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.TruthHelper
@@ -22,6 +24,7 @@ import com.android.build.gradle.integration.common.truth.ZipFileSubject
 import com.android.builder.model.AndroidProject
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
+import org.gradle.tooling.BuildException
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.ClassRule
@@ -36,6 +39,8 @@ import org.objectweb.asm.tree.FieldNode
 import java.util.jar.JarFile
 
 import static com.google.common.truth.Truth.assertThat
+import static org.junit.Assert.fail
+
 /**
  * Assemble tests for minify.
  */
@@ -49,7 +54,7 @@ class MinifyTest {
     @BeforeClass
     static void setUp() {
         project.execute("clean", "assembleMinified",
-                "assembleMinifiedAndroidTest", "jarDebugClasses")
+                "assembleAndroidTest", "jarDebugClasses")
     }
 
     @AfterClass
@@ -58,8 +63,24 @@ class MinifyTest {
     }
 
     @Test
+    @Category(Lint.class)
     void lint() {
         project.execute("lint")
+    }
+
+    @Test
+    void "minify unitTests"() {
+        if ("false".equals(GradleTestProject.CUSTOM_JACK)) {
+            project.execute("testMinified")
+        } else {
+            try {
+                project.execute("testMinified")
+            } catch (BuildException e) {
+                return
+            }
+            fail("Was expecting testMinified to throw a BuildException " +
+                    "because Minified is built with Jack")
+        }
     }
 
     @Test

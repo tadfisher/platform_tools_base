@@ -15,18 +15,23 @@
  */
 
 package com.android.build.gradle.integration.testing
+
+import com.android.build.gradle.integration.common.category.UnitTesting
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.google.common.base.Throwables
 import org.gradle.tooling.BuildException
 import org.junit.ClassRule
 import org.junit.Test
+import org.junit.experimental.categories.Category
 
 import static com.android.build.gradle.integration.testing.JUnitResults.Outcome.FAILED
 import static com.android.build.gradle.integration.testing.JUnitResults.Outcome.PASSED
 import static org.junit.Assert.fail
+
 /**
  * Meta-level tests for the app-level unit testing support.
  */
+@Category(UnitTesting.class)
 class UnitTestingFlavorsSupportTest {
     @ClassRule
     static public GradleTestProject flavorsProject = GradleTestProject.builder()

@@ -15,16 +15,20 @@
  */
 
 package com.android.build.gradle.integration.testing
+
+import com.android.build.gradle.integration.common.category.UnitTesting
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import groovy.transform.CompileStatic
 import org.junit.ClassRule
 import org.junit.Test
+import org.junit.experimental.categories.Category
 
 import static com.android.build.gradle.integration.testing.JUnitResults.Outcome.PASSED
 import static com.google.common.truth.Truth.assertThat
 /**
  * Meta-level tests for the app-level unit testing support. Tests default values mode.
  */
+@Category(UnitTesting.class)
 class UnitTestingDefaultValuesTest {
     @ClassRule
     static public GradleTestProject simpleProject = GradleTestProject.builder()
