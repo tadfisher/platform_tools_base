@@ -34,7 +34,6 @@ import com.android.build.gradle.internal.dsl.GroupableProductFlavor
 import com.android.build.gradle.internal.dsl.GroupableProductFlavorFactory
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.dsl.SigningConfigFactory
-import com.android.build.gradle.internal.model.DependenciesImpl
 import com.android.build.gradle.internal.model.ModelBuilder
 import com.android.build.gradle.internal.process.GradleJavaProcessExecutor
 import com.android.build.gradle.internal.process.GradleProcessExecutor
@@ -56,6 +55,7 @@ import com.android.ide.common.blame.output.BlameAwareLoggedProcessOutputHandler
 import com.android.ide.common.internal.ExecutorSingleton
 import com.android.utils.ILogger
 import groovy.transform.CompileStatic
+import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
@@ -64,18 +64,14 @@ import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.plugins.JavaPlugin
-import org.gradle.api.tasks.TaskContainer
 import org.gradle.internal.reflect.Instantiator
 import org.gradle.tooling.BuildException
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 
 import java.security.MessageDigest
-import java.util.jar.Attributes
 import java.util.jar.Manifest
 import java.util.regex.Pattern
 
-import static com.android.builder.core.BuilderConstants.DEBUG
-import static com.android.builder.core.BuilderConstants.RELEASE
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES
 import static java.io.File.separator
 
@@ -257,6 +253,7 @@ public abstract class BasePlugin {
                 new GradleJavaProcessExecutor(project),
                 new BlameAwareLoggedProcessOutputHandler(getLogger(),
                         extraModelInfo.getErrorFormatMode()),
+                extraModelInfo,
                 logger,
                 verbose)
 
@@ -380,7 +377,6 @@ public abstract class BasePlugin {
         }
 
         project.afterEvaluate {
-            ensureTargetSetup()
             SpanRecorders.record(project, ExecutionType.BASE_PLUGIN_CREATE_ANDROID_TASKS) {
                 createAndroidTasks(false)
             }
@@ -415,6 +411,8 @@ public abstract class BasePlugin {
             throw new BadPluginException(
                     "The 'java' plugin has been applied, but it is not compatible with the Android plugins.")
         }
+
+        ensureTargetSetup()
 
         // don't do anything if the project was not initialized.
         // Unless TEST_SDK_DIR is set in which case this is unit tests and we don't return.
@@ -454,9 +452,14 @@ public abstract class BasePlugin {
         // check if the target has been set.
         TargetInfo targetInfo = androidBuilder.getTargetInfo()
         if (targetInfo == null) {
+            if (extension.getCompileOptions() == null) {
+                throw new GradleException("Calling getBootClasspath before compileSdkVersion")
+            }
+
             sdkHandler.initTarget(
                     extension.getCompileSdkVersion(),
                     extension.buildToolsRevision,
+                    extension.getLibraryRequests(),
                     androidBuilder)
         }
     }

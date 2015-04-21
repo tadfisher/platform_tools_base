@@ -1276,13 +1276,8 @@ abstract class TaskManager {
 
         configureLanguageLevel(javaCompileTask)
         javaCompileTask.options.encoding = getExtension().compileOptions.encoding
-
-        // setup the boot classpath just before the task actually runs since this will
-        // force the sdk to be parsed.
-        javaCompileTask.doFirst {
-            javaCompileTask.options.bootClasspath =
-                    androidBuilder.getBootClasspathAsStrings().join(File.pathSeparator)
-        }
+        javaCompileTask.options.bootClasspath =
+                androidBuilder.getBootClasspathAsStrings().join(File.pathSeparator)
 
         // Create jar task for uses by external modules.
         if (variantData.variantDependency.classesConfiguration != null) {
