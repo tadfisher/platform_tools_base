@@ -19,6 +19,7 @@ package com.android.builder.core;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.jack.api.JackProvider;
+import com.android.jill.api.JillProvider;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.repository.FullRevision;
 import com.google.common.base.Optional;
@@ -32,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
 
 /**
@@ -124,9 +126,20 @@ public enum BuildToolsServiceLoader {
      */
     public static final Service<JackProvider> JACK = new Jack();
 
+    /**
+     * Jill service description.
+     */
+    public static final Service<JillProvider> JILL = new Jill();
+
     private static final class Jack extends Service<JackProvider> {
         Jack() {
-            super(ImmutableList.of("jack.jar", "jill.jar"), JackProvider.class);
+            super(ImmutableList.of("jack.jar"), JackProvider.class);
+        }
+    }
+
+    private static final class Jill extends Service<JillProvider> {
+        Jill() {
+            super(ImmutableList.of("jill.jar"), JillProvider.class);
         }
     }
 
@@ -191,7 +204,7 @@ public enum BuildToolsServiceLoader {
                     throw new RuntimeException(e);
                 }
             }
-            ClassLoader cl = new URLClassLoader(urls, getClass().getClassLoader());
+            ClassLoader cl = new URLClassLoader(urls, serviceType.getServiceClass().getClassLoader());
             ServiceLoader<T> serviceLoader = ServiceLoader.load(serviceType.getServiceClass(), cl);
             loadedServicesLoaders.add(new LoadedServiceLoader<T>(
                     serviceType.getServiceClass(), serviceLoader));
