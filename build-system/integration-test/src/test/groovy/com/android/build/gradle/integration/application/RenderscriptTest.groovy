@@ -16,12 +16,14 @@
 
 package com.android.build.gradle.integration.application
 
+import com.android.build.gradle.integration.common.category.Lint
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
+import org.junit.experimental.categories.Category
 
 /**
  * Assemble tests for renderscript.
@@ -44,6 +46,7 @@ class RenderscriptTest {
     }
 
     @Test
+    @Category(Lint.class)
     void lint() {
         project.execute("lint")
     }

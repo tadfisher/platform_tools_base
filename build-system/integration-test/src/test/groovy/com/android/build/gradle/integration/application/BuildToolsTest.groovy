@@ -27,7 +27,7 @@ import org.junit.Test
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
-import static org.junit.Assert.assertTrue
+import static com.google.common.truth.Truth.assert_
 
 @CompileStatic
 class BuildToolsTest {
@@ -37,12 +37,19 @@ class BuildToolsTest {
     private static final Pattern INPUT_CHANGED_PATTERN =
             ~/Value of input property 'buildToolsVersion' has changed for task ':(\S+)'/
 
-    private static final String[] tasks = [
+    private static final List<String> JAVAC_DX_TASKS = [
             "preDexDebug", "dexDebug", "compileDebugAidl", "compileDebugRenderscript",
             "mergeDebugResources", "processDebugResources",
             "preDexRelease", "dexRelease", "compileReleaseAidl", "compileReleaseRenderscript",
             "mergeReleaseResources", "processReleaseResources"
     ]
+
+    //TODO: check that this list is correct.
+    private static final List<String> JACK_TASKS = [
+            "mergeReleaseResources", "processDebugResources", "compileReleaseAidl",
+            "jillReleaseRuntimeLibraries", "compileReleaseRenderscript", "compileDebugRenderscript",
+            "processReleaseResources", "mergeDebugResources", "jillDebugRuntimeLibraries",
+            "jillReleasePackagedLibraries", "jillDebugPackagedLibraries", "compileDebugAidl"]
 
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
@@ -69,32 +76,38 @@ android {
         project.execute("assemble")
 
         Set<String> skippedTasks = getTasksMatching(UP_TO_DATE_PATTERN, project.stdout)
-        for (String task : tasks) {
-            assertTrue(String.format("Expecting task %s to be UP-TO-DATE" , task),
-                    skippedTasks.contains(task))
-        }
+
+        List<String> expectedTasks = (GradleTestProject.CUSTOM_JACK.toLowerCase().equals("false")) ?
+                JAVAC_DX_TASKS : JACK_TASKS;
+
+        assert_().withFailureMessage("Expecting tasks to be UP-TO-DATE")
+                .that(skippedTasks).containsAllIn(expectedTasks);
     }
 
     @Test
     public void invalidateBuildTools() {
         project.execute("assemble")
-
         project.getBuildFile() << """
 apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-    buildToolsVersion "19.1.0"
+    buildToolsVersion "${
+            // switch to a different build tools version.
+            GradleTestProject.DEFAULT_BUILD_TOOL_VERSION != "21.1.1" ? "21.1.1" : "21.1.0"
+        }"
 }
 """
 
         project.stdout.reset()
         project.execute("assemble")
         Set<String> affectedTasks = getTasksMatching(INPUT_CHANGED_PATTERN, project.stdout)
-        for (String task : tasks) {
-            assertTrue(String.format("Expecting task %s to be invalidated", task),
-                    affectedTasks.contains(task))
-        }
+
+        List<String> expectedTasks = (GradleTestProject.CUSTOM_JACK.toLowerCase().equals("false")) ?
+                JAVAC_DX_TASKS : JACK_TASKS;
+
+        assert_().withFailureMessage("Expecting tasks to be invalidated")
+                .that(affectedTasks).containsAllIn(expectedTasks);
     }
 
     private static Set<String> getTasksMatching(Pattern pattern, ByteArrayOutputStream output) {
