@@ -1480,7 +1480,8 @@ public class AndroidBuilder {
                 buildToolInfo,
                 mVerboseExec,
                 mJavaProcessExecutor,
-                mProcessOutputHandler);
+                mProcessOutputHandler,
+                mLogger);
     }
 
     public static List<File> convertLibraryToJack(
@@ -1490,7 +1491,8 @@ public class AndroidBuilder {
             @NonNull BuildToolInfo buildToolInfo,
             boolean verbose,
             @NonNull JavaProcessExecutor processExecutor,
-            @NonNull ProcessOutputHandler processOutputHandler)
+            @NonNull ProcessOutputHandler processOutputHandler,
+            @NonNull ILogger logger)
             throws ProcessException {
         checkNotNull(inputFile, "inputFile cannot be null.");
         checkNotNull(outFile, "outFile cannot be null.");
@@ -1518,6 +1520,7 @@ public class AndroidBuilder {
             builder.addArgs("--verbose");
         }
 
+        logger.verbose(builder.toString());
         JavaProcessInfo javaProcessInfo = builder.createJavaProcess();
         ProcessResult result = processExecutor.execute(javaProcessInfo, processOutputHandler);
         result.rethrowFailure().assertNormalExitValue();
