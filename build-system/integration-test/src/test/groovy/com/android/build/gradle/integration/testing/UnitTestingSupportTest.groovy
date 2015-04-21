@@ -15,10 +15,13 @@
  */
 
 package com.android.build.gradle.integration.testing
+
+import com.android.build.gradle.integration.common.category.UnitTesting
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import org.junit.AfterClass
 import org.junit.ClassRule
 import org.junit.Test
+import org.junit.experimental.categories.Category
 
 import static com.android.build.gradle.integration.testing.JUnitResults.Outcome.PASSED
 import static com.android.build.gradle.integration.testing.JUnitResults.Outcome.SKIPPED
@@ -44,11 +47,13 @@ class UnitTestingSupportTest {
     }
 
     @Test
+    @Category(UnitTesting.class)
     public void appProject() throws Exception {
         doTestProject(appProject)
     }
 
     @Test
+    @Category(UnitTesting.class)
     public void libProject() throws Exception {
         doTestProject(libProject)
     }

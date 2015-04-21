@@ -43,7 +43,12 @@ configure([test, testPrebuilts]) {
     maxParallelForks = Runtime.runtime.availableProcessors() / 2
 
     useJUnit {
-        excludeCategories "com.android.build.gradle.integration.common.category.DeviceTests"
+        if (System.env.CUSTOM_JACK) {
+            excludeCategories "com.android.build.gradle.integration.common.category.DeviceTests",
+                    "com.android.build.gradle.integration.common.category.Lint"
+        } else {
+            excludeCategories "com.android.build.gradle.integration.common.category.DeviceTests"
+        }
     }
 }
 

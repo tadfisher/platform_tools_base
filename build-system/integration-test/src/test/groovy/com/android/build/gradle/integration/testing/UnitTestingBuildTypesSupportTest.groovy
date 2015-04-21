@@ -15,11 +15,14 @@
  */
 
 package com.android.build.gradle.integration.testing
+
+import com.android.build.gradle.integration.common.category.UnitTesting
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.google.common.base.Throwables
 import org.gradle.tooling.BuildException
 import org.junit.ClassRule
 import org.junit.Test
+import org.junit.experimental.categories.Category
 
 import static com.android.build.gradle.integration.testing.JUnitResults.Outcome.PASSED
 import static org.junit.Assert.fail
@@ -33,6 +36,7 @@ class UnitTestingBuildTypesSupportTest {
             .create()
 
     @Test
+    @Category(UnitTesting.class)
     public void 'Tests for a given build type are only compiled against the build type'() throws Exception {
         flavorsProject.execute("clean", "testDebug")
 

@@ -15,11 +15,14 @@
  */
 
 package com.android.build.gradle.integration.application
+
+import com.android.build.gradle.integration.common.category.Lint
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import org.gradle.tooling.BuildException
 import org.junit.AfterClass
 import org.junit.ClassRule
 import org.junit.Test
+import org.junit.experimental.categories.Category
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import static org.junit.Assert.fail
@@ -55,6 +58,7 @@ class DependencyCheckerTest {
     }
 
     @Test
+    @Category(Lint.class)
     void lint() {
         httpClientProject.execute("lint")
     }

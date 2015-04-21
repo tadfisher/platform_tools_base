@@ -16,11 +16,13 @@
 
 package com.android.build.gradle.integration.testing
 
+import com.android.build.gradle.integration.common.category.UnitTesting
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.google.common.base.Throwables
 import org.gradle.tooling.BuildException
 import org.junit.ClassRule
 import org.junit.Test
+import org.junit.experimental.categories.Category
 
 import static com.android.build.gradle.integration.testing.JUnitResults.Outcome.FAILED
 import static com.android.build.gradle.integration.testing.JUnitResults.Outcome.PASSED
@@ -36,6 +38,7 @@ class UnitTestingFlavorsSupportTest {
             .create()
 
     @Test
+    @Category(UnitTesting.class)
     public void 'Tests for a given flavor are only compiled against the flavor'() throws Exception {
         flavorsProject.execute("clean", "testBuildsPassesDebug")
 
@@ -55,6 +58,7 @@ class UnitTestingFlavorsSupportTest {
     }
 
     @Test
+    @Category(UnitTesting.class)
     public void 'Task for a given flavor only runs the correct tests'() throws Exception {
         flavorsProject.execute("clean", "testBuildsPassesDebug")
 
