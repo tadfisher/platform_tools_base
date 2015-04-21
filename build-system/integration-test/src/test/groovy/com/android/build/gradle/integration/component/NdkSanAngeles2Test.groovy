@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.component
 
+import com.android.build.gradle.integration.common.category.Lint
 import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import org.junit.AfterClass
@@ -46,6 +47,7 @@ class NdkSanAngeles2Test {
     }
 
     @Test
+    @Category(Lint.class)
     void lint() {
         project.execute("lint")
     }

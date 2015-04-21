@@ -98,7 +98,7 @@ public class GradleTestProject implements TestRule {
         ANDROID_GRADLE_PLUGIN_VERSION = !Strings.isNullOrEmpty(envVersion) ? envVersion
                 : Version.ANDROID_GRADLE_PLUGIN_VERSION;
         String envJack = System.getenv().get("CUSTOM_JACK");
-        CUSTOM_JACK = !Strings.isNullOrEmpty(envJack) ? envJack : "false";
+        CUSTOM_JACK = !Strings.isNullOrEmpty(envJack) ? envJack.toLowerCase() : "false";
     }
 
     private static final String COMMON_HEADER = "commonHeader.gradle";
@@ -240,7 +240,7 @@ public class GradleTestProject implements TestRule {
         ndkDir = findNdkDir();
         String buildDir = System.getenv("PROJECT_BUILD_DIR");
         outDir = (buildDir == null) ? new File("build/tests") : new File(buildDir, "tests");
-        this.name = (name == null) ? DEFAULT_TEST_PROJECT_NAME : name;
+        this.name = (name == null) ? DEFAULT_TEST_PROJECT_NAME : name.replaceAll("[^A-Za-z0-9_-]", "_");
         this.experimentalMode = experimentalMode;
         this.targetGradleVersion = targetGradleVersion;
         this.testProject = testProject;

@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.library
 
+import com.android.build.gradle.integration.common.category.Lint
 import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.ModelHelper
@@ -34,7 +35,6 @@ import static com.android.builder.core.BuilderConstants.DEBUG
 import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertNotNull
-import static org.junit.Assert.assertThat
 import static org.junit.Assert.assertTrue
 
 /**
@@ -59,6 +59,7 @@ class LibTestDepTest {
     }
 
     @Test
+    @Category(Lint.class)
     void lint() {
         project.execute("lint")
     }

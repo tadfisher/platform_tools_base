@@ -16,8 +16,8 @@ dependencies {
 }
 
 def testEnvironment = [
-    PROJECT_BUILD_DIR: project.buildDir,
-    CUSTOM_REPO: rootProject.file("../out/repo"),
+    PROJECT_BUILD_DIR: project.buildDir.toString(),
+    CUSTOM_REPO: rootProject.file("../out/repo").toString(),
     CUSTOM_GRADLE: System.env.CUSTOM_GRADLE ?: rootProject.ext.buildVersion,
     ANDROID_HOME: System.env.ANDROID_HOME,
     ANDROID_NDK_HOME: System.env.ANDROID_NDK_HOME,
@@ -43,7 +43,13 @@ configure([test, testPrebuilts]) {
     maxParallelForks = Runtime.runtime.availableProcessors() / 2
 
     useJUnit {
-        excludeCategories "com.android.build.gradle.integration.common.category.DeviceTests"
+        if (System.env.CUSTOM_JACK) {
+            excludeCategories "com.android.build.gradle.integration.common.category.DeviceTests",
+                    "com.android.build.gradle.integration.common.category.Lint",
+                    "com.android.build.gradle.integration.common.category.UnitTesting"
+        } else {
+            excludeCategories "com.android.build.gradle.integration.common.category.DeviceTests"
+        }
     }
 }
 
@@ -83,9 +89,24 @@ task performanceTest(type: Test) {
     }
 }
 
-test.dependsOn ':publishLocal'
-connectedIntegrationTest.dependsOn ':publishLocal'
-performanceTest.dependsOn ':publishLocal'
+task validateTestEnvironment {
+    inputs.properties(testEnvironment)
+}
+validateTestEnvironment << {
+    if (testEnvironment.CUSTOM_JACK) {
+        if (testEnvironment.CUSTOM_BUILDTOOLS) {
+            def a = testEnvironment.CUSTOM_BUILDTOOLS.tokenize('.').collect { it.toInteger() }
+            if (a.get(0) < 21 || (a.get(0) == 21 && (a.size() == 1 || a.get(1) < 1))) {
+                throw new RuntimeException("Jack requires buildTools >= 21.1.0. " +
+                        "CUSTOM_BUILDTOOLS=" + testEnvironment.CUSTOM_BUILDTOOLS)
+            }
+        }
+    }
+}
+
+test.dependsOn ':publishLocal', validateTestEnvironment
+connectedIntegrationTest.dependsOn ':publishLocal', validateTestEnvironment
+performanceTest.dependsOn ':publishLocal', validateTestEnvironment
 check.dependsOn performanceTest
 
 jacocoTestReport {

@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.application
 
+import com.android.build.gradle.integration.common.category.Lint
 import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import org.junit.AfterClass
@@ -44,6 +45,7 @@ class MultiresTest {
     }
 
     @Test
+    @Category(Lint.class)
     void lint() {
         project.execute("lint")
     }
