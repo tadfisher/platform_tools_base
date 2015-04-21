@@ -56,6 +56,7 @@ import com.android.ide.common.blame.output.BlameAwareLoggedProcessOutputHandler
 import com.android.ide.common.internal.ExecutorSingleton
 import com.android.utils.ILogger
 import groovy.transform.CompileStatic
+import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
@@ -257,6 +258,7 @@ public abstract class BasePlugin {
                 new GradleJavaProcessExecutor(project),
                 new BlameAwareLoggedProcessOutputHandler(getLogger(),
                         extraModelInfo.getErrorFormatMode()),
+                extraModelInfo,
                 logger,
                 verbose)
 
@@ -380,7 +382,6 @@ public abstract class BasePlugin {
         }
 
         project.afterEvaluate {
-            ensureTargetSetup()
             SpanRecorders.record(project, ExecutionType.BASE_PLUGIN_CREATE_ANDROID_TASKS) {
                 createAndroidTasks(false)
             }
@@ -415,6 +416,8 @@ public abstract class BasePlugin {
             throw new BadPluginException(
                     "The 'java' plugin has been applied, but it is not compatible with the Android plugins.")
         }
+
+        ensureTargetSetup()
 
         // don't do anything if the project was not initialized.
         // Unless TEST_SDK_DIR is set in which case this is unit tests and we don't return.
@@ -454,9 +457,14 @@ public abstract class BasePlugin {
         // check if the target has been set.
         TargetInfo targetInfo = androidBuilder.getTargetInfo()
         if (targetInfo == null) {
+            if (extension.getCompileOptions() == null) {
+                throw new GradleException("Calling getBootClasspath before compileSdkVersion")
+            }
+
             sdkHandler.initTarget(
                     extension.getCompileSdkVersion(),
                     extension.buildToolsRevision,
+                    extension.getUsedLibraries(),
                     androidBuilder)
         }
     }

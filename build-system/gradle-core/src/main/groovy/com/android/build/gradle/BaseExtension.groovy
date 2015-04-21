@@ -40,6 +40,7 @@ import com.android.build.gradle.internal.dsl.Splits
 import com.android.build.gradle.internal.dsl.TestOptions
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.BuilderConstants
+import com.android.builder.core.UsedLibrary
 import com.android.builder.model.SourceProvider
 import com.android.builder.testing.api.DeviceProvider
 import com.android.builder.testing.api.TestServer
@@ -71,6 +72,7 @@ public abstract class BaseExtension {
 
     private String target
     private FullRevision buildToolsRevision
+    private List<UsedLibrary> usedLibraries = []
 
     /** Default config, shared by all flavors. */
     final ProductFlavor defaultConfig
@@ -266,6 +268,14 @@ public abstract class BaseExtension {
 
     void setCompileSdkVersion(String target) {
         compileSdkVersion(target)
+    }
+
+    void useLibrary(String name) {
+        useLibrary(name, true)
+    }
+
+    void useLibrary(String name, boolean required) {
+        usedLibraries.add(new UsedLibrary(name, required))
     }
 
     void buildToolsVersion(String version) {
@@ -559,6 +569,10 @@ public abstract class BaseExtension {
 
     public FullRevision getBuildToolsRevision() {
         return buildToolsRevision
+    }
+
+    public Collection<UsedLibrary> getUsedLibraries() {
+        return usedLibraries
     }
 
     public File getSdkDirectory() {

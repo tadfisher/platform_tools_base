@@ -27,6 +27,8 @@ import com.android.sdklib.ISystemImage;
 import com.android.sdklib.SdkManager.LayoutlibVersion;
 import com.android.sdklib.repository.descriptors.IdDisplay;
 import com.android.utils.SparseArray;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 import java.io.File;
 import java.util.Arrays;
@@ -243,7 +245,35 @@ public final class PlatformTarget implements IAndroidTarget {
 
     @Override @NonNull
     public List<String> getBootClasspath() {
-        return Collections.singletonList(getPath(IAndroidTarget.ANDROID_JAR));
+        return ImmutableList.of(getPath(IAndroidTarget.ANDROID_JAR));
+    }
+
+    @NonNull
+    @Override
+    public List<OptionalLibrary> getOptionalLibraries() {
+        if (mVersion.getFeatureLevel() > 22) {
+            // TODO: Change value of requireManifestEntry for 24+
+            OptionalLibrary library = new OptionalLibraryImpl(
+                    "org.apache.http.legacy",
+                    new File(mRootFolderOsPath, "optional/apache-http.jar"),
+                    "org.apache.http.legacy",
+                    false /*requireManifestEntry*/);
+            return ImmutableList.of(library);
+        }
+
+        return ImmutableList.of();
+    }
+
+    /**
+     * Always returns null, as a standard platform has no additional libraries.
+     *
+     * {@inheritDoc}
+     * @see com.android.sdklib.IAndroidTarget#getAdditionalLibraries()
+     */
+    @NonNull
+    @Override
+    public List<OptionalLibrary> getAdditionalLibraries() {
+        return ImmutableList.of();
     }
 
     /**
@@ -281,17 +311,6 @@ public final class PlatformTarget implements IAndroidTarget {
         }
 
         return new File(getFile(IAndroidTarget.SKINS), skinName);
-    }
-
-    /**
-     * Always returns null, as a standard platform ha no optional libraries.
-     *
-     * {@inheritDoc}
-     * @see com.android.sdklib.IAndroidTarget#getOptionalLibraries()
-     */
-    @Override
-    public IOptionalLibrary[] getOptionalLibraries() {
-        return null;
     }
 
     /**
