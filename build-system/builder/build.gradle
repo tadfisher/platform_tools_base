@@ -28,7 +28,6 @@ dependencies {
     compile 'org.bouncycastle:bcprov-jdk15on:1.48'
     compile 'org.ow2.asm:asm:5.0.3'
     compile 'org.ow2.asm:asm-tree:5.0.3'
-    compile 'com.google.code.gson:gson:2.2.4'
 
     testCompile 'junit:junit:4.12'
     testCompile 'org.mockito:mockito-all:1.9.5'
@@ -83,3 +82,28 @@ public final class Version {
 }
 
 tasks.compileJava.dependsOn generateVersionConstantsJava
+
+configurations {
+    provided
+    sourcesProvided
+}
+
+dependencies {
+    provided(project(':base:profile')) {
+        transitive = false
+    }
+    sourcesProvided(project(path:':base:profile', configuration:'sourcesOnly')) {
+        transitive = false
+    }
+}
+
+sourceSets.main.compileClasspath += [configurations.provided]
+tasks.compileJava.dependsOn(configurations.provided)
+tasks.sourcesJar.dependsOn(configurations.sourcesProvided)
+
+tasks.jar {
+    from({zipTree(configurations.provided.singleFile)})
+}
+tasks.sourcesJar {
+    from({zipTree(configurations.sourcesProvided.singleFile)})
+}
