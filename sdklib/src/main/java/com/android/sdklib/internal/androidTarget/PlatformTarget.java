@@ -27,12 +27,16 @@ import com.android.sdklib.ISystemImage;
 import com.android.sdklib.SdkManager.LayoutlibVersion;
 import com.android.sdklib.repository.descriptors.IdDisplay;
 import com.android.utils.SparseArray;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import javax.swing.text.html.Option;
 
 /**
  * Represents a platform target in the SDK.
@@ -54,6 +58,7 @@ public final class PlatformTarget implements IAndroidTarget {
     private final SparseArray<String> mPaths = new SparseArray<String>();
     private File[] mSkins;
     private final ISystemImage[] mSystemImages;
+    private final List<OptionalLibrary> mOptionalLibraries;
     private final LayoutlibVersion mLayoutlibVersion;
     private final BuildToolInfo mBuildToolInfo;
 
@@ -78,6 +83,7 @@ public final class PlatformTarget implements IAndroidTarget {
             LayoutlibVersion layoutlibVersion,
             ISystemImage[] systemImages,
             Map<String, String> properties,
+            List<OptionalLibrary> optionalLibraries,
             @NonNull BuildToolInfo buildToolInfo) {
         if (!platformOSPath.endsWith(File.separator)) {
             platformOSPath = platformOSPath + File.separator;
@@ -91,6 +97,7 @@ public final class PlatformTarget implements IAndroidTarget {
         mBuildToolInfo = buildToolInfo;
         mSystemImages = systemImages == null ? new ISystemImage[0] : systemImages;
         Arrays.sort(mSystemImages);
+        mOptionalLibraries = ImmutableList.copyOf(optionalLibraries);
 
         if (mVersion.isPreview()) {
             mName =  String.format(PLATFORM_NAME_PREVIEW, mVersionName);
@@ -235,7 +242,6 @@ public final class PlatformTarget implements IAndroidTarget {
         return new File(getPath(pathId));
     }
 
-
     @Override
     public BuildToolInfo getBuildToolInfo() {
         return mBuildToolInfo;
@@ -243,7 +249,25 @@ public final class PlatformTarget implements IAndroidTarget {
 
     @Override @NonNull
     public List<String> getBootClasspath() {
-        return Collections.singletonList(getPath(IAndroidTarget.ANDROID_JAR));
+        return ImmutableList.of(getPath(IAndroidTarget.ANDROID_JAR));
+    }
+
+    @NonNull
+    @Override
+    public List<OptionalLibrary> getOptionalLibraries() {
+        return mOptionalLibraries;
+    }
+
+    /**
+     * Always returns null, as a standard platform has no additional libraries.
+     *
+     * {@inheritDoc}
+     * @see com.android.sdklib.IAndroidTarget#getAdditionalLibraries()
+     */
+    @NonNull
+    @Override
+    public List<OptionalLibrary> getAdditionalLibraries() {
+        return ImmutableList.of();
     }
 
     /**
@@ -281,17 +305,6 @@ public final class PlatformTarget implements IAndroidTarget {
         }
 
         return new File(getFile(IAndroidTarget.SKINS), skinName);
-    }
-
-    /**
-     * Always returns null, as a standard platform ha no optional libraries.
-     *
-     * {@inheritDoc}
-     * @see com.android.sdklib.IAndroidTarget#getOptionalLibraries()
-     */
-    @Override
-    public IOptionalLibrary[] getOptionalLibraries() {
-        return null;
     }
 
     /**
