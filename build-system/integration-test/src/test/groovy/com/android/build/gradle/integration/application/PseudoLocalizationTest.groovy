@@ -15,12 +15,18 @@
  */
 
 package com.android.build.gradle.integration.application
+
+import com.android.build.gradle.integration.common.category.Lint
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.sdklib.repository.FullRevision
+import com.google.common.truth.Truth
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
+import org.junit.Assume
 import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
+import org.junit.experimental.categories.Category
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
 /**
@@ -35,6 +41,9 @@ class PseudoLocalizationTest {
 
     @BeforeClass
     static void setUp() {
+        Truth.ASSERT.that(FullRevision.parseRevision(GradleTestProject.DEFAULT_BUILD_TOOL_VERSION))
+                .isGreaterThan(new FullRevision(21,0,0))
+
         project.execute("clean", "assembleDebug")
     }
 
@@ -44,6 +53,7 @@ class PseudoLocalizationTest {
     }
 
     @Test
+    @Category(Lint.class)
     void lint() {
         project.execute("lint")
     }

@@ -15,6 +15,7 @@
  */
 
 package com.android.build.gradle.integration.testing
+
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.google.common.base.Throwables
 import org.gradle.tooling.BuildException

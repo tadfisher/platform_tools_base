@@ -15,6 +15,7 @@
  */
 
 package com.android.build.gradle.integration.testing
+
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import org.junit.AfterClass
 import org.junit.ClassRule
