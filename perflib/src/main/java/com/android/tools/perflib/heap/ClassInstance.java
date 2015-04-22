@@ -51,6 +51,17 @@ public class ClassInstance extends Instance {
         return result;
     }
 
+    public int getFieldCount() {
+        int result = 0;
+        ClassObj clazz = getClassObj();
+        getBuffer().setPosition(mValuesOffset);
+        while (clazz != null) {
+          result += clazz.getFields().length;
+          clazz = clazz.getSuperClassObj();
+        }
+        return result;
+    }
+
     @Override
     public final void accept(@NonNull Visitor visitor) {
         visitor.visitClassInstance(this);
