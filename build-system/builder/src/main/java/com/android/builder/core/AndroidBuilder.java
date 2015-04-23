@@ -116,10 +116,12 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
-import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /**
  * This is the main builder class. It is given all the data to process the build (such as
@@ -1170,7 +1172,6 @@ public class AndroidBuilder {
             @NonNull Collection<File> preDexedLibraries,
             @NonNull File outDexFolder,
                      boolean multidex,
-                     boolean multidexLegacy,
             @Nullable File mainDexList,
             @NonNull DexOptions dexOptions,
             @Nullable List<String> additionalParameters,
@@ -1187,6 +1188,13 @@ public class AndroidBuilder {
         checkState(mTargetInfo != null,
                 "Cannot call convertByteCode() before setTargetInfo() is called.");
 
+        ImmutableList.Builder<File> verifiedInputs = ImmutableList.builder();
+        for (File input : inputs) {
+            if (checkLibraryClassesJar(input)) {
+                verifiedInputs.add(input);
+            }
+        }
+
         BuildToolInfo buildToolInfo = mTargetInfo.getBuildTools();
         DexProcessBuilder builder = new DexProcessBuilder(outDexFolder);
 
@@ -1196,7 +1204,7 @@ public class AndroidBuilder {
                 .setMultiDex(multidex)
                 .setMainDexList(mainDexList)
                 .addInputs(preDexedLibraries)
-                .addInputs(inputs);
+                .addInputs(verifiedInputs.build());
 
         if (additionalParameters != null) {
             builder.additionalParameters(additionalParameters);
@@ -1284,7 +1292,7 @@ public class AndroidBuilder {
      * @throws ProcessException
      */
     @NonNull
-    public static List<File> preDexLibrary(
+    public static ImmutableList<File> preDexLibrary(
             @NonNull File inputFile,
             @NonNull File outFile,
             boolean multiDex,
@@ -1298,6 +1306,15 @@ public class AndroidBuilder {
         checkNotNull(outFile, "outFile cannot be null.");
         checkNotNull(dexOptions, "dexOptions cannot be null.");
 
+
+
+        try {
+            if (!checkLibraryClassesJar(inputFile)) {
+                return ImmutableList.of();
+            }
+        } catch(IOException e) {
+            throw new RuntimeException("Exception while checking library jar", e);
+        }
         DexProcessBuilder builder = new DexProcessBuilder(outFile);
 
         builder.setVerbose(verbose)
@@ -1321,10 +1338,61 @@ public class AndroidBuilder {
                 throw new RuntimeException("No dex files created at " + outFile.getAbsolutePath());
             }
 
-            return Lists.newArrayList(files);
+            return ImmutableList.copyOf(files);
         } else {
-            return Collections.singletonList(outFile);
+            return ImmutableList.of(outFile);
         }
+    }
+
+    /**
+     * Returns true if the library (jar or folder) contains class files, false otherwise.
+     */
+    private static boolean checkLibraryClassesJar(@NonNull File input) throws IOException {
+
+        if (!input.exists()) {
+            return false;
+        }
+
+        if (input.isDirectory()) {
+            return checkFolder(input);
+        }
+
+        ZipFile zipFile = null;
+        try {
+            zipFile = new ZipFile(input);
+            Enumeration<? extends ZipEntry> entries = zipFile.entries();
+            while(entries.hasMoreElements()) {
+                if (entries.nextElement().getName().endsWith(".class")) {
+                    return true;
+                }
+            }
+            return false;
+        } finally {
+            if (zipFile != null) {
+                zipFile.close();
+            }
+        }
+    }
+
+    /**
+     * Returns true if this folder or one of its subfolder contains a class file, false otherwise.
+     */
+    private static boolean checkFolder(@NonNull File folder) {
+        File[] subFolders = folder.listFiles();
+        if (subFolders != null) {
+            for (File childFolder : subFolders) {
+                if (childFolder.isFile() && childFolder.getName().endsWith(".class")) {
+                    return true;
+                }
+                if (childFolder.isDirectory()) {
+                    // if childFolder returns false, continue search otherwise return success.
+                    if (checkFolder(childFolder)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     /**

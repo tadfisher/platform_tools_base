@@ -64,9 +64,6 @@ public class Dex extends BaseTask {
     boolean multiDexEnabled = false
 
     @Input
-    boolean legacyMultiDexMode = false
-
-    @Input
     boolean optimize = true
 
     @InputFile @Optional
@@ -148,7 +145,6 @@ public class Dex extends BaseTask {
                 getLibraries(),
                 outFolder,
                 getMultiDexEnabled(),
-                getLegacyMultiDexMode(),
                 getMainDexListFile(),
                 getDexOptions(),
                 getAdditionalParameters(),

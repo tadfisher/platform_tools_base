@@ -2075,7 +2075,6 @@ abstract class TaskManager {
                 project.file("$project.buildDir/${FD_INTERMEDIATES}/tmp/dex/${config.dirName}")
         dexTask.dexOptions = getExtension().dexOptions
         dexTask.multiDexEnabled = isMultiDexEnabled
-        dexTask.legacyMultiDexMode = isLegacyMultiDexMode
         // dx doesn't work with receving --no-optimize in debug so we disable it for now.
         dexTask.optimize = true //!variantData.variantConfiguration.buildType.debuggable
 
