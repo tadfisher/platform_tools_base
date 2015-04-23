@@ -22,8 +22,10 @@ import com.android.annotations.Nullable;
 import com.android.resources.Density;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ScreenOrientation;
+import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -50,7 +52,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
     }
 
     /** Splitter which can be used to split qualifiers */
-    public static final Splitter QUALIFIER_SPLITTER = Splitter.on('-');
+    public static final Splitter QUALIFIER_SPLITTER = Splitter.on(SdkConstants.RES_QUALIFIER_SEP);
 
 
     private final ResourceQualifier[] mQualifiers = new ResourceQualifier[INDEX_COUNT];
@@ -310,7 +312,20 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
      */
     @Nullable
     public static FolderConfiguration getConfigForQualifierString(@NonNull String qualifierString) {
-        return getConfigFromQualifiers(QUALIFIER_SPLITTER.split(qualifierString));
+        if (!qualifierString.isEmpty()) {
+            return getConfigFromQualifiers(QUALIFIER_SPLITTER.split(qualifierString));
+        } else {
+            return getConfigFromQualifiers(Collections.<String>emptyList());
+        }
+    }
+
+    /**
+     * Creates a copy of the given {@link FolderConfiguration}, that can be modified without
+     * affecting the original.
+     */
+    @NonNull
+    public static FolderConfiguration copyOf(@NonNull FolderConfiguration original) {
+        return getConfigForQualifierString(original.getQualifierString());
     }
 
     /**
@@ -803,19 +818,31 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
      */
     @NonNull
     public String getFolderName(@NonNull ResourceFolderType folder) {
-        StringBuilder result = new StringBuilder(folder.getName());
+        String qualifierString = getQualifierString();
+        if (qualifierString.isEmpty()) {
+            return folder.getName();
+        } else {
+            return folder.getName() + SdkConstants.RES_QUALIFIER_SEP + qualifierString;
+        }
+    }
+
+    /**
+     * Returns the qualifier string, that is the part after the folder type. Can be empty.
+     */
+    @NonNull
+    public String getQualifierString() {
+        List<String> parts = Lists.newArrayList();
 
         for (ResourceQualifier qualifier : mQualifiers) {
             if (qualifier != null) {
                 String segment = qualifier.getFolderSegment();
                 if (segment != null && !segment.isEmpty()) {
-                    result.append(SdkConstants.RES_QUALIFIER_SEP);
-                    result.append(segment);
+                    parts.add(segment);
                 }
             }
         }
 
-        return result.toString();
+        return Joiner.on(SdkConstants.RES_QUALIFIER_SEP).join(parts);
     }
 
   /**
