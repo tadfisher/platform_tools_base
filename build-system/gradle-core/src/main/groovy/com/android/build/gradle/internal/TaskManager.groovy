@@ -115,7 +115,6 @@ import com.android.sdklib.SdkVersionInfo
 import com.android.sdklib.repository.FullRevision
 import com.google.common.base.CharMatcher
 import com.google.common.collect.ImmutableList
-import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Iterators
 import com.google.common.collect.Lists
 import com.google.common.collect.Sets
@@ -863,7 +862,7 @@ abstract class TaskManager {
         String variantName = variantData.variantConfiguration.fullName.capitalize()
         int minSdk = variantData.variantConfiguration.minSdkVersion.getApiLevel()
 
-        if (extension.preprocessResources  && minSdk < PreprocessResourcesTask.MIN_SDK) {
+        if (extension.preprocessingOptions.preprocessResources  && minSdk < PreprocessResourcesTask.MIN_SDK) {
             // Otherwise mergeResources will rename files when merging and it's hard to keep track
             // of PNGs that the user wanted to use instead of the generated ones.
             checkArgument(
@@ -887,8 +886,7 @@ abstract class TaskManager {
             preprocessResourcesTask.incrementalFolder =
                     project.file("$project.buildDir/${FD_INTERMEDIATES}/incremental/preprocessResourcesTask/${variantData.variantConfiguration.dirName}")
 
-            // TODO: configure this in the extension.
-            preprocessResourcesTask.densitiesToGenerate = [Density.HIGH, Density.XHIGH]
+            preprocessResourcesTask.densitiesToGenerate = extension.preprocessingOptions.typedDensities
         }
     }
 
