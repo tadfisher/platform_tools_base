@@ -31,6 +31,7 @@ import com.android.builder.signing.SignedJarBuilder.IZipEntryFilter;
 import com.android.ide.common.packaging.PackagingUtils;
 import com.android.ide.common.signing.CertificateInfo;
 import com.android.utils.ILogger;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
 
@@ -95,34 +96,65 @@ public final class Packager implements IArchiveBuilder {
     }
 
     /**
+     * Filter based on packaging options.
+     */
+    private static final class FileFilter implements Predicate<String> {
+        @Nullable
+        private final PackagingOptions mPackagingOptions;
+        @NonNull
+        private final Set<String> mExcludes;
+        @NonNull
+        private final Set<String> mPickFirsts;
+        private Set<String> mUsedPickFirsts = null;
+
+        public FileFilter(@Nullable PackagingOptions packagingOptions) {
+            mPackagingOptions = packagingOptions;
+            mExcludes = mPackagingOptions != null ? mPackagingOptions.getExcludes() :
+                    Collections.<String>emptySet();
+            mPickFirsts = mPackagingOptions != null ? mPackagingOptions.getPickFirsts() :
+                    Collections.<String>emptySet();
+        }
+
+        @Override
+        public boolean apply(@Nullable String input) {
+            //noinspection VariableNotUsedInsideIf
+            if (mPackagingOptions != null) {
+                if (mExcludes.contains(input)) {
+                    return false;
+                }
+
+                if (mPickFirsts.contains(input)) {
+                    if (mUsedPickFirsts == null) {
+                        mUsedPickFirsts = Sets.newHashSetWithExpectedSize(mPickFirsts.size());
+                    }
+
+                    if (mUsedPickFirsts.contains(input)) {
+                        return false;
+                    } else {
+                        mUsedPickFirsts.add(input);
+                    }
+                }
+            }
+            return true;
+        }
+    }
+
+    /**
      * Custom {@link IZipEntryFilter} to filter out everything that is not a standard java
      * resources, and also record whether the zip file contains native libraries.
      * <p/>Used in {@link SignedJarBuilder#writeZip(java.io.InputStream, IZipEntryFilter)} when
      * we only want the java resources from external jars.
      */
-    private final class JavaAndNativeResourceFilter implements IZipEntryFilter {
+    private final class ZipEntryResourceFilter implements IZipEntryFilter {
         private final List<String> mNativeLibs = new ArrayList<String>();
-        private Set<String> mUsedPickFirsts = null;
-
-        @Nullable
-        private final PackagingOptions mPackagingOptions;
-
-        @NonNull
-        private final Set<String> mExcludes;
-        @NonNull
-        private final Set<String> mPickFirsts;
 
         private boolean mNativeLibsConflict = false;
         private File mInputFile;
 
-        private JavaAndNativeResourceFilter(@Nullable PackagingOptions packagingOptions) {
-            mPackagingOptions = packagingOptions;
+        private FileFilter mFilter;
 
-            mExcludes = mPackagingOptions != null ? mPackagingOptions.getExcludes() :
-                    Collections.<String>emptySet();
-            mPickFirsts = mPackagingOptions != null ? mPackagingOptions.getPickFirsts() :
-                    Collections.<String>emptySet();
-
+        private ZipEntryResourceFilter(@NonNull FileFilter filter) {
+            mFilter = filter;
         }
 
         @Override
@@ -135,23 +167,8 @@ public final class Packager implements IArchiveBuilder {
                 return false;
             }
 
-            //noinspection VariableNotUsedInsideIf
-            if (mPackagingOptions != null) {
-                if (mExcludes.contains(archivePath)) {
-                    return false;
-                }
-
-                if (mPickFirsts.contains(archivePath)) {
-                    if (mUsedPickFirsts == null) {
-                        mUsedPickFirsts = Sets.newHashSetWithExpectedSize(mPickFirsts.size());
-                    }
-
-                    if (mUsedPickFirsts.contains(archivePath)) {
-                        return false;
-                    } else {
-                        mUsedPickFirsts.add(archivePath);
-                    }
-                }
+            if (!mFilter.apply(archivePath)) {
+                return false;
             }
 
             // Check each folders to make sure they should be included.
@@ -215,8 +232,9 @@ public final class Packager implements IArchiveBuilder {
     private boolean mJniDebugMode = false;
     private boolean mIsSealed = false;
 
+    private final FileFilter mFileFilter;
     private final NullZipFilter mNullFilter = new NullZipFilter();
-    private final JavaAndNativeResourceFilter mFilter;
+    private final ZipEntryResourceFilter mZipFilter;
     private final HashMap<String, File> mAddedFiles = new HashMap<String, File>();
 
     /**
@@ -283,7 +301,8 @@ public final class Packager implements IArchiveBuilder {
             @Nullable String createdBy,
             @Nullable PackagingOptions packagingOptions,
             ILogger logger) throws PackagerException {
-        mFilter = new JavaAndNativeResourceFilter(packagingOptions);
+        mFileFilter = new FileFilter(packagingOptions);
+        mZipFilter = new ZipEntryResourceFilter(mFileFilter);
 
         try {
             File apkFile = new File(apkLocation);
@@ -450,16 +469,16 @@ public final class Packager implements IArchiveBuilder {
             mLogger.verbose("%s:", jarFile);
 
             // reset the filter with this input.
-            mFilter.reset(jarFile);
+            mZipFilter.reset(jarFile);
 
             // ask the builder to add the content of the file, filtered to only let through
             // the java resources.
             fis = new FileInputStream(jarFile);
-            mBuilder.writeZip(fis, mFilter);
+            mBuilder.writeZip(fis, mZipFilter);
 
             // check if native libraries were found in the external library. This should
             // constitutes an error or warning depending on if they are in lib/
-            return new JarStatusImpl(mFilter.getNativeLibs(), mFilter.getNativeLibsConflict());
+            return new JarStatusImpl(mZipFilter.getNativeLibs(), mZipFilter.getNativeLibsConflict());
         } catch (DuplicateFileException e) {
             mBuilder.cleanUp();
             throw e;
@@ -572,6 +591,10 @@ public final class Packager implements IArchiveBuilder {
 
     private void doAddFile(File file, String archivePath) throws DuplicateFileException,
             IOException {
+        if (!mFileFilter.apply(archivePath)) {
+            return;
+        }
+
         mLogger.verbose("%1$s => %2$s", file, archivePath);
 
         File duplicate = checkFileForDuplicate(archivePath);
