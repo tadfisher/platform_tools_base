@@ -176,6 +176,11 @@ public abstract class GraphicGenerator {
      */
     public void generate(String category, Map<String, Map<String, BufferedImage>> categoryMap,
             GraphicGeneratorContext context, Options options, String name) {
+        // Vector image only need to generate one preview image, so we by pass all the other image densities.
+        if (options.density == Density.ANYDPI) {
+            generateImageAndUpdateMap(category, categoryMap, context, options, name);
+            return;
+        }
         Density[] densityValues = Density.values();
         // Sort density values into ascending order
         Arrays.sort(densityValues, new Comparator<Density>() {
@@ -184,7 +189,6 @@ public abstract class GraphicGenerator {
                 return d1.getDpiValue() - d2.getDpiValue();
             }
         });
-
         for (Density density : densityValues) {
             if (!density.isValidValueForDevice()) {
                 continue;
@@ -195,19 +199,33 @@ public abstract class GraphicGenerator {
                 continue;
             }
             options.density = density;
-            BufferedImage image = generate(context, options);
-            if (image != null) {
-                String mapCategory = category;
-                if (mapCategory == null) {
-                    mapCategory = options.density.getResourceValue();
-                }
-                Map<String, BufferedImage> imageMap = categoryMap.get(mapCategory);
-                if (imageMap == null) {
-                    imageMap = new LinkedHashMap<String, BufferedImage>();
-                    categoryMap.put(mapCategory, imageMap);
-                }
-                imageMap.put(getIconPath(options, name), image);
+            generateImageAndUpdateMap(category, categoryMap, context, options, name);
+        }
+    }
+
+    private void generateImageAndUpdateMap(String category,
+                                           Map<String, Map<String, BufferedImage>> categoryMap,
+                                           GraphicGeneratorContext context,
+                                           Options options,
+                                           String name) {
+        BufferedImage image = generate(context, options);
+        if (image != null) {
+            String mapCategory = category;
+            if (mapCategory == null) {
+                mapCategory = options.density.getResourceValue();
             }
+            Map<String, BufferedImage> imageMap = categoryMap.get(mapCategory);
+            if (imageMap == null) {
+                imageMap = new LinkedHashMap<String, BufferedImage>();
+                categoryMap.put(mapCategory, imageMap);
+            }
+            String iconPath;
+            if (options.density != Density.ANYDPI) {
+                iconPath = getIconPath(options, name);
+            } else {
+                iconPath = "res/drawable/" + name + ".xml";
+            }
+            imageMap.put(iconPath, image);
         }
     }
 
@@ -223,6 +241,10 @@ public abstract class GraphicGenerator {
      * @return a factor to multiple mdpi distances with to compute the target density
      */
     public static float getMdpiScaleFactor(Density density) {
+        if (density == Density.ANYDPI) {
+            // Use XXHDPI for vector drawable. Just make the icon preview looks sharp.
+            return 3.0f;
+        }
         return density.getDpiValue() / (float) Density.MEDIUM.getDpiValue();
     }
 
