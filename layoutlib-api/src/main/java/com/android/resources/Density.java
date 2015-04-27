@@ -33,8 +33,17 @@ public enum Density implements ResourceEnum {
     TV(     "tvdpi",   "TV Density",       213, 13), //$NON-NLS-1$
     MEDIUM( "mdpi",    "Medium Density",   160,  4), //$NON-NLS-1$
     LOW(    "ldpi",    "Low Density",      120,  4), //$NON-NLS-1$
+<<<<<<< HEAD
     ANYDPI( "anydpi",  "Any Density",        0, 21), //$NON-NLS-1$
     NODPI(  "nodpi",   "No Density",         0,  4); //$NON-NLS-1$
+||||||| merged common ancestors
+    NODPI(  "nodpi",   "No Density",         0,  4); //$NON-NLS-1$
+=======
+    NODPI(  "nodpi",   "No Density",         0,  4), //$NON-NLS-1$
+    // We can't merge vector into nodpi since it is under /drawable diretory.
+    // And for preview, we pretend to be 160 / mdpi.
+    VECTOR( "vector",  "Vector-No Density",160, 21); //$NON-NLS-1$
+>>>>>>> Setup initial Vector Asset generation UI and conversion engine
 
     public static final int DEFAULT_DENSITY = 160;
 
@@ -155,6 +164,12 @@ public enum Density implements ResourceEnum {
 
     @Override
     public boolean isValidValueForDevice() {
+<<<<<<< HEAD
         return this != NODPI && this != ANYDPI; // nodpi/anydpi is not a valid config for devices.
+||||||| merged common ancestors
+        return this != NODPI; // nodpi is not a valid config for devices.
+=======
+        return this != NODPI && this != VECTOR; // nodpi is not a valid config for devices.
+>>>>>>> Setup initial Vector Asset generation UI and conversion engine
     }
 }
