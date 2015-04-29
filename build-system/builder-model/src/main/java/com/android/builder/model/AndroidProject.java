@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.Set;
 
 /**
  * Entry point for the model of the Android Projects. This models a single module, whether
@@ -163,6 +164,14 @@ public interface AndroidProject {
      */
     @NonNull
     Collection<File> getFrameworkSources();
+
+    /**
+     * Returns the set of toolchains used to create any native libraries.
+     *
+     * @return set of toolchains.
+     */
+    @NonNull
+    Set<Toolchain> getToolchains();
 
     /**
      * Returns a list of {@link SigningConfig}.
