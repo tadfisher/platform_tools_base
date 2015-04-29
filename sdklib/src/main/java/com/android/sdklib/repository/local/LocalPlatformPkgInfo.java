@@ -92,6 +92,10 @@ public class LocalPlatformPkgInfo extends LocalPkgInfo {
         return mLoaded;
     }
 
+    public void unLoad() {
+      mLoaded = false;
+    }
+
     //-----
 
     /**
