@@ -20,6 +20,7 @@ import static com.android.builder.model.AndroidProject.ARTIFACT_MAIN;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.Immutable;
 import com.android.build.OutputFile;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.api.ApkOutputFile;
@@ -29,6 +30,8 @@ import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.core.NdkConfig;
+import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.variant.ApkVariantOutputData;
@@ -199,8 +202,10 @@ public class ModelBuilder implements ToolingModelBuilder {
         List<AndroidArtifact> extraAndroidArtifacts = Lists.newArrayList(
                 extraModelInfo.getExtraAndroidArtifacts(variantName));
         // Make sure all extra artifacts are serializable.
-        Collection<JavaArtifact> extraJavaArtifacts = extraModelInfo.getExtraJavaArtifacts(variantName);
-        List<JavaArtifact> clonedExtraJavaArtifacts = Lists.newArrayListWithCapacity(extraJavaArtifacts.size());
+        Collection<JavaArtifact> extraJavaArtifacts = extraModelInfo.getExtraJavaArtifacts(
+                variantName);
+        List<JavaArtifact> clonedExtraJavaArtifacts = Lists.newArrayListWithCapacity(
+                extraJavaArtifacts.size());
         for (JavaArtifact javaArtifact : extraJavaArtifacts) {
             clonedExtraJavaArtifacts.add(JavaArtifactImpl.clone(javaArtifact));
         }
@@ -288,6 +293,29 @@ public class ModelBuilder implements ToolingModelBuilder {
                 sourceProviders.multiFlavorSourceProvider);
     }
 
+    private Collection<NativeLibrary> createNativeLibraries(
+            @NonNull NdkConfig ndkConfig,
+            @NonNull Collection<String> abis) {
+        Collection<NativeLibrary> nativeLibraries = Lists.newArrayListWithCapacity(abis.size());
+        for (String abi : abis) {
+            @SuppressWarnings("ConstantConditions")
+            NativeLibrary lib = new NativeLibraryImpl(
+                    ndkConfig.getModuleName(),
+                    "",  /*toolchainName*/
+                    abi,
+                    Collections.<File>emptyList(),  /*cIncludeDirs*/
+                    Collections.<File>emptyList(),  /*cppIncludeDirs*/
+                    Collections.<File>emptyList(),  /*cSystemIncludeDirs*/
+                    Collections.<File>emptyList(),  /*cppSystemIncludeDirs*/
+                    Collections.<String>emptyList(),  /*cDefines*/
+                    Collections.<String>emptyList(),  /*cppDefines*/
+                    Lists.newArrayList(ndkConfig.getcFlags()),
+                    Lists.newArrayList(ndkConfig.getcFlags()));
+            nativeLibraries.add(lib);
+        }
+        return nativeLibraries;
+    }
+
     private AndroidArtifact createAndroidArtifact(
             @NonNull String name,
             @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData) {
@@ -304,6 +332,24 @@ public class ModelBuilder implements ToolingModelBuilder {
         // get the outputs
         List<? extends BaseVariantOutputData> variantOutputs = variantData.getOutputs();
         List<AndroidArtifactOutput> outputs = Lists.newArrayListWithCapacity(variantOutputs.size());
+
+        NdkConfig ndkConfig = variantData.getVariantConfiguration().getNdkConfig();
+        Collection<NativeLibrary> nativeLibraries = Collections.emptyList();
+        if (ndkConfig.getModuleName() != null) {
+            if (config.getSplits().getAbi().isEnable()) {
+                nativeLibraries = createNativeLibraries(ndkConfig, config.getSplits().getAbiFilters());
+            } else {
+                if (ndkConfig.getAbiFilters() == null || ndkConfig.getAbiFilters().isEmpty()) {
+                    nativeLibraries = createNativeLibraries(
+                            ndkConfig,
+                            ImmutableList.of(
+                                    "armeabi", "armeabi-v7a", "arm64-v8a", "x86", "x86_64", "mips",
+                                    "mips64"));
+                } else {
+                    nativeLibraries = createNativeLibraries(ndkConfig, ndkConfig.getAbiFilters());
+                }
+            }
+        }
 
         for (BaseVariantOutputData variantOutputData : variantOutputs) {
             int intVersionCode;
@@ -359,7 +405,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                 sourceProviders.variantSourceProvider,
                 sourceProviders.multiFlavorSourceProvider,
                 variantConfiguration.getSupportedAbis(),
-                Collections.<NativeLibrary>emptySet(), /*nativeLibraries*/
+                nativeLibraries,
                 variantConfiguration.getMergedBuildConfigFields(),
                 variantConfiguration.getMergedResValues());
     }
