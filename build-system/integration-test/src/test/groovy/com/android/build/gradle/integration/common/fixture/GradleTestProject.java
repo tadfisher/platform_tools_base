@@ -29,9 +29,9 @@ import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.FileHelper;
 import com.android.build.gradle.integration.common.utils.JacocoAgent;
 import com.android.build.gradle.integration.common.utils.SdkHelper;
+import com.android.builder.Version;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
-import com.android.builder.Version;
 import com.android.io.StreamException;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
@@ -121,6 +121,7 @@ public class GradleTestProject implements TestRule {
         boolean captureStdOut = false;
         boolean captureStdErr = false;
         boolean experimentalMode = false;
+        boolean useExperimentalGradleVersion = false;
 
         @Nullable
         private String heapSize;
@@ -133,7 +134,7 @@ public class GradleTestProject implements TestRule {
                     name,
                     testProject,
                     experimentalMode,
-                    experimentalMode ? GRADLE_EXP_TEST_VERSION : GRADLE_TEST_VERSION,
+                    useExperimentalGradleVersion ? GRADLE_EXP_TEST_VERSION : GRADLE_TEST_VERSION,
                     captureStdOut,
                     captureStdErr,
                     heapSize);
@@ -159,8 +160,21 @@ public class GradleTestProject implements TestRule {
             return this;
         }
 
+        /**
+         * Use experimental plugin for the test project.
+         */
         public Builder forExpermimentalPlugin(boolean mode) {
+            this.useExperimentalGradleVersion = mode;
             this.experimentalMode = mode;
+            return this;
+        }
+
+        /**
+         * Use the gradle version for experimental plugin, but the test project do not necessarily
+         * have to use experimental plugin.
+         */
+        public Builder useExperimentalGradleVersion(boolean mode) {
+            this.useExperimentalGradleVersion = mode;
             return this;
         }
 

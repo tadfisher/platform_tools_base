@@ -62,6 +62,7 @@ class MultiProjectsAndroidTest {
     @ClassRule
     public static GradleTestProject project = GradleTestProject.builder()
             .fromTestApp(baseProject)
+            .useExperimentalGradleVersion(true)
             .create()
 
     @AfterClass

@@ -31,6 +31,7 @@ class LargeVariantAndroidTest {
     @ClassRule
     static public GradleTestProject project = GradleTestProject.builder()
             .fromTestApp(new HelloWorldApp())
+            .useExperimentalGradleVersion(true)
             .create()
 
     @BeforeClass
