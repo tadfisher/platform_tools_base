@@ -358,6 +358,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                 sourceProviders.variantSourceProvider,
                 sourceProviders.multiFlavorSourceProvider,
                 variantConfiguration.getSupportedAbis(),
+                null, /*nativeLibraries*/
                 variantConfiguration.getMergedBuildConfigFields(),
                 variantConfiguration.getMergedResValues());
     }
