@@ -47,6 +47,7 @@ import com.android.builder.model.ApiVersion;
 import com.android.builder.model.ArtifactMetaData;
 import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.LintOptions;
+import com.android.builder.model.NativeLibrary;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.SourceProviderContainer;
@@ -358,6 +359,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                 sourceProviders.variantSourceProvider,
                 sourceProviders.multiFlavorSourceProvider,
                 variantConfiguration.getSupportedAbis(),
+                Collections.<NativeLibrary>emptySet(), /*nativeLibraries*/
                 variantConfiguration.getMergedBuildConfigFields(),
                 variantConfiguration.getMergedResValues());
     }
