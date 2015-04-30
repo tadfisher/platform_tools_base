@@ -39,4 +39,13 @@ public interface LibraryDependency extends AndroidLibrary, ManifestDependency, S
      */
     @NonNull
     Collection<JarDependency> getLocalDependencies();
+
+    /**
+     * Returns whether the library is considered optional, meaning that it could not
+     * be present in the final APK.
+     *
+     * If the library is optional, then it'll get skipped from resource merging inside other
+     * libraries.
+     */
+    boolean isOptional();
 }

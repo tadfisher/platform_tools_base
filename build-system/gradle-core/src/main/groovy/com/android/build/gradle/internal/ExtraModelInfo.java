@@ -60,6 +60,7 @@ public class ExtraModelInfo {
 
     @NonNull
     private final Project project;
+    private final boolean isLibrary;
 
     private final ModelQueryMode modelQueryMode;
     private final ErrorFormatMode errorFormatMode;
@@ -74,10 +75,15 @@ public class ExtraModelInfo {
     private final ListMultimap<String, SourceProviderContainer> extraProductFlavorSourceProviders = ArrayListMultimap.create();
     private final ListMultimap<String, SourceProviderContainer> extraMultiFlavorSourceProviders = ArrayListMultimap.create();
 
-    public ExtraModelInfo(@NonNull Project project) {
+    public ExtraModelInfo(@NonNull Project project, boolean isLibrary) {
         this.project = project;
+        this.isLibrary = isLibrary;
         modelQueryMode = computeModelQueryMode(project);
         errorFormatMode = computeErrorFormatMode(project);
+    }
+
+    public boolean isLibrary() {
+        return isLibrary;
     }
 
     public Map<SyncIssueKey, SyncIssue> getSyncIssues() {
