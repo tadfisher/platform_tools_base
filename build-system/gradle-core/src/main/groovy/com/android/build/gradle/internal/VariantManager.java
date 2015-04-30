@@ -389,7 +389,7 @@ public class VariantManager implements VariantModel {
             // now add the default config
             testVariantProviders.add(defaultConfigData.getTestConfigurationProvider(variantType));
 
-            assert(testVariantConfig.getTestedConfig() != null);
+            assert (testVariantConfig.getTestedConfig() != null);
             if (testVariantConfig.getTestedConfig().getType() == VariantType.LIBRARY) {
                 testVariantProviders.add(testedVariantData.getVariantDependency());
             }
