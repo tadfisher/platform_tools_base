@@ -35,7 +35,6 @@ import com.android.build.gradle.tasks.MergeResources
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.DefaultBuildType
-import com.android.builder.core.VariantType
 import com.android.builder.dependency.LibraryBundle
 import com.android.builder.dependency.LibraryDependency
 import com.android.builder.dependency.ManifestDependency
@@ -120,7 +119,14 @@ class LibraryTaskManager extends TaskManager {
                     false /*includeDependencies*/,
                     false /*process9Patch*/);
 
-            if (!variantData.variantDependency.androidDependencies.isEmpty()) {
+            boolean hasLibraries = false;
+            for (LibraryDependency libraryDependency : variantData.variantDependency.androidDependencies) {
+                if (!libraryDependency.isOptional()) {
+                    hasLibraries = true;
+                    break;
+                }
+            }
+            if (hasLibraries) {
                 // Add a task to merge the resource folders, including the libraries, in order to
                 // generate the R.txt file with all the symbols, including the ones from
                 // the dependencies.
@@ -406,6 +412,11 @@ class LibraryTaskManager extends TaskManager {
             @NonNull
             protected File getJarsRootFolder() {
                 return getFolder();
+            }
+
+            @Override
+            boolean isOptional() {
+                return false
             }
         };
 

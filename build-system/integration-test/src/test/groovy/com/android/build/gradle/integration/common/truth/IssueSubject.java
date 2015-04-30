@@ -22,7 +22,6 @@ import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
 import com.google.common.truth.SubjectFactory;
 
-
 public class IssueSubject extends Subject<IssueSubject, SyncIssue> {
 
     static class Factory extends SubjectFactory<IssueSubject, SyncIssue> {
