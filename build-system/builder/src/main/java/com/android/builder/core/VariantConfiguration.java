@@ -1926,4 +1926,8 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         // default is false.
         return false;
     }
+
+    public File getJarJarRuleFile() {
+        return getMergedFlavor().getJarJarRuleFile();
+    }
 }
