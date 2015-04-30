@@ -77,6 +77,8 @@ public class VariantDependencies implements DependencyContainer, ConfigurationPr
         Set<Configuration> compileConfigs = Sets.newHashSetWithExpectedSize(providers.length * 2)
         Set<Configuration> apkConfigs = Sets.newHashSetWithExpectedSize(providers.length)
 
+        System.out.println("COMPUTE VARIANT DEP: " + name)
+
         for (ConfigurationProvider provider : providers) {
             if (provider != null) {
                 compileConfigs.add(provider.compileConfiguration)
@@ -87,6 +89,17 @@ public class VariantDependencies implements DependencyContainer, ConfigurationPr
                 apkConfigs.add(provider.compileConfiguration)
                 apkConfigs.add(provider.packageConfiguration)
             }
+        }
+
+        System.out.println("\tCompile:");
+        for (Configuration c : compileConfigs) {
+            System.out.println("\t\t-> " + c.getName());
+            displayExtendsFrom(c, "\t\t\t");
+        }
+        System.out.println("\tPackage:");
+        for (Configuration c : apkConfigs) {
+            System.out.println("\t\t-> " + c.getName());
+            displayExtendsFrom(c, "\t\t\t");
         }
 
         Configuration compile = project.configurations.maybeCreate("_${name}Compile")
@@ -136,6 +149,15 @@ public class VariantDependencies implements DependencyContainer, ConfigurationPr
                 classes,
                 metadata,
                 variantType != VariantType.UNIT_TEST);
+    }
+
+    private static void displayExtendsFrom(Configuration configuration, String indent) {
+        String newIndent = indent + "\t"
+        for (Configuration c : configuration.getExtendsFrom()) {
+            System.out.println(indent + "-> " + c.getName());
+
+            displayExtendsFrom(c, newIndent);
+        }
     }
 
     private VariantDependencies(@NonNull  String name,
