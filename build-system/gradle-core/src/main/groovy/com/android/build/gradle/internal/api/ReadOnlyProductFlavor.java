@@ -22,6 +22,7 @@ import com.android.builder.model.ApiVersion;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
 
+import java.io.File;
 import java.util.Collection;
 
 /**
@@ -147,5 +148,11 @@ public class ReadOnlyProductFlavor extends ReadOnlyBaseConfig implements Product
     @Override
     public String getDimension() {
         return productFlavor.getDimension();
+    }
+
+    @Nullable
+    @Override
+    public File getJarJarRuleFile() {
+        return productFlavor.getJarJarRuleFile();
     }
 }

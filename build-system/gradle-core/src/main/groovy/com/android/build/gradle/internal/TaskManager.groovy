@@ -1821,6 +1821,12 @@ abstract class TaskManager {
                     "${project.buildDir}/${FD_OUTPUTS}/mapping/${variantData.variantConfiguration.dirName}/mapping.txt")
         }
 
+        conventionMapping(compileTask).map("jarJarRuleFile") {
+            if (config.getJarJarRuleFile() != null) {
+                project.file(config.getJarJarRuleFile())
+            }
+        }
+
         configureLanguageLevel(compileTask)
     }
 
