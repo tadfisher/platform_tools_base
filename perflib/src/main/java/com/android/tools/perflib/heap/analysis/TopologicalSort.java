@@ -26,8 +26,6 @@ import com.google.common.collect.Lists;
 
 import java.util.List;
 
-import gnu.trove.TLongHashSet;
-
 public class TopologicalSort {
 
     @NonNull
@@ -60,25 +58,32 @@ public class TopologicalSort {
      */
     private static class TopologicalSortVisitor extends NonRecursiveVisitor {
 
-        // Marks nodes that have been fully visited and popped off the stack.
-        private final TLongHashSet mVisited = new TLongHashSet();
-
         private final List<Instance> mPostorder = Lists.newArrayList();
 
         @Override
+        public void visitLater(@NonNull Instance instance) {
+            if (!mSeen.contains(instance.getId())) {
+                mSeen.add(instance.getId());
+                mStack.push(instance);
+            }
+        }
+
+        @Override
         public void doVisit(Iterable<? extends Instance> startNodes) {
+            // root nodes are instances that share the same id as the node they point to.
+            // This means that we cannot mark them as visited here or they would be marking
+            // the actual root instance
+            // TODO RootObj should not be Instance objects
             for (Instance node : startNodes) {
                 node.accept(this);
             }
             while (!mStack.isEmpty()) {
+                int size = mStack.size();
                 Instance node = mStack.peek();
-                if (mSeen.add(node.getId())) {
-                    node.accept(this);
-                } else {
-                    mStack.pop();
-                    if (mVisited.add(node.getId())) {
-                        mPostorder.add(node);
-                    }
+                node.accept(this);
+                if (size == mStack.size()) {
+                    assert node == mStack.pop();
+                    mPostorder.add(node);
                 }
             }
         }
