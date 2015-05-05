@@ -23,25 +23,7 @@ import com.android.annotations.NonNull;
  * Exception when a {@link DataItem} is declared more than once in a {@link DataSet}
  */
 public class DuplicateDataException extends MergingException {
-
-    private DataItem mOne;
-    private DataItem mTwo;
-
     DuplicateDataException(@NonNull DataItem one, @NonNull DataItem two) {
-        super(String.format("Duplicate resources: %1s:%2s, %3s:%4s",
-                one.getSource().getFile().getAbsolutePath(), one.getKey(),
-                two.getSource().getFile().getAbsolutePath(), two.getKey()));
-        mOne = one;
-        mTwo = two;
-        addFile(one.getSource().getFile());
-        addFile(two.getSource().getFile());
-    }
-
-    public DataItem getOne() {
-        return mOne;
-    }
-
-    public DataItem getTwo() {
-        return mTwo;
+        super("Duplicate resources", one, two);
     }
 }
