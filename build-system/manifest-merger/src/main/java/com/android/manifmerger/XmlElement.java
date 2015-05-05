@@ -20,6 +20,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.blame.SourceFile;
+import com.android.ide.common.blame.SourceFilePosition;
 import com.android.ide.common.blame.SourcePosition;
 import com.android.ide.common.res2.MergingException;
 import com.android.utils.ILogger;
@@ -117,15 +118,18 @@ public class XmlElement extends OrphanXmlElement {
                             OtherOperationType.valueOf(instruction);
                             break;
                         } catch (IllegalArgumentException e1) {
+
                             String errorMessage =
-                                    String.format("[%1$s:%2$s] Invalid instruction '%3$s', "
-                                                    + "valid instructions are : %4$s",
-                                            mDocument.getSourceFile().print(false),
-                                            mDocument.getNodePosition(xml).getStartLine(),
+                                    String.format("Invalid instruction '%1$s', "
+                                                    + "valid instructions are : %2$s",
                                             instruction,
                                             Joiner.on(',').join(AttributeOperationType.values())
                                     );
-                            throw new RuntimeException(new MergingException(errorMessage, e));
+                            Throwable e2 = new IllegalArgumentException(errorMessage, e1);
+                            throw new RuntimeException(MergingException.wrapException(e1,
+                                    new SourceFilePosition(
+                                            mDocument.getSourceFile(),
+                                            mDocument.getNodePosition(xml))));
                         }
                     }
                     for (String attributeName : Splitter.on(',').trimResults()
