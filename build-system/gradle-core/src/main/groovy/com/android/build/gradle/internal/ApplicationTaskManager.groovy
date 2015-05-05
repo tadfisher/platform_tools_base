@@ -25,8 +25,6 @@ import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.BaseVariantOutputData
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.profile.ExecutionType
-import com.android.builder.profile.Recorder
-import com.android.builder.profile.ThreadRecorder
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
@@ -107,10 +105,12 @@ class ApplicationTaskManager extends TaskManager {
 
         // Add a compile task
         SpanRecorders.record(ExecutionType.APP_TASK_MANAGER_CREATE_COMPILE_TASK) {
+            createJavacTask(tasks, variantScope);
+
             if (variantData.getVariantConfiguration().getUseJack()) {
                 createJackTask(appVariantData, null /*testedVariant*/);
             } else {
-                createJavaCompileTask(tasks, variantScope);
+                useJavacTask(tasks, variantScope)
                 createJarTask(tasks, variantScope);
                 createPostCompilationTasks(tasks, variantScope);
             }

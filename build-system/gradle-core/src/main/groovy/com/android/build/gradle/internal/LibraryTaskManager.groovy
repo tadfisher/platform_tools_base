@@ -40,6 +40,7 @@ import com.android.builder.dependency.ManifestDependency
 import com.android.builder.model.AndroidLibrary
 import com.android.builder.model.MavenCoordinates
 import com.android.builder.profile.ExecutionType
+import groovy.transform.CompileStatic
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.internal.ConventionMapping
@@ -167,7 +168,9 @@ class LibraryTaskManager extends TaskManager {
 
         // Add a compile task
         SpanRecorders.record(ExecutionType.LIB_TASK_MANAGER_CREATE_COMPILE_TASK) {
-            createJavaCompileTask(tasks, variantScope);
+            // DO NOT SUBMIT: Why is there no mention of Jack here?
+            createJavacTask(tasks, variantScope);
+            useJavacTask(tasks, variantScope)
         }
 
         // package the prebuilt native libs into the bundle folder
@@ -246,11 +249,11 @@ class LibraryTaskManager extends TaskManager {
         // post-compilation steps are inserted between the compilation and dx.
         PostCompilationData pcData = new PostCompilationData()
         SpanRecorders.record(ExecutionType.LIB_TASK_MANAGER_CREATE_POST_COMPILATION_TASK) {
-            pcData.classGeneratingTask = [variantScope.javaCompileTask.name]
+            pcData.classGeneratingTask = [variantScope.javacTask.name]
             pcData.libraryGeneratingTask = Collections.singletonList(
                     variantData.variantDependency.packageConfiguration.buildDependencies)
             pcData.inputFiles = {
-                return variantData.javaCompileTask.outputs.files.files
+                return variantData.javacTask.outputs.files.files
             }
             pcData.inputDir = {
                 return variantScope.javaOutputDir
@@ -418,6 +421,7 @@ class LibraryTaskManager extends TaskManager {
         }
     }
 
+    @CompileStatic
     public ExtractAnnotations createExtractAnnotations(
             String fullName, Project project, BaseVariantData variantData) {
         GradleVariantConfiguration config = variantData.variantConfiguration
@@ -439,7 +443,7 @@ class LibraryTaskManager extends TaskManager {
         conventionMapping(task).map("classpath") {
             project.files(androidBuilder.getCompileClasspath(config))
         }
-        task.dependsOn variantData.javaCompileTask
+        task.dependsOn variantData.javacTask
 
         // Setup the boot classpath just before the task actually runs since this will
         // force the sdk to be parsed. (Same as in compileTask)
