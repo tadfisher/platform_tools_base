@@ -80,6 +80,37 @@ public class ApiLookupTest extends AbstractCheckTest {
                 "(Ljava/lang/Throwable;)V"));
     }
 
+    public void testDeprecatedFields() {
+        // Not deprecated:
+        assertEquals(-1, mDb.getFieldDeprecatedIn("android/Manifest$permission", "GET_PACKAGE_SIZE"));
+        // Field only has since > 1, no deprecation
+        assertEquals(9, mDb.getFieldVersion("android/Manifest$permission", "NFC"));
+
+        // Deprecated
+        assertEquals(21, mDb.getFieldDeprecatedIn("android/Manifest$permission", "GET_TASKS"));
+        // Field both deprecated and since > 1
+        assertEquals(21, mDb.getFieldDeprecatedIn("android/Manifest$permission", "READ_SOCIAL_STREAM"));
+        assertEquals(15, mDb.getFieldVersion("android/Manifest$permission", "READ_SOCIAL_STREAM"));
+    }
+
+    public void testDeprecatedCalls() {
+        // Not deprecated:
+        assertEquals(12, mDb.getCallVersion("android/app/Fragment", "onInflate",
+                "(Landroid/app/Activity;Landroid/util/AttributeSet;Landroid/os/Bundle;)V"));
+        assertEquals(-1, mDb.getCallDeprecatedIn("android/app/Fragment", "onInflate",
+                "(Landroid/app/Activity;Landroid/util/AttributeSet;Landroid/os/Bundle;)V"));
+        // Deprecated
+        assertEquals(16, mDb.getCallDeprecatedIn("android/app/Service", "onStart", "(Landroid/content/Intent;I)V"));
+        assertEquals(16, mDb.getCallDeprecatedIn("android/app/Fragment", "onInflate", "(Landroid/util/AttributeSet;Landroid/os/Bundle;)V"));
+    }
+
+    public void testDeprecatedClasses() {
+        // Not deprecated:
+        assertEquals(-1, mDb.getClassDeprecatedIn("android/app/Fragment"));
+        // Deprecated
+        assertEquals(9, mDb.getClassDeprecatedIn("org/xml/sax/Parser"));
+    }
+
     public void testInheritInterfaces() {
         // The onPreferenceStartFragment is inherited via the
         // android/preference/PreferenceFragment$OnPreferenceStartFragmentCallback

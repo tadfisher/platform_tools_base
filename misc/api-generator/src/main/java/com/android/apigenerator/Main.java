@@ -115,8 +115,8 @@ public class Main {
 
     /**
      * Creates the simplified diff-based API level.
-     * @param outFolder the out folder.
-     * @param classes
+     * @param outFile the output file
+     * @param classes the classes to write
      */
     private static boolean createApiFile(File outFile, Map<String, ApiClass> classes) {
 
@@ -124,7 +124,7 @@ public class Main {
         try {
             ps = new PrintStream(outFile, "UTF-8");
             ps.println("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-            ps.println("<api version=\"1\">");
+            ps.println("<api version=\"2\">");
             TreeMap<String, ApiClass> map = new TreeMap<String, ApiClass>(classes);
             for (ApiClass theClass : map.values()) {
                 (theClass).print(ps);
