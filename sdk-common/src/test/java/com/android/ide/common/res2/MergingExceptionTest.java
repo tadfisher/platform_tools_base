@@ -32,34 +32,34 @@ public class MergingExceptionTest extends TestCase {
         assertEquals("Error: My error message",
                 new MergingException("Error: My error message").getMessage());
         assertEquals("/some/random/path: Error: My error message",
-                new MergingException("My error message").addFile(file).getMessage());
+                new MergingException("My error message", file).getMessage());
         assertEquals("/some/random/path:50: Error: My error message",
-                new MergingException("My error message").addFilePosition(
+                new MergingException("My error message",
                         new SourceFilePosition(file, new SourcePosition(49, -1, -1)))
                         .getMessage());
         assertEquals("/some/random/path:50:4: Error: My error message",
-                new MergingException("My error message").addFilePosition(
+                new MergingException("My error message",
                         new SourceFilePosition(file, new SourcePosition(49, 3, -1)))
                         .getMessage());
         assertEquals("/some/random/path:50:4: Error: My error message",
-                new MergingException("My error message").addFilePosition(
+                new MergingException("My error message",
                         new SourceFilePosition(file, new SourcePosition(49, 3, -1)))
                         .getLocalizedMessage());
         assertEquals("/some/random/path: Error: My error message",
-                new MergingException("/some/random/path: My error message").addFile(file)
+                new MergingException("/some/random/path: My error message", file)
                         .getMessage());
         assertEquals("/some/random/path: Error: My error message",
-                new MergingException("/some/random/path My error message").addFile(file)
+                new MergingException("/some/random/path My error message", file)
                         .getMessage());
 
         // end of string handling checks
         assertEquals("/some/random/path: Error: ",
-                new MergingException("/some/random/path").addFile(file).getMessage());
+                new MergingException("/some/random/path", file).getMessage());
         assertEquals("/some/random/path: Error: ",
-                new MergingException("/some/random/path").addFile(file).getMessage());
+                new MergingException("/some/random/path", file).getMessage());
         assertEquals("/some/random/path: Error: ",
-                new MergingException("/some/random/path:").addFile(file).getMessage());
+                new MergingException("/some/random/path:", file).getMessage());
         assertEquals("/some/random/path: Error: ",
-                new MergingException("/some/random/path: ").addFile(file).getMessage());
+                new MergingException("/some/random/path: ", file).getMessage());
     }
 }

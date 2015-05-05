@@ -26,6 +26,7 @@ import static com.android.SdkConstants.TAG_SKIP;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.blame.SourceFilePosition;
 import com.android.resources.ResourceType;
 import com.android.utils.XmlUtils;
 import com.google.common.collect.Lists;
@@ -99,7 +100,7 @@ class ValueResourceParser2 {
             ResourceItem resource = getResource(node, mFile);
             if (resource != null) {
                 // check this is not a dup
-                checkDuplicate(resource, map);
+                checkDuplicate(resource, map, mFile);
 
                 resources.add(resource);
 
@@ -167,12 +168,10 @@ class ValueResourceParser2 {
             if (type != null) {
                 return type;
             }
-            throw new MergingException(String.format("Unsupported type '%s'", typeString))
-                    .addFileIfNonNull(from);
+            throw new MergingException(String.format("Unsupported type '%s'", typeString), from);
         }
 
-        throw new MergingException(String.format("Unsupported node '%s'", nodeName))
-                .addFileIfNonNull(from);
+        throw new MergingException(String.format("Unsupported node '%s'", nodeName), from);
     }
 
     /**
@@ -201,13 +200,13 @@ class ValueResourceParser2 {
         try {
             return XmlUtils.parseUtfXmlFile(file, true /*namespaceAware*/);
         } catch (SAXParseException e) {
-            throw new MergingException(e).addFilePosition(file, e);
+            throw MergingException.wrapSaxParseException(e, file);
         } catch (ParserConfigurationException e) {
-            throw new MergingException(e).addFile(file);
+            throw MergingException.wrapException(e, file);
         } catch (SAXException e) {
-            throw new MergingException(e).addFile(file);
+            throw MergingException.wrapException(e, file);
         } catch (IOException e) {
-            throw new MergingException(e).addFile(file);
+            throw MergingException.wrapException(e, file);
         }
     }
 
@@ -241,7 +240,7 @@ class ValueResourceParser2 {
                 // is the attribute in the android namespace?
                 if (!resource.getName().startsWith(ANDROID_NS_NAME_PREFIX)) {
                     if (hasFormatAttribute(node) || XmlUtils.hasElementChildren(node)) {
-                        checkDuplicate(resource, map);
+                        checkDuplicate(resource, map, from);
                         resource.setIgnoredFromDiskMerge(true);
                         list.add(resource);
                     }
@@ -251,7 +250,8 @@ class ValueResourceParser2 {
     }
 
     private static void checkDuplicate(@NonNull ResourceItem resource,
-                                       @Nullable Map<ResourceType, Set<String>> map)
+                                       @Nullable Map<ResourceType, Set<String>> map,
+                                       @Nullable File from)
             throws MergingException {
         if (map == null) {
             return;
@@ -266,7 +266,7 @@ class ValueResourceParser2 {
             if (set.contains(name)) {
                 throw new MergingException(String.format(
                         "Found item %s/%s more than one time",
-                        resource.getType().getDisplayName(), name));
+                        resource.getType().getDisplayName(), name), from);
             }
 
             set.add(name);
