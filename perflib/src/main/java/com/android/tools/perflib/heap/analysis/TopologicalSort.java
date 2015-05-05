@@ -27,6 +27,7 @@ import com.google.common.collect.Lists;
 import java.util.List;
 
 import gnu.trove.TLongHashSet;
+import gnu.trove.TLongIntHashMap;
 
 public class TopologicalSort {
 
@@ -61,7 +62,7 @@ public class TopologicalSort {
     private static class TopologicalSortVisitor extends NonRecursiveVisitor {
 
         // Marks nodes that have been fully visited and popped off the stack.
-        private final TLongHashSet mVisited = new TLongHashSet();
+        private final TLongIntHashMap mVisited = new TLongIntHashMap();
 
         private final List<Instance> mPostorder = Lists.newArrayList();
 
@@ -73,12 +74,17 @@ public class TopologicalSort {
             while (!mStack.isEmpty()) {
                 Instance node = mStack.peek();
                 if (mSeen.add(node.getId())) {
+                    // We need to keep track the first time we see this node (since we are using a iterative, not recursive, algorithm).
+                    // We will use the size of the stack as the marker, since eventually we'll pop back to the node in question, which is
+                    // exactly when we want to add it to the postorder.
+                    mVisited.put(node.getId(), mStack.size());
                     node.accept(this);
                 } else {
-                    mStack.pop();
-                    if (mVisited.add(node.getId())) {
+                    if (mVisited.get(node.getId()) == mStack.size()) {
+                        mVisited.put(node.getId(), -1); // Use -1 to denote that the node has already been visited + added.
                         mPostorder.add(node);
                     }
+                    mStack.pop();
                 }
             }
         }
