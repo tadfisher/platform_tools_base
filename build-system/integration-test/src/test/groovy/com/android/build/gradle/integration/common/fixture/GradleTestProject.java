@@ -836,13 +836,17 @@ public class GradleTestProject implements TestRule {
     }
 
     private List<String> getJvmArguments() {
+        return getJvmArguments(false);
+    }
+
+    private List<String> getJvmArguments(boolean force) {
         List<String> jvmArguments = new ArrayList<String>();
         if (!Strings.isNullOrEmpty(heapSize)) {
             jvmArguments.add("-Xmx" + heapSize);
         }
         jvmArguments.add("-XX:MaxPermSize=1024m");
         String debugIntegrationTest = System.getenv("DEBUG_INNER_TEST");
-        if (!Strings.isNullOrEmpty(debugIntegrationTest)) {
+        if (force || !Strings.isNullOrEmpty(debugIntegrationTest)) {
             jvmArguments.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005");
         }
         return jvmArguments;
@@ -861,7 +865,7 @@ public class GradleTestProject implements TestRule {
             @NonNull BuildAction<Map<K, V>> action,
             boolean emulateStudio_1_0) {
 
-        BuildActionExecuter<Map<K, V>> executer = connection.action(action);
+        BuildActionExecuter<Map<K, V>> executor = connection.action(action);
 
         List<String> arguments = Lists.newArrayListWithCapacity(emulateStudio_1_0 ? 2 : 3);
         arguments.add("-P" + AndroidProject.PROPERTY_BUILD_MODEL_ONLY + "=true");
@@ -870,17 +874,17 @@ public class GradleTestProject implements TestRule {
             arguments.add("-P" + AndroidProject.PROPERTY_BUILD_MODEL_ONLY_ADVANCED + "=true");
         }
 
-        List<String> debugJvmArguments = getJvmArguments();
+        List<String> debugJvmArguments = getJvmArguments(true);
         if (!debugJvmArguments.isEmpty()) {
             arguments.add("-Dorg.gradle.jvmargs=" + Joiner.on(' ').join(debugJvmArguments));
         }
 
-        executer.withArguments(Iterables.toArray(arguments, String.class));
+        executor.withArguments(Iterables.toArray(arguments, String.class));
 
-        executer.setStandardOutput(System.out);
-        executer.setStandardError(System.err);
+        executor.setStandardOutput(System.out);
+        executor.setStandardError(System.err);
 
-        return executer.run();
+        return executor.run();
     }
 
     /**
