@@ -265,9 +265,10 @@ public class DeviceManager {
             if (mDefaultDevices != null) {
                 return false;
             }
-            InputStream stream = null;
+            InputStream stream = DeviceManager.class
+                    .getResourceAsStream(SdkConstants.FN_DEVICES_XML);
             try {
-                stream = DeviceManager.class.getResourceAsStream(SdkConstants.FN_DEVICES_XML);
+                assert stream != null : SdkConstants.FN_DEVICES_XML + " not bundled in sdklib.";
                 mDefaultDevices = DeviceParser.parse(stream);
                 return true;
             } catch (IllegalStateException e) {
@@ -279,11 +280,11 @@ public class DeviceManager {
                 mLog.error(e, "Error reading default devices");
                 mDefaultDevices = new LinkedHashSet<Device>();
             } finally {
-                if (stream != null) {
-                    try {
-                        stream.close();
-                    } catch (IOException ignore) {}
-                }
+                try {
+                    // suppress null warning (asserted not null above).
+                    //noinspection ConstantConditions
+                    stream.close();
+                } catch (IOException ignore) {}
             }
         }
         return false;
@@ -303,9 +304,8 @@ public class DeviceManager {
             mVendorDevices = new LinkedHashSet<Device>();
 
             // Load builtin devices
-            InputStream stream = null;
+            InputStream stream = DeviceManager.class.getResourceAsStream("nexus.xml");
             try {
-                stream = DeviceManager.class.getResourceAsStream("nexus.xml");
                 mVendorDevices.addAll(DeviceParser.parse(stream));
             } catch (Exception e) {
                 mLog.error(e, "Could not load nexus devices");
@@ -317,9 +317,8 @@ public class DeviceManager {
                 }
             }
 
-            stream = null;
+            stream = DeviceManager.class.getResourceAsStream("wear.xml");
             try {
-                stream = DeviceManager.class.getResourceAsStream("wear.xml");
                 mVendorDevices.addAll(DeviceParser.parse(stream));
             } catch (Exception e) {
                 mLog.error(e, "Could not load wear devices");
@@ -331,9 +330,8 @@ public class DeviceManager {
                 }
             }
 
-            stream = null;
+            stream = DeviceManager.class.getResourceAsStream("tv.xml");
             try {
-                stream = DeviceManager.class.getResourceAsStream("tv.xml");
                 mVendorDevices.addAll(DeviceParser.parse(stream));
             } catch (Exception e) {
                 mLog.error(e, "Could not load tv devices");
