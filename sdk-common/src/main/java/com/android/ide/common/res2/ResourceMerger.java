@@ -24,6 +24,7 @@ import static com.android.ide.common.res2.ResourceFile.ATTR_QUALIFIER;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.blame.SourceFilePosition;
 import com.android.resources.ResourceType;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -215,7 +216,7 @@ public class ResourceMerger extends DataMerger<ResourceItem, ResourceFile, Resou
                 }
             }
         } catch (ParserConfigurationException e) {
-            throw new MergingException(e);
+            throw MergingException.wrapException(e, SourceFilePosition.UNKNOWN);
         }
     }
 
