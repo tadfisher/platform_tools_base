@@ -64,7 +64,7 @@ public final class Message {
                 .add(sourceFilePosition).add(sourceFilePositions).build();
     }
 
-    /*package*/ Message(@NonNull Kind kind,
+    public Message(@NonNull Kind kind,
             @NonNull String text,
             @NonNull String rawMessage,
             @NonNull ImmutableList<SourceFilePosition> positions) {

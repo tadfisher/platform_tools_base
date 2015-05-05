@@ -175,7 +175,7 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
                             + "This is an internal error in the incremental builds code; "
                             + "to work around it, try doing a full clean build.",
                     getConfigName(), changedFile.getAbsolutePath());
-            throw new MergingException(message).addFile(changedFile);
+            throw new MergingException(message, changedFile);
         }
 
         //noinspection VariableNotUsedInsideIf
@@ -319,7 +319,7 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
 
             FolderConfiguration folderConfiguration = FolderConfiguration.getConfigForFolder(folderName);
             if (folderConfiguration == null) {
-                throw new MergingException("Invalid resource directory name").addFile(folder);
+                throw new MergingException("Invalid resource directory name", folder);
             }
 
             if (mNormalizeResources) {
