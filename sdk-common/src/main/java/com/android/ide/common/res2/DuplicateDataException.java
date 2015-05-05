@@ -18,30 +18,35 @@ package com.android.ide.common.res2;
 
 
 import com.android.annotations.NonNull;
+import com.android.ide.common.blame.Message;
+import com.android.ide.common.blame.SourceFile;
+import com.android.ide.common.blame.SourceFilePosition;
+import com.android.ide.common.blame.SourcePosition;
+import com.google.common.collect.ImmutableList;
+
+import java.io.File;
 
 /**
  * Exception when a {@link DataItem} is declared more than once in a {@link DataSet}
  */
 public class DuplicateDataException extends MergingException {
-
-    private DataItem mOne;
-    private DataItem mTwo;
-
     DuplicateDataException(@NonNull DataItem one, @NonNull DataItem two) {
-        super(String.format("Duplicate resources: %1s:%2s, %3s:%4s",
-                one.getSource().getFile().getAbsolutePath(), one.getKey(),
-                two.getSource().getFile().getAbsolutePath(), two.getKey()));
-        mOne = one;
-        mTwo = two;
-        addFile(one.getSource().getFile());
-        addFile(two.getSource().getFile());
+        super(null, createMessage(one, two));
     }
 
-    public DataItem getOne() {
-        return mOne;
+
+    private static Message createMessage(DataItem one, DataItem two) {
+        return new Message(Message.Kind.ERROR, "Duplicate resources", getPosition(one), getPosition(two));
     }
 
-    public DataItem getTwo() {
-        return mTwo;
+
+    private static SourceFilePosition getPosition(DataItem item) {
+        DataFile dataFile = item.getSource();
+        if (dataFile == null) {
+            return new SourceFilePosition(new SourceFile(item.getKey()), SourcePosition.UNKNOWN);
+        }
+        File f = dataFile.getFile();
+        SourcePosition sourcePosition = SourcePosition.UNKNOWN;  // TODO: find position in file.
+        return new SourceFilePosition(new SourceFile(f, item.getKey()), sourcePosition);
     }
 }

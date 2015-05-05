@@ -170,12 +170,10 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
         ResourceFile resourceFile = getDataFile(changedFile);
 
         if (resourceFile == null) {
-            String message = String.format(
+            throw MergingException.withFile(changedFile,
                     "In DataSet '%s', no data file for changedFile '%s'. "
-                            + "This is an internal error in the incremental builds code; "
-                            + "to work around it, try doing a full clean build.",
-                    getConfigName(), changedFile.getAbsolutePath());
-            throw new MergingException(message).addFile(changedFile);
+                    + "This is an internal error in the incremental builds code; "
+                    + "to work around it, try doing a full clean build.", getConfigName());
         }
 
         //noinspection VariableNotUsedInsideIf
@@ -278,16 +276,15 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
                     new ResourceItem(name, folderData.type, null),
                     folderData.qualifiers);
         } else {
+            ValueResourceParser2 parser = new ValueResourceParser2(file);
+            List<ResourceItem> items;
             try {
-                ValueResourceParser2 parser = new ValueResourceParser2(file);
-                List<ResourceItem> items = parser.parseFile();
-
-                return new ResourceFile(file, items, folderData.qualifiers);
+                items = parser.parseFile();
             } catch (MergingException e) {
-                e.setFile(file);
                 logger.error(e, "Failed to parse %s", file.getAbsolutePath());
                 throw e;
             }
+            return new ResourceFile(file, items, folderData.qualifiers);
         }
     }
 
@@ -319,7 +316,7 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
 
             FolderConfiguration folderConfiguration = FolderConfiguration.getConfigForFolder(folderName);
             if (folderConfiguration == null) {
-                throw new MergingException("Invalid resource directory name").addFile(folder);
+                throw MergingException.withFile(folder, "Invalid resource directory name");
             }
 
             if (mNormalizeResources) {
