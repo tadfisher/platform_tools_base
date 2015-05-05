@@ -19,6 +19,7 @@ package com.android.ide.common.res2;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.android.ide.common.blame.SourceFilePosition;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ArrayListMultimap;
@@ -339,16 +340,16 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
             try {
                 createDir(blobRootFolder);
             } catch (IOException ioe) {
-                throw new MergingException(ioe).addFile(blobRootFolder);
+                throw MergingException.wrapException(ioe, blobRootFolder);
             }
             File file = new File(blobRootFolder, FN_MERGER_XML);
             try {
                 Files.write(content, file, Charsets.UTF_8);
             } catch (IOException ioe) {
-                throw new MergingException(ioe).addFile(file);
+                throw MergingException.wrapException(ioe, file);
             }
         } catch (ParserConfigurationException e) {
-            throw new MergingException(e);
+            throw MergingException.wrapException(e, SourceFilePosition.UNKNOWN);
         }
     }
 
@@ -426,13 +427,13 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
 
             return true;
         } catch (SAXParseException e) {
-            throw new MergingException(e).addFilePosition(file, e);
+            throw MergingException.wrapSaxParseException(e, file);
         } catch (IOException e) {
-            throw new MergingException(e).addFile(file);
+            throw MergingException.wrapException(e, file);
         } catch (ParserConfigurationException e) {
-            throw new MergingException(e).addFile(file);
+            throw MergingException.wrapException(e, file);
         } catch (SAXException e) {
-            throw new MergingException(e).addFile(file);
+            throw MergingException.wrapException(e, file);
         }
     }
 

@@ -16,50 +16,102 @@
 
 package com.android.ide.common.res2;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
+import com.android.ide.common.blame.Message;
 import com.android.ide.common.blame.SourceFilePosition;
 import com.android.ide.common.blame.SourcePosition;
+import com.google.common.collect.ImmutableList;
 
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.xml.sax.SAXParseException;
 
 import java.io.File;
+import java.util.Collections;
+import java.util.List;
 
-public class MergingExceptionTest extends TestCase {
-    @SuppressWarnings("ThrowableInstanceNeverThrown")
+@SuppressWarnings({"ThrowableInstanceNeverThrown", "ThrowableResultOfMethodCallIgnored"})
+public class MergingExceptionTest {
+
+    private static final File file = new File("/some/random/path");
+
+    @Test
     public void testGetMessage() {
-        File file = new File("/some/random/path");
         assertEquals("Error: My error message",
-                new MergingException("My error message").getMessage());
+                MergingException.withFile(null, "My error message").getMessage());
         assertEquals("Error: My error message",
-                new MergingException("Error: My error message").getMessage());
+                MergingException.wrapException(
+                        new Exception(),
+                        new Message(
+                                Message.Kind.ERROR,
+                                "Error: My error message",
+                                SourceFilePosition.UNKNOWN))
+                        .getMessage());
+        assertEquals("Error: My error message",
+                MergingException.withFile(null, "Error: My error message").getMessage());
         assertEquals("/some/random/path: Error: My error message",
-                new MergingException("My error message").addFile(file).getMessage());
+                MergingException.wrapException(new Exception("My error message"), file)
+                        .getMessage());
         assertEquals("/some/random/path:50: Error: My error message",
-                new MergingException("My error message").addFilePosition(
+                MergingException.wrapException(new Exception("My error message"),
                         new SourceFilePosition(file, new SourcePosition(49, -1, -1)))
                         .getMessage());
         assertEquals("/some/random/path:50:4: Error: My error message",
-                new MergingException("My error message").addFilePosition(
+                MergingException.wrapException(new Exception("My error message"),
                         new SourceFilePosition(file, new SourcePosition(49, 3, -1)))
                         .getMessage());
         assertEquals("/some/random/path:50:4: Error: My error message",
-                new MergingException("My error message").addFilePosition(
+                MergingException.wrapException(new Exception("My error message"),
                         new SourceFilePosition(file, new SourcePosition(49, 3, -1)))
                         .getLocalizedMessage());
         assertEquals("/some/random/path: Error: My error message",
-                new MergingException("/some/random/path: My error message").addFile(file)
+                MergingException.withFile(file, "/some/random/path: My error message")
                         .getMessage());
         assertEquals("/some/random/path: Error: My error message",
-                new MergingException("/some/random/path My error message").addFile(file)
+                MergingException.withFile(file, "/some/random/path My error message")
                         .getMessage());
 
         // end of string handling checks
         assertEquals("/some/random/path: Error: ",
-                new MergingException("/some/random/path").addFile(file).getMessage());
+                MergingException.withFile(file, "/some/random/path").getMessage());
         assertEquals("/some/random/path: Error: ",
-                new MergingException("/some/random/path").addFile(file).getMessage());
+                MergingException.withFile(file, "/some/random/path").getMessage());
         assertEquals("/some/random/path: Error: ",
-                new MergingException("/some/random/path:").addFile(file).getMessage());
+                MergingException.withFile(file, "/some/random/path:").getMessage());
         assertEquals("/some/random/path: Error: ",
-                new MergingException("/some/random/path: ").addFile(file).getMessage());
+                MergingException.withFile(file, "/some/random/path: ").getMessage());
+    }
+
+
+    @Test
+    public void testWrapSaxParseExceptionWithLocation() {
+        SAXParseException saxParseException = new SAXParseException("message", "", "", 5, 7);
+        List<Message> messages = MergingException
+                .wrapSaxParseException(saxParseException, file).getMessages();
+        assertEquals(new Message(Message.Kind.ERROR, "message",
+                new SourceFilePosition(file, new SourcePosition(4, 6, -1))), messages.get(0));
+    }
+
+    @Test
+    public void testWrapSaxParseExceptionWithoutLocation() {
+        SAXParseException saxParseException = new SAXParseException("message", "", "", -1, -1);
+
+        List<Message> messages = MergingException
+                .wrapSaxParseException(saxParseException, file).getMessages();
+        assertEquals(new Message(Message.Kind.ERROR, "message",
+                new SourceFilePosition(file, SourcePosition.UNKNOWN)), messages.get(0));
+    }
+
+    @Test
+    public void testThrowIfNonEmpty() throws MergingException{
+        MergingException.throwIfNonEmpty(ImmutableList.<Message>of());
+        try {
+            MergingException.throwIfNonEmpty(ImmutableList.<Message>of(
+                    new Message(Message.Kind.ERROR, "Message", SourceFilePosition.UNKNOWN)));
+            fail();
+        } catch (MergingException e) {
+            // ok
+        }
     }
 }
