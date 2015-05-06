@@ -326,6 +326,9 @@ public class Util {
      *                image.
      */
     public static void drawCenterInside(Graphics2D g, BufferedImage source, Rectangle dstRect) {
+        if (source == null) {
+            return;
+        }
         final int srcWidth = source.getWidth();
         final int srcHeight = source.getHeight();
         if (srcWidth * 1.0 / srcHeight > dstRect.width * 1.0 / dstRect.height) {
