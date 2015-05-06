@@ -16,6 +16,15 @@
 
 package com.android.assetstudiolib.vectordrawable;
 
+import com.android.ide.common.blame.SourcePosition;
+import com.android.utils.PositionXmlParser;
+import com.google.common.base.Strings;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -31,13 +40,30 @@ class SvgTree {
     public float[] matrix;
     public float[] viewBox;
     public float mScaleFactor = 1;
-    private String mFileName;
 
     private SvgGroupNode mRoot;
+    private String mFileName;
 
-    public SvgTree(String name) {
-        mFileName = name;
+    private ArrayList<String> mErrorLines = new ArrayList<String>();
+    // Keep the parser inside the tree such that we can later get the line number
+    // for each node.
+    private PositionXmlParser mParser = new PositionXmlParser();
+
+    // Although we keep all of the error logs, we only display a limited number of them to keep the
+    // UI better looking.
+    private static final int MAX_DISPLAY_ERROR_LOG_SIZE = 20;
+
+    public enum SvgLogLevel {
+        ERROR,
+        WARNING;
     }
+
+    public Document parse(File f) throws Exception {
+        mFileName = f.getName();
+        Document doc = mParser.parse(new FileInputStream(f));
+        return doc;
+    }
+
 
     public void normalize() {
         transform(matrix[0], matrix[1], matrix[2], matrix[3], matrix[4], matrix[5]);
@@ -67,6 +93,39 @@ class SvgTree {
 
     public SvgGroupNode getRoot() {
         return mRoot;
+    }
+
+    public void logErrorLine(String s, Node node, SvgLogLevel level) {
+        if (!Strings.isNullOrEmpty(s)) {
+            if (node != null) {
+                SourcePosition position = getPosition(node);
+                mErrorLines.add(level.name() + "@ line " + (position.getStartLine() + 1) +
+                                " " + s + "\n");
+            } else {
+                mErrorLines.add(s);
+            }
+        }
+    }
+
+    /**
+     * @return Error log. Empty string if there are no errors.
+     */
+    public String getErrorLog() {
+        StringBuilder errorBuilder = new StringBuilder();
+        // Object log;
+        int counter = 0;
+        if (mErrorLines.size() > 0) {
+            errorBuilder.append("In " + mFileName + ":\n");
+        }
+        for (String log: mErrorLines) {
+            errorBuilder.append(log);
+            counter++;
+        }
+        return errorBuilder.toString();
+    }
+
+    private SourcePosition getPosition(Node node) {
+        return mParser.getPosition(node);
     }
 
 }
