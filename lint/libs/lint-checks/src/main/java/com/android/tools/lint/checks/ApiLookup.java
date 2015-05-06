@@ -36,7 +36,6 @@ import com.google.common.io.Files;
 import com.google.common.primitives.UnsignedBytes;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
@@ -81,7 +80,7 @@ public class ApiLookup {
     /** Relative path to the api-versions.xml database file within the Lint installation */
     private static final String XML_FILE_PATH = "platform-tools/api/api-versions.xml"; //$NON-NLS-1$
     private static final String FILE_HEADER = "API database used by Android lint\000";
-    private static final int BINARY_FORMAT_VERSION = 6;
+    private static final int BINARY_FORMAT_VERSION = 7;
     private static final boolean DEBUG_FORCE_REGENERATE_BINARY = false;
     private static final boolean DEBUG_SEARCH = false;
     private static final boolean WRITE_STATS = false;
@@ -304,8 +303,8 @@ public class ApiLookup {
             // First skip the header
             byte[] expectedHeader = FILE_HEADER.getBytes(Charsets.US_ASCII);
             buffer.rewind();
-            for (int offset = 0; offset < expectedHeader.length; offset++) {
-                if (expectedHeader[offset] != buffer.get()) {
+            for (byte anExpectedHeader : expectedHeader) {
+                if (anExpectedHeader != buffer.get()) {
                     client.log(null, "Incorrect file header: not an API database cache " +
                             "file, or a corrupt cache file");
                     return;
@@ -418,31 +417,15 @@ public class ApiLookup {
             // or not, then we'd need to put this data back in.
             List<String> members = new ArrayList<String>(allMethods.size() + allFields.size());
             for (String member : allMethods) {
-
-                Integer since = apiClass.getMethod(member, info);
-                if (since == null) {
-                    assert false : className + ':' + member;
-                    since = 1;
-                }
-                if (since != 1) {
+                if (member.contains(""))
+                if (apiClass.getMethod(member, info) != 1
+                        || apiClass.getMemberDeprecatedIn(member, info) > 0) {
                     members.add(member);
                 }
             }
-
-            // Strip out all members that have been supported since version 1.
-            // This makes the database *much* leaner (down from about 4M to about
-            // 1.7M), and this just fills the table with entries that ultimately
-            // don't help the API checker since it just needs to know if something
-            // requires a version *higher* than the minimum. If in the future the
-            // database needs to answer queries about whether a method is public
-            // or not, then we'd need to put this data back in.
             for (String member : allFields) {
-                Integer since = apiClass.getField(member, info);
-                if (since == null) {
-                    assert false : className + ':' + member;
-                    since = 1;
-                }
-                if (since != 1) {
+                if (apiClass.getField(member, info) != 1
+                        || apiClass.getMemberDeprecatedIn(member, info) > 0) {
                     members.add(member);
                 }
             }
@@ -531,7 +514,9 @@ public class ApiLookup {
             int since = apiClass.getSince();
             assert since == UnsignedBytes.toInt((byte) since) : since; // make sure it fits
             buffer.put((byte) since);
-
+            int deprecatedIn = apiClass.getDeprecatedIn();
+            assert deprecatedIn == UnsignedBytes.toInt((byte) deprecatedIn) : deprecatedIn;
+            buffer.put((byte) deprecatedIn);
             nextEntry = buffer.position();
         }
 
@@ -553,23 +538,27 @@ public class ApiLookup {
                 nextOffset = buffer.position();
                 buffer.position(nextEntry);
 
-                Integer since;
+                int since;
                 if (member.indexOf('(') != -1) {
                     since = apiClass.getMethod(member, info);
                 } else {
                     since = apiClass.getField(member, info);
                 }
-                if (since == null) {
+                if (since == Integer.MAX_VALUE) {
                     assert false : clz + ':' + member;
                     since = 1;
+                }
+
+                int deprecatedIn = apiClass.getMemberDeprecatedIn(member, info);
+                if (deprecatedIn != 0) {
+                    assert deprecatedIn != -1 : deprecatedIn + " for " + member;
                 }
 
                 assert classNumber == (short) classNumber;
                 buffer.putShort((short) classNumber);
                 byte[] signature = member.getBytes(Charsets.UTF_8);
-                for (int i = 0; i < signature.length; i++) {
+                for (byte b : signature) {
                     // Make sure all signatures are really just simple ASCII
-                    byte b = signature[i];
                     assert b == (b & 0x7f) : member;
                     buffer.put(b);
                     // Skip types on methods
@@ -582,6 +571,8 @@ public class ApiLookup {
                 assert api == UnsignedBytes.toInt((byte) api);
                 //assert api >= 1 && api < 0xFF; // max that fits in a byte
                 buffer.put((byte) api);
+                assert deprecatedIn == UnsignedBytes.toInt((byte) deprecatedIn);
+                buffer.put((byte) deprecatedIn);
                 nextEntry = buffer.position();
             }
         }
@@ -606,11 +597,10 @@ public class ApiLookup {
         buffer.rewind();
         buffer.get(b);
         if (file.exists()) {
-            file.delete();
+            boolean deleted = file.delete();
+            assert deleted : file;
         }
-        FileOutputStream output = Files.newOutputStreamSupplier(file).getOutput();
-        output.write(b);
-        output.close();
+        Files.write(b, file);
     }
 
     // For debugging only
@@ -650,22 +640,6 @@ public class ApiLookup {
     }
 
     /**
-     * Quick determination whether a given class name is possibly interesting; this
-     * is a quick package prefix check to determine whether we need to consider
-     * the class at all. This let's us do less actual searching for the vast majority
-     * of APIs (in libraries, application code etc) that have nothing to do with the
-     * APIs in our packages.
-     * @param name the class name in VM format (e.g. using / instead of .)
-     * @return true if the owner is <b>possibly</b> relevant
-     */
-    public static boolean isRelevantClass(String name) {
-        // TODO: Add quick switching here. This is tied to the database file so if
-        // we end up with unexpected prefixes there, this could break. For that reason,
-        // for now we consider everything relevant.
-        return true;
-    }
-
-    /**
      * Returns the API version required by the given class reference,
      * or -1 if this is not a known API class. Note that it may return -1
      * for classes introduced in version 1; internally the database only
@@ -678,10 +652,6 @@ public class ApiLookup {
      *         it's unknown <b>or version 1</b>.
      */
     public int getClassVersion(@NonNull String className) {
-        if (!isRelevantClass(className)) {
-            return -1;
-        }
-
         if (mData != null) {
             int classNumber = findClass(className);
             if (classNumber != -1) {
@@ -693,7 +663,8 @@ public class ApiLookup {
                 return UnsignedBytes.toInt(mData[offset]);
             }
         }  else {
-           ApiClass clz = mInfo.getClass(className);
+            assert mInfo != null;
+            ApiClass clz = mInfo.getClass(className);
             if (clz != null) {
                 int since = clz.getSince();
                 if (since == Integer.MAX_VALUE) {
@@ -706,6 +677,43 @@ public class ApiLookup {
         return -1;
     }
 
+    /**
+     * Returns the API version the given class was deprecated in, or -1 if the class
+     * is not deprecated.
+     *
+     * @param className the internal name of the method's owner class, e.g. its
+     *            fully qualified name (as returned by Class.getName(), but with
+     *            '.' replaced by '/'.
+     * @return the API version the API was deprecated in, or -1 if
+     *         it's unknown <b>or version 0</b>.
+     */
+    public int getClassDeprecatedIn(@NonNull String className) {
+        if (mData != null) {
+            int classNumber = findClass(className);
+            if (classNumber != -1) {
+                int offset = mIndices[classNumber];
+                while (mData[offset] != 0) {
+                    offset++;
+                }
+                offset++;
+                offset++; // deprecation is second byte after API level
+                int deprecatedIn = UnsignedBytes.toInt(mData[offset]);
+                return deprecatedIn != 0 ? deprecatedIn : -1;
+            }
+        }  else {
+            assert mInfo != null;
+            ApiClass clz = mInfo.getClass(className);
+            if (clz != null) {
+                int deprecatedIn = clz.getDeprecatedIn();
+                if (deprecatedIn == Integer.MAX_VALUE) {
+                    deprecatedIn = -1;
+                }
+                return deprecatedIn;
+            }
+        }
+
+        return -1;
+    }
     /**
      * Returns the API version required by the given method call. The method is
      * referred to by its {@code owner}, {@code name} and {@code desc} fields.
@@ -725,16 +733,14 @@ public class ApiLookup {
             @NonNull String owner,
             @NonNull String name,
             @NonNull String desc) {
-        if (!isRelevantClass(owner)) {
-            return -1;
-        }
-
+        //noinspection VariableNotUsedInsideIf
         if (mData != null) {
             int classNumber = findClass(owner);
             if (classNumber != -1) {
                 return findMember(classNumber, name, desc);
             }
         }  else {
+            assert mInfo != null;
            ApiClass clz = mInfo.getClass(owner);
             if (clz != null) {
                 String signature = name + desc;
@@ -743,6 +749,45 @@ public class ApiLookup {
                     since = -1;
                 }
                 return since;
+            }
+        }
+
+        return -1;
+    }
+
+    /**
+     * Returns the API version the given call was deprecated in, or -1 if the method
+     * is not deprecated.
+     *
+     * @param owner the internal name of the method's owner class, e.g. its
+     *            fully qualified name (as returned by Class.getName(), but with
+     *            '.' replaced by '/'.
+     * @param name the method's name
+     * @param desc the method's descriptor - see {@link org.objectweb.asm.Type}
+     * @return the API version the API was deprecated in, or -1 if
+     *         it's unknown <b>or version 0</b>.
+     */
+    public int getCallDeprecatedIn(
+            @NonNull String owner,
+            @NonNull String name,
+            @NonNull String desc) {
+        //noinspection VariableNotUsedInsideIf
+        if (mData != null) {
+            int classNumber = findClass(owner);
+            if (classNumber != -1) {
+                int deprecatedIn = findMemberDeprecatedIn(classNumber, name, desc);
+                return deprecatedIn != 0 ? deprecatedIn : -1;
+            }
+        }  else {
+            assert mInfo != null;
+            ApiClass clz = mInfo.getClass(owner);
+            if (clz != null) {
+                String signature = name + desc;
+                int deprecatedIn = clz.getMemberDeprecatedIn(signature, mInfo);
+                if (deprecatedIn == Integer.MAX_VALUE) {
+                    deprecatedIn = -1;
+                }
+                return deprecatedIn;
             }
         }
 
@@ -765,16 +810,14 @@ public class ApiLookup {
     public int getFieldVersion(
             @NonNull String owner,
             @NonNull String name) {
-        if (!isRelevantClass(owner)) {
-            return -1;
-        }
-
+        //noinspection VariableNotUsedInsideIf
         if (mData != null) {
             int classNumber = findClass(owner);
             if (classNumber != -1) {
                 return findMember(classNumber, name, null);
             }
         }  else {
+            assert mInfo != null;
             ApiClass clz = mInfo.getClass(owner);
             if (clz != null) {
                 int since = clz.getField(name, mInfo);
@@ -782,6 +825,42 @@ public class ApiLookup {
                     since = -1;
                 }
                 return since;
+            }
+        }
+
+        return -1;
+    }
+
+    /**
+     * Returns the API version the given field was deprecated in, or -1 if the field
+     * is not deprecated.
+     *
+     * @param owner the internal name of the method's owner class, e.g. its
+     *            fully qualified name (as returned by Class.getName(), but with
+     *            '.' replaced by '/'.
+     * @param name the method's name
+     * @return the API version the API was deprecated in, or -1 if
+     *         it's unknown <b>or version 0</b>.
+     */
+    public int getFieldDeprecatedIn(
+            @NonNull String owner,
+            @NonNull String name) {
+        //noinspection VariableNotUsedInsideIf
+        if (mData != null) {
+            int classNumber = findClass(owner);
+            if (classNumber != -1) {
+                int deprecatedIn = findMemberDeprecatedIn(classNumber, name, null);
+                return deprecatedIn != 0 ? deprecatedIn : -1;
+            }
+        }  else {
+            assert mInfo != null;
+            ApiClass clz = mInfo.getClass(owner);
+            if (clz != null) {
+                int deprecatedIn = clz.getMemberDeprecatedIn(name, mInfo);
+                if (deprecatedIn == Integer.MAX_VALUE) {
+                    deprecatedIn = -1;
+                }
+                return deprecatedIn;
             }
         }
 
@@ -842,6 +921,7 @@ public class ApiLookup {
         int high = mJavaPackages.length - 1;
         while (low <= high) {
             int middle = (low + high) >>> 1;
+            //noinspection UnnecessaryLocalVariable
             int offset = middle;
 
             if (DEBUG_SEARCH) {
@@ -925,6 +1005,16 @@ public class ApiLookup {
     }
 
     private int findMember(int classNumber, @NonNull String name, @Nullable String desc) {
+        return findMember(classNumber, name, desc, 0);
+    }
+
+    private int findMemberDeprecatedIn(int classNumber, @NonNull String name,
+            @Nullable String desc) {
+        return findMember(classNumber, name, desc, 1);
+    }
+
+    private int findMember(int classNumber, @NonNull String name, @Nullable String desc,
+            int delta) {
         // The index array contains class indexes from 0 to classCount and
         // member indices from classCount to mIndices.length.
         int low = mClassCount;
@@ -957,6 +1047,7 @@ public class ApiLookup {
 
                             if (mData[offset++] == 0) {
                                 // Yes, terminated argument list: get the API level
+                                offset += delta;
                                 return UnsignedBytes.toInt(mData[offset]);
                             }
                         }
@@ -969,6 +1060,7 @@ public class ApiLookup {
                         offset += nameLength;
                         if (mData[offset++] == 0) {
                             // Yes, terminated argument list: get the API level
+                            offset += delta;
                             return UnsignedBytes.toInt(mData[offset]);
                         }
                     }

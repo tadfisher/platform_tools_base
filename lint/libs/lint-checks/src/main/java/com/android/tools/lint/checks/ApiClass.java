@@ -37,19 +37,21 @@ import java.util.Set;
  * {@link #getField} returns when the field was introduced.
  */
 public class ApiClass {
-
     private final String mName;
     private final int mSince;
+    private int mDeprecatedIn;
 
     private final List<Pair<String, Integer>> mSuperClasses = Lists.newArrayList();
     private final List<Pair<String, Integer>> mInterfaces = Lists.newArrayList();
 
     private final Map<String, Integer> mFields = new HashMap<String, Integer>();
     private final Map<String, Integer> mMethods = new HashMap<String, Integer>();
+    private final Map<String, Integer> mDeprecatedMembersIn = new HashMap<String, Integer>();
 
-    ApiClass(String name, int since) {
+    ApiClass(String name, int since, int deprecatedIn) {
         mName = name;
         mSince = since;
+        mDeprecatedIn = deprecatedIn;
     }
 
     /**
@@ -69,11 +71,20 @@ public class ApiClass {
     }
 
     /**
-     * Returns when a field was added, or null if it doesn't exist.
+     * Returns the API level a method was deprecated in, or 0 if the method is not deprecated
+     *
+     * @return the API level a method was deprecated in, or 0 if the method is not deprecated
+     */
+    int getDeprecatedIn() {
+        return mDeprecatedIn;
+    }
+
+    /**
+     * Returns when a field was added, or Integer.MAX_VALUE if it doesn't exist.
      * @param name the name of the field.
      * @param info the corresponding info
      */
-    Integer getField(String name, Api info) {
+    int getField(String name, Api info) {
         // The field can come from this class or from a super class or an interface
         // The value can never be lower than this introduction of this class.
         // When looking at super classes and interfaces, it can never be lower than when the
@@ -98,11 +109,9 @@ public class ApiClass {
             ApiClass superClass = info.getClass(superClassPair.getFirst());
             if (superClass != null) {
                 i = superClass.getField(name, info);
-                if (i != null) {
-                    int tmp = superClassPair.getSecond() > i ? superClassPair.getSecond() : i;
-                    if (tmp < min) {
-                        min = tmp;
-                    }
+                int tmp = superClassPair.getSecond() > i ? superClassPair.getSecond() : i;
+                if (tmp < min) {
+                    min = tmp;
                 }
             }
         }
@@ -112,11 +121,9 @@ public class ApiClass {
             ApiClass superClass = info.getClass(superClassPair.getFirst());
             if (superClass != null) {
                 i = superClass.getField(name, info);
-                if (i != null) {
-                    int tmp = superClassPair.getSecond() > i ? superClassPair.getSecond() : i;
-                    if (tmp < min) {
-                        min = tmp;
-                    }
+                int tmp = superClassPair.getSecond() > i ? superClassPair.getSecond() : i;
+                if (tmp < min) {
+                    min = tmp;
                 }
             }
         }
@@ -125,8 +132,55 @@ public class ApiClass {
     }
 
     /**
-     * Returns when a method was added, or null if it doesn't exist. This goes through the super
-     * class to find method only present there.
+     * Returns when a field was deprecated, or 0 if it's not deprecated
+     *
+     * @param name the name of the field.
+     * @param info the corresponding info
+     */
+    int getMemberDeprecatedIn(String name, Api info) {
+        int deprecatedIn = findMemberDeprecatedIn(name, info);
+        return deprecatedIn < Integer.MAX_VALUE ? deprecatedIn : 0;
+    }
+
+    private int findMemberDeprecatedIn(String name, Api info) {
+        // This follows the same logic as getField/getMethod.
+        // However, it also incorporates deprecation versions from the class.
+        int min = Integer.MAX_VALUE;
+        Integer i = mDeprecatedMembersIn.get(name);
+        if (i != null) {
+            min = i;
+        }
+
+        // now look at the super classes
+        for (Pair<String, Integer> superClassPair : mSuperClasses) {
+            ApiClass superClass = info.getClass(superClassPair.getFirst());
+            if (superClass != null) {
+                i = superClass.findMemberDeprecatedIn(name, info);
+                int tmp = superClassPair.getSecond() > i ? superClassPair.getSecond() : i;
+                if (tmp < min) {
+                    min = tmp;
+                }
+            }
+        }
+
+        // now look at the interfaces
+        for (Pair<String, Integer> superClassPair : mInterfaces) {
+            ApiClass superClass = info.getClass(superClassPair.getFirst());
+            if (superClass != null) {
+                i = superClass.findMemberDeprecatedIn(name, info);
+                int tmp = superClassPair.getSecond() > i ? superClassPair.getSecond() : i;
+                if (tmp < min) {
+                    min = tmp;
+                }
+            }
+        }
+
+        return min;
+    }
+
+    /**
+     * Returns when a method was added, or Integer.MAX_VALUE if it doesn't exist.
+     * This goes through the super class to find method only present there.
      * @param methodSignature the method signature
      */
     int getMethod(String methodSignature, Api info) {
@@ -159,11 +213,9 @@ public class ApiClass {
             ApiClass superClass = info.getClass(superClassPair.getFirst());
             if (superClass != null) {
                 i = superClass.getMethod(methodSignature, info);
-                if (i != null) {
-                    int tmp = superClassPair.getSecond() > i ? superClassPair.getSecond() : i;
-                    if (tmp < min) {
-                        min = tmp;
-                    }
+                int tmp = superClassPair.getSecond() > i ? superClassPair.getSecond() : i;
+                if (tmp < min) {
+                    min = tmp;
                 }
             }
         }
@@ -173,11 +225,9 @@ public class ApiClass {
             ApiClass superClass = info.getClass(interfacePair.getFirst());
             if (superClass != null) {
                 i = superClass.getMethod(methodSignature, info);
-                if (i != null) {
-                    int tmp = interfacePair.getSecond() > i ? interfacePair.getSecond() : i;
-                    if (tmp < min) {
-                        min = tmp;
-                    }
+                int tmp = interfacePair.getSecond() > i ? interfacePair.getSecond() : i;
+                if (tmp < min) {
+                    min = tmp;
                 }
             }
         }
@@ -185,14 +235,16 @@ public class ApiClass {
         return min;
     }
 
-    void addField(String name, int since) {
+    void addField(String name, int since, int deprecatedIn) {
         Integer i = mFields.get(name);
-        if (i == null || i.intValue() > since) {
-            mFields.put(name, Integer.valueOf(since));
+        assert i == null;
+        mFields.put(name, since);
+        if (deprecatedIn > 0) {
+            mDeprecatedMembersIn.put(name, deprecatedIn);
         }
     }
 
-    void addMethod(String name, int since) {
+    void addMethod(String name, int since, int deprecatedIn) {
         // Strip off the method type at the end to ensure that the code which
         // produces inherited methods doesn't get confused and end up multiple entries.
         // For example, java/nio/Buffer has the method "array()Ljava/lang/Object;",
@@ -205,8 +257,10 @@ public class ApiClass {
         }
 
         Integer i = mMethods.get(name);
-        if (i == null || i.intValue() > since) {
-            mMethods.put(name, Integer.valueOf(since));
+        assert i == null;
+        mMethods.put(name, since);
+        if (deprecatedIn > 0) {
+            mDeprecatedMembersIn.put(name, deprecatedIn);
         }
     }
 
@@ -222,11 +276,12 @@ public class ApiClass {
         // check if we already have that name (at a lower level)
         for (Pair<String, Integer> pair : list) {
             if (name.equals(pair.getFirst())) {
+                assert false;
                 return;
             }
         }
 
-        list.add(Pair.of(name, Integer.valueOf(value)));
+        list.add(Pair.of(name, value));
 
     }
 
@@ -275,18 +330,14 @@ public class ApiClass {
         for (Pair<String, Integer> superClass : mSuperClasses) {
             ApiClass clz = info.getClass(superClass.getFirst());
             assert clz != null : superClass.getSecond();
-            if (clz != null) {
-                clz.addAllMethods(info, set, false);
-            }
+            clz.addAllMethods(info, set, false);
         }
 
         // Get methods from implemented interfaces as well;
         for (Pair<String, Integer> superClass : mInterfaces) {
             ApiClass clz = info.getClass(superClass.getFirst());
             assert clz != null : superClass.getSecond();
-            if (clz != null) {
-                clz.addAllMethods(info, set, false);
-            }
+            clz.addAllMethods(info, set, false);
         }
     }
 
@@ -312,18 +363,14 @@ public class ApiClass {
         for (Pair<String, Integer> superClass : mSuperClasses) {
             ApiClass clz = info.getClass(superClass.getFirst());
             assert clz != null : superClass.getSecond();
-            if (clz != null) {
-                clz.addAllFields(info, set);
-            }
+            clz.addAllFields(info, set);
         }
 
         // Get methods from implemented interfaces as well;
         for (Pair<String, Integer> superClass : mInterfaces) {
             ApiClass clz = info.getClass(superClass.getFirst());
             assert clz != null : superClass.getSecond();
-            if (clz != null) {
-                clz.addAllFields(info, set);
-            }
+            clz.addAllFields(info, set);
         }
     }
 
