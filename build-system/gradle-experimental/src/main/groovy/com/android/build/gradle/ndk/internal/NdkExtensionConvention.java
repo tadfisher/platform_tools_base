@@ -13,10 +13,6 @@ public class NdkExtensionConvention {
 
     public static final String DEFAULT_TOOLCHAIN = "gcc";
 
-    // Default toolchain version depends on the target ABI.  Setting it to "default" to allow
-    // the version to be determined later.
-    public static final String DEFAULT_TOOLCHAIN_VERSION = "default";
-
     public static final String DEFAULT_STL = "system";
 
     /**
@@ -32,10 +28,6 @@ public class NdkExtensionConvention {
                         "Invalid toolchain '%s'.  Supported toolchains are 'gcc' and 'clang'.",
                         ndkConfig.getToolchain()));
             }
-        }
-
-        if (ndkConfig.getToolchainVersion().isEmpty()) {
-            ndkConfig.setToolchainVersion(DEFAULT_TOOLCHAIN_VERSION);
         }
 
         ndkConfig.getCFilePattern().getIncludes().create(

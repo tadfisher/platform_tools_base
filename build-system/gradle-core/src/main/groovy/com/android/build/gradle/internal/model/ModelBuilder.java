@@ -37,6 +37,7 @@ import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
+import com.android.build.gradle.internal.NdkHandler;
 import com.android.builder.Version;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
@@ -60,6 +61,7 @@ import com.android.sdklib.IAndroidTarget;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import org.gradle.api.Project;
@@ -69,6 +71,7 @@ import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Builder for the custom Android model.
@@ -85,6 +88,10 @@ public class ModelBuilder implements ToolingModelBuilder {
     private final VariantManager variantManager;
     @NonNull
     private final TaskManager taskManager;
+    @NonNull
+    private final NdkHandler ndkHandler;
+    @NonNull
+    private Map<String, NativeToolchain> toolchains;
 
     private final boolean isLibrary;
 
@@ -94,12 +101,14 @@ public class ModelBuilder implements ToolingModelBuilder {
             @NonNull TaskManager taskManager,
             @NonNull AndroidConfig config,
             @NonNull ExtraModelInfo extraModelInfo,
+            @NonNull NdkHandler ndkHandler,
             boolean isLibrary) {
         this.androidBuilder = androidBuilder;
         this.config = config;
         this.extraModelInfo = extraModelInfo;
         this.variantManager = variantManager;
         this.taskManager = taskManager;
+        this.ndkHandler = ndkHandler;
         this.isLibrary = isLibrary;
     }
 
@@ -143,6 +152,8 @@ public class ModelBuilder implements ToolingModelBuilder {
         List<String> flavorDimensionList = (config.getFlavorDimensionList() != null ?
                 config.getFlavorDimensionList() : Lists.<String>newArrayList());
 
+        toolchains = createNativeToolchainModelMap(ndkHandler);
+
         DefaultAndroidProject androidProject = new DefaultAndroidProject(
                 Version.ANDROID_GRADLE_PLUGIN_VERSION,
                 project.getName(),
@@ -159,7 +170,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                 lintOptions,
                 project.getBuildDir(),
                 config.getResourcePrefix(),
-                Collections.<NativeToolchain>emptySet(),
+                ImmutableList.copyOf(toolchains.values()),
                 isLibrary,
                 Version.BUILDER_MODEL_API_VERSION);
 
@@ -186,6 +197,24 @@ public class ModelBuilder implements ToolingModelBuilder {
         }
 
         return androidProject;
+    }
+
+    /**
+     * Create a map of ABI to NativeToolchain
+     */
+    public static Map<String, NativeToolchain> createNativeToolchainModelMap(
+            @NonNull NdkHandler ndkHandler) {
+        Map<String, NativeToolchain> toolchains = Maps.newHashMap();
+
+        for (String abi : ndkHandler.getSupportedAbis()) {
+            toolchains.put(
+                    abi,
+                    new NativeToolchainImpl(
+                            ndkHandler.getToolchainName() + "-" + abi,
+                            ndkHandler.getCCompiler(abi),
+                            ndkHandler.getCppCompiler(abi)));
+        }
+        return toolchains;
     }
 
     @NonNull
@@ -286,26 +315,30 @@ public class ModelBuilder implements ToolingModelBuilder {
     /**
      * Create a NativeLibrary for each ABI.
      */
-    private static Collection<NativeLibrary> createNativeLibraries(
+    private Collection<NativeLibrary> createNativeLibraries(
             @NonNull NdkConfig ndkConfig,
             @NonNull Collection<String> abis) {
         Collection<NativeLibrary> nativeLibraries = Lists.newArrayListWithCapacity(abis.size());
         for (String abi : abis) {
+            NativeToolchain toolchain = toolchains.get(abi);
+
+            String sysrootFlag = "--sysroot=" + ndkHandler.getSysroot(abi);
+
             // The DSL currently do not support all options available in the model such as the
             // include dirs and the defines.  Therefore, just pass an empty collection for now.
             @SuppressWarnings("ConstantConditions")
             NativeLibrary lib = new NativeLibraryImpl(
                     ndkConfig.getModuleName(),
-                    "",  /*toolchainName*/
+                    toolchain == null ? "" : toolchain.getName(),
                     abi,
                     Collections.<File>emptyList(),  /*cIncludeDirs*/
                     Collections.<File>emptyList(),  /*cppIncludeDirs*/
                     Collections.<File>emptyList(),  /*cSystemIncludeDirs*/
-                    Collections.<File>emptyList(),  /*cppSystemIncludeDirs*/
+                    ndkHandler.getStlIncludes(ndkConfig.getStl(), abi),
                     Collections.<String>emptyList(),  /*cDefines*/
                     Collections.<String>emptyList(),  /*cppDefines*/
-                    Lists.newArrayList(ndkConfig.getcFlags()),
-                    Lists.newArrayList(ndkConfig.getcFlags()));
+                    ImmutableList.of(sysrootFlag, ndkConfig.getcFlags()),
+                    ImmutableList.of(sysrootFlag, ndkConfig.getcFlags()));
             nativeLibraries.add(lib);
         }
         return nativeLibraries;
@@ -337,9 +370,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                 if (ndkConfig.getAbiFilters() == null || ndkConfig.getAbiFilters().isEmpty()) {
                     nativeLibraries = createNativeLibraries(
                             ndkConfig,
-                            ImmutableList.of(
-                                    "armeabi", "armeabi-v7a", "arm64-v8a", "x86", "x86_64", "mips",
-                                    "mips64"));
+                            ndkHandler.getSupportedAbis());
                 } else {
                     nativeLibraries = createNativeLibraries(ndkConfig, ndkConfig.getAbiFilters());
                 }

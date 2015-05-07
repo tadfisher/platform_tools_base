@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.ndk.internal;
 
+import com.android.build.gradle.internal.NdkHandler;
 import com.google.common.collect.Lists;
 
 import org.gradle.nativeplatform.platform.NativePlatform;
@@ -53,31 +54,13 @@ public class StlNativeToolSpecification extends AbstractNativeToolSpecification 
 
         List<String> cppFlags = Lists.newArrayList();
 
-        List<String> includeDirs = Lists.newArrayList();
-        if (stlName.equals("system")) {
-            includeDirs.add("system/include");
-        } else if (stlName.equals("stlport")) {
-            includeDirs.add("stlport/stlport");
-            includeDirs.add("gabi++/include");
-        } else if (stlName.equals("gnustl")) {
-            String gccToolchainVersion = ndkHandler.getGccToolchainVersion(platform.getName());
-            includeDirs.add("gnu-libstdc++/" + gccToolchainVersion + "/include");
-            includeDirs.add("gnu-libstdc++/" + gccToolchainVersion +
-                    "/libs/" + platform.getName() + "/include");
-            includeDirs.add("gnu-libstdc++/" + gccToolchainVersion +
-                    "/include/backward");
-        } else if (stlName.equals("gabi++")) {
-            includeDirs.add("gabi++/include");
-        } else if (stlName.equals("c++")) {
-            includeDirs.add("llvm-libc++/libcxx/include");
-            includeDirs.add("gabi++/include");
-            includeDirs.add("../android/support/include");
+        if (stlName.equals("c++")) {
             cppFlags.add("-std=c++11");
         }
 
-        for (String dir : includeDirs) {
-            cppFlags.add("-I" +
-                    new File(StlConfiguration.getStlBaseDirectory(ndkHandler), dir).toString());
+        List<File> includeDirs = ndkHandler.getStlIncludes(stlName, platform.getName());
+        for (File dir : includeDirs) {
+            cppFlags.add("-I" + dir.toString());
         }
         return cppFlags;
     }
