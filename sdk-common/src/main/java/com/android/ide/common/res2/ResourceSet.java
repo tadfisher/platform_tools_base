@@ -21,6 +21,7 @@ import static com.android.ide.common.res2.ResourceFile.ATTR_QUALIFIER;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.blame.Message;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceConstants;
@@ -132,17 +133,23 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
     @Override
     protected void readSourceFolder(File sourceFolder, ILogger logger)
             throws MergingException {
+        List<Message> errors = Lists.newArrayList();
         File[] folders = sourceFolder.listFiles();
         if (folders != null) {
             for (File folder : folders) {
                 if (folder.isDirectory() && !isIgnored(folder)) {
                     FolderData folderData = getFolderData(folder);
                     if (folderData != null) {
-                        parseFolder(sourceFolder, folder, folderData, logger);
+                        try {
+                            parseFolder(sourceFolder, folder, folderData, logger);
+                        } catch (MergingException e) {
+                            errors.addAll(e.getMessages());
+                        }
                     }
                 }
             }
         }
+        MergingException.throwIfNonEmpty(errors);
     }
 
     @Override
@@ -170,12 +177,10 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
         ResourceFile resourceFile = getDataFile(changedFile);
 
         if (resourceFile == null) {
-            String message = String.format(
+            throw MergingException.withFile(changedFile,
                     "In DataSet '%s', no data file for changedFile '%s'. "
-                            + "This is an internal error in the incremental builds code; "
-                            + "to work around it, try doing a full clean build.",
-                    getConfigName(), changedFile.getAbsolutePath());
-            throw MergingException.withFile(changedFile, message);
+                    + "This is an internal error in the incremental builds code; "
+                    + "to work around it, try doing a full clean build.", getConfigName());
         }
 
         //noinspection VariableNotUsedInsideIf
@@ -278,15 +283,15 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
                     new ResourceItem(name, folderData.type, null),
                     folderData.qualifiers);
         } else {
+            ValueResourceParser2 parser = new ValueResourceParser2(file);
+            List<ResourceItem> items;
             try {
-                ValueResourceParser2 parser = new ValueResourceParser2(file);
-                List<ResourceItem> items = parser.parseFile();
-
-                return new ResourceFile(file, items, folderData.qualifiers);
+                items = parser.parseFile();
             } catch (MergingException e) {
                 logger.error(e, "Failed to parse %s", file.getAbsolutePath());
                 throw e;
             }
+            return new ResourceFile(file, items, folderData.qualifiers);
         }
     }
 
