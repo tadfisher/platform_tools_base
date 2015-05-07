@@ -18,126 +18,184 @@ package com.android.ide.common.res2;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.blame.Message;
+import com.android.ide.common.blame.Message.Kind;
+import com.android.ide.common.blame.SourceFile;
 import com.android.ide.common.blame.SourceFilePosition;
 import com.android.ide.common.blame.SourcePosition;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import org.xml.sax.SAXParseException;
 
 import java.io.File;
+import java.util.Collection;
+import java.util.Formatter;
 import java.util.List;
 
-/** Exception for errors during merging */
+/**
+ * Exception for errors during merging.
+ */
 public class MergingException extends Exception {
-    private String mMessage; // Keeping our own copy since parent prepends exception class name
-    private List<SourceFilePosition> mFilePositions = Lists.newArrayList();
 
-    public MergingException(@NonNull String message, @Nullable Throwable cause) {
-        super(message, cause);
-        mMessage = message;
-    }
+    public static final String MULTIPLE_ERRORS = "Multiple errors:";
 
-    public MergingException(@NonNull String message) {
-        this(message, null);
-    }
+    private final List<Message> mMessages;
 
-    public MergingException(@NonNull Throwable cause) {
-        this(cause.getLocalizedMessage(), cause);
+    /**
+     * For internal use. Creates a new MergingException
+     *
+     * @param cause    the original exception. May be null.
+     * @param messages the messaged. Must contain at least one item.
+     */
+    protected MergingException(@Nullable Throwable cause, @NonNull Message... messages) {
+        super(messages.length == 1 ? messages[0].getText() : MULTIPLE_ERRORS, cause);
+        mMessages = ImmutableList.copyOf(messages);
     }
 
     /**
-     *  Add the file if it hasn't already been included in the list of file positions.
+     * Creates a new MergingException
+     *
+     * @param cause   the cause
+     * @param message the first message.
      */
-    public MergingException setFile(@NonNull File file) {
-        for (SourceFilePosition filePosition : mFilePositions) {
-            if (file.equals(filePosition.getFile().getSourceFile())) {
-                return this;
-            }
-        }
-        addFile(file);
-        return this;
+    public static MergingException wrapException(@NonNull Throwable cause,
+            @NonNull Message message) {
+        return new MergingException(cause, message);
     }
 
-    public MergingException addFile(@NonNull File file) {
-        mFilePositions.add(new SourceFilePosition(file, SourcePosition.UNKNOWN));
-        return this;
+    /**
+     * Creates a new MergingException with the specified cause and source file position.
+     *
+     * @param throwable the cause. The message text will be specified by {@link
+     *                  Throwable#getLocalizedMessage()}
+     * @param position  the source file position that caused the error.
+     */
+    public static MergingException wrapException(@NonNull Throwable throwable,
+            @NonNull SourceFilePosition position) {
+        String message = throwable.getLocalizedMessage();
+        return new MergingException(throwable, new Message(Kind.ERROR, message, position));
     }
 
-    public MergingException addFileIfNonNull(@Nullable File file) {
-        return (file != null) ? addFile(file) : this;
+    /**
+     * Creates a new MergingException with the specified cause and source file.
+     *
+     * @param throwable the cause. The message text will be specified by {@Link
+     *                  Throwable.getLocalizedMessage()}
+     * @param file      the source file that caused the error.
+     */
+    public static MergingException wrapException(@NonNull Throwable throwable, @NonNull File file) {
+        return wrapException(throwable, new SourceFilePosition(file, SourcePosition.UNKNOWN));
     }
 
-    public MergingException addFilePosition(@NonNull SourceFilePosition filePosition) {
-        mFilePositions.add(filePosition);
-        return this;
-    }
-
-    public MergingException addFilePosition(@NonNull File file, @NonNull SAXParseException exception) {
+    /**
+     * Creates a new MergingException with the specified cause and source file, extracting the
+     * position from the specified {@link SAXParseException}.
+     *
+     * @param exception the cause. The sourcePosition will be extracted from the SaxParseException.
+     *                  The message text will be specified by {@Link Throwable.getLocalizedMessage()}
+     * @param file      the source file being parsed.
+     */
+    public static MergingException wrapSaxParseException(@NonNull SAXParseException exception,
+            @NonNull File file) {
+        String message = exception.getLocalizedMessage();
+        final SourceFilePosition position;
         int lineNumber = exception.getLineNumber();
         if (lineNumber != -1) {
-            addFilePosition(new SourceFilePosition(file, new SourcePosition(
-                    exception.getLineNumber() - 1, exception.getColumnNumber() - 1, -1)));
+            // Convert positions to be 0-based for SourceFilePosition.
+            position = new SourceFilePosition(file, new SourcePosition(
+                    lineNumber - 1, exception.getColumnNumber() - 1, -1));
         } else {
-            addFile(file);
+            position = new SourceFilePosition(file, SourcePosition.UNKNOWN);
         }
-        return this;
+        return wrapException(exception, position);
     }
 
-    public MergingException setCause(@NonNull Throwable cause) {
-        initCause(cause);
-        return this;
+    /**
+     * Creates a new MergingException with the specified file and message.
+     *
+     * @param file      the source file. May be null if unknown.
+     * @param msgFormat s an optional error format. It will be processed using a {@link Formatter}
+     *                  with the provided arguments.
+     * @param args      provides the arguments for errorFormat.
+     */
+    public static MergingException withFile(@Nullable File file, @NonNull String msgFormat,
+            @NonNull Object... args) {
+        String message = String.format(msgFormat, args);
+        SourceFile sourceFile = file == null ? SourceFile.UNKNOWN : new SourceFile(file);
+        SourceFilePosition position = new SourceFilePosition(sourceFile, SourcePosition.UNKNOWN);
+        return new MergingException(null, new Message(Kind.ERROR, message, position));
     }
 
-    /** Computes the error message to display for this error */
+    public static void throwIfNonEmpty(Collection<Message> messages) throws MergingException{
+        if (!messages.isEmpty()) {
+            throw new MergingException(null, Iterables.toArray(messages, Message.class));
+        }
+    }
+
+    public List<Message> getMessages() {
+        return mMessages;
+    }
+
+    /**
+     * Computes the error message to display for this error
+     */
     @Override
     public String getMessage() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(Joiner.on('\t').join(mFilePositions));
+        List<String> messages = Lists.newArrayListWithCapacity(mMessages.size());
+        for (Message message : mMessages) {
+            StringBuilder sb = new StringBuilder();
+            List<SourceFilePosition> sourceFilePositions = message.getSourceFilePositions();
+            if (sourceFilePositions.size() > 1 || !sourceFilePositions.get(0)
+                    .equals(SourceFilePosition.UNKNOWN)) {
+                sb.append(Joiner.on('\t').join(sourceFilePositions));
+            }
 
-        if (sb.length() > 0) {
-            sb.append(':').append(' ');
+            String text = message.getText();
+            if (sb.length() > 0) {
+                sb.append(':').append(' ');
 
-            // ALWAYS insert the string "Error:" between the path and the message.
-            // This is done to make the error messages more simple to detect
-            // (since a generic path: message pattern can match a lot of output, basically
-            // any labeled output, and we don't want to do file existence checks on any random
-            // string to the left of a colon.)
-            if (!mMessage.startsWith("Error: ")) {
+                // ALWAYS insert the string "Error:" between the path and the message.
+                // This is done to make the error messages more simple to detect
+                // (since a generic path: message pattern can match a lot of output, basically
+                // any labeled output, and we don't want to do file existence checks on any random
+                // string to the left of a colon.)
+                if (!text.startsWith("Error: ")) {
+                    sb.append("Error: ");
+                }
+            } else if (!text.contains("Error: ")) {
                 sb.append("Error: ");
             }
-        } else if (!mMessage.contains("Error: ")) {
-            sb.append("Error: ");
-        }
 
-        String message = mMessage;
-
-        // If the error message already starts with the path, strip it out.
-        // This avoids redundant looking error messages you can end up with
-        // like for example for permission denied errors where the error message
-        // string itself contains the path as a prefix:
-        //    /my/full/path: /my/full/path (Permission denied)
-        if (mFilePositions.size() == 1) {
-            File file = mFilePositions.get(0).getFile().getSourceFile();
-            if (file!= null) {
-                String path = file.getAbsolutePath();
-                if (message.startsWith(path)) {
-                    int stripStart = path.length();
-                    if (message.length() > stripStart && message.charAt(stripStart) == ':') {
-                        stripStart++;
+            // If the error message already starts with the path, strip it out.
+            // This avoids redundant looking error messages you can end up with
+            // like for example for permission denied errors where the error message
+            // string itself contains the path as a prefix:
+            //    /my/full/path: /my/full/path (Permission denied)
+            if (sourceFilePositions.size() == 1) {
+                File file = sourceFilePositions.get(0).getFile().getSourceFile();
+                if (file != null) {
+                    String path = file.getAbsolutePath();
+                    if (text.startsWith(path)) {
+                        int stripStart = path.length();
+                        if (text.length() > stripStart && text.charAt(stripStart) == ':') {
+                            stripStart++;
+                        }
+                        if (text.length() > stripStart && text.charAt(stripStart) == ' ') {
+                            stripStart++;
+                        }
+                        text = text.substring(stripStart);
                     }
-                    if (message.length() > stripStart && message.charAt(stripStart) == ' ') {
-                        stripStart++;
-                    }
-                    message = message.substring(stripStart);
                 }
             }
-        }
 
-        sb.append(message);
-        return sb.toString();
+            sb.append(text);
+            messages.add(sb.toString());
+        }
+        return Joiner.on('\n').join(messages);
     }
 
     @Override
