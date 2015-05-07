@@ -16,11 +16,10 @@
 
 package com.android.build.gradle.internal.dsl;
 
-import static com.android.build.OutputFile.NO_FILTER;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
+import com.android.build.gradle.internal.NdkHandler;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
@@ -33,19 +32,16 @@ import java.util.Set;
  */
 public class AbiSplitOptions extends SplitOptions {
 
-    private static final String[] ABI_LIST = new String[] {
-            "armeabi", "armeabi-v7a", "arm64-v8a", "x86", "x86_64", "mips", "mips64" };
-
     private boolean universalApk = false;
 
     @Override
     protected Set<String> getDefaultValues() {
-        return Sets.newHashSet(ABI_LIST);
+        return Sets.newHashSet(NdkHandler.getAbiList());
     }
 
     @Override
     protected ImmutableSet<String> getAllowedValues() {
-        return ImmutableSet.copyOf(ABI_LIST);
+        return ImmutableSet.copyOf(NdkHandler.getAbiList());
     }
 
     /**
