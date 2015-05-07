@@ -17,12 +17,13 @@
 package com.android.tools.perflib.heap.analysis;
 
 import com.android.annotations.NonNull;
-import com.android.tools.perflib.heap.Heap;
-import com.android.tools.perflib.heap.Instance;
-import com.android.tools.perflib.heap.RootObj;
-import com.android.tools.perflib.heap.Snapshot;
+import com.android.tools.perflib.heap.*;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import gnu.trove.TLongHashSet;
+
+import java.util.Comparator;
+import java.util.PriorityQueue;
 
 /**
  * Initial implementation of dominator computation.
@@ -104,6 +105,11 @@ public class Dominators {
         }
     }
 
+    public void computeMinDistanceToGcRoots() {
+        DijkstraVisitor visitor = new DijkstraVisitor();
+        visitor.doVisit(mSnapshot.getGCRoots());
+    }
+
     /**
      * Kicks off the computation of dominators and retained sizes.
      */
@@ -123,6 +129,51 @@ public class Dominators {
             for (Instance dom = node.getImmediateDominator(); dom != Snapshot.SENTINEL_ROOT;
                     dom = dom.getImmediateDominator()) {
                 dom.addRetainedSize(heapIndex, node.getSize());
+            }
+        }
+        computeMinDistanceToGcRoots();
+    }
+
+    private static class DijkstraVisitor extends NonRecursiveVisitor {
+        private PriorityQueue<Instance> mPriorityQueue = new PriorityQueue<Instance>(1024, new Comparator<Instance>() {
+            @Override
+            public int compare(Instance o1, Instance o2) {
+                return o1.getDistanceToGcRoot() - o2.getDistanceToGcRoot();
+            }
+        });
+        private TLongHashSet mExistsInQueue = new TLongHashSet();
+        private Instance mPreviousInstance = null;
+        private int mVisitDistance = 0;
+
+        @Override
+        public void visitLater(@NonNull Instance instance) {
+            if (mVisitDistance < instance.getDistanceToGcRoot()) {
+                if (mExistsInQueue.contains(instance.getId())) {
+                    assert (!mExistsInQueue.contains(instance.getId()));
+                }
+                instance.setDistanceToGcRoot(mVisitDistance);
+                instance.setNextInstanceToGcRoot(mPreviousInstance);
+                mExistsInQueue.add(instance.getId());
+                mPriorityQueue.add(instance);
+            }
+        }
+
+        @Override
+        public void doVisit(Iterable<? extends Instance> startNodes) {
+            // root nodes are instances that share the same id as the node they point to.
+            // This means that we cannot mark them as visited here or they would be marking
+            // the actual root instance
+            // TODO RootObj should not be Instance objects
+            for (Instance node : startNodes) {
+                node.accept(this);
+            }
+
+            while (!mPriorityQueue.isEmpty()) {
+                Instance node = mPriorityQueue.poll();
+                mExistsInQueue.remove(node.getId());
+                mVisitDistance = node.getDistanceToGcRoot() + 1;
+                mPreviousInstance = node;
+                node.accept(this);
             }
         }
     }
