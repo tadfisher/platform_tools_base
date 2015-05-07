@@ -31,6 +31,12 @@ import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.LibraryVariantData;
 import com.android.builder.core.VariantConfiguration;
+import com.android.builder.tasks.Job;
+import com.android.builder.tasks.JobContext;
+import com.android.builder.tasks.QueueThreadContext;
+import com.android.builder.tasks.QueueThreadContextAdapter;
+import com.android.builder.tasks.WorkQueue;
+import com.android.utils.StdLogger;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -44,7 +50,6 @@ import org.gradle.tooling.BuildException;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -60,6 +65,24 @@ import proguard.gradle.ProGuardTask;
  * tasks.
  */
 public class AndroidProGuardTask extends ProGuardTask implements FileSupplier {
+
+    /**
+     * Simple {@link WorkQueue} context implementation that simply runs the proguard job.
+     */
+    private static class ProguardTaskThreadContext extends
+            QueueThreadContextAdapter<AndroidProGuardTask> {
+
+        @Override
+        public void runTask(@NonNull Job<AndroidProGuardTask> job) throws Exception {
+            job.runTask(new JobContext<AndroidProGuardTask>(null /* payload */));
+            job.finished();
+        }
+    }
+
+    private static final WorkQueue<AndroidProGuardTask> workQueue =
+            new WorkQueue<AndroidProGuardTask>(
+                    new StdLogger(StdLogger.Level.VERBOSE),
+                    new ProguardTaskThreadContext(), "ProGuard tasks limiter", 4);
 
     /**
      * resulting obfuscation mapping file.
@@ -102,7 +125,32 @@ public class AndroidProGuardTask extends ProGuardTask implements FileSupplier {
 
     @Override
     @TaskAction
-    public void proguard() throws ParseException, IOException {
+    public void proguard() throws IOException, ParseException {
+        final Job<AndroidProGuardTask> job = new Job<AndroidProGuardTask>(getName(),
+                new com.android.builder.tasks.Task<AndroidProGuardTask>() {
+                    @Override
+                    public void run(@NonNull Job<AndroidProGuardTask> job,
+                            @NonNull JobContext<AndroidProGuardTask> context) throws IOException {
+                        try {
+                            AndroidProGuardTask.this.doMinification();
+                        } catch (ParseException e) {
+                            throw new IOException(e);
+                        }
+                    }
+                });
+        try {
+            workQueue.push(job);
+
+            // wait for the task completion.
+            job.await();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    public void doMinification() throws ParseException, IOException {
         // only set the tested application mapping file if it exists (it must at this point or that
         // means the tested application did not request obfuscation).
         if (testedAppMappingFile != null && testedAppMappingFile.exists()) {
