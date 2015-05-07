@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.ndk.internal
 
+import com.android.build.gradle.internal.NdkHandler
 import com.android.build.gradle.managed.ManagedString
 import com.android.build.gradle.model.AndroidComponentModelSourceSet
 import com.android.build.gradle.managed.NdkConfig
@@ -75,7 +76,7 @@ class NdkConfiguration {
                                 binary, buildDir, sourceSetName)
             }
 
-            String sysroot = ndkHandler.getSysroot(binary.targetPlatform)
+            String sysroot = ndkHandler.getSysroot(binary.targetPlatform.getName())
             cCompiler.args  "--sysroot=$sysroot"
             cppCompiler.args  "--sysroot=$sysroot"
             linker.args "--sysroot=$sysroot"
@@ -143,11 +144,10 @@ class NdkConfiguration {
             File buildDir,
             NdkConfig ndkConfig,
             NdkHandler handler) {
-
         String copyGdbServerTaskName = NdkNamingScheme.getTaskName(binary, "copy", "GdbServer")
         tasks.create(copyGdbServerTaskName, Copy) {
             it.from(new File(
-                    handler.getPrebuiltDirectory(binary.targetPlatform),
+                    handler.getPrebuiltDirectory(binary.targetPlatform.name),
                     "gdbserver/gdbserver"))
             it.into(new File(buildDir, NdkNamingScheme.getOutputDirectoryName(binary)))
         }
