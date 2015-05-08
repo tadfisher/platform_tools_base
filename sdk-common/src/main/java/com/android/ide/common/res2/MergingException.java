@@ -63,39 +63,42 @@ public class MergingException extends Exception {
 
         private String mOriginalMessageText = null;
 
+        @NonNull
         private SourceFile mFile = SourceFile.UNKNOWN;
 
+        @NonNull
         private SourcePosition mPosition = SourcePosition.UNKNOWN;
 
         private Builder() {
         }
 
-        public Builder wrapException(Throwable cause) {
+        public Builder wrapException(@NonNull Throwable cause) {
             mCause = cause;
             mOriginalMessageText = Throwables.getStackTraceAsString(cause);
             return this;
         }
 
-        public Builder withFile(File file) {
+        public Builder withFile(@NonNull File file) {
             mFile = new SourceFile(file);
             return this;
         }
 
-        public Builder withFile(SourceFile file) {
+        public Builder withFile(@NonNull SourceFile file) {
             mFile = file;
             return this;
         }
 
-        public Builder withPosition(SourcePosition position) {
+        public Builder withPosition(@NonNull SourcePosition position) {
             mPosition = position;
             return this;
         }
 
-        public Builder withMessage(String messageText, Object... args) {
+        public Builder withMessage(@NonNull String messageText, @Nullable Object... args) {
             mMessageText = args.length == 0 ? messageText : String.format(messageText, args);
             return this;
         }
 
+        @NonNull
         public MergingException build() {
             if (mCause != null) {
                 if (mMessageText == null) {
