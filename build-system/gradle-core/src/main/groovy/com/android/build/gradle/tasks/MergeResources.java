@@ -85,6 +85,8 @@ public class MergeResources extends IncrementalTask {
 
     private boolean normalizeResources;
 
+    private File blameLogFolder;
+
     // actual inputs
     private List<ResourceSet> inputResourceSets;
 
@@ -140,8 +142,7 @@ public class MergeResources extends IncrementalTask {
             // get the merged set and write it down.
             MergedResourceWriter writer = new MergedResourceWriter(
                     destinationDir, getCruncher(),
-                    getCrunchPng(), getProcess9Patch(), getPublicFile());
-            writer.setInsertSourceMarkers(getInsertSourceMarkers());
+                    getCrunchPng(), getProcess9Patch(), getPublicFile(), getBlameLogFolder());
 
             merger.mergeData(writer, false /*doCleanUp*/);
 
@@ -203,8 +204,7 @@ public class MergeResources extends IncrementalTask {
 
             MergedResourceWriter writer = new MergedResourceWriter(
                     getOutputDir(), getCruncher(),
-                    getCrunchPng(), getProcess9Patch(), getPublicFile());
-            writer.setInsertSourceMarkers(getInsertSourceMarkers());
+                    getCrunchPng(), getProcess9Patch(), getPublicFile(), getBlameLogFolder());
             merger.mergeData(writer, false /*doCleanUp*/);
             // No exception? Write the known state.
             merger.writeBlobTo(getIncrementalFolder(), writer);
@@ -298,6 +298,15 @@ public class MergeResources extends IncrementalTask {
         this.publicFile = publicFile;
     }
 
+    @OutputDirectory
+    public File getBlameLogFolder() {
+        return blameLogFolder;
+    }
+
+    public void setBlameLogFolder(File blameLogFolder) {
+        this.blameLogFolder = blameLogFolder;
+    }
+
     public boolean getInsertSourceMarkers() {
         return insertSourceMarkers;
     }
@@ -354,6 +363,8 @@ public class MergeResources extends IncrementalTask {
                     scope.getGlobalScope().getBuildDir() + "/" + AndroidProject.FD_INTERMEDIATES +
                             "/incremental/" + taskNamePrefix + "Resources/" +
                             variantData.getVariantConfiguration().getDirName()));
+
+            mergeResourcesTask.setBlameLogFolder(scope.getResourceBlameLogFolder());
 
             mergeResourcesTask.process9Patch = process9Patch;
             mergeResourcesTask.crunchPng = scope.getGlobalScope().getExtension().getAaptOptions()
