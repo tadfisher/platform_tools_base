@@ -349,6 +349,16 @@ public class VariantScope {
     }
 
     @NonNull
+    public File getLogDir() {
+        return new File(globalScope.getLogsDir(), getVariantConfiguration().getDirName());
+    }
+
+    @NonNull
+    public File getResourceBlameLogDir() {
+        return new File(getLogDir(), "blame/res");
+    }
+
+    @NonNull
     public File getMergeAssetsOutputDir() {
         return getVariantConfiguration().getType() == VariantType.LIBRARY ?
                 new File(globalScope.getIntermediatesDir(),
@@ -714,4 +724,5 @@ public class VariantScope {
             AndroidTask<? extends Task> obfuscationTask) {
         this.obfuscationTask = obfuscationTask;
     }
+
 }
