@@ -166,9 +166,7 @@ public class Queries {
             throw new IllegalArgumentException("Class not found: " + baseClassName);
         }
 
-        Instance[] instances = new Instance[theClass.mInstances.size()];
-
-        return theClass.mInstances.toArray(instances);
+        return theClass.getInstancesArray();
     }
 
     /*
@@ -191,7 +189,7 @@ public class Queries {
         ArrayList<Instance> instanceList = new ArrayList<Instance>();
 
         for (ClassObj someClass : classList) {
-            instanceList.addAll(someClass.mInstances);
+            instanceList.addAll(someClass.getInstancesList());
         }
 
         Instance[] result = new Instance[instanceList.size()];
