@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;
@@ -53,11 +54,12 @@ public final class Message {
             @NonNull String text,
             @NonNull SourceFilePosition sourceFilePosition,
             @NonNull SourceFilePosition... sourceFilePositions) {
-        mKind = kind;
-        mText = text;
+        mKind = Preconditions.checkNotNull(kind);
+        mText = Preconditions.checkNotNull(text);
         mRawMessage = text;
         mSourceFilePositions = ImmutableList.<SourceFilePosition>builder()
-                .add(sourceFilePosition).add(sourceFilePositions).build();
+                .add(Preconditions.checkNotNull(sourceFilePosition))
+                .add(Preconditions.checkNotNull(sourceFilePositions)).build();
     }
 
     /**
@@ -78,22 +80,23 @@ public final class Message {
             @NonNull String rawMessage,
             @NonNull SourceFilePosition sourceFilePosition,
             @NonNull SourceFilePosition... sourceFilePositions) {
-        mKind = kind;
-        mText = text;
-        mRawMessage = rawMessage;
+        mKind = Preconditions.checkNotNull(kind);
+        mText = Preconditions.checkNotNull(text);
+        mRawMessage = Preconditions.checkNotNull(rawMessage);
         mSourceFilePositions = ImmutableList.<SourceFilePosition>builder()
-                .add(sourceFilePosition).add(sourceFilePositions).build();
+                .add(Preconditions.checkNotNull(sourceFilePosition))
+                .add(Preconditions.checkNotNull(sourceFilePositions)).build();
     }
 
     public Message(@NonNull Kind kind,
             @NonNull String text,
             @NonNull String rawMessage,
             @NonNull ImmutableList<SourceFilePosition> positions) {
-        mKind = kind;
-        mText = text;
-        mRawMessage = rawMessage;
+        mKind = Preconditions.checkNotNull(kind);
+        mText = Preconditions.checkNotNull(text);
+        mRawMessage = Preconditions.checkNotNull(rawMessage);
 
-        if (positions.isEmpty()) {
+        if (Preconditions.checkNotNull(positions).isEmpty()) {
             mSourceFilePositions = ImmutableList.of(SourceFilePosition.UNKNOWN);
         } else {
             mSourceFilePositions = positions;

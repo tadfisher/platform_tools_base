@@ -47,13 +47,13 @@ public final class SourceFile {
     public SourceFile(
             @NonNull File sourceFile,
             @NonNull String description) {
-        mSourceFile = sourceFile;
+        mSourceFile = sourceFile.getAbsoluteFile();
         mDescription = description;
     }
 
     public SourceFile(
             @SuppressWarnings("NullableProblems") @NonNull File sourceFile) {
-        mSourceFile = sourceFile;
+        mSourceFile = sourceFile.getAbsoluteFile();
         mDescription = null;
     }
 
@@ -94,7 +94,8 @@ public final class SourceFile {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(mSourceFile, mDescription);
+        String filePath = mSourceFile != null ? mSourceFile.getPath() : null;
+        return Objects.hashCode(filePath, mDescription);
     }
 
     @Override

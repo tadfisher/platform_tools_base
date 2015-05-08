@@ -37,14 +37,24 @@ public interface MergeConsumer<I extends DataItem> {
      */
     class ConsumerException extends MergingException {
 
-        public ConsumerException(Throwable cause) {
-            super(cause, new Message(Message.Kind.ERROR, cause.getLocalizedMessage(),
+        public ConsumerException(@NonNull Throwable cause) {
+            super(cause, new Message(Message.Kind.ERROR, getMessage(cause),
                     SourceFilePosition.UNKNOWN));
         }
 
-        public ConsumerException(Throwable cause, @NonNull File file) {
-            super(cause, new Message(Message.Kind.ERROR, cause.getLocalizedMessage(),
+        public ConsumerException(@NonNull Throwable cause, @NonNull File file) {
+            super(cause, new Message(Message.Kind.ERROR, getMessage(cause),
                     new SourceFilePosition(file, SourcePosition.UNKNOWN)));
+        }
+
+
+        @NonNull
+        private static String getMessage(@NonNull Throwable t) {
+            String message = t.getLocalizedMessage();
+            if (message != null) {
+                return message;
+            }
+            return t.getClass().getCanonicalName();
         }
     }
 
@@ -77,4 +87,5 @@ public interface MergeConsumer<I extends DataItem> {
     void removeItem(@NonNull I removedItem, @Nullable I replacedBy) throws ConsumerException;
 
     boolean ignoreItemInMerge(I item);
+
 }
