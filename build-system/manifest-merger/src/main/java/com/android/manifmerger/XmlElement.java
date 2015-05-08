@@ -130,7 +130,7 @@ public class XmlElement extends OrphanXmlElement {
                                     new Message(Message.Kind.ERROR, errorMessage,
                                             new SourceFilePosition(
                                                     mDocument.getSourceFile(),
-                                                    mDocument.getNodePosition(xml)))));
+                                                    XmlDocument.getNodePosition(xml)))));
                         }
                     }
                     for (String attributeName : Splitter.on(',').trimResults()
