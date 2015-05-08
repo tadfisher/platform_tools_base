@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.scope;
 
 import static com.android.builder.core.BuilderConstants.FD_REPORTS;
 import static com.android.builder.model.AndroidProject.FD_GENERATED;
+import static com.android.builder.model.AndroidProject.FD_LOGS;
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 
@@ -53,6 +54,8 @@ public class GlobalScope {
     @NonNull
     private final File intermediatesDir;
     @NonNull
+    private final File logsDir;
+    @NonNull
     private final File generatedDir;
     @NonNull
     private final File reportsDir;
@@ -74,6 +77,7 @@ public class GlobalScope {
         this.toolingRegistry = toolingRegistry;
         intermediatesDir = new File(getBuildDir(), FD_INTERMEDIATES);
         generatedDir = new File(getBuildDir(), FD_GENERATED);
+        logsDir = new File(getBuildDir(), FD_LOGS);
         reportsDir = new File(getBuildDir(), FD_REPORTS);
         outputsDir = new File(getBuildDir(), FD_OUTPUTS);
     }
@@ -122,6 +126,9 @@ public class GlobalScope {
     public File getGeneratedDir() {
         return generatedDir;
     }
+
+    @NonNull
+    public File getLogsDir() { return logsDir; }
 
     @NonNull
     public File getReportsDir() {
