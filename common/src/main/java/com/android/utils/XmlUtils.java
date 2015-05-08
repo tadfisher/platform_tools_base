@@ -495,7 +495,7 @@ public class XmlUtils {
      */
     public static String toXml(Node node, boolean preserveWhitespace) {
         StringBuilder sb = new StringBuilder(1000);
-        append(sb, node, 0);
+        append(sb, node, 0, 0);
         return sb.toString();
     }
 
@@ -503,7 +503,7 @@ public class XmlUtils {
     private static void append(
             @NonNull StringBuilder sb,
             @NonNull Node node,
-            int indent) {
+            int line, int column) {
         short nodeType = node.getNodeType();
         switch (nodeType) {
             case Node.DOCUMENT_NODE:

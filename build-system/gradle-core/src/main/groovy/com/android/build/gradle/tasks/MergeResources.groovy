@@ -22,7 +22,6 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.IncrementalTask
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.BaseVariantOutputData
-import com.android.builder.core.VariantType
 import com.android.builder.png.QueuedCruncher
 import com.android.ide.common.internal.PngCruncher
 import com.android.ide.common.res2.FileStatus
@@ -57,6 +56,11 @@ public class MergeResources extends IncrementalTask {
     @Optional
     @OutputFile
     File publicFile
+
+    /** Optional directory to write the blame logs to */
+    @Optional
+    @OutputDirectory
+    File blameLogFolder
 
     // ----- PRIVATE TASK API -----
 
@@ -130,7 +134,7 @@ public class MergeResources extends IncrementalTask {
             // get the merged set and write it down.
             MergedResourceWriter writer = new MergedResourceWriter(
                     destinationDir, getCruncher(),
-                    getCrunchPng(), getProcess9Patch(), getPublicFile())
+                    getCrunchPng(), getProcess9Patch(), getPublicFile(), getBlameLogFolder())
             writer.setInsertSourceMarkers(getInsertSourceMarkers())
 
             merger.mergeData(writer, false /*doCleanUp*/)
@@ -192,7 +196,7 @@ public class MergeResources extends IncrementalTask {
 
             MergedResourceWriter writer = new MergedResourceWriter(
                     getOutputDir(), getCruncher(),
-                    getCrunchPng(), getProcess9Patch(), getPublicFile())
+                    getCrunchPng(), getProcess9Patch(), getPublicFile(), getBlameLogFolder())
             writer.setInsertSourceMarkers(getInsertSourceMarkers())
             merger.mergeData(writer, false /*doCleanUp*/)
             // No exception? Write the known state.
