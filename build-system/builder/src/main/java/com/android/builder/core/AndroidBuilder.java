@@ -1468,6 +1468,7 @@ public class AndroidBuilder {
             @Nullable Collection<File> proguardFiles,
             @Nullable File mappingFile,
             @Nullable File jarJarRulesFile,
+            @Nullable File incrementalDir,
             boolean multiDex,
             int minSdkVersion) {
 
@@ -1516,6 +1517,12 @@ public class AndroidBuilder {
                     config.setProperty("jack.import.resource.policy", "keep-first");
 
                     config.setReporter(ReporterKind.DEFAULT, outputStream);
+
+                    // set the incremental dir if set and either already exists or can be created.
+                    if (incrementalDir != null &&
+                            (incrementalDir.exists() || incrementalDir.mkdirs())) {
+                        config.setIncrementalDir(incrementalDir);
+                    }
 
                     compilationTask = config.getTask();
                 } catch (ConfigNotSupportedException e1) {
