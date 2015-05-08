@@ -28,10 +28,17 @@ import static com.android.utils.SdkUtils.createPathComment;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.blame.Message;
+import com.android.ide.common.blame.MessageJsonSerializer;
+import com.android.ide.common.blame.SourceFile;
+import com.android.ide.common.blame.SourceFileJsonTypeAdapter;
+import com.android.ide.common.blame.SourceFilePosition;
+import com.android.ide.common.blame.SourcePosition;
 import com.android.ide.common.internal.PngCruncher;
 import com.android.ide.common.internal.PngException;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
+import com.android.utils.PositionXmlParser;
 import com.android.utils.SdkUtils;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
@@ -40,15 +47,22 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.stream.JsonWriter;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -67,6 +81,11 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
      * If non-null, points to a File that we should write public.txt to
      */
     private final File mPublicFile;
+
+    /**
+     * If non-null, points to the folder to store the blame log.
+     */
+    private final File mBlameLogFolder;
 
     private DocumentBuilderFactory mFactory;
 
@@ -94,13 +113,15 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
             @NonNull PngCruncher pngRunner,
             boolean crunchPng,
             boolean process9Patch,
-            @Nullable File publicFile) {
+            @Nullable File publicFile,
+            @Nullable File blameLogFolder) {
         super(rootFolder);
         mCruncher = pngRunner;
         mCruncherKey = mCruncher.start();
         mCrunchPng = crunchPng;
         mProcess9Patch = process9Patch;
         mPublicFile = publicFile;
+        mBlameLogFolder = blameLogFolder;
     }
 
     /**
@@ -244,6 +265,12 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
 
     @Override
     protected void postWriteAction() throws ConsumerException {
+        Gson gson = null;
+        if (mBlameLogFolder != null) {
+            GsonBuilder gsonBuilder = new GsonBuilder();
+            MessageJsonSerializer.registerTypeAdapters(gsonBuilder);
+            gson = gsonBuilder.create();
+        }
 
         // now write the values files.
         for (String key : mValuesResMap.keySet()) {
@@ -266,6 +293,7 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                 }
             }
 
+
             if (mustWriteFile) {
                 String folderName = key.isEmpty() ?
                         ResourceFolderType.VALUES.getName() :
@@ -276,7 +304,12 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                 // collision when not normalizing folders name.
                 File outFile = new File(valuesFolder, folderName + DOT_XML);
                 ResourceFile currentFile = null;
+                File blameFile = null;
                 try {
+                    if (mBlameLogFolder != null) {
+                        blameFile = new File(mBlameLogFolder, folderName + "_blame.json");
+                        createDir(mBlameLogFolder);
+                    }
                     createDir(valuesFolder);
 
                     DocumentBuilder builder = mFactory.newDocumentBuilder();
@@ -291,6 +324,7 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
 
                     for (ResourceItem item : items) {
                         Node nodeValue = item.getValue();
+
                         if (nodeValue != null && publicTag.equals(nodeValue.getNodeName())) {
                             if (publicNodes == null) {
                                 publicNodes = Lists.newArrayList();
@@ -304,20 +338,12 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                         rootNode.appendChild(document.createTextNode("\n    "));
 
                         ResourceFile source = item.getSource();
-                        if (source != currentFile && source != null && mInsertSourceMarkers) {
-                            currentFile = source;
-                            File file = source.getFile();
-                            rootNode.appendChild(document.createComment(
-                                    createPathComment(file, true)));
-                            rootNode.appendChild(document.createTextNode("\n    "));
-                            // Add an <eat-comment> element to ensure that this comment won't
-                            // get merged into a potential comment from the next child (or
-                            // even added as the sole comment in the R class)
-                            rootNode.appendChild(document.createElement(TAG_EAT_COMMENT));
-                            rootNode.appendChild(document.createTextNode("\n    "));
-                        }
 
                         Node adoptedNode = NodeUtils.adoptNode(document, nodeValue);
+                        if (source != null) {
+                            XmlUtils.attachSourceFile(
+                                    adoptedNode, new SourceFile(source.getFile()));
+                        }
                         rootNode.appendChild(adoptedNode);
                     }
 
@@ -327,6 +353,21 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                     currentFile = null;
 
                     String content = XmlUtils.toXml(document, true /*preserveWhitespace*/);
+
+                    // Blame report
+                    if (blameFile != null) {
+                        blameFile.getParentFile().mkdirs();
+                        JsonWriter writer = new JsonWriter(Files.newWriter(blameFile, Charsets.UTF_8));
+                        writer.beginObject().name("file");
+                        gson.toJson(new SourceFile(outFile), SourceFile.class, writer);
+                        writer.name("map");
+                        writer.beginArray();
+                        appendBlame(document, gson, writer);
+                        writer.endArray();
+                        writer.endObject();
+                        writer.close();
+                    }
+
                     Files.write(content, outFile, Charsets.UTF_8);
 
                     if (publicNodes != null && mPublicFile != null) {
@@ -368,6 +409,24 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                     ResourceFolderType.VALUES.getName();
 
             removeOutFile(folderName, folderName + DOT_XML);
+            new File(mBlameLogFolder, folderName + "_blame.json").delete();
+        }
+    }
+
+
+    private static void appendBlame(Node node, Gson gson, JsonWriter writer) throws IOException {
+        SourceFilePosition from = XmlUtils.getSourceFilePosition(node);
+        if (!from.getFile().equals(SourceFile.UNKNOWN)) {
+            writer.beginObject().name("merged");
+            gson.toJson(XmlUtils.getOutputPosition(node), SourcePosition.class, writer);
+            writer.name("original");
+            gson.toJson(from, SourceFilePosition.class, writer);
+            writer.endObject();
+        }
+        NodeList children = node.getChildNodes();
+        int childCount = children.getLength();
+        for (int i = 0; i < childCount; i++)  {
+            appendBlame(children.item(i), gson, writer);
         }
     }
 
