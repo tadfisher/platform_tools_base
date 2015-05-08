@@ -66,6 +66,8 @@ public class MergeResources extends IncrementalTask {
      */
     private File publicFile;
 
+    private File blameLogFolder;
+
     private boolean process9Patch;
 
     private boolean crunchPng;
@@ -80,6 +82,7 @@ public class MergeResources extends IncrementalTask {
     private List<ResourceSet> inputResourceSets;
 
     private final FileValidity<ResourceSet> fileValidity = new FileValidity<ResourceSet>();
+
 
     // fake input to detect changes. Not actually used by the task
     @InputFiles
@@ -131,7 +134,7 @@ public class MergeResources extends IncrementalTask {
             // get the merged set and write it down.
             MergedResourceWriter writer = new MergedResourceWriter(
                     destinationDir, getCruncher(),
-                    getCrunchPng(), getProcess9Patch(), getPublicFile());
+                    getCrunchPng(), getProcess9Patch(), getPublicFile(), getBlameLogFolder());
             writer.setInsertSourceMarkers(getInsertSourceMarkers());
 
             merger.mergeData(writer, false /*doCleanUp*/);
@@ -194,7 +197,7 @@ public class MergeResources extends IncrementalTask {
 
             MergedResourceWriter writer = new MergedResourceWriter(
                     getOutputDir(), getCruncher(),
-                    getCrunchPng(), getProcess9Patch(), getPublicFile());
+                    getCrunchPng(), getProcess9Patch(), getPublicFile(), getBlameLogFolder());
             writer.setInsertSourceMarkers(getInsertSourceMarkers());
             merger.mergeData(writer, false /*doCleanUp*/);
             // No exception? Write the known state.
@@ -284,6 +287,16 @@ public class MergeResources extends IncrementalTask {
 
     public void setPublicFile(File publicFile) {
         this.publicFile = publicFile;
+    }
+
+    @Optional
+    @OutputDirectory
+    public File getBlameLogFolder() {
+        return new File(getIncrementalFolder(), "blame");
+    }
+
+    public void setBlameLogFolder(File blameLogFolder) {
+        this.blameLogFolder = blameLogFolder;
     }
 
     public boolean getInsertSourceMarkers() {

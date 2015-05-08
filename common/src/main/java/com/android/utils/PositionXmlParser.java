@@ -20,6 +20,7 @@ import static com.android.SdkConstants.UTF_8;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.blame.SourceFile;
 import com.android.ide.common.blame.SourcePosition;
 
 import org.w3c.dom.Attr;
