@@ -12,6 +12,7 @@
             <meta-data android:name="android.support.PARENT_ACTIVITY"
                 android:value="${parentActivityClass}" />
             </#if>
+            <#include "_activities/deeplink.xml.ftl">
         </activity>
     </application>
 

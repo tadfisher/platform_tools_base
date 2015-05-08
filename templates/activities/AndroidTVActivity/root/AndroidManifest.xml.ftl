@@ -30,6 +30,7 @@
                 <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
+            <#include "_activities/deeplink.xml.ftl">
         </activity>
 
         <activity android:name="${packageName}.${detailsActivity}" />

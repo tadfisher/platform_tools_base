@@ -38,6 +38,13 @@
         help="The hierarchical parent activity, used to provide a default implementation for the 'Up' button" />
 
     <parameter
+        id="enableDeeplink"
+        name="Enable Deep Link"
+        type="boolean"
+        default="true"
+        help="If true, this activity will have a intent filter for deep link, making it possible for app indexing" />
+
+    <parameter
         id="packageName"
         name="Package name"
         type="string"

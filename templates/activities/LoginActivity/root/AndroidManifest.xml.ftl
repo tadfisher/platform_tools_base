@@ -28,6 +28,7 @@
             <meta-data android:name="android.support.PARENT_ACTIVITY"
                 android:value="${parentActivityClass}" />
             </#if>
+            <#include "_activities/deeplink.xml.ftl">
         </activity>
 <#if includeGooglePlus>
         <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version" />

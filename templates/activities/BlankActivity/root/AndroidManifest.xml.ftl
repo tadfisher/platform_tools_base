@@ -18,6 +18,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
             </#if>
+            <#include "_activities/deeplink.xml.ftl">
         </activity>
     </application>
 
