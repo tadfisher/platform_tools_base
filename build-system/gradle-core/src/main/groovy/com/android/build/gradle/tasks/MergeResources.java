@@ -137,8 +137,7 @@ public class MergeResources extends IncrementalTask {
             // get the merged set and write it down.
             MergedResourceWriter writer = new MergedResourceWriter(
                     destinationDir, getCruncher(),
-                    getCrunchPng(), getProcess9Patch(), getPublicFile());
-            writer.setInsertSourceMarkers(getInsertSourceMarkers());
+                    getCrunchPng(), getProcess9Patch(), getPublicFile(), getBlameLogFolder());
 
             merger.mergeData(writer, false /*doCleanUp*/);
 
@@ -200,8 +199,7 @@ public class MergeResources extends IncrementalTask {
 
             MergedResourceWriter writer = new MergedResourceWriter(
                     getOutputDir(), getCruncher(),
-                    getCrunchPng(), getProcess9Patch(), getPublicFile());
-            writer.setInsertSourceMarkers(getInsertSourceMarkers());
+                    getCrunchPng(), getProcess9Patch(), getPublicFile(), getBlameLogFolder());
             merger.mergeData(writer, false /*doCleanUp*/);
             // No exception? Write the known state.
             merger.writeBlobTo(getIncrementalFolder(), writer);
@@ -293,6 +291,11 @@ public class MergeResources extends IncrementalTask {
 
     public void setPublicFile(File publicFile) {
         this.publicFile = publicFile;
+    }
+
+    @OutputDirectory
+    public File getBlameLogFolder() {
+        return new File(getIncrementalFolder(), "blame");
     }
 
     public boolean getInsertSourceMarkers() {

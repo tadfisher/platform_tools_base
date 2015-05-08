@@ -22,22 +22,24 @@ import static com.android.SdkConstants.DOT_9PNG;
 import static com.android.SdkConstants.DOT_PNG;
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.RES_QUALIFIER_SEP;
-import static com.android.SdkConstants.TAG_EAT_COMMENT;
 import static com.android.SdkConstants.TAG_RESOURCES;
-import static com.android.utils.SdkUtils.createPathComment;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.blame.MergingLog;
+import com.android.ide.common.blame.SourceFile;
+import com.android.ide.common.blame.SourceFilePosition;
+import com.android.ide.common.blame.SourcePosition;
 import com.android.ide.common.internal.PngCruncher;
 import com.android.ide.common.internal.PngException;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
-import com.android.utils.SdkUtils;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 
@@ -49,6 +51,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -68,9 +71,13 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
      */
     private final File mPublicFile;
 
-    private DocumentBuilderFactory mFactory;
+    /**
+     *
+     */
+    @Nullable
+    private final MergingLog mMergingLog;
 
-    private boolean mInsertSourceMarkers = true;
+    private DocumentBuilderFactory mFactory;
 
     private final boolean mCrunchPng;
 
@@ -94,32 +101,17 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
             @NonNull PngCruncher pngRunner,
             boolean crunchPng,
             boolean process9Patch,
-            @Nullable File publicFile) {
+            @Nullable File publicFile,
+            @Nullable File blameLogFolder) {
         super(rootFolder);
         mCruncher = pngRunner;
         mCruncherKey = mCruncher.start();
         mCrunchPng = crunchPng;
         mProcess9Patch = process9Patch;
         mPublicFile = publicFile;
+        mMergingLog = blameLogFolder != null ? new MergingLog(blameLogFolder) : null;
     }
 
-    /**
-     * Sets whether this manifest merger will insert source markers into the merged source
-     *
-     * @param insertSourceMarkers if true, insert source markers
-     */
-    public void setInsertSourceMarkers(boolean insertSourceMarkers) {
-        mInsertSourceMarkers = insertSourceMarkers;
-    }
-
-    /**
-     * Returns whether this manifest merger will insert source markers into the merged source
-     *
-     * @return whether this manifest merger will insert source markers into the merged source
-     */
-    public boolean isInsertSourceMarkers() {
-        return mInsertSourceMarkers;
-    }
 
     @Override
     public void start(@NonNull DocumentBuilderFactory factory) throws ConsumerException {
@@ -166,6 +158,7 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                     @Override
                     public Void call() throws Exception {
                         ResourceFile resourceFile = item.getSource();
+                        //noinspection ConstantConditions
                         File file = resourceFile.getFile();
 
                         String filename = file.getName();
@@ -195,11 +188,10 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                                         Files.copy(file, outFile);
                                     }
                                 }
-                            } else if (mInsertSourceMarkers && filename.endsWith(DOT_XML)) {
-                                SdkUtils.copyXmlWithSourceReference(file, outFile);
                             } else {
                                 Files.copy(file, outFile);
                             }
+                            if (mMergingLog != null) mMergingLog.logCopy(folderName, file, outFile);
                         } catch (PngException e) {
                             throw MergingException.wrapException(e).withFile(file).build();
                         } catch (IOException ioe) {
@@ -221,6 +213,7 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
 
         if (removedType == replacedType) {
             // if the type is multi, then we make sure to flag the qualifier as deleted.
+            //noinspection StatementWithEmptyBody
             if (removedType == ResourceFile.FileType.MULTI) {
                 mQualifierWithDeletedValues.add(
                         removedItem.getQualifiers());
@@ -304,20 +297,12 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                         rootNode.appendChild(document.createTextNode("\n    "));
 
                         ResourceFile source = item.getSource();
-                        if (source != currentFile && source != null && mInsertSourceMarkers) {
-                            currentFile = source;
-                            File file = source.getFile();
-                            rootNode.appendChild(document.createComment(
-                                    createPathComment(file, true)));
-                            rootNode.appendChild(document.createTextNode("\n    "));
-                            // Add an <eat-comment> element to ensure that this comment won't
-                            // get merged into a potential comment from the next child (or
-                            // even added as the sole comment in the R class)
-                            rootNode.appendChild(document.createElement(TAG_EAT_COMMENT));
-                            rootNode.appendChild(document.createTextNode("\n    "));
-                        }
 
                         Node adoptedNode = NodeUtils.adoptNode(document, nodeValue);
+                        if (source != null) {
+                            XmlUtils.attachSourceFile(
+                                    adoptedNode, new SourceFile(source.getFile()));
+                        }
                         rootNode.appendChild(adoptedNode);
                     }
 
@@ -326,7 +311,13 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
 
                     currentFile = null;
 
-                    String content = XmlUtils.toXml(document);
+                    Map<SourcePosition, SourceFilePosition> blame = Maps.newLinkedHashMap();
+                    String content = XmlUtils.toXml(document, blame);
+
+                    if (mMergingLog != null) {
+                        mMergingLog.logSource(folderName, new SourceFile(outFile), blame);
+                    }
+
                     Files.write(content, outFile, Charsets.UTF_8);
 
                     if (publicNodes != null && mPublicFile != null) {
@@ -360,6 +351,9 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                 }
             }
         }
+        if (mMergingLog != null) {
+            mMergingLog.write();
+        }
 
         // now remove empty values files.
         for (String key : mQualifierWithDeletedValues) {
@@ -379,6 +373,7 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
      */
     private boolean removeOutFile(ResourceItem resourceItem) {
         ResourceFile resourceFile = resourceItem.getSource();
+        //noinspection ConstantConditions
         if (resourceFile.getType() == ResourceFile.FileType.MULTI) {
             throw new IllegalArgumentException("SourceFile cannot be a FileType.MULTI");
         }
@@ -400,6 +395,9 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
     private boolean removeOutFile(String folderName, String fileName) {
         File valuesFolder = new File(getRootFolder(), folderName);
         File outFile = new File(valuesFolder, fileName);
+        if (mMergingLog != null) {
+            mMergingLog.logRemove(folderName, new SourceFile(outFile));
+        }
         return outFile.delete();
     }
 
