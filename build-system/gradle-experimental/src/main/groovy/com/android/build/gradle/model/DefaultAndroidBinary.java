@@ -16,20 +16,29 @@
 
 package com.android.build.gradle.model;
 
+import com.android.build.gradle.internal.TaskType;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.ProductFlavor;
+import com.android.utils.StringHelper;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 
 import org.gradle.nativeplatform.NativeLibraryBinarySpec;
 import org.gradle.platform.base.binary.BaseBinarySpec;
 
 import java.util.List;
+import java.util.Map;
+
+import groovy.lang.Closure;
 
 /**
  * Binary for Android.
  */
 public class DefaultAndroidBinary extends BaseBinarySpec implements AndroidBinary {
+
+    private String fullName;
 
     private BuildType buildType;
 
@@ -40,6 +49,28 @@ public class DefaultAndroidBinary extends BaseBinarySpec implements AndroidBinar
     private List<NativeLibraryBinarySpec> nativeBinaries = Lists.newArrayList();
 
     private List<String> targetAbi = Lists.newArrayList();
+
+    private Multimap<TaskType, Closure> taskConfigClosures = ArrayListMultimap.create();
+
+    public String getFullName() {
+        if (fullName == null) {
+            StringBuilder sb = new StringBuilder();
+
+            boolean first = true;
+            for (ProductFlavor flavor : productFlavors) {
+                sb.append(first ? flavor.getName() : StringHelper.capitalize(flavor.getName()));
+                first = false;
+            }
+
+            sb.append(productFlavors.isEmpty()
+                    ? buildType.getName()
+                    : StringHelper.capitalize(buildType.getName()));
+
+            fullName = sb.toString();
+        }
+
+        return fullName;
+    }
 
     @Override
     public BuildType getBuildType() {
@@ -57,6 +88,15 @@ public class DefaultAndroidBinary extends BaseBinarySpec implements AndroidBinar
 
     public void setProductFlavors(List<? extends ProductFlavor> productFlavors) {
         this.productFlavors = productFlavors;
+    }
+
+    public Multimap<TaskType, Closure> getTaskConfigClosures() {
+        return taskConfigClosures;
+    }
+
+    @Override
+    public void configure(TaskType task, Closure<?> configClosure) {
+        taskConfigClosures.put(task, configClosure);
     }
 
     public BaseVariantData getVariantData() {

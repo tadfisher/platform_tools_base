@@ -35,6 +35,12 @@ public class FileSubject extends Subject<FileSubject, File> {
         }
     }
 
+    public void doesNotExist() {
+        if (getSubject().exists()) {
+            fail("does not exist");
+        }
+    }
+
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
     public void isFile() {
         if (!getSubject().exists()) {

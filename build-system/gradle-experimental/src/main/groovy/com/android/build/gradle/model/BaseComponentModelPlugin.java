@@ -396,7 +396,7 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
             }
 
             DefaultAndroidComponentSpec spec = (DefaultAndroidComponentSpec) androidSpec;
-            spec.setExtension(androidExtension);
+            spec.setConfig(androidExtension);
             spec.setVariantManager(variantManager);
         }
 
