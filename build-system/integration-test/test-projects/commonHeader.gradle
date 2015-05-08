@@ -44,3 +44,4 @@ plugins.withId("com.android.application") { plugin ->
 plugins.withId("com.android.library") { plugin ->
     plugin.extension.defaultConfig.useJack = ext.useJack
 }
+

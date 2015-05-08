@@ -16,12 +16,10 @@
 
 package com.android.build.gradle.integration.application
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.ArtifactMetaData
 import com.android.builder.model.JavaArtifact
 import groovy.transform.CompileStatic
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
@@ -35,24 +33,12 @@ class UnitTestingModelTest {
 
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
-            .fromTestApp(new HelloWorldApp())
+            .fromTestProject("unitTestingBigProject")
             .create();
 
-    @Before
-    public void setUp() {
-        project.buildFile << """
-apply plugin: 'com.android.application'
-
-android {
-    compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-    buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-}
-"""
-    }
-
     @Test
-    public void "Unit testing artifacts are included in the model"() {
-        AndroidProject model = project.singleModel
+    public void simple() {
+        AndroidProject model = project.allModels[':app']
 
         assertThat(model.extraArtifacts*.name).containsExactly(
                 AndroidProject.ARTIFACT_ANDROID_TEST,
@@ -102,8 +88,7 @@ android {
     productFlavors { paid; free }
 }
 """
-
-        AndroidProject model = project.singleModel
+        AndroidProject model = project.allModels[':app']
 
         assertThat(model.productFlavors).hasSize(2)
 

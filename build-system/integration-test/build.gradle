@@ -46,6 +46,8 @@ configure([test, testPrebuilts]) {
     useJUnit {
         excludeCategories "com.android.build.gradle.integration.common.category.DeviceTests"
     }
+
+    outputs.upToDateWhen { false }
 }
 
 task connectedIntegrationTest(type: Test)
