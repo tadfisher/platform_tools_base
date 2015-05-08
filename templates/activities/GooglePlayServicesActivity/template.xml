@@ -35,6 +35,13 @@
         help="If true, this activity will have a CATEGORY_LAUNCHER intent filter, making it visible in the launcher" />
 
     <parameter
+        id="enableDeeplink"
+        name="Enable Deep Link"
+        type="boolean"
+        default="true"
+        help="If true, this activity will have a intent filter for deep link, making it possible for app indexing" />
+
+    <parameter
         id="packageName"
         name="Package name"
         type="string"
