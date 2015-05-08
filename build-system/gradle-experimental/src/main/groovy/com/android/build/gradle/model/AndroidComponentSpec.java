@@ -24,5 +24,5 @@ import org.gradle.platform.base.ComponentSpec;
  * Android ComponentSpec.
  */
 public interface AndroidComponentSpec extends ComponentSpec{
-    AndroidConfig getExtension();
+    AndroidConfig getConfig();
 }

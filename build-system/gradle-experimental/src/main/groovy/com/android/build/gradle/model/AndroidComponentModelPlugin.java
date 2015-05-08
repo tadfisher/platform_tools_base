@@ -20,7 +20,11 @@ import static com.android.build.gradle.model.ModelConstants.ANDROID_COMPONENT_SP
 import static com.android.builder.core.VariantType.ANDROID_TEST;
 import static com.android.builder.core.VariantType.UNIT_TEST;
 
+import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.ProductFlavorCombo;
+import com.android.build.gradle.internal.TaskInfo;
+import com.android.build.gradle.internal.TaskInfoRegistry;
+import com.android.build.gradle.internal.TaskType;
 import com.android.build.gradle.managed.AndroidConfig;
 import com.android.build.gradle.managed.BuildType;
 import com.android.build.gradle.managed.ProductFlavor;
@@ -38,6 +42,8 @@ import com.google.common.primitives.Ints;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
+import org.gradle.api.internal.ClosureBackedAction;
 import org.gradle.internal.reflect.Instantiator;
 import org.gradle.internal.service.ServiceRegistry;
 import org.gradle.language.base.ProjectSourceSet;
@@ -52,6 +58,7 @@ import org.gradle.model.Path;
 import org.gradle.model.RuleSource;
 import org.gradle.model.collection.CollectionBuilder;
 import org.gradle.model.collection.ManagedSet;
+import org.gradle.platform.base.BinaryContainer;
 import org.gradle.platform.base.BinaryType;
 import org.gradle.platform.base.BinaryTypeBuilder;
 import org.gradle.platform.base.ComponentBinaries;
@@ -62,7 +69,10 @@ import org.gradle.platform.base.LanguageType;
 import org.gradle.platform.base.LanguageTypeBuilder;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+
+import groovy.lang.Closure;
 
 /**
  * Plugin to set up infrastructure for other android plugins.
@@ -255,6 +265,31 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
                             });
                 }
             }
+        }
+
+        @Model
+        TaskInfoRegistry createTaskInfoRegistry() {
+            return new TaskInfoRegistry();
+        }
+
+        @Mutate
+        void executeUserTaskConfiguration(
+                @NonNull final CollectionBuilder<Task> tasks,
+                @NonNull final BinaryContainer binaries,
+                @NonNull final TaskInfoRegistry taskInfoRegistry) {
+            binaries.withType(AndroidBinary.class, new Action<AndroidBinary>() {
+                @Override
+                public void execute(AndroidBinary androidBinary) {
+                    DefaultAndroidBinary binary = (DefaultAndroidBinary) androidBinary;
+                    for (Map.Entry<TaskType, Closure> entry : binary.getTaskConfigClosures().entries()) {
+                        TaskInfo taskInfo = taskInfoRegistry.get(entry.getKey());
+                        String taskName = taskInfo.getPrefix()
+                                + StringHelper.capitalize(binary.getFullName())
+                                + taskInfo.getSuffix();
+                        tasks.named(taskName, new ClosureBackedAction<Task>(entry.getValue()));
+                    }
+                }
+            });
         }
 
         private static String getBinaryName(BuildType buildType, ProductFlavorCombo flavorCombo) {

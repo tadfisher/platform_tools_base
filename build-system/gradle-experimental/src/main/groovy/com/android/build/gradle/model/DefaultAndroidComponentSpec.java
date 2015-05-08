@@ -27,7 +27,7 @@ import org.gradle.platform.base.component.BaseComponentSpec;
  * Implementation for Android component spec.
  */
 public class DefaultAndroidComponentSpec extends BaseComponentSpec implements AndroidComponentSpec{
-    AndroidConfig extension;
+    AndroidConfig config;
 
     VariantManager variantManager;
 
@@ -36,16 +36,15 @@ public class DefaultAndroidComponentSpec extends BaseComponentSpec implements An
     NativeLibrarySpec nativeLibrary;
 
     @Override
-    public AndroidConfig getExtension() {
-        return extension;
+    public AndroidConfig getConfig() {
+        return config;
     }
 
-    public void setExtension(AndroidConfig extension) {
-        this.extension = extension;
+    public void setConfig(AndroidConfig config) {
+        this.config = config;
     }
 
     public VariantManager getVariantManager() {
-
         return variantManager;
     }
 
