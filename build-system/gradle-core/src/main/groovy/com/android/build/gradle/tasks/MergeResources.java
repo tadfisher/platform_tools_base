@@ -90,6 +90,8 @@ public class MergeResources extends IncrementalTask {
 
     private boolean normalizeResources;
 
+    private File blameLogFolder;
+
     private ResourcePreprocessor preprocessor;
 
     // actual inputs
@@ -144,9 +146,13 @@ public class MergeResources extends IncrementalTask {
 
             // get the merged set and write it down.
             MergedResourceWriter writer = new MergedResourceWriter(
-                    destinationDir, getCruncher(),
-                    getCrunchPng(), getProcess9Patch(), getPublicFile(), preprocessor);
-            writer.setInsertSourceMarkers(getInsertSourceMarkers());
+                    destinationDir,
+                    getCruncher(),
+                    getCrunchPng(),
+                    getProcess9Patch(),
+                    getPublicFile(),
+                    getBlameLogFolder(),
+                    preprocessor);
 
             merger.mergeData(writer, false /*doCleanUp*/);
 
@@ -211,8 +217,7 @@ public class MergeResources extends IncrementalTask {
 
             MergedResourceWriter writer = new MergedResourceWriter(
                     getOutputDir(), getCruncher(),
-                    getCrunchPng(), getProcess9Patch(), getPublicFile(), preprocessor);
-            writer.setInsertSourceMarkers(getInsertSourceMarkers());
+                    getCrunchPng(), getProcess9Patch(), getPublicFile(), getBlameLogFolder(), preprocessor);
             merger.mergeData(writer, false /*doCleanUp*/);
             // No exception? Write the known state.
             merger.writeBlobTo(getIncrementalFolder(), writer);
@@ -324,6 +329,15 @@ public class MergeResources extends IncrementalTask {
         this.publicFile = publicFile;
     }
 
+    @OutputDirectory
+    public File getBlameLogFolder() {
+        return blameLogFolder;
+    }
+
+    public void setBlameLogFolder(File blameLogFolder) {
+        this.blameLogFolder = blameLogFolder;
+    }
+
     public boolean getInsertSourceMarkers() {
         return insertSourceMarkers;
     }
@@ -381,6 +395,8 @@ public class MergeResources extends IncrementalTask {
                     scope.getGlobalScope().getBuildDir() + "/" + AndroidProject.FD_INTERMEDIATES +
                             "/incremental/" + taskNamePrefix + "Resources/" +
                             variantData.getVariantConfiguration().getDirName()));
+
+            mergeResourcesTask.setBlameLogFolder(scope.getResourceBlameLogDir());
 
             mergeResourcesTask.process9Patch = process9Patch;
             mergeResourcesTask.crunchPng = extension.getAaptOptions()
