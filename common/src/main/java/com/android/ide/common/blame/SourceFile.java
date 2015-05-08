@@ -94,7 +94,8 @@ public final class SourceFile {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(mSourceFile, mDescription);
+        String filePath = mSourceFile != null ? mSourceFile.getPath() : null;
+        return Objects.hashCode(filePath, mDescription);
     }
 
     @Override
