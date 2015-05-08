@@ -33,8 +33,8 @@ import static com.google.common.base.Charsets.UTF_8;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.google.common.base.CaseFormat;
-import com.google.common.base.Charsets;
+import com.android.ide.common.blame.SourcePosition;
+import com.google.common.base.CharMatcher;
 import com.google.common.io.Files;
 
 import org.w3c.dom.Attr;
@@ -48,14 +48,10 @@ import org.xml.sax.SAXException;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
-import java.nio.charset.Charset;
 import java.util.HashSet;
 import java.util.Locale;
 
@@ -494,24 +490,28 @@ public class XmlUtils {
      * {@code sdk-common}.
      */
     public static String toXml(Node node, boolean preserveWhitespace) {
-        StringBuilder sb = new StringBuilder(1000);
-        append(sb, node, 0);
+        CountingStringBuilder sb = new CountingStringBuilder(1000);
+        append(sb, node);
         return sb.toString();
     }
 
+    private static final String OUT_POSITION = "outputoffsets";
+
     /** Dump node to string without indentation adjustments */
     private static void append(
-            @NonNull StringBuilder sb,
-            @NonNull Node node,
-            int indent) {
+            @NonNull CountingStringBuilder sb,
+            @NonNull Node node) {
         short nodeType = node.getNodeType();
+        int currentLine = sb.line;
+        int currentColumn = sb.column;
+        int currentOffset = sb.getOffset();
         switch (nodeType) {
             case Node.DOCUMENT_NODE:
             case Node.DOCUMENT_FRAGMENT_NODE: {
                 sb.append(XML_PROLOG);
                 NodeList children = node.getChildNodes();
                 for (int i = 0, n = children.getLength(); i < n; i++) {
-                    append(sb, children.item(i), indent);
+                    append(sb, children.item(i));
                 }
                 break;
             }
@@ -558,7 +558,7 @@ public class XmlUtils {
                 if (childCount > 0) {
                     for (int i = 0; i < childCount; i++) {
                         Node child = children.item(i);
-                        append(sb, child, indent + 1);
+                        append(sb, child);
                     }
                     sb.append('<').append('/');
                     sb.append(element.getTagName());
@@ -570,6 +570,54 @@ public class XmlUtils {
             default:
                 throw new UnsupportedOperationException(
                         "Unsupported node type " + nodeType + ": not yet implemented");
+        }
+        node.setUserData(OUT_POSITION, new SourcePosition(currentLine, currentColumn, currentOffset, sb.line, sb.column, sb.getOffset()), null);
+    }
+
+    private static class CountingStringBuilder {
+        @SuppressWarnings("StringBufferField")
+        private final StringBuilder sb;
+        int line = 0;
+        int column = 0;
+
+        public CountingStringBuilder(int size) {
+            sb = new StringBuilder(size);
+        }
+
+        public CountingStringBuilder append(String text) {
+            sb.append(text);
+            int lastNewLineIndex = text.lastIndexOf('\n');
+            if (lastNewLineIndex == -1) {
+                column += text.length();
+            } else {
+                line += CharMatcher.is('\n').countIn(text);
+                column = text.length() - lastNewLineIndex - 1;
+            }
+            return this;
+        }
+
+        public CountingStringBuilder append(char character) {
+            sb.append(character);
+            if (character == '\n') {
+                line += 1;
+                column = 0;
+            } else {
+                column++;
+            }
+            return this;
+        }
+
+        public int getOffset() {
+            return sb.length();
+        }
+
+        public SourcePosition getCurrentPosition() {
+            return new SourcePosition(line, column, sb.length());
+        }
+
+        @Override
+        public String toString() {
+            return sb.toString();
         }
     }
 

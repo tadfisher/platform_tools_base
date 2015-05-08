@@ -28,10 +28,12 @@ import static com.android.utils.SdkUtils.createPathComment;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.blame.SourcePosition;
 import com.android.ide.common.internal.PngCruncher;
 import com.android.ide.common.internal.PngException;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
+import com.android.utils.PositionXmlParser;
 import com.android.utils.SdkUtils;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
@@ -47,6 +49,7 @@ import org.w3c.dom.Node;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -67,6 +70,11 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
      * If non-null, points to a File that we should write public.txt to
      */
     private final File mPublicFile;
+
+    /**
+     * If non-null, points to the folder to store the blame log.
+     */
+    private final File mBlameLogFolder;
 
     private DocumentBuilderFactory mFactory;
 
@@ -94,13 +102,15 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
             @NonNull PngCruncher pngRunner,
             boolean crunchPng,
             boolean process9Patch,
-            @Nullable File publicFile) {
+            @Nullable File publicFile,
+            @Nullable File blameLogFolder) {
         super(rootFolder);
         mCruncher = pngRunner;
         mCruncherKey = mCruncher.start();
         mCrunchPng = crunchPng;
         mProcess9Patch = process9Patch;
         mPublicFile = publicFile;
+        mBlameLogFolder = blameLogFolder;
     }
 
     /**
@@ -276,6 +286,10 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                 // collision when not normalizing folders name.
                 File outFile = new File(valuesFolder, folderName + DOT_XML);
                 ResourceFile currentFile = null;
+                if (mBlameLogFolder != null) {
+                    File blameFile = new File(new File(mBlameLogFolder, folderName),
+                            folderName + DOT_XML + "_blame.json");
+                }
                 try {
                     createDir(valuesFolder);
 
@@ -291,6 +305,7 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
 
                     for (ResourceItem item : items) {
                         Node nodeValue = item.getValue();
+
                         if (nodeValue != null && publicTag.equals(nodeValue.getNodeName())) {
                             if (publicNodes == null) {
                                 publicNodes = Lists.newArrayList();
@@ -304,6 +319,8 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                         rootNode.appendChild(document.createTextNode("\n    "));
 
                         ResourceFile source = item.getSource();
+
+
                         if (source != currentFile && source != null && mInsertSourceMarkers) {
                             currentFile = source;
                             File file = source.getFile();
