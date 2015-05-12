@@ -126,6 +126,8 @@ class NdkSanAngelesTest {
             assertThat(nativeLibrary.getCppCompilerFlags()).contains("-DANDROID_NDK -DDISABLE_IMPORTGL");
             assertThat(nativeLibrary.getCSystemIncludeDirs()).isEmpty();
             assertThat(nativeLibrary.getCppSystemIncludeDirs()).isNotEmpty();
+            File solibSearchPath = nativeLibrary.getSolibSearchPath().first()
+            assertThat(new File(solibSearchPath, "libsanangeles.so")).exists()
         }
 
         Collection<String> expectedToolchains = [
