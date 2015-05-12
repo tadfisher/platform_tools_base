@@ -15,6 +15,8 @@
  */
 
 package com.android.build.gradle.integration.ndk
+
+import com.android.build.gradle.integration.common.category.Lint
 import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import groovy.transform.CompileStatic
@@ -46,6 +48,7 @@ class NdkJniLibTest {
     }
 
     @Test
+    @Category(Lint.class)
     void lint() {
         project.execute("lint")
     }
@@ -53,7 +56,7 @@ class NdkJniLibTest {
     @Test
     void "check version code"() {
         GradleTestProject app = project.getSubproject("app")
-        
+
         assertThatApk(app.getApk("gingerbread", "universal", "debug")).hasVersionCode(1000123)
         assertThatApk(app.getApk("gingerbread", "armeabi-v7a", "debug")).hasVersionCode(1100123)
         assertThatApk(app.getApk("gingerbread", "mips", "debug")).hasVersionCode(1200123)

@@ -15,6 +15,8 @@
  */
 
 package com.android.build.gradle.integration.application
+
+import com.android.build.gradle.integration.common.category.Lint
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.ModelHelper
 import com.android.builder.model.AndroidLibrary
@@ -26,6 +28,7 @@ import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
+import org.junit.experimental.categories.Category
 
 import static com.android.builder.core.BuilderConstants.DEBUG
 import static org.junit.Assert.assertEquals
@@ -54,6 +57,7 @@ class TictactoeTest {
     }
 
     @Test
+    @Category(Lint.class)
     void lint() {
         project.execute("lint")
     }
