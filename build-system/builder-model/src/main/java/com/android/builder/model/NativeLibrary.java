@@ -116,4 +116,12 @@ public interface NativeLibrary {
     @NonNull
     List<String> getCppCompilerFlags();
 
+    /**
+     * The solib-search-path for gdb setup.
+     *
+     * @return list of path to locate shared objects with debug symbol.
+     */
+    @NonNull
+    List<File> getSolibSearchPath();
+
 }
