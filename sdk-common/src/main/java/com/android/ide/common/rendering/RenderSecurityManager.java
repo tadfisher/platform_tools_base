@@ -30,9 +30,10 @@ import java.lang.reflect.Member;
 import java.net.InetAddress;
 import java.security.Permission;
 import java.util.PropertyPermission;
+import java.util.concurrent.Callable;
 
 /**
- * A {@link java.lang.SecurityManager} which is used for layout lib rendering, to
+ * A {@link SecurityManager} which is used for layout lib rendering, to
  * prevent custom views from accidentally exiting the whole IDE if they call
  * {@code System.exit}, as well as unintentionally writing files etc.
  * <p>
@@ -46,6 +47,7 @@ public class RenderSecurityManager extends SecurityManager {
 
     /** Whether we should restrict reading to certain paths */
     public static final boolean RESTRICT_READS = false;
+    private static final Object SECURITY_MANAGER_LOCK = new Object();
 
     /**
      * Whether the security manager is enabled for this session (it might still
@@ -132,6 +134,7 @@ public class RenderSecurityManager extends SecurityManager {
         mProjectPath = projectPath;
         mTempDir = System.getProperty("java.io.tmpdir");
         mNormalizedTempDir = new File(mTempDir).getPath(); // will call fs.normalize() on the path
+        //noinspection AssignmentToStaticFieldFromInstanceMethod
         sLastFailedPath = null;
     }
 
@@ -157,7 +160,7 @@ public class RenderSecurityManager extends SecurityManager {
      * @param credential when turning off the security manager, the exact same
      *                   credential passed in to the earlier activation call
      */
-    public void setActive(boolean active, @Nullable Object credential) {
+    void setActive(boolean active, @Nullable Object credential) {
         SecurityManager current = System.getSecurityManager();
         boolean isActive = current == this;
         if (active == isActive) {
@@ -204,6 +207,45 @@ public class RenderSecurityManager extends SecurityManager {
                 mAllowSetSecurityManager = false;
                 sIsRenderThread.set(false);
             }
+        }
+    }
+
+    /**
+     * Runs the given {@link Callable} using the {@link RenderSecurityManager} and returns the result of the call.
+     * @param callable the {@link Callable} to run on the context of the {@link RenderSecurityManager}
+     * @param credential when turning off the security manager, the exact same
+     *                   credential passed in to the earlier activation call
+     */
+    public <T>T runOnSecurityManager(Callable<T> callable, Object credential) throws Exception {
+        synchronized(SECURITY_MANAGER_LOCK) {
+            try {
+                setActive(true, credential);
+                return callable.call();
+            }
+            finally {
+                setActive(false, credential);
+            }
+        }
+    }
+
+    /**
+     * Runs the given {@link Runnable} using the {@link RenderSecurityManager}.
+     * @param runnable the {@link Runnable} to run on the context of the {@link RenderSecurityManager}
+     * @param credential when turning off the security manager, the exact same
+     *                   credential passed in to the earlier activation call
+     */
+    public void runOnSecurityManager(final Runnable runnable, Object credential) {
+        try {
+            runOnSecurityManager(new Callable<Void>() {
+                @Override
+                public Void call() throws Exception {
+                    runnable.run();
+                    return null;
+                }
+            }, credential);
+        }
+        catch (Exception e) {
+            // Ignored. Runnables don't throw exceptions.
         }
     }
 
@@ -389,6 +431,7 @@ public class RenderSecurityManager extends SecurityManager {
             // ignore
         }
 
+        //noinspection AssignmentToStaticFieldFromInstanceMethod
         sLastFailedPath = path;
 
         return false;
