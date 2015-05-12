@@ -39,6 +39,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -298,6 +299,13 @@ public class PackageApplication extends IncrementalTask implements FileSupplier 
             ConventionMappingHelper.map(packageApp, "packagedJars", new Callable<Set<File>>() {
                 @Override
                 public Set<File> call() {
+                    // when the application is obfuscated, the original resources may have been
+                    // adapted to match changing package names for instance, so we take the
+                    // resources from the obfuscation process results rather than the original
+                    // exploded library's classes.jar files.
+                    if (config.isMinifyEnabled() && variantData.obfuscationTask != null) {
+                        return variantData.obfuscationTask.getOutputs().getFiles().getFiles();
+                    }
                     return scope.getGlobalScope().getAndroidBuilder().getPackagedJars(config);
                 }
             });
