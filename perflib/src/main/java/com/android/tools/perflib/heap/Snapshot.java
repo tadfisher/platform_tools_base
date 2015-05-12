@@ -57,6 +57,10 @@ public class Snapshot {
 
     private Dominators mDominators;
 
+    private int mIdSize = 4;
+
+    private long mIdSizeMask = 0x00000000ffffffffl;
+
     public Snapshot(@NonNull HprofBuffer buffer) {
         mBuffer = buffer;
         setToDefaultHeap();
@@ -153,6 +157,19 @@ public class Snapshot {
         return mCurrentHeap.getThread(serialNumber);
     }
 
+    public final void setIdSize(int size) {
+        mIdSize = size;
+        mIdSizeMask = 0xffffffffffffffffl >>> ((8 - size) * 8);
+    }
+
+    public final int getIdSize() {
+        return mIdSize;
+    }
+
+    public final long getIdSizeMask() {
+        return mIdSizeMask;
+    }
+
     public final void addInstance(long id, @NonNull Instance instance) {
         mCurrentHeap.addInstance(id, instance);
         instance.setHeap(mCurrentHeap);
@@ -221,7 +238,7 @@ public class Snapshot {
                 int classSize = javaLangClassSize;
 
                 for (Field f : classObj.mStaticFields) {
-                    classSize += f.getType().getSize();
+                    classSize += f.getType().getSize(this);
                 }
                 classObj.setSize(classSize);
             }

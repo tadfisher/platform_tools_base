@@ -31,10 +31,6 @@ public enum Type {
     INT(10, 4),
     LONG(11, 8);
 
-    private static int sIdSize = 4; // TODO: This needs to be moved to Snapshot.
-
-    private static long sIdSizeMask = 0x00000000ffffffffl;
-
     private static Map<Integer, Type> sTypeMap = Maps.newHashMap();
 
     private int mId;
@@ -52,21 +48,12 @@ public enum Type {
         mSize = size;
     }
 
-    public static final void setIdSize(int size) {
-        sIdSize = size;
-        sIdSizeMask = 0xffffffffffffffffl >>> ((8 - size) * 8);
-    }
-
-    public static final long getIdSizeMask() {
-        return sIdSizeMask;
-    };
-
     public static Type getType(int id) {
         return sTypeMap.get(id);
     }
 
-    public int getSize() {
-        return this == OBJECT ? sIdSize : mSize;
+    public int getSize(Snapshot snapshot) {
+        return this == OBJECT ? snapshot.getIdSize() : mSize;
     }
 
     public static String getClassNameOfPrimitiveArray(Type type) {
