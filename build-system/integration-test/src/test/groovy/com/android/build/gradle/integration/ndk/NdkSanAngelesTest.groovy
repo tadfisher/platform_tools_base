@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.ndk
 import com.android.SdkConstants
 import com.android.build.FilterData
 import com.android.build.OutputFile
+import com.android.build.gradle.integration.common.category.Lint
 import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.TruthHelper
@@ -66,6 +67,7 @@ class NdkSanAngelesTest {
     }
 
     @Test
+    @Category(Lint.class)
     void lint() {
         project.execute("lint")
     }
