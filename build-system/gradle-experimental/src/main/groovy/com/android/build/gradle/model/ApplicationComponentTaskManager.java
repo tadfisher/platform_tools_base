@@ -19,12 +19,17 @@ package com.android.build.gradle.model;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.ApplicationTaskManager;
 import com.android.build.gradle.internal.DependencyManager;
+import com.android.build.gradle.internal.NdkHandler;
 import com.android.build.gradle.internal.SdkHandler;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.ndk.internal.NdkNamingScheme;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.core.VariantConfiguration;
 import com.google.common.collect.ImmutableList;
 
 import org.gradle.api.Project;
+import org.gradle.nativeplatform.SharedLibraryBinarySpec;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 import java.io.File;
@@ -53,9 +58,23 @@ public class ApplicationComponentTaskManager extends ApplicationTaskManager {
     }
 
     @Override
-    protected Collection<File> getNdkOutputDirectories(BaseVariantData variantData) {
+    public void configureScopeForNdk(VariantScope scope) {
         NdkComponentModelPlugin plugin = project.getPlugins().getPlugin(
                 NdkComponentModelPlugin.class);
-        return plugin.getOutputDirectories(variantData.getVariantConfiguration());
+        scope.setNdkSoFolder(plugin.getOutputDirectories(scope.getVariantConfiguration()));
+
+        VariantConfiguration config = scope.getVariantConfiguration();
+        // TODO: NdkComponentModelPlugin should generate two .so files, one with debugging symbols
+        // and one without.  For now, both of them are in the same directory.
+        for (String abi : NdkHandler.getAbiList()) {
+            scope.addNdkSolibSearchPath(
+                    abi,
+                    new File(
+                            scope.getGlobalScope().getBuildDir(),
+                            NdkNamingScheme.getOutputDirectoryName(
+                                    config.getBuildType().getName(),
+                                    config.getFlavorName(),
+                                    abi)));
+        }
     }
 }

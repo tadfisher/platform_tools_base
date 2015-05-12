@@ -280,10 +280,20 @@ abstract class TaskManager {
     }
 
     /**
-     * Returns the directories of the NDK buildables.
+     * Override to configures NDK data in the scope.
      */
-    protected Collection<File> getNdkOutputDirectories(BaseVariantData variantData) {
-        return Collections.singleton(variantData.ndkCompileTask.soFolder)
+    public void configureScopeForNdk(VariantScope scope) {
+        BaseVariantData variantData = scope.getVariantData()
+        scope.setNdkSoFolder(Collections.singleton(new File(
+                scope.getGlobalScope().getIntermediatesDir(),
+                "ndk/${variantData.variantConfiguration.dirName}/lib")))
+        File objFolder = new File(
+                scope.getGlobalScope().getIntermediatesDir(),
+                "ndk/${variantData.variantConfiguration.dirName}/obj")
+        scope.setNdkObjFolder(objFolder)
+        for (String abi : NdkHandler.getAbiList()) {
+            scope.addNdkSolibSearchPath(abi, new File(objFolder, "local/" + abi))
+        }
     }
 
     private AndroidConfig getExtension() {
@@ -728,10 +738,10 @@ abstract class TaskManager {
                 new File("$project.buildDir/${FD_INTERMEDIATES}/splits/${config.dirName}")
         variantOutputData.packageSplitAbiTask.androidBuilder = androidBuilder
         variantOutputData.packageSplitAbiTask.dependsOn generateSplitAbiRes
-        variantOutputData.packageSplitAbiTask.dependsOn getNdkBuildable(variantData)
+        variantOutputData.packageSplitAbiTask.dependsOn scope.getNdkBuildable()
 
         conventionMapping(variantOutputData.packageSplitAbiTask).map("jniFolders") {
-            getJniFolders(variantData);
+            getJniFolders(scope);
         }
         conventionMapping(variantOutputData.packageSplitAbiTask).
                 map("jniDebuggable") { config.buildType.isJniDebuggable() }
@@ -751,11 +761,13 @@ abstract class TaskManager {
      * native resources.
      */
     @NonNull
-    public Set<File> getJniFolders(@NonNull ApkVariantData variantData) {
+    public Set<File> getJniFolders(@NonNull VariantScope scope) {
+
+        BaseVariantData variantData = scope.variantData
         VariantConfiguration config = variantData.variantConfiguration
         // for now only the project's compilation output.
         Set<File> set = Sets.newHashSet()
-        set.addAll(getNdkOutputDirectories(variantData))
+        set.addAll(scope.getNdkSoFolder())
         set.addAll(variantData.renderscriptCompileTask.libOutputDir)
         set.addAll(config.libraryJniFolders)
         set.addAll(config.jniLibsList)
@@ -851,8 +863,8 @@ abstract class TaskManager {
         scope.resourceGenTask.dependsOn(tasks, generateMicroApkTask);
     }
 
-    public void createNdkTasks(
-            @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData) {
+    public void createNdkTasks(@NonNull VariantScope scope) {
+        BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
         NdkCompile ndkCompile = project.tasks.create(
                 "compile${variantData.variantConfiguration.fullName.capitalize()}Ndk",
                 NdkCompile)
@@ -897,10 +909,7 @@ abstract class TaskManager {
             project.file(
                     "$project.buildDir/${FD_INTERMEDIATES}/ndk/${variantData.variantConfiguration.dirName}/obj")
         }
-        conventionMapping(ndkCompile).map("soFolder") {
-            project.file(
-                    "$project.buildDir/${FD_INTERMEDIATES}/ndk/${variantData.variantConfiguration.dirName}/lib")
-        }
+        ndkCompile.soFolder = scope.getNdkSoFolder().first()
     }
 
     /**
@@ -985,10 +994,9 @@ abstract class TaskManager {
 
         // Add NDK tasks
         if (isNdkTaskNeeded) {
-            createNdkTasks(variantData)
+            createNdkTasks(variantScope)
         }
         variantScope.setNdkBuildable(getNdkBuildable(variantData))
-        variantScope.setNdkOutputDirectories(getNdkOutputDirectories(variantData))
 
         // Add a task to compile the test application
         if (variantData.getVariantConfiguration().useJack) {

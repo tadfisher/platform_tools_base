@@ -55,6 +55,7 @@ import org.gradle.api.tasks.compile.AbstractCompile;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -71,7 +72,11 @@ public class VariantScope {
     @Nullable
     private Collection<Object> ndkBuildable;
     @Nullable
-    private Collection<File> ndkOutputDirectories;
+    private Collection<File> ndkSoFolder;
+    @Nullable
+    private File ndkObjFolder;
+    @NonNull
+    private Map<String, File> ndkSolibSearchPath = Maps.newHashMap();
 
     @Nullable
     private File mergeResourceOutputDir;
@@ -165,23 +170,49 @@ public class VariantScope {
     }
 
     @Nullable
-    public Collection<File> getNdkOutputDirectories() {
-        return ndkOutputDirectories;
+    public Collection<File> getNdkSoFolder() {
+        return ndkSoFolder;
     }
 
-    public void setNdkOutputDirectories(@NonNull Collection<File> ndkOutputDirectories) {
-        this.ndkOutputDirectories = ndkOutputDirectories;
+    public void setNdkSoFolder(@NonNull Collection<File> ndkSoFolder) {
+        this.ndkSoFolder = ndkSoFolder;
+    }
+
+    @Nullable
+    public File getNdkObjFolder() {
+        return ndkObjFolder;
+    }
+
+    public void setNdkObjFolder(@NonNull File ndkObjFolder) {
+        this.ndkObjFolder = ndkObjFolder;
+    }
+
+    /**
+     * Return the folder containing the shared object with debugging symbol for the specified ABI.
+     */
+    @Nullable
+    public File getNdkSolibSearchPath(@NonNull String abi) {
+        File rc = ndkSolibSearchPath.get(abi);
+        if (rc ==null) {
+            System.out.println("Missing abi: " + abi);
+            System.out.println(ndkSolibSearchPath);
+        }
+        return ndkSolibSearchPath.get(abi);
+    }
+
+    public void addNdkSolibSearchPath(@NonNull String abi, @NonNull File searchPath) {
+        this.ndkSolibSearchPath.put(abi, searchPath);
     }
 
     @NonNull
     public Set<File> getJniFolders() {
-        assert getNdkOutputDirectories() != null;
+        assert getNdkSoFolder() != null;
 
         VariantConfiguration config = getVariantConfiguration();
         ApkVariantData apkVariantData = (ApkVariantData) variantData;
         // for now only the project's compilation output.
         Set<File> set = Sets.newHashSet();
-        set.addAll(getNdkOutputDirectories());
+        set.addAll(getNdkSoFolder());
         set.add(getRenderscriptLibOutputDir());
         set.addAll(config.getLibraryJniFolders());
         set.addAll(config.getJniLibsList());

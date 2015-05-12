@@ -317,12 +317,16 @@ public class ModelBuilder implements ToolingModelBuilder {
      */
     private Collection<NativeLibrary> createNativeLibraries(
             @NonNull NdkConfig ndkConfig,
-            @NonNull Collection<String> abis) {
+            @NonNull Collection<String> abis,
+            @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData) {
         Collection<NativeLibrary> nativeLibraries = Lists.newArrayListWithCapacity(abis.size());
         for (String abi : abis) {
             NativeToolchain toolchain = toolchains.get(abi);
 
             String sysrootFlag = "--sysroot=" + ndkHandler.getSysroot(abi);
+            List<String> cFlags = ndkConfig.getcFlags() == null
+                    ? ImmutableList.of(sysrootFlag)
+                    : ImmutableList.of(sysrootFlag, ndkConfig.getcFlags());
 
             // The DSL currently do not support all options available in the model such as the
             // include dirs and the defines.  Therefore, just pass an empty collection for now.
@@ -337,8 +341,9 @@ public class ModelBuilder implements ToolingModelBuilder {
                     ndkHandler.getStlIncludes(ndkConfig.getStl(), abi),
                     Collections.<String>emptyList(),  /*cDefines*/
                     Collections.<String>emptyList(),  /*cppDefines*/
-                    ImmutableList.of(sysrootFlag, ndkConfig.getcFlags()),
-                    ImmutableList.of(sysrootFlag, ndkConfig.getcFlags()));
+                    cFlags,
+                    cFlags,  // TODO: NdkConfig should allow cppFlags to be set separately.
+                    ImmutableList.of(variantData.getScope().getNdkSolibSearchPath(abi)));
             nativeLibraries.add(lib);
         }
         return nativeLibraries;
@@ -365,14 +370,21 @@ public class ModelBuilder implements ToolingModelBuilder {
         Collection<NativeLibrary> nativeLibraries = Collections.emptyList();
         if (ndkConfig.getModuleName() != null) {
             if (config.getSplits().getAbi().isEnable()) {
-                nativeLibraries = createNativeLibraries(ndkConfig, config.getSplits().getAbiFilters());
+                nativeLibraries = createNativeLibraries(
+                        ndkConfig,
+                        config.getSplits().getAbiFilters(),
+                        variantData);
             } else {
                 if (ndkConfig.getAbiFilters() == null || ndkConfig.getAbiFilters().isEmpty()) {
                     nativeLibraries = createNativeLibraries(
                             ndkConfig,
-                            ndkHandler.getSupportedAbis());
+                            ndkHandler.getSupportedAbis(),
+                            variantData);
                 } else {
-                    nativeLibraries = createNativeLibraries(ndkConfig, ndkConfig.getAbiFilters());
+                    nativeLibraries = createNativeLibraries(
+                            ndkConfig,
+                            ndkConfig.getAbiFilters(),
+                            variantData);
                 }
             }
         }

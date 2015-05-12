@@ -119,7 +119,7 @@ class ApplicationTaskManager extends TaskManager {
         // Add NDK tasks
         if (isNdkTaskNeeded) {
             SpanRecorders.record(ExecutionType.APP_TASK_MANAGER_CREATE_NDK_TASK) {
-                createNdkTasks(variantData);
+                createNdkTasks(variantScope);
             }
         } else {
             if (variantData.compileTask != null) {
@@ -129,7 +129,6 @@ class ApplicationTaskManager extends TaskManager {
             }
         }
         variantScope.setNdkBuildable(getNdkBuildable(variantData))
-        variantScope.setNdkOutputDirectories(getNdkOutputDirectories(variantData))
 
         if (variantData.getSplitHandlingPolicy() ==
                 BaseVariantData.SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY) {

@@ -430,8 +430,6 @@ public class NdkHandler {
             includeDirs.add(new File(stlBaseDir, "gabi++/include"));
             includeDirs.add(new File(stlBaseDir, "../android/support/include"));
         }
-        System.out.println("getStlIncludes");
-        System.out.println(includeDirs);
 
         return includeDirs;
     }
