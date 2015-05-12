@@ -1510,6 +1510,7 @@ abstract class TaskManager {
         Closure<List<File>> inputFiles
 
         Closure<File> inputDir
+        Closure<File> javaResourcesInputDir;
 
         Closure<List<File>> inputLibraries
     }
@@ -1555,6 +1556,9 @@ abstract class TaskManager {
         }
         pcData.inputDir = {
             scope.javaOutputDir
+        }
+        pcData.javaResourcesInputDir = {
+            scope.javaResourcesDestinationDir
         }
         pcData.inputLibraries = {
             scope.globalScope.androidBuilder.getPackagedJars(config) as List
