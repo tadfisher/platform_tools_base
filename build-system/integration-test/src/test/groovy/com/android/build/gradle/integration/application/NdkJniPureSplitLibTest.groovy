@@ -39,6 +39,7 @@ class NdkJniPureSplitLibTest {
 
     @BeforeClass
     static void setUp() {
+        GradleTestProject.assumeBuildToolsAtLeast(21)
         project.execute("clean", ":app:assembleDebug")
     }
 
