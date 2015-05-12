@@ -116,4 +116,13 @@ public interface NativeLibrary {
     @NonNull
     List<String> getCppCompilerFlags();
 
+    /**
+     * The folders containing libraries with debug symbol.
+     * For gdb, this sets the solib-search-path.
+     *
+     * @return list of paths to locate shared objects with debug symbol.
+     */
+    @NonNull
+    List<File> getDebuggableLibraryFolders();
+
 }
