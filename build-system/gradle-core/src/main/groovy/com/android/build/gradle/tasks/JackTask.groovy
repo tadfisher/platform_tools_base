@@ -59,9 +59,9 @@ public class JackTask extends AbstractAndroidCompile
     @Optional
     Collection<File> proguardFiles
 
-    @InputFile
+    @InputFiles
     @Optional
-    File jarJarRuleFile
+    Collection<File> jarJarRuleFiles
 
     @Input
     boolean debug
@@ -101,7 +101,7 @@ public class JackTask extends AbstractAndroidCompile
                 getSource().files,
                 getProguardFiles(),
                 getMappingFile(),
-                getJarJarRuleFile(),
+                getJarJarRuleFiles(),
                 getIncrementalDir(),
                 isMultiDexEnabled(),
                 getMinSdkVersion())) {
@@ -115,7 +115,7 @@ public class JackTask extends AbstractAndroidCompile
                     computeEcjOptionFile(),
                     getProguardFiles(),
                     getMappingFile(),
-                    getJarJarRuleFile(),
+                    getJarJarRuleFiles(),
                     isMultiDexEnabled(),
                     getMinSdkVersion(),
                     isDebugLog,

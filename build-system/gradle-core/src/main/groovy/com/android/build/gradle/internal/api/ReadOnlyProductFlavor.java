@@ -150,10 +150,10 @@ public class ReadOnlyProductFlavor extends ReadOnlyBaseConfig implements Product
         return productFlavor.getDimension();
     }
 
-    @Nullable
+    @NonNull
     @Override
-    public File getJarJarRuleFile() {
-        return productFlavor.getJarJarRuleFile();
+    public Collection<File> getJarJarRuleFiles() {
+        return productFlavor.getJarJarRuleFiles();
     }
 
     @Nullable

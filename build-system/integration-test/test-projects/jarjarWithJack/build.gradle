@@ -17,7 +17,7 @@ android {
     minSdkVersion 16
     targetSdkVersion 20
     useJack true
-    jarJarRuleFile 'jarjar.rules'
+    jarJarRuleFiles 'jarjar.rules'
   }
 
   buildTypes {
