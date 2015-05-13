@@ -43,8 +43,8 @@ class CompileOptions {
 
     boolean ndkCygwinMode = false
 
-    void setSourceCompatibility(@NonNull JavaVersion sourceCompatibility) {
-        this.sourceCompatibility = sourceCompatibility
+    void setSourceCompatibility(@NonNull Object sourceCompatibility) {
+        this.sourceCompatibility = convert(sourceCompatibility)
     }
 
     /**
@@ -58,8 +58,8 @@ class CompileOptions {
         sourceCompatibility?: defaultJavaVersion
     }
 
-    void setTargetCompatibility(@NonNull JavaVersion targetCompatibility) {
-        this.targetCompatibility = targetCompatibility
+    void setTargetCompatibility(@NonNull Object targetCompatibility) {
+        this.targetCompatibility = convert(targetCompatibility)
     }
 
     /**
@@ -71,5 +71,21 @@ class CompileOptions {
     @NonNull
     JavaVersion getTargetCompatibility() {
         targetCompatibility?: defaultJavaVersion
+    }
+
+    /**
+     * Convert all possible supported way of specifying a Java version to {@link JavaVersion}
+     * @param compatibility the user provided java version.
+     * @return {@link JavaVersion} or a runtime exception if it cannot be converted.
+     */
+    @NonNull
+    private JavaVersion convert(@NonNull Object compatibility) {
+        // for backward compatibility reasons, we support setting strings like 'Version_1_6'
+        if (compatibility instanceof String
+                && compatibility.toString().toUpperCase().startsWith(
+                'Version_'.toUpperCase())) {
+            compatibility = compatibility.substring("Version".length() + 1).replace("_", ".")
+        }
+        return JavaVersion.toVersion(compatibility)
     }
 }
