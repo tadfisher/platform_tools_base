@@ -27,6 +27,7 @@ import com.android.builder.core.DefaultProductFlavor
 import com.android.builder.model.ApiVersion
 import com.android.builder.model.ClassField
 import com.google.common.base.Strings
+import com.google.common.collect.ImmutableList
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.logging.Logger
@@ -417,16 +418,15 @@ class ProductFlavor extends DefaultProductFlavor implements CoreProductFlavor {
         return getDimension();
     }
 
+    void jarJarRuleFile(Object file) {
+        setJarJarRuleFiles(ImmutableList.of(project.file(file)))
+    }
 
-    void jarJarRuleFile(String ...files) {
-        if (files.length == 0) {
-            setJarJarRuleFile(null);
-            return;
+    void jarJarRuleFiles(Object ...files) {
+        ImmutableList.Builder<File> builder = ImmutableList.builder()
+        for (String file : files) {
+            builder.add(project.file(file))
         }
-        String jarJarRuleFile = files[0];
-        if (files.length > 1) {
-            logger.error("More than one jarJarRuleFile provided, ignoring all but " + jarJarRuleFile);
-        }
-        setJarJarRuleFile(project.file(jarJarRuleFile))
+        setJarJarRuleFiles(builder.build())
     }
 }
