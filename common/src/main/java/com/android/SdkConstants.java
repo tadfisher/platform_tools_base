@@ -746,6 +746,9 @@ public final class SdkConstants {
     public static final String TAG_USES_FEATURE = "uses-feature";      //$NON-NLS-1$
     public static final String TAG_USES_PERMISSION = "uses-permission";//$NON-NLS-1$
     public static final String TAG_USES_LIBRARY = "uses-library";      //$NON-NLS-1$
+    public static final String TAG_MANIFEST = "manifest";              //$NON-NLS-1$
+    public static final String TAG_ACTION = "action";                  //$NON-NLS-1$
+    public static final String TAG_CATEGORY = "category";              //$NON-NLS-1$
     public static final String TAG_APPLICATION = "application";        //$NON-NLS-1$
     public static final String TAG_INTENT_FILTER = "intent-filter";    //$NON-NLS-1$
     public static final String TAG_USES_SDK = "uses-sdk";              //$NON-NLS-1$
