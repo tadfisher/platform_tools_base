@@ -21,6 +21,8 @@ import com.android.annotations.Nullable;
 import org.gradle.model.Managed;
 import org.gradle.model.collection.ManagedSet;
 
+import java.util.Map;
+
 /**
  * A Managed product flavor.
  */
@@ -123,4 +125,5 @@ public interface ProductFlavor {
 
     String getJarJarRuleFile();
     void setJarJarRuleFile(String jarJarRuleFile);
+
 }
