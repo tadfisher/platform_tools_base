@@ -12,4 +12,5 @@
     <global id="mavenUrl" value="mavenCentral" />
     <global id="buildToolsVersion" value="18.0.1" />
     <global id="gradlePluginVersion" value="0.6.+" />
+    <global id="unitTestsSupported" type="boolean" value="${(compareVersions(gradlePluginVersion, '1.1.0') >= 0)?string}" />
 </globals>
