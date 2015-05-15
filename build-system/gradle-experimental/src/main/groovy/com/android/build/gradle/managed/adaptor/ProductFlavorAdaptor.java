@@ -187,6 +187,13 @@ public class ProductFlavorAdaptor implements CoreProductFlavor {
 
     @Nullable
     @Override
+    public Map<String, String> getTestInstrumentationRunnerArguments() {
+        // TODO: To be implemented.
+        return null;
+    }
+
+    @Nullable
+    @Override
     public Boolean getTestHandleProfiling() {
         return productFlavor.getTestHandleProfiling();
     }

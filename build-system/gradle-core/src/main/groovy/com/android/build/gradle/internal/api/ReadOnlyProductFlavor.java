@@ -24,6 +24,7 @@ import com.android.builder.model.SigningConfig;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * read-only version of the ProductFlavor wrapping another ProductFlavor.
@@ -118,6 +119,12 @@ public class ReadOnlyProductFlavor extends ReadOnlyBaseConfig implements Product
     @Override
     public String getTestInstrumentationRunner() {
         return productFlavor.getTestInstrumentationRunner();
+    }
+
+    @Nullable
+    @Override
+    public Map<String, String> getTestInstrumentationRunnerArguments() {
+        return productFlavor.getTestInstrumentationRunnerArguments();
     }
 
     @Nullable

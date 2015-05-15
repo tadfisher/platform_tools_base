@@ -2,7 +2,10 @@ package com.android.tests.basic;
 
 import android.test.ActivityInstrumentationTestCase2;
 import android.test.suitebuilder.annotation.MediumTest;
+import android.test.suitebuilder.annotation.SmallTest;
 import android.widget.TextView;
+
+import java.lang.RuntimeException;
 
 public class MainTest extends ActivityInstrumentationTestCase2<Main> {
 
@@ -39,6 +42,12 @@ public class MainTest extends ActivityInstrumentationTestCase2<Main> {
     @MediumTest
     public void testBuildConfig() {
         assertEquals("bar", BuildConfig.FOO);
+    }
+
+    @SmallTest
+    public void testSmallTestsShouldNotBeRun() {
+        throw new RuntimeException("Should have been excluded by custom test instrumentation "
+                + "runner argument.");
     }
 }
 
