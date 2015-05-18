@@ -159,7 +159,7 @@ public class NdkHandler {
     }
 
 
-    private File getDefaultGccToolchainPath(Abi abi) {
+    public File getDefaultGccToolchainPath(Abi abi) {
         return getToolchainPath(Toolchain.GCC, getGccToolchainVersion(abi), abi);
     }
 
