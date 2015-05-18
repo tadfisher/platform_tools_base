@@ -19,10 +19,12 @@ package com.android.build.gradle.integration.common.truth;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.Lists;
+import com.google.common.io.Files;
 
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 public class ApkSubjectTest {
@@ -33,7 +35,7 @@ public class ApkSubjectTest {
                 "");
 
         FakeFailureStrategy failure = new FakeFailureStrategy();
-        File file = new File("foo");
+        File file = getTempFile("foo");
         ApkSubject subject = new ApkSubject(failure, file);
         // apk file doesn't exist so the failure gets filled with error. Ignore and reset.
         failure.reset();
@@ -51,7 +53,7 @@ public class ApkSubjectTest {
                 "bar");
 
         FakeFailureStrategy failure = new FakeFailureStrategy();
-        File file = new File("foo");
+        File file = getTempFile("foo");
         ApkSubject subject = new ApkSubject(failure, file);
         // apk file doesn't exist so the failure gets filled with error. Ignore and reset.
         failure.reset();
@@ -69,7 +71,7 @@ public class ApkSubjectTest {
                 "bar");
 
         FakeFailureStrategy failure = new FakeFailureStrategy();
-        File file = new File("foo");
+        File file = getTempFile("foo");
         ApkSubject subject = new ApkSubject(failure, file);
         // apk file doesn't exist so the failure gets filled with error. Ignore and reset.
         failure.reset();
@@ -78,4 +80,15 @@ public class ApkSubjectTest {
 
         assertThat(failure.message).isEqualTo("Not true that <foo> has maxSdkVersion <14>. It is <20>");
     }
+
+    private static File getTempFile(String name) {
+        File file = new File(Files.createTempDir(), name);
+        try {
+            file.createNewFile();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return file;
+    }
+
 }
