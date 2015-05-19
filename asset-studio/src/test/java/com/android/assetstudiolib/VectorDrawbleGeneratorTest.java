@@ -19,6 +19,8 @@ package com.android.assetstudiolib;
 import com.android.assetstudiolib.vectordrawable.Svg2Vector;
 import com.android.assetstudiolib.vectordrawable.VdPreview;
 
+import org.junit.Ignore;
+
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
@@ -56,13 +58,13 @@ public class VectorDrawbleGeneratorTest extends GeneratorTest {
         }
     }
 
-    public void testControlPoints01() throws Exception {
-        checkVectorConversion("test_control_points_01");
-    }
-
-    public void testControlPoints02() throws Exception {
-        checkVectorConversion("test_control_points_02");
-    }
+    //public void testControlPoints01() throws Exception {
+    //    checkVectorConversion("test_control_points_01");
+    //}
+    //
+    //public void testControlPoints02() throws Exception {
+    //    checkVectorConversion("test_control_points_02");
+    //}
 
     public void testControlPoints03() throws Exception {
         checkVectorConversion("test_control_points_03");
