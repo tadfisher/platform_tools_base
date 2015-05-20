@@ -52,6 +52,7 @@ class ProductFlavorImpl extends BaseConfigImpl implements ProductFlavor, Seriali
     private Boolean mTestHandleProfiling = null;
     private Boolean mTestFunctionalTest = null;
     private Set<String> mResourceConfigurations = null;
+    private Boolean mCompressNativeLibs = null;
 
 
     @NonNull
@@ -87,6 +88,8 @@ class ProductFlavorImpl extends BaseConfigImpl implements ProductFlavor, Seriali
 
         clonedFlavor.mResourceConfigurations = ImmutableSet.copyOf(
                 productFlavor.getResourceConfigurations());
+
+        clonedFlavor.mCompressNativeLibs = productFlavor.getCompressNativeLibs();
 
         return clonedFlavor;
     }
@@ -197,6 +200,12 @@ class ProductFlavorImpl extends BaseConfigImpl implements ProductFlavor, Seriali
 
     @Nullable
     @Override
+    public Boolean getCompressNativeLibs() {
+        return mCompressNativeLibs;
+    }
+
+    @Nullable
+    @Override
     public String getDimension() {
         return mDimension;
     }
@@ -220,6 +229,7 @@ class ProductFlavorImpl extends BaseConfigImpl implements ProductFlavor, Seriali
                 ", mTestHandleProfiling=" + mTestHandleProfiling +
                 ", mTestFunctionalTest=" + mTestFunctionalTest +
                 ", mResourceConfigurations=" + mResourceConfigurations +
+                ", mCompressNativeLibs=" + mCompressNativeLibs +
                 "} " + super.toString();
     }
 }

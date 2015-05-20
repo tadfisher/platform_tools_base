@@ -1841,4 +1841,14 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         jarjarRuleFiles.addAll(mBuildType.getJarJarRuleFiles());
         return jarjarRuleFiles.build();
     }
+
+    public boolean getCompressNativeLibs() {
+        Boolean value = mMergedFlavor.getCompressNativeLibs();
+        if (value != null) {
+            return value;
+        }
+
+        // default is true (for now)
+        return true;
+    }
 }

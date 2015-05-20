@@ -183,4 +183,10 @@ public interface ProductFlavor extends BaseConfig {
      */
     @Nullable
     SigningConfig getSigningConfig();
+
+    /**
+     * Returns whether compress native libraries or not.
+     */
+    @Nullable
+    Boolean getCompressNativeLibs();
 }
