@@ -121,4 +121,8 @@ public class ReadOnlyBuildType extends ReadOnlyBaseConfig implements BuildType {
     public List<File> getJarJarRuleFiles() {
         return buildType.getJarJarRuleFiles();
     }
+
+    @Nullable
+    @Override
+    public Boolean getCompressNativeLibs() { return buildType.getCompressNativeLibs(); }
 }

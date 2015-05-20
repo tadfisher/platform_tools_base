@@ -43,6 +43,8 @@ class BuildTypeImpl extends BaseConfigImpl implements BuildType, Serializable {
     private boolean zipAlignEnabled;
     private boolean embedMicroApp;
 
+    private boolean compressNativeLibs = true;
+
     @NonNull
     static BuildTypeImpl cloneBuildType(@NonNull BuildType buildType) {
         BuildTypeImpl clonedBuildType = new BuildTypeImpl(buildType);
@@ -59,7 +61,7 @@ class BuildTypeImpl extends BaseConfigImpl implements BuildType, Serializable {
         clonedBuildType.zipAlignEnabled = buildType.isZipAlignEnabled();
         clonedBuildType.embedMicroApp = buildType.isEmbedMicroApp();
         clonedBuildType.pseudoLocalesEnabled = buildType.isPseudoLocalesEnabled();
-
+        clonedBuildType.compressNativeLibs = buildType.getCompressNativeLibs() == null ? true : buildType.getCompressNativeLibs();
         return clonedBuildType;
     }
 
@@ -132,6 +134,12 @@ class BuildTypeImpl extends BaseConfigImpl implements BuildType, Serializable {
 
     @Nullable
     @Override
+    public Boolean getCompressNativeLibs() {
+        return compressNativeLibs;
+    }
+
+    @Nullable
+    @Override
     public SigningConfig getSigningConfig() {
         return null;
     }
@@ -149,6 +157,7 @@ class BuildTypeImpl extends BaseConfigImpl implements BuildType, Serializable {
                 ", versionNameSuffix='" + versionNameSuffix + '\'' +
                 ", minifyEnabled=" + minifyEnabled +
                 ", zipAlignEnabled=" + zipAlignEnabled +
+                ", compressNativeLibs" + compressNativeLibs +
                 ", embedMicroApp=" + embedMicroApp +
                 "} " + super.toString();
     }

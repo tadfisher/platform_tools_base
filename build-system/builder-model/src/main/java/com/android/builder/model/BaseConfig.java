@@ -107,4 +107,10 @@ public interface BaseConfig {
      */
     @NonNull
     List<File> getJarJarRuleFiles();
+
+    /**
+     * Returns whether compress native libraries or not.
+     */
+    @Nullable
+    Boolean getCompressNativeLibs();
 }

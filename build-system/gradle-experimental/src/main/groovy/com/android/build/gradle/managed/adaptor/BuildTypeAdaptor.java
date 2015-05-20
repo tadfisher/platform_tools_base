@@ -172,6 +172,10 @@ public class BuildTypeAdaptor implements CoreBuildType {
         return buildType.getSigningConfig() == null ? null : new SigningConfigAdaptor(buildType.getSigningConfig());
     }
 
+    @Nullable
+    @Override
+    public Boolean getCompressNativeLibs() { return null; }
+
     @Override
     public NdkConfig getNdkConfig() {
         return null;
