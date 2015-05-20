@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.assetstudiolib.vectordrawable;
+package com.android.ide.common.vectordrawable;
 
 import com.android.ide.common.blame.SourcePosition;
 import com.android.utils.PositionXmlParser;
