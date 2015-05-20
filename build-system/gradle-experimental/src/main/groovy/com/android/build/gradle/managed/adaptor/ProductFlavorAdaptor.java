@@ -221,6 +221,13 @@ public class ProductFlavorAdaptor implements CoreProductFlavor {
                 new SigningConfigAdaptor(productFlavor.getSigningConfig());
     }
 
+    @Nullable
+    @Override
+    public Boolean getCompressNativeLibs() {
+        // TODO: To be implemented.
+        return null;
+    }
+
     @Override
     public NdkConfig getNdkConfig() {
         return new NdkConfigAdaptor(productFlavor.getNdkConfig());

@@ -212,7 +212,6 @@ public class VariantScope {
         assert getNdkSoFolder() != null;
 
         VariantConfiguration config = getVariantConfiguration();
-        ApkVariantData apkVariantData = (ApkVariantData) variantData;
         // for now only the project's compilation output.
         Set<File> set = Sets.newHashSet();
         set.addAll(getNdkSoFolder());
