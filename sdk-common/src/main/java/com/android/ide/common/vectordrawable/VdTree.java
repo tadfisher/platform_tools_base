@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.assetstudiolib.vectordrawable;
+package com.android.ide.common.vectordrawable;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -53,8 +53,12 @@ class VdTree {
         mCurrentGroup.add(pathOrGroup);
     }
 
-    public float getAspectRatio(){
-        return mBaseWidth / mBaseHeight;
+    public float getBaseWidth(){
+        return mBaseWidth;
+    }
+
+    public float getBaseHeight(){
+        return mBaseHeight;
     }
 
     public void draw(Graphics g, int w, int h) {
