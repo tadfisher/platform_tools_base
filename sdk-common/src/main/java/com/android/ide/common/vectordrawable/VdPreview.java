@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.assetstudiolib.vectordrawable;
+package com.android.ide.common.vectordrawable;
 
 import com.android.annotations.Nullable;
 import com.google.common.base.Charsets;
@@ -24,11 +24,22 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 
 /**
+ *
  * Generate a Image based on the VectorDrawable's XML content.
  */
 public class VdPreview {
+    /**
+     *
+     * @param forceImageWidth the width of result image if this is bigger than 0. Otherwise, take
+     *                        the imageScale to scale.
+     * @param imageScale scale the image based on its baseWidth and baseHeight. This is
+     *                   ignored when forceImageWidth > 0.
+     * @param xmlFileContent  VectorDrawable's XML file's content.
+     * @param vdErrorLog log for the parsing errors and warnings.
+     * @return an preview image according to the VectorDrawable's XML
+     */
     @Nullable
-    public static BufferedImage getPreviewFromVectorXml(int imageWidth,
+    public static BufferedImage getPreviewFromVectorXml(int forceImageWidth, float imageScale,
                                                         @Nullable String xmlFileContent,
                                                         @Nullable StringBuilder vdErrorLog) {
         if (xmlFileContent == null || xmlFileContent.isEmpty()) {
@@ -43,9 +54,23 @@ public class VdPreview {
         if (vdTree == null) {
             return null;
         }
+
+        // If the forceImageWidth is set (>0), then we honor that.
+        // Otherwise, we will ask the vectorDrawable for the prefer size, then apply the imageScale.
+        float vdWidth = vdTree.getBaseWidth();
+        float vdHeight = vdTree.getBaseHeight();
+        float imageWidth;
+        float imageHeight;
+        if (forceImageWidth > 0) {
+            imageWidth = forceImageWidth;
+            imageHeight = forceImageWidth * vdHeight / vdWidth;
+        } else {
+            imageWidth = vdWidth * imageScale;
+            imageHeight = vdHeight * imageScale;
+        }
+
         // Create the image according to the vectorDrawable's aspect ratio.
-        BufferedImage image = new BufferedImage(imageWidth,
-                                  (int) (imageWidth / vdTree.getAspectRatio()),
+        BufferedImage image = new BufferedImage((int) imageWidth, (int) imageHeight,
                                   BufferedImage.TYPE_INT_ARGB);
 
         Graphics g = image.getGraphics();
