@@ -141,6 +141,8 @@ public class PackageApplication extends IncrementalTask implements FileSupplier 
 
     private Set<File> packagedJars;
 
+    private boolean compressNativeLibs;
+
     private boolean jniDebugBuild;
 
     private CoreSigningConfig signingConfig;
@@ -167,6 +169,16 @@ public class PackageApplication extends IncrementalTask implements FileSupplier 
 
     public void setJniDebugBuild(boolean jniDebugBuild) {
         this.jniDebugBuild = jniDebugBuild;
+    }
+
+
+    @Input
+    public boolean getCompressNativeLibs() {
+        return compressNativeLibs;
+    }
+
+    public void setCompressNativeLibs(boolean compressNativeLibs) {
+        this.compressNativeLibs = compressNativeLibs;
     }
 
     @Nested
@@ -206,8 +218,9 @@ public class PackageApplication extends IncrementalTask implements FileSupplier 
             getBuilder().packageApk(getResourceFile().getAbsolutePath(), getDexFolder(),
                     getDexedLibraries(), getPackagedJars(),
                     (dir == null ? null : dir.getAbsolutePath()), getJniFolders(),
-                    getMergingFolder(), getAbiFilters(), getJniDebugBuild(), getSigningConfig(),
-                    getPackagingOptions(), getOutputFile().getAbsolutePath());
+                    getMergingFolder(), getAbiFilters(), getCompressNativeLibs(),
+                    getJniDebugBuild(), getSigningConfig(), getPackagingOptions(),
+                    getOutputFile().getAbsolutePath());
         } catch (DuplicateFileException e) {
             Logger logger = getLogger();
             logger.error("Error: duplicate files during packaging of APK " + getOutputFile()
@@ -366,6 +379,13 @@ public class PackageApplication extends IncrementalTask implements FileSupplier 
                 @Override
                 public Boolean call() throws Exception {
                     return config.getBuildType().isJniDebuggable();
+                }
+            });
+
+            ConventionMappingHelper.map(packageApp, "compressNativeLibs", new Callable<Boolean>() {
+                @Override
+                public Boolean call() throws Exception {
+                    return config.getCompressNativeLibs();
                 }
             });
 

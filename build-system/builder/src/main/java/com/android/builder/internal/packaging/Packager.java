@@ -442,7 +442,7 @@ public final class Packager implements IArchiveBuilder {
         }
 
         try {
-            doAddFile(file, archivePath);
+            doAddFile(file, archivePath, true);
         } catch (DuplicateFileException e) {
             mBuilder.cleanUp();
             throw e;
@@ -546,6 +546,7 @@ public final class Packager implements IArchiveBuilder {
      *
      * @param nativeFolder the root folder containing the abi folders which contain the .so
      * @param abiFilters a list of abi filters to include. If null or empty, all abis are included.
+     * @param compress compress native libraries.
      *
      * @throws PackagerException if an error occurred
      * @throws SealedPackageException if the APK is already sealed.
@@ -554,7 +555,7 @@ public final class Packager implements IArchiveBuilder {
      *
      * @see #setJniDebugMode(boolean)
      */
-    public void addNativeLibraries(@NonNull File nativeFolder, @Nullable Set<String> abiFilters)
+    public void addNativeLibraries(@NonNull File nativeFolder, @Nullable Set<String> abiFilters, boolean compress)
             throws PackagerException, SealedPackageException, DuplicateFileException {
         if (mIsSealed) {
             throw new SealedPackageException("APK is already sealed");
@@ -598,7 +599,7 @@ public final class Packager implements IArchiveBuilder {
                                     abi.getName() + "/" + libName;
 
                                 try {
-                                    doAddFile(lib, path);
+                                    doAddFile(lib, path, compress);
                                 } catch (IOException e) {
                                     mBuilder.cleanUp();
                                     throw new PackagerException(e, "Failed to add %s", lib);
@@ -616,8 +617,9 @@ public final class Packager implements IArchiveBuilder {
      *
      * @throws PackagerException if an error occurred
      * @throws SealedPackageException if the APK is already sealed.
+     * @param compressJniLibs
      */
-    public void sealApk() throws PackagerException, SealedPackageException {
+    public void sealApk(boolean compressJniLibs) throws PackagerException, SealedPackageException {
         if (mIsSealed) {
             throw new SealedPackageException("APK is already sealed");
         }
@@ -628,7 +630,7 @@ public final class Packager implements IArchiveBuilder {
             String archivePath = entry.getKey();
             try {
                 if (inputFile.exists()) {
-                    mBuilder.writeFile(inputFile, archivePath);
+                    mBuilder.writeFile(inputFile, archivePath, compressJniLibs);
                 }
             } catch (IOException e) {
                 mBuilder.cleanUp();
@@ -647,7 +649,7 @@ public final class Packager implements IArchiveBuilder {
         }
     }
 
-    private void doAddFile(File file, String archivePath) throws DuplicateFileException,
+    private void doAddFile(File file, String archivePath, boolean compress) throws DuplicateFileException,
             IOException {
         if (!mFileFilter.apply(archivePath)) {
             return;
@@ -676,7 +678,7 @@ public final class Packager implements IArchiveBuilder {
         }
 
         mAddedFiles.put(archivePath, file);
-        mBuilder.writeFile(file, archivePath);
+        mBuilder.writeFile(file, archivePath, compress);
     }
 
     /**

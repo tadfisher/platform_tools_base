@@ -60,6 +60,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
+import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -201,9 +202,10 @@ public class SignedJarBuilder {
      * Writes a new {@link File} into the archive.
      * @param inputFile the {@link File} to write.
      * @param jarPath the filepath inside the archive.
+     * @param compress compress the file when true.
      * @throws IOException
      */
-    public void writeFile(File inputFile, String jarPath) throws IOException {
+    public void writeFile(File inputFile, String jarPath, boolean compress) throws IOException {
         // Get an input stream on the file.
         FileInputStream fis = new FileInputStream(inputFile);
         try {
@@ -211,10 +213,33 @@ public class SignedJarBuilder {
             // create the zip entry
             JarEntry entry = new JarEntry(jarPath);
             entry.setTime(inputFile.lastModified());
+            if (!compress) {
+                entry.setMethod(JarEntry.STORED);
+                entry.setSize(inputFile.length());
+                entry.setCrc(calculateCrc32(inputFile));
+            }
 
             writeEntry(fis, entry);
         } finally {
             // close the file stream used to read the file
+            fis.close();
+        }
+    }
+
+    private long calculateCrc32(File inputFile) throws IOException {
+        FileInputStream fis = new FileInputStream(inputFile);
+        try {
+            CRC32 crc32 = new CRC32();
+
+            int len = 0;
+            byte buffer[] = new byte[65536];
+
+            while ((len = fis.read(buffer)) != -1) {
+                crc32.update(buffer, 0, len);
+            }
+
+            return crc32.getValue();
+        } finally {
             fis.close();
         }
     }

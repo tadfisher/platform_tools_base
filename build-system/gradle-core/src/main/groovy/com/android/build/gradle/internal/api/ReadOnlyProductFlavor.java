@@ -154,6 +154,12 @@ public class ReadOnlyProductFlavor extends ReadOnlyBaseConfig implements Product
 
     @Nullable
     @Override
+    public Boolean getCompressNativeLibs() {
+        return productFlavor.getCompressNativeLibs();
+    }
+
+    @Nullable
+    @Override
     public String getDimension() {
         return productFlavor.getDimension();
     }

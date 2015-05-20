@@ -41,6 +41,8 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
 
     private boolean mZipAlignEnabled = true;
 
+    private boolean mCompressNativeLibs = true;
+
     public DefaultBuildType(@NonNull String name) {
         mName = name;
     }
@@ -55,11 +57,12 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
         setRenderscriptOptimLevel(that.getRenderscriptOptimLevel());
         setApplicationIdSuffix(that.getApplicationIdSuffix());
         setVersionNameSuffix(that.getVersionNameSuffix());
-        setMinifyEnabled(that.isMinifyEnabled() );
+        setMinifyEnabled(that.isMinifyEnabled());
         setZipAlignEnabled(that.isZipAlignEnabled());
         setSigningConfig(that.getSigningConfig());
         setEmbedMicroApp(that.isEmbedMicroApp());
         setPseudoLocalesEnabled(that.isPseudoLocalesEnabled());
+        setCompressNativeLibs(that.getCompressNativeLibs());
 
         return this;
     }
@@ -268,6 +271,16 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
         mEmbedMicroApp = embedMicroApp;
     }
 
+    @Nullable
+    @Override
+    public Boolean getCompressNativeLibs() {
+        return mCompressNativeLibs;
+    }
+
+    public void setCompressNativeLibs(Boolean compressNativeLibs) {
+        mCompressNativeLibs = compressNativeLibs;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -288,7 +301,8 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
                 mEmbedMicroApp == buildType.mEmbedMicroApp &&
                 Objects.equal(mApplicationIdSuffix, buildType.mApplicationIdSuffix) &&
                 Objects.equal(mVersionNameSuffix, buildType.mVersionNameSuffix) &&
-                Objects.equal(mSigningConfig, buildType.mSigningConfig);
+                Objects.equal(mSigningConfig, buildType.mSigningConfig) &&
+                Objects.equal(mCompressNativeLibs, buildType.mCompressNativeLibs);
     }
 
     @Override
@@ -307,6 +321,7 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
                 mMinifyEnabled,
                 mZipAlignEnabled,
                 mSigningConfig,
+                mCompressNativeLibs,
                 mEmbedMicroApp);
     }
 
@@ -326,6 +341,7 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
                 .add("minifyEnabled", mMinifyEnabled)
                 .add("zipAlignEnabled", mZipAlignEnabled)
                 .add("signingConfig", mSigningConfig)
+                .add("compressNativeLibs", mCompressNativeLibs)
                 .add("embedMicroApp", mEmbedMicroApp)
                 .add("mBuildConfigFields", getBuildConfigFields())
                 .add("mResValues", getResValues())

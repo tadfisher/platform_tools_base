@@ -14,6 +14,7 @@ import com.android.utils.StringHelper;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Task;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.ParallelizableTask;
@@ -54,6 +55,8 @@ public class ZipAlign extends DefaultTask implements FileSupplier {
     @ApkFile
     private File zipAlignExe;
 
+    private boolean zipAlignNativeLibs;
+
     @InputFile
     public File getZipAlignExe() {
         return zipAlignExe;
@@ -63,6 +66,11 @@ public class ZipAlign extends DefaultTask implements FileSupplier {
         this.zipAlignExe = zipAlignExe;
     }
 
+    @Input
+    public boolean getZipAlignNativeLibs() { return zipAlignNativeLibs; }
+
+    public void setZipAlignNativeLibs(boolean zipAlignNativeLibs) { this.zipAlignNativeLibs = zipAlignNativeLibs; }
+
     @TaskAction
     public void zipAlign() {
         getProject().exec(new Action<ExecSpec>() {
@@ -70,6 +78,9 @@ public class ZipAlign extends DefaultTask implements FileSupplier {
             public void execute(ExecSpec execSpec) {
                 execSpec.executable(getZipAlignExe());
                 execSpec.args("-f", "4");
+                if (getZipAlignNativeLibs()) {
+                    execSpec.args("-p");
+                }
                 execSpec.args(getInputFile());
                 execSpec.args(getOutputFile());
             }
@@ -136,6 +147,12 @@ public class ZipAlign extends DefaultTask implements FileSupplier {
                         return new File(path);
                     }
                     return null;
+                }
+            });
+            ConventionMappingHelper.map(zipAlign, "zipAlignNativeLibs", new Callable<Boolean>() {
+                @Override
+                public Boolean call() throws Exception {
+                    return scope.getVariantScope().getVariantConfiguration().getMinSdkVersion().getApiLevel() > 22;
                 }
             });
         }

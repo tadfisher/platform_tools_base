@@ -136,15 +136,15 @@ import java.util.logging.Logger;
  * build steps.
  *
  * To use:
- * create a builder with {@link #AndroidBuilder(String, CommandLineRunner, ProcessExecutor, JavaProcessExecutor, ProcessOutputHandler, ILogger, boolean)}
+ * create a builder with {@link #AndroidBuilder(String, CommandLineRunner, ProcessExecutor, JavaProcessExecutor, ProcessOutputHandler, EvaluationErrorReporter, ILogger, boolean)}
  *
  * then build steps can be done with
  * {@link #mergeManifests(File, List, List, String, int, String, String, String, Integer, String, String, ManifestMerger2.MergeType, Map, File)}
  * {@link #processTestManifest(String, String, String, String, String, Boolean, Boolean, File, List, Map, File, File)}
  * {@link #processResources(AaptPackageProcessBuilder, boolean)}
  * {@link #compileAllAidlFiles(java.util.List, java.io.File, java.io.File, java.util.List, com.android.builder.compiling.DependencyFileProcessor)}
- * {@link #convertByteCode(Collection, Collection, File, boolean, boolean, File, DexOptions, List, File, boolean, boolean)}
- * {@link #packageApk(String, java.io.File, java.util.Collection, java.util.Collection, String, java.util.Collection, java.util.Set, boolean, com.android.builder.model.SigningConfig, com.android.builder.model.PackagingOptions, String)}
+ * {@link #convertByteCode(Collection, Collection, File, boolean, File, DexOptions, List, File, boolean, boolean)}
+ * {@link #packageApk(String, java.io.File, java.util.Collection, java.util.Collection, String, java.util.Collection, java.util.Set, boolean, boolean, com.android.builder.model.SigningConfig, com.android.builder.model.PackagingOptions, String)}
  *
  * Java compilation is not handled but the builder provides the bootclasspath with
  * {@link #getBootClasspath()}.
@@ -1735,6 +1735,7 @@ public class AndroidBuilder {
      * @param jniLibsFolders the folders containing jni shared libraries
      * @param mergingFolder folder to contain files that are being merged
      * @param abiFilters optional ABI filter
+     * @param compressJniLibs compress jni libraries
      * @param jniDebugBuild whether the app should include jni debug data
      * @param signingConfig the signing configuration
      * @param packagingOptions the packaging options
@@ -1756,6 +1757,7 @@ public class AndroidBuilder {
             @Nullable Collection<File> jniLibsFolders,
             @NonNull File mergingFolder,
             @Nullable Set<String> abiFilters,
+            boolean compressJniLibs,
             boolean jniDebugBuild,
             @Nullable SigningConfig signingConfig,
             @Nullable PackagingOptions packagingOptions,
@@ -1820,12 +1822,12 @@ public class AndroidBuilder {
             if (jniLibsFolders != null) {
                 for (File jniFolder : jniLibsFolders) {
                     if (jniFolder.isDirectory()) {
-                        packager.addNativeLibraries(jniFolder, abiFilters);
+                        packager.addNativeLibraries(jniFolder, abiFilters, compressJniLibs);
                     }
                 }
             }
 
-            packager.sealApk();
+            packager.sealApk(compressJniLibs);
         } catch (SealedPackageException e) {
             // shouldn't happen since we control the package from start to end.
             throw new RuntimeException(e);

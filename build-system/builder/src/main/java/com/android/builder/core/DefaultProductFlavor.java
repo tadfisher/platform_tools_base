@@ -76,6 +76,8 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
     private SigningConfig mSigningConfig;
     @Nullable
     private Set<String> mResourceConfiguration;
+    @Nullable
+    private Boolean mCompressNativeLibs;
 
     /**
      * Creates a ProductFlavor with a given name.
@@ -368,6 +370,16 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
         return this;
     }
 
+    @Nullable
+    @Override
+    public Boolean getCompressNativeLibs() {
+        return mCompressNativeLibs;
+    }
+
+    public ProductFlavor setCompressNativeLibs(boolean compressNativeLibs) {
+        mCompressNativeLibs = compressNativeLibs;
+        return this;
+    }
     /**
      * Adds a res config filter (for instance 'hdpi')
      */
@@ -476,6 +488,10 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
                 overlay.getSigningConfig(),
                 base.getSigningConfig());
 
+        flavor.mCompressNativeLibs = chooseNotNull(
+                overlay.getCompressNativeLibs(),
+                base.getCompressNativeLibs());
+
         flavor.addResourceConfigurations(base.getResourceConfigurations());
         flavor.addResourceConfigurations(overlay.getResourceConfigurations());
 
@@ -537,6 +553,8 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
 
         flavor.mSigningConfig = productFlavor.getSigningConfig();
 
+        flavor.mCompressNativeLibs = productFlavor.getCompressNativeLibs();
+
         flavor.addResourceConfigurations(productFlavor.getResourceConfigurations());
         flavor.addManifestPlaceholders(productFlavor.getManifestPlaceholders());
 
@@ -589,7 +607,8 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
                 Objects.equal(mTestInstrumentationRunnerArguments,
                         that.mTestInstrumentationRunnerArguments) &&
                 Objects.equal(mVersionCode, that.mVersionCode) &&
-                Objects.equal(mVersionName, that.mVersionName);
+                Objects.equal(mVersionName, that.mVersionName) &&
+                Objects.equal(mCompressNativeLibs, that.mCompressNativeLibs);
     }
 
     @Override
@@ -613,7 +632,8 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
                 mTestHandleProfiling,
                 mTestFunctionalTest,
                 mSigningConfig,
-                mResourceConfiguration);
+                mResourceConfiguration,
+                mCompressNativeLibs);
     }
 
     @Override
@@ -637,6 +657,7 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
                 .add("testFunctionalTest", mTestFunctionalTest)
                 .add("signingConfig", mSigningConfig)
                 .add("resConfig", mResourceConfiguration)
+                .add("compressNativeLibs", mCompressNativeLibs)
                 .add("mBuildConfigFields", getBuildConfigFields())
                 .add("mResValues", getResValues())
                 .add("mProguardFiles", getProguardFiles())
