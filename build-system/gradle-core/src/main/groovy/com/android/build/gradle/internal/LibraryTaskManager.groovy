@@ -219,6 +219,7 @@ class LibraryTaskManager extends TaskManager {
             MergeFileTask mergeProGuardFileTask = project.tasks.create(
                     "merge${fullName.capitalize()}ProguardFiles",
                     MergeFileTask)
+            // Here we should add in the proguard rules extracted from the code
             mergeProGuardFileTask.inputFiles =
                 project.files(variantConfig.getConsumerProguardFiles()).files
             mergeProGuardFileTask.outputFile = project.file(
@@ -442,6 +443,7 @@ class LibraryTaskManager extends TaskManager {
         task.variant = variantData
         task.destinationDir = project.file("$project.buildDir/${FD_INTERMEDIATES}/$ANNOTATIONS/${dirName}")
         task.output = new File(task.destinationDir, FN_ANNOTATIONS_ZIP)
+        task.proguard = new File(task.destinationDir, "proguard-keeps.cfg")
         task.classDir = project.file("$project.buildDir/${FD_INTERMEDIATES}/classes/${variantData.variantConfiguration.dirName}")
         task.source = variantData.getJavaSources()
         task.encoding = extension.compileOptions.encoding
