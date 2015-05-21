@@ -1313,23 +1313,19 @@ abstract class TaskManager {
                 testVariantData.outputs.get(0).assembleTask,
                 testedVariantData.assembleVariantTask)
 
-        DeviceProviderInstrumentTestTask connectedTask =
-                createDeviceProviderInstrumentTestTask(
-                        connectedTaskName,
-                        "Installs and runs the tests for ${baseVariantData.description} on connected devices.",
-                        testType.taskType,
-                        testData,
-                        artifactsTasks,
+        AndroidTask<DeviceProviderInstrumentTestTask> connectedTask = androidTasks.create(
+                tasks,
+                new DeviceProviderInstrumentTestTask.ConfigAction(testVariantData.getScope(),
                         new ConnectedDeviceProvider(
-                                sdkHandler.getSdkInfo().adb,
-                                new LoggerWrapper(logger)),
-                        CONNECTED
-                )
+                                sdkHandler.getSdkInfo().adb, new LoggerWrapper(logger)), testData));
+
+        tasks.named(connectedTask.name) {
+            it.dependsOn artifactsTasks
+        }
 
         tasks.named(connectedRootName) {
-            it.dependsOn connectedTask
+            it.dependsOn connectedTask.name
         }
-        testVariantData.connectedTestTask = connectedTask
 
         if (baseVariantData.variantConfiguration.buildType.isTestCoverageEnabled()
                 && !baseVariantData.variantConfiguration.useJack) {
@@ -1341,8 +1337,8 @@ abstract class TaskManager {
                 project.configurations[JacocoPlugin.ANT_CONFIGURATION_NAME]
             }
             conventionMapping(reportTask).map("coverageFile") {
-                new File(connectedTask.getCoverageDir(),
-                        SimpleTestCallable.FILE_COVERAGE_EC)
+                new File(((TestVariantData) testVariantData.getScope().getVariantData())
+                        .connectedTestTask.getCoverageDir(), SimpleTestCallable.FILE_COVERAGE_EC)
             }
             conventionMapping(reportTask).map("classDir") {
                 return baseVariantData.javacTask.destinationDir
@@ -1355,7 +1351,8 @@ abstract class TaskManager {
                         "$project.buildDir/$FD_REPORTS/coverage/${baseVariantData.variantConfiguration.dirName}")
             }
 
-            reportTask.dependsOn connectedTask
+
+            reportTask.dependsOn connectedTask.name
             tasks.named(connectedRootName) {
                 it.dependsOn reportTask
             }
@@ -1369,27 +1366,15 @@ abstract class TaskManager {
 
         // now the providers.
         for (DeviceProvider deviceProvider : providers) {
-            DeviceProviderInstrumentTestTask providerTask =
-                    createDeviceProviderInstrumentTestTask(
-                            hasFlavors ?
-                                    "${deviceProvider.name}${ANDROID_TEST.suffix}${baseVariantData.variantConfiguration.fullName.capitalize()}" :
-                                    "${deviceProvider.name}${ANDROID_TEST.suffix}",
-                            "Installs and runs the tests for Build '${baseVariantData.variantConfiguration.fullName}' using Provider '${deviceProvider.name.capitalize()}'.",
-                            testType.taskType,
-                            testData,
-                            artifactsTasks,
-                            deviceProvider,
-                            "$DEVICE/$deviceProvider.name"
-                    )
+
+            AndroidTask<DeviceProviderInstrumentTestTask> providerTask = androidTasks.create(tasks,
+                            new DeviceProviderInstrumentTestTask.ConfigAction(
+                                    testVariantData.getScope(), deviceProvider, testData));
 
             tasks.named(mainProviderTaskName) {
-                it.dependsOn providerTask
+                it.dependsOn providerTask.name
             }
-            testVariantData.providerTestTaskList.add(providerTask)
-
-            if (!deviceProvider.isConfigured()) {
-                providerTask.enabled = false;
-            }
+            tasks.named(connectedTask.name) { it.dependsOn artifactsTasks }
         }
 
         // now the test servers
@@ -1428,87 +1413,6 @@ abstract class TaskManager {
                 serverTask.enabled = false;
             }
         }
-    }
-
-    protected DeviceProviderInstrumentTestTask createDeviceProviderInstrumentTestTask(
-            @NonNull String taskName,
-            @NonNull String description,
-            @NonNull Class<? extends DeviceProviderInstrumentTestTask> taskClass,
-            @NonNull TestData testData,
-            @NonNull List<Task> artifactsTasks,
-            @NonNull DeviceProvider deviceProvider,
-            @NonNull String subFolder) {
-        DeviceProviderInstrumentTestTask testTask = project.tasks.create(
-                taskName,
-                taskClass as Class<DeviceProviderInstrumentTestTask>)
-
-        testTask.description = description
-        testTask.group = JavaBasePlugin.VERIFICATION_GROUP
-
-        for (Task task : artifactsTasks) {
-            testTask.dependsOn task
-        }
-
-        testTask.androidBuilder = androidBuilder
-        testTask.testData = testData
-        testTask.flavorName = testData.getFlavorName()
-        testTask.deviceProvider = deviceProvider
-        testTask.installOptions = getExtension().getAdbOptions().getInstallOptions();
-
-        conventionMapping(testTask).map("resultsDir") {
-            String rootLocation = getExtension().testOptions.resultsDir != null ?
-                    getExtension().testOptions.resultsDir :
-                    "$project.buildDir/${FD_OUTPUTS}/$FD_ANDROID_RESULTS"
-
-            String flavorFolder = testData.getFlavorName()
-            if (!flavorFolder.isEmpty()) {
-                flavorFolder = "$FD_FLAVORS/" + flavorFolder
-            }
-
-            project.file("$rootLocation/$subFolder/$flavorFolder")
-        }
-
-        conventionMapping(testTask).map("adbExec") {
-            return sdkHandler.getSdkInfo().getAdb()
-        }
-
-        conventionMapping(testTask).map("splitSelectExec") {
-            String path = androidBuilder.targetInfo?.buildTools?.getPath(
-                    BuildToolInfo.PathId.SPLIT_SELECT)
-            if (path != null) {
-                File splitSelectExe = new File(path)
-                return splitSelectExe.exists() ? splitSelectExe : null;
-            } else {
-                return null;
-            }
-        }
-        testTask.processExecutor = androidBuilder.getProcessExecutor()
-
-
-        conventionMapping(testTask).map("reportsDir") {
-            String rootLocation = getExtension().testOptions.reportDir != null ?
-                    getExtension().testOptions.reportDir :
-                    "$project.buildDir/$FD_REPORTS/$FD_ANDROID_TESTS"
-
-            String flavorFolder = testData.getFlavorName()
-            if (!flavorFolder.isEmpty()) {
-                flavorFolder = "$FD_FLAVORS/" + flavorFolder
-            }
-
-            project.file("$rootLocation/$subFolder/$flavorFolder")
-        }
-        conventionMapping(testTask).map("coverageDir") {
-            String rootLocation = "$project.buildDir/${FD_OUTPUTS}/code-coverage"
-
-            String flavorFolder = testData.getFlavorName()
-            if (!flavorFolder.isEmpty()) {
-                flavorFolder = "$FD_FLAVORS/" + flavorFolder
-            }
-
-            project.file("$rootLocation/$subFolder/$flavorFolder")
-        }
-
-        return testTask
     }
 
     /**
@@ -2330,6 +2234,11 @@ abstract class TaskManager {
     @NonNull
     protected Logger getLogger() {
         return logger
+    }
+
+    @NonNull
+    protected AndroidTaskRegistry getAndroidTasks() {
+        return androidTasks
     }
 
     private File getDefaultProguardFile(String name) {
