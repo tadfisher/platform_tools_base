@@ -60,21 +60,6 @@ public class LibraryComponentTaskManager extends LibraryTaskManager {
     public void configureScopeForNdk(VariantScope scope) {
         NdkComponentModelPlugin plugin = project.getPlugins().getPlugin(
                 NdkComponentModelPlugin.class);
-        scope.setNdkSoFolder(plugin.getOutputDirectories(scope.getVariantConfiguration()));
-
-        VariantConfiguration config = scope.getVariantConfiguration();
-        // TODO: NdkComponentModelPlugin should generate two .so files, one with debugging symbols
-        // and one without.  For now, generate only one file with debugging symbol in the output
-        // directory.
-        for (Abi abi : NdkHandler.getAbiList()) {
-            scope.addNdkDebuggableLibraryFolders(
-                    abi,
-                    new File(
-                            scope.getGlobalScope().getBuildDir(),
-                            NdkNamingScheme.getOutputDirectoryName(
-                                    config.getBuildType().getName(),
-                                    config.getFlavorName(),
-                                    abi.getName())));
-        }
+        plugin.configureScopeForNdk(scope);
     }
 }

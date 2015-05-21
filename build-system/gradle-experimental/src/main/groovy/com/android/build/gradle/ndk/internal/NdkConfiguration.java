@@ -21,10 +21,12 @@ import static com.android.build.gradle.ndk.internal.BinaryToolHelper.getCppCompi
 
 import com.android.build.gradle.internal.NdkHandler;
 import com.android.build.gradle.internal.core.Abi;
+import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.managed.ManagedString;
 import com.android.build.gradle.managed.NdkConfig;
 import com.android.build.gradle.model.AndroidComponentModelSourceSet;
 import com.android.build.gradle.tasks.GdbSetupTask;
+import com.android.build.gradle.tasks.StripDebugSymbolTask;
 import com.android.builder.core.BuilderConstants;
 import com.android.utils.StringHelper;
 
@@ -73,11 +75,15 @@ public class NdkConfiguration {
                         getCCompiler(binary).define("ANDROID_NDK");
                         getCppCompiler(binary).define("ANDROID_NDK");
 
+                        // TODO: Right now, we create the library in the "obj" folder, then strip
+                        // the debug symbols and place the final output in the "lib" folder.  For
+                        // non-debuggable build, we should just place the output in the lib folder.
+
                         // Set output library filename.
                         binary.setSharedLibraryFile(
                                 new File(
                                         buildDir,
-                                        NdkNamingScheme.getOutputDirectoryName(binary)
+                                        NdkNamingScheme.getDebugLibraryDirectoryName(binary)
                                                 + "/"
                                                 + NdkNamingScheme.getSharedLibraryFileName(ndkConfig.getModuleName())));
 
@@ -154,9 +160,10 @@ public class NdkConfiguration {
         StlConfiguration.createStlCopyTask(ndkHandler, ndkConfig.getStl(), tasks, buildDir, binary);
 
         if (binary.getBuildType().getName().equals(BuilderConstants.DEBUG)) {
+            // TODO: Use AndroidTaskRegistry and scopes to create tasks in experimental plugin.
             setupNdkGdbDebug(tasks, binary, buildDir, ndkConfig, ndkHandler);
         }
-
+        createStripDebugTask(tasks, binary, buildDir, ndkHandler);
     }
 
     /**
@@ -188,7 +195,6 @@ public class NdkConfiguration {
                         Abi.getByName(binary.getTargetPlatform().getName())),
                         "gdbserver/gdbserver"));
                 task.into(new File(buildDir, NdkNamingScheme.getOutputDirectoryName(binary)));
-
             }
         });
         binary.getBuildTask().dependsOn(copyGdbServerTaskName);
@@ -205,5 +211,32 @@ public class NdkConfiguration {
             }
         });
         binary.getBuildTask().dependsOn(createGdbSetupTaskName);
+    }
+
+    private static void createStripDebugTask(
+            CollectionBuilder<Task> tasks,
+            final SharedLibraryBinarySpec binary,
+            final File buildDir,
+            final NdkHandler handler) {
+        String taskName = NdkNamingScheme.getTaskName(binary, "stripSymbols");
+        tasks.create(
+                taskName,
+                StripDebugSymbolTask.class,
+                new Action<StripDebugSymbolTask>() {
+                    @Override
+                    public void execute(StripDebugSymbolTask task) {
+                        File debugLib = binary.getSharedLibraryFile();
+                        task.setInputFile(debugLib);
+                        System.out.println(task.getInputFile());
+                        task.setOutputFile(new File(
+                                buildDir,
+                                NdkNamingScheme.getOutputDirectoryName(binary) + "/"
+                                        + debugLib.getName()));
+                        System.out.println(task.getOutputFile());
+                        task.setStripCommand(handler.getStripCommand(
+                                Abi.getByName(binary.getTargetPlatform().getName())));
+                    }
+                });
+        binary.getBuildTask().dependsOn(taskName);
     }
 }

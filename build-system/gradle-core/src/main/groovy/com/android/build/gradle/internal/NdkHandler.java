@@ -404,6 +404,11 @@ public class NdkHandler {
         return new File(getToolchainPath(toolchain, toolchainVersion, abi), "bin/" + compiler);
     }
 
+    public File getStripCommand(Abi abi) {
+        String strip = toolchain == Toolchain.CLANG ? "ndk-strip" : abi.getGccExecutablePrefix() + "-strip";
+        return new File(getToolchainPath(toolchain, toolchainVersion, abi), "bin/" + strip);
+    }
+
     /**
      * Return a list of include directories for an STl.
      */
