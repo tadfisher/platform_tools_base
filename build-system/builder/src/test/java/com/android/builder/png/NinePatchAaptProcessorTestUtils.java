@@ -66,8 +66,8 @@ public class NinePatchAaptProcessorTestUtils {
         ILogger logger = new StdLogger(StdLogger.Level.VERBOSE);
         SdkManager sdkManager = SdkManager.createManager(getSdkDir().getAbsolutePath(), logger);
         assert sdkManager != null;
-        BuildToolInfo buildToolInfo = sdkManager.getBuildTool(fullRevision);
-        if (buildToolInfo == null) {
+        BuildToolInfo buildToolInfo = sdkManager.getLatestBuildTool();
+        if (buildToolInfo == null || buildToolInfo.getRevision().compareTo(fullRevision) < 0) {
             throw new RuntimeException("Test requires build-tools " + fullRevision.toShortString());
         }
         return new File(buildToolInfo.getPath(BuildToolInfo.PathId.AAPT));
