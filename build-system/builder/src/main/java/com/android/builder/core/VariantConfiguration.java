@@ -1759,6 +1759,8 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             fullList.addAll(flavor.getConsumerProguardFiles());
         }
 
+        // TODO: Merge in @Keep file here
+
         return fullList;
     }
 
