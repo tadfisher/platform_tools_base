@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.scope;
 
 import static com.android.builder.model.AndroidProject.FD_GENERATED;
+import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
