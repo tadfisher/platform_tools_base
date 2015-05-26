@@ -24,7 +24,9 @@ import com.google.common.primitives.UnsignedBytes;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public abstract class Instance {
 
@@ -65,9 +67,14 @@ public abstract class Instance {
     //  List of all objects that hold a live reference to this object
     private final ArrayList<Instance> mReferences = new ArrayList<Instance>();
 
+    // Users may add additional attributes to objects not interpreted here.
+    // The user should ensure they pick a unique key in this map.
+    Map<String, Object> mAttributes;
+
     Instance(long id, @NonNull StackTrace stackTrace) {
         mId = id;
         mStack = stackTrace;
+        mAttributes = new HashMap<String, Object>();
     }
 
     public long getId() {
@@ -251,5 +258,13 @@ public abstract class Instance {
         public int getCompositeSize() {
             return mSize;
         }
+    }
+
+    public Object getAttribute(String name) {
+      return mAttributes.get(name);
+    }
+
+    public void putAttribute(String name, Object value) {
+      mAttributes.put(name, value);
     }
 }
