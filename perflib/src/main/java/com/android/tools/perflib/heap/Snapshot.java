@@ -18,6 +18,7 @@ package com.android.tools.perflib.heap;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.tools.perflib.heap.analysis.AlternateDominators;
 import com.android.tools.perflib.heap.analysis.Dominators;
 import com.android.tools.perflib.heap.analysis.ShortestDistanceVisitor;
 import com.android.tools.perflib.heap.analysis.TopologicalSort;
@@ -272,6 +273,11 @@ public class Snapshot {
             ShortestDistanceVisitor shortestDistanceVisitor = new ShortestDistanceVisitor();
             shortestDistanceVisitor.doVisit(getGCRoots());
         }
+    }
+
+    public void computeAlternateDominators() {
+        AlternateDominators dominators = new AlternateDominators(this);
+        dominators.computeRetainedSizes();
     }
 
     @NonNull
