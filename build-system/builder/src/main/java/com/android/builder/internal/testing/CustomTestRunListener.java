@@ -109,7 +109,13 @@ public class CustomTestRunListener extends XmlTestRunListener {
     
     @Override
     public void testAssumptionFailure(TestIdentifier test, String trace) {
-        testFailed(test, trace);
+        if (mLogger != null) {
+            mLogger.warning(
+                    String.format("\n%1$s > %2$s[%3$s] \033[33mSKIPPED \033[0m",
+                            test.getClassName(), test.getTestName(), mDeviceName));
+            mLogger.warning(getModifiedTrace(trace));
+        }
+        super.testAssumptionFailure(test, trace);
     }
 
     @Override
