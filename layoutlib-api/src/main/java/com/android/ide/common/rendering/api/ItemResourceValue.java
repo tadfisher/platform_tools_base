@@ -30,18 +30,30 @@ public class ItemResourceValue extends ResourceValue {
     }
 
     /**
+     * If the value is a reference to a framework resource or not is NOT represented with a boolean here!
+     * but can be deduced with:
+     * <pre> {@code
+     *        boolean isFrameworkValue = item.isFramework() ||
+     *            item.getValue().startsWith(SdkConstants.ANDROID_PREFIX) ||
+     *            item.getValue().startsWith(SdkConstants.ANDROID_THEME_PREFIX);
+     * } </pre>
      * For {@code <item name="foo">bar</item>}, item in a style resource, the values of the
      * parameters will be as follows:
      *
-     * @param attributeName foo
+     * @param attributeName   foo
      * @param isFrameworkAttr is foo in framework namespace.
-     * @param value bar
-     * @param isFramework if the style is a framework file or project file.
+     * @param value           bar (including the namespace of value, e.g. android:bar)
+     *                        if isFramework=true the value namespace can sometimes be missing.
+     *                        if isFramework=false the namespace is always correct
+     *                        (present for framework value, absent for project value)
+     * @param isFramework     if the style is a framework file or project file.
      */
     public ItemResourceValue(String attributeName, boolean isFrameworkAttr, String value,
             boolean isFramework) {
         super(null, attributeName, value, isFramework);
         mIsFrameworkAttr = isFrameworkAttr;
+
+
     }
 
     public boolean isFrameworkAttr() {
