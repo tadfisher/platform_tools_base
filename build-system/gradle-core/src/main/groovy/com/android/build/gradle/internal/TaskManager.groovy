@@ -1662,9 +1662,7 @@ abstract class TaskManager {
         jackTask.dependsOn variantData.variantDependency.compileConfiguration.buildDependencies
 
         jackTask.androidBuilder = androidBuilder
-        conventionMapping(jackTask).map("javaMaxHeapSize") {
-            getExtension().dexOptions.getJavaMaxHeapSize()
-        }
+        jackTask.javaMaxHeapSize = getExtension().dexOptions.javaMaxHeapSize
 
         jackTask.source = variantData.getJavaSources()
 
