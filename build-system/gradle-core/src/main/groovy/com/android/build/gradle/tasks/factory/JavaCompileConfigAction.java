@@ -18,6 +18,7 @@ import org.gradle.api.tasks.compile.AbstractCompile;
 import org.gradle.api.tasks.compile.JavaCompile;
 
 import java.io.File;
+import java.util.concurrent.Callable;
 
 import groovy.lang.Closure;
 
@@ -111,7 +112,7 @@ public class JavaCompileConfigAction implements TaskConfigAction<JavaCompile> {
 
                 });
 
-        configureLanguageLevel(javacTask);
+        configureLanguageLevel(scope, javacTask);
         javacTask.getOptions().setEncoding(
                 scope.getGlobalScope().getExtension().getCompileOptions().getEncoding());
         javacTask.getOptions().setBootClasspath(
@@ -119,7 +120,7 @@ public class JavaCompileConfigAction implements TaskConfigAction<JavaCompile> {
                         scope.getGlobalScope().getAndroidBuilder().getBootClasspathAsStrings()));
     }
 
-    private void configureLanguageLevel(AbstractCompile compileTask) {
+    public static void configureLanguageLevel(VariantScope scope, AbstractCompile compileTask) {
         final CompileOptions compileOptions = scope.getGlobalScope().getExtension()
                 .getCompileOptions();
         JavaVersion javaVersionToUse;
@@ -146,26 +147,18 @@ public class JavaCompileConfigAction implements TaskConfigAction<JavaCompile> {
         compileOptions.setDefaultJavaVersion(javaVersionToUse);
 
         ConventionMappingHelper
-                .map(compileTask, "sourceCompatibility", new Closure<String>(this, this) {
-                    public String doCall(Object it) {
+                .map(compileTask, "sourceCompatibility", new Callable<Object>() {
+                    @Override
+                    public Object call() {
                         return compileOptions.getSourceCompatibility().toString();
                     }
-
-                    public String doCall() {
-                        return doCall(null);
-                    }
-
                 });
         ConventionMappingHelper
-                .map(compileTask, "targetCompatibility", new Closure<String>(this, this) {
-                    public String doCall(Object it) {
+                .map(compileTask, "targetCompatibility", new Callable<Object>() {
+                    @Override
+                    public Object call() {
                         return compileOptions.getTargetCompatibility().toString();
                     }
-
-                    public String doCall() {
-                        return doCall(null);
-                    }
-
                 });
     }
 

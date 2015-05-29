@@ -381,6 +381,10 @@ public class AndroidProGuardTask extends ProGuardTask implements FileSupplier {
                         String.valueOf(scope.getGlobalScope().getBuildDir()) + "/" + FD_OUTPUTS
                                 + "/mapping/" + variantData.getVariantConfiguration().getDirName());
 
+                if (!proguardOut.equals(scope.getProguardOutputFolder())) {
+                    throw new RuntimeException("wrong file.");
+                }
+
                 proguardTask.dump(new File(proguardOut, "dump.txt"));
                 proguardTask.printseeds(new File(proguardOut, "seeds.txt"));
                 proguardTask.printusage(new File(proguardOut, "usage.txt"));

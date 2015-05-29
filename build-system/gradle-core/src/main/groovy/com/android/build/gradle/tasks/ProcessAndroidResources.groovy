@@ -227,10 +227,8 @@ public class ProcessAndroidResources extends IncrementalTask {
                         LoggingUtil.displayWarning(Logging.getLogger(this.class), scope.globalScope.project,
                                 "shrinkResources does not yet work with useJack=true")
                     }
-                    ConventionMappingHelper.map(processResources, "proguardOutputFile") {
-                        new File(
-                                "$scope.globalScope.buildDir/${FD_INTERMEDIATES}/proguard-rules/${config.dirName}/aapt_rules.txt")
-                    }
+                    processResources.setProguardOutputFile(
+                            scope.variantScope.getProcessAndroidResourcesProguardOutputFile());
                 } else if (config.buildType.shrinkResources) {
                     LoggingUtil.displayWarning(Logging.getLogger(this.class), scope.globalScope.project,
                             "To shrink resources you must also enable ProGuard")

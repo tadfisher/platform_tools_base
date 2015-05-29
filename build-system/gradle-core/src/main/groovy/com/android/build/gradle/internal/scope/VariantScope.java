@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.scope;
 
 import static com.android.builder.model.AndroidProject.FD_GENERATED;
+import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -231,9 +232,9 @@ public class VariantScope {
     }
 
     @Nullable
-    public BaseVariantData getTestedVariantData() {
+    public BaseVariantData<? extends BaseVariantOutputData> getTestedVariantData() {
         return variantData instanceof TestVariantData ?
-                (BaseVariantData) ((TestVariantData) variantData).getTestedVariantData() :
+                (BaseVariantData<? extends BaseVariantOutputData>) ((TestVariantData) variantData).getTestedVariantData() :
                 null;
     }
 
@@ -396,6 +397,42 @@ public class VariantScope {
     public File getJackIncrementalDir() {
         return new File(globalScope.getIntermediatesDir(), "incremental/jack/"
                 + getVariantConfiguration().getDirName());
+    }
+
+    @NonNull
+    public File getJillPackagedLibrariesDir() {
+        return new File(globalScope.getIntermediatesDir(),
+                "jill/" + getVariantConfiguration().getDirName() + "/packaged");
+    }
+
+    @NonNull
+    public File getJillRuntimeLibrariesDir() {
+        return new File(globalScope.getIntermediatesDir(),
+                "jill/" + getVariantConfiguration().getDirName() + "/runtime");
+    }
+
+    @NonNull
+    public File getJackDestinationDir() {
+        return new File(globalScope.getIntermediatesDir(),
+                "dex/" + getVariantConfiguration().getDirName());
+    }
+
+    @NonNull
+    public File getJackClassesZip() {
+        return new File(globalScope.getIntermediatesDir(),
+                "packaged/" + getVariantConfiguration().getDirName() + "/classes.zip");
+    }
+
+    @NonNull
+    public File getProguardOutputFolder() {
+        return new File(globalScope.getBuildDir(), "/" + FD_OUTPUTS + "/mapping/" +
+                getVariantConfiguration().getDirName());
+    }
+
+    @NonNull
+    public File getProcessAndroidResourcesProguardOutputFile() {
+        return new File(globalScope.getIntermediatesDir(),
+                "/proguard-rules/" + getVariantConfiguration().getDirName() + "/aapt_rules.txt");
     }
 
     // Tasks getters/setters.

@@ -110,7 +110,7 @@ class ApplicationTaskManager extends TaskManager {
             AndroidTask<JavaCompile> javacTask = createJavacTask(tasks, variantScope);
 
             if (variantData.getVariantConfiguration().getUseJack()) {
-                createJackTask(appVariantData, null /*testedVariant*/);
+                createJackTask(tasks, variantScope, null /*testedVariant*/);
             } else {
                 setJavaCompilerTask(javacTask, tasks, variantScope)
                 createJarTask(tasks, variantScope);

@@ -161,11 +161,11 @@ abstract class TaskManager {
 
     public static final String FILE_JACOCO_AGENT = 'jacocoagent.jar'
 
-    public static final String DEFAULT_PROGUARD_CONFIG_FILE = 'proguard-android.txt'
-
     public final static String DIR_BUNDLES = "bundles";
 
     public static final String INSTALL_GROUP = "Install"
+
+    public static final String DEFAULT_PROGUARD_CONFIG_FILE = "proguard-android.txt";
 
     public static final String BUILD_GROUP = BasePlugin.BUILD_GROUP
 
@@ -1018,7 +1018,7 @@ abstract class TaskManager {
 
         // Add a task to compile the test application
         if (variantData.getVariantConfiguration().useJack) {
-            createJackTask(variantData, testedVariantData);
+            createJackTask(tasks, variantScope, testedVariantData);
         } else {
             AndroidTask<JavaCompile> javacTask = createJavacTask(tasks, variantScope);
             setJavaCompilerTask(javacTask, tasks, variantScope)
@@ -1602,183 +1602,43 @@ abstract class TaskManager {
     }
 
     public void createJackTask(
-            @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData,
+            @NonNull TaskFactory tasks,
+            @NonNull VariantScope variantScope,
             @Nullable BaseVariantData<? extends BaseVariantOutputData> testedVariantData) {
 
-        GradleVariantConfiguration config = variantData.variantConfiguration
+        GradleVariantConfiguration config = variantScope.variantData.variantConfiguration
 
         // ----- Create Jill tasks -----
-        JillTask jillRuntimeTask = project.tasks.create(
-                "jill${config.fullName.capitalize()}RuntimeLibraries",
-                JillTask)
 
-        jillRuntimeTask.androidBuilder = androidBuilder
-        jillRuntimeTask.dexOptions = getExtension().dexOptions
+        // TODO: Should this task be global? Only the output dir depends on the variant.
+        AndroidTask<JillTask> jillRuntimeTask = androidTasks.create(tasks,
+                new JillTask.RuntimeTaskConfigAction(variantScope))
 
-        conventionMapping(jillRuntimeTask).map("inputLibs") {
-            androidBuilder.getBootClasspath()
-        }
-        conventionMapping(jillRuntimeTask).map("outputFolder") {
-            project.file(
-                    "${project.buildDir}/${FD_INTERMEDIATES}/jill/${config.dirName}/runtime")
-        }
+        AndroidTask<JillTask> jillPackagedTask = androidTasks.create(tasks,
+                new JillTask.PackagedConfigAction(variantScope))
 
-        // ----
-
-        JillTask jillPackagedTask = project.tasks.create(
-                "jill${config.fullName.capitalize()}PackagedLibraries",
-                JillTask)
-
-        jillPackagedTask.dependsOn variantData.variantDependency.packageConfiguration.buildDependencies
-        jillPackagedTask.androidBuilder = androidBuilder
-        jillPackagedTask.dexOptions = getExtension().dexOptions
-
-        conventionMapping(jillPackagedTask).map("inputLibs") {
-            androidBuilder.getPackagedJars(config)
-        }
-        conventionMapping(jillPackagedTask).map("outputFolder") {
-            project.file(
-                    "${project.buildDir}/${FD_INTERMEDIATES}/jill/${config.dirName}/packaged")
-        }
+        jillPackagedTask.dependsOn(tasks,
+                variantScope.variantData.variantDependency.packageConfiguration.buildDependencies)
 
         // ----- Create Jack Task -----
-        JackTask jackTask = project.tasks.create(
-                "compile${config.fullName.capitalize()}JavaWithJack",
-                JackTask)
-        jackTask.isVerbose = isVerbose()
-        jackTask.isDebugLog = isDebugLog()
+        AndroidTask<JackTask> jackTask = androidTasks.create(tasks,
+                new JackTask.ConfigAction(variantScope, isVerbose(), isDebugLog()));
 
         // Jack is compiling and also providing the binary and mapping files.
-        // TODO: Use setJavaCompilerTask once this uses scopes etc.
-        variantData.compileTask.dependsOn jackTask
-        variantData.javaCompilerTask = jackTask
-        variantData.jackTask = jackTask
-        variantData.mappingFileProviderTask = jackTask
-        variantData.binayFileProviderTask = jackTask
+        setJavaCompilerTask(jackTask, tasks, variantScope);
+//        variantData.compileTask.dependsOn jackTask
+//        variantData.javaCompilerTask = jackTask
+//        variantData.jackTask = jackTask
+//        variantData.mappingFileProviderTask = jackTask
+//        variantData.binayFileProviderTask = jackTask
 
-        jackTask.dependsOn variantData.sourceGenTask, jillRuntimeTask, jillPackagedTask
+        jackTask.dependsOn(tasks,
+                variantScope.variantData.sourceGenTask, jillRuntimeTask, jillPackagedTask)
         // TODO - dependency information for the compile classpath is being lost.
         // Add a temporary approximation
-        jackTask.dependsOn variantData.variantDependency.compileConfiguration.buildDependencies
+        jackTask.dependsOn(tasks,
+                variantScope.variantData.variantDependency.compileConfiguration.buildDependencies)
 
-        jackTask.androidBuilder = androidBuilder
-        jackTask.javaMaxHeapSize = getExtension().dexOptions.javaMaxHeapSize
-
-        jackTask.source = variantData.getJavaSources()
-
-        jackTask.multiDexEnabled = config.isMultiDexEnabled()
-        jackTask.minSdkVersion = config.minSdkVersion.apiLevel
-
-        jackTask.incrementalDir = variantData.getScope().getJackIncrementalDir()
-
-        // if the tested variant is an app, add its classpath. For the libraries,
-        // it's done automatically since the classpath includes the library output as a normal
-        // dependency.
-        if (testedVariantData instanceof ApplicationVariantData) {
-            conventionMapping(jackTask).map("classpath") {
-                project.fileTree(jillRuntimeTask.outputFolder) +
-                        testedVariantData.jackTask.classpath +
-                        project.fileTree(testedVariantData.jackTask.jackFile)
-            }
-        } else {
-            conventionMapping(jackTask).map("classpath") {
-                project.fileTree(jillRuntimeTask.outputFolder)
-            }
-        }
-
-        conventionMapping(jackTask).map("packagedLibraries") {
-            project.fileTree(jillPackagedTask.outputFolder).files
-        }
-
-        conventionMapping(jackTask).map("destinationDir") {
-            project.file("$project.buildDir/${FD_INTERMEDIATES}/dex/${config.dirName}")
-        }
-
-        conventionMapping(jackTask).map("jackFile") {
-            project.file(
-                    "$project.buildDir/${FD_INTERMEDIATES}/packaged/${config.dirName}/classes.zip")
-        }
-
-        conventionMapping(jackTask).map("tempFolder") {
-            project.file("$project.buildDir/${FD_INTERMEDIATES}/tmp/jack/${config.dirName}")
-        }
-        if (config.isMinifyEnabled()) {
-            conventionMapping(jackTask).map("proguardFiles") {
-                // since all the output use the same resources, we can use the first output
-                // to query for a proguard file.
-                BaseVariantOutputData variantOutputData = variantData.outputs.get(0)
-
-                List<File> proguardFiles = config.getProguardFiles(true /*includeLibs*/,
-                        [getDefaultProguardFile(DEFAULT_PROGUARD_CONFIG_FILE)])
-                File proguardResFile = variantOutputData.processResourcesTask.proguardOutputFile
-                if (proguardResFile != null) {
-                    proguardFiles.add(proguardResFile)
-                }
-                // for tested app, we only care about their aapt config since the base
-                // configs are the same files anyway.
-                if (testedVariantData != null) {
-                    // use single output for now.
-                    proguardResFile =
-                            testedVariantData.outputs.get(0).processResourcesTask.proguardOutputFile
-                    if (proguardResFile != null) {
-                        proguardFiles.add(proguardResFile)
-                    }
-                }
-
-                return proguardFiles
-            }
-
-            jackTask.mappingFile = project.file(
-                    "${project.buildDir}/${FD_OUTPUTS}/mapping/${variantData.variantConfiguration.dirName}/mapping.txt")
-        }
-
-        conventionMapping(jackTask).map("jarJarRuleFiles") {
-            config.getJarJarRuleFiles().collect { project.file(it) }
-        }
-
-        configureLanguageLevel(jackTask)
-    }
-
-    /**
-     * Configures the source and target language level of a compile task. If the user has set it
-     * explicitly, we obey the setting. Otherwise we change the default language level based on the
-     * compile SDK version.
-     *
-     * <p>This method modifies getExtension().compileOptions, to propagate the language level to Studio.
-     */
-    private void configureLanguageLevel(AbstractCompile compileTask) {
-        def compileOptions = getExtension().compileOptions
-        JavaVersion javaVersionToUse
-
-        Integer compileSdkLevel =
-                AndroidTargetHash.getVersionFromHash(getExtension().compileSdkVersion)?.apiLevel
-        switch (compileSdkLevel) {
-            case null:  // Default to 1.6 if we fail to parse compile SDK version.
-            case 0..20:
-                javaVersionToUse = JavaVersion.VERSION_1_6
-                break
-            default:
-                javaVersionToUse = JavaVersion.VERSION_1_7
-                break
-        }
-
-        def jdkVersion = JavaVersion.toVersion(System.getProperty("java.specification.version"))
-        if (jdkVersion < javaVersionToUse) {
-            logger.info(
-                    "Default language level for 'compileSdkVersion $compileSdkLevel' is " +
-                            "$javaVersionToUse, but the JDK used is $jdkVersion, so the JDK " +
-                            "language level will be used.")
-            javaVersionToUse = jdkVersion
-        }
-
-        compileOptions.defaultJavaVersion = javaVersionToUse
-
-        conventionMapping(compileTask).map("sourceCompatibility") {
-            compileOptions.sourceCompatibility.toString()
-        }
-        conventionMapping(compileTask).map("targetCompatibility") {
-            compileOptions.targetCompatibility.toString()
-        }
     }
 
     /**
@@ -2221,11 +2081,5 @@ abstract class TaskManager {
         return androidTasks
     }
 
-    private File getDefaultProguardFile(String name) {
-        File sdkDir = sdkHandler.getAndCheckSdkFolder()
-        return new File(sdkDir,
-                SdkConstants.FD_TOOLS + File.separatorChar
-                        + SdkConstants.FD_PROGUARD + File.separatorChar
-                        + name);
-    }
+
 }
