@@ -40,6 +40,12 @@ public interface NdkConfig {
     String getcFlags();
 
     /**
+     * The C++ Flags
+     */
+    @Nullable
+    String getCppFlags();
+
+    /**
      * The LD Libs
      */
     @Nullable

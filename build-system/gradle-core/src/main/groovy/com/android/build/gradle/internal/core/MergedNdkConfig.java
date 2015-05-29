@@ -31,6 +31,7 @@ public class MergedNdkConfig implements NdkConfig {
 
     private String moduleName;
     private String cFlags;
+    private String cppFlags;
     private List<String> ldLibs;
     private Set<String> abiFilters;
     private String stl;
@@ -39,6 +40,7 @@ public class MergedNdkConfig implements NdkConfig {
     public void reset() {
         moduleName = null;
         cFlags = null;
+        cppFlags = null;
         ldLibs = null;
         abiFilters = null;
     }
@@ -53,6 +55,12 @@ public class MergedNdkConfig implements NdkConfig {
     @Nullable
     public String getcFlags() {
         return cFlags;
+    }
+
+    @Override
+    @Nullable
+    public String getCppFlags() {
+        return cppFlags;
     }
 
     @Override
@@ -107,6 +115,12 @@ public class MergedNdkConfig implements NdkConfig {
             cFlags = ndkConfig.getcFlags();
         } else if (ndkConfig.getcFlags() != null && !ndkConfig.getcFlags().isEmpty()) {
             cFlags = cFlags + " " + ndkConfig.getcFlags();
+        }
+
+        if (cppFlags == null) {
+            cppFlags = ndkConfig.getCppFlags();
+        } else if (ndkConfig.getCppFlags() != null) {
+            cppFlags = cppFlags + " " + ndkConfig.getCppFlags();
         }
 
         if (ndkConfig.getLdLibs() != null) {
