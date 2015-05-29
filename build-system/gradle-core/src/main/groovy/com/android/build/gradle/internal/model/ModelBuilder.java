@@ -335,9 +335,12 @@ public class ModelBuilder implements ToolingModelBuilder {
             }
 
             String sysrootFlag = "--sysroot=" + ndkHandler.getSysroot(abi);
-            List<String> cFlags = ndkConfig.getcFlags() == null
+            List<String> cFlags = ndkConfig.getcFlags() == null || ndkConfig.getcFlags().isEmpty()
                     ? ImmutableList.of(sysrootFlag)
                     : ImmutableList.of(sysrootFlag, ndkConfig.getcFlags());
+            List<String> cppFlags = ndkConfig.getCppFlags() == null || ndkConfig.getCppFlags().isEmpty()
+                    ? ImmutableList.of(sysrootFlag)
+                    : ImmutableList.of(sysrootFlag, ndkConfig.getCppFlags());
 
             // The DSL currently do not support all options available in the model such as the
             // include dirs and the defines.  Therefore, just pass an empty collection for now.
@@ -353,7 +356,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                     Collections.<String>emptyList(),  /*cDefines*/
                     Collections.<String>emptyList(),  /*cppDefines*/
                     cFlags,
-                    cFlags,  // TODO: NdkConfig should allow cppFlags to be set separately.
+                    cppFlags,
                     ImmutableList.of(variantData.getScope().getNdkDebuggableLibraryFolders(abi)));
             nativeLibraries.add(lib);
         }

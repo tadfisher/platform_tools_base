@@ -53,6 +53,12 @@ public class NdkConfigAdaptor implements com.android.build.gradle.internal.core.
 
     @Nullable
     @Override
+    public String getCppFlags() {
+        return ndkConfig.getCppFlags();
+    }
+
+    @Nullable
+    @Override
     public Collection<String> getLdLibs() {
         return Lists.newArrayList(Iterables.transform(ndkConfig.getLdLibs(),
                 new Function<ManagedString, String>() {
