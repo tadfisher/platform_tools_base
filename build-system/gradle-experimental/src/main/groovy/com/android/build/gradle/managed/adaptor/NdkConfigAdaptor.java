@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.managed.NdkConfig;
 import com.google.common.base.Joiner;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -46,6 +47,13 @@ public class NdkConfigAdaptor implements com.android.build.gradle.internal.core.
     public String getcFlags() {
         return Joiner.on(' ').join(ndkConfig.getCFlags());
     }
+
+    @Nullable
+    @Override
+    public String getCppFlags() {
+        return Joiner.on(' ').join(ndkConfig.getCppFlags());
+    }
+
 
     @Nullable
     @Override

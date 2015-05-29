@@ -39,6 +39,7 @@ public class NdkOptions implements NdkConfig, Serializable {
 
     private String moduleName;
     private String cFlags;
+    private String cppFlags;
     private List<String> ldLibs;
     private Set<String> abiFilters;
     private String stl;
@@ -72,6 +73,16 @@ public class NdkOptions implements NdkConfig, Serializable {
 
     public void setcFlags(String cFlags) {
         this.cFlags = cFlags;
+    }
+
+    @Override
+    @Input @Optional
+    public String getCppFlags() {
+        return cppFlags;
+    }
+
+    public void setCppFlags(String cppFlags) {
+        this.cppFlags = cppFlags;
     }
 
     @Override

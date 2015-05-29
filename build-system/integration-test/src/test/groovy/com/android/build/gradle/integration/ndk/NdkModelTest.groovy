@@ -52,7 +52,8 @@ android {
     defaultConfig {
         ndk {
             moduleName "hello-jni"
-            cFlags = "-DTEST_FLAG"
+            cFlags = "-DTEST_CFLAG"
+            cppFlags = "-DTEST_CPPFLAG"
         }
     }
 }
@@ -183,8 +184,8 @@ android {
             assertThat(mainArtifact.getNativeLibraries()).hasSize(((Collection)entry.getValue()).size())
             for (NativeLibrary nativeLibrary : mainArtifact.getNativeLibraries()) {
                 assertThat(nativeLibrary.getName()).isEqualTo("hello-jni")
-                assertThat(nativeLibrary.getCCompilerFlags()).contains("-DTEST_FLAG");
-                assertThat(nativeLibrary.getCppCompilerFlags()).contains("-DTEST_FLAG");
+                assertThat(nativeLibrary.getCCompilerFlags()).contains("-DTEST_CFLAG");
+                assertThat(nativeLibrary.getCppCompilerFlags()).contains("-DTEST_CPPFLAG");
                 assertThat(nativeLibrary.getCSystemIncludeDirs()).isEmpty();
                 assertThat(nativeLibrary.getCppSystemIncludeDirs()).isNotEmpty();
                 File solibSearchPath = nativeLibrary.getDebuggableLibraryFolders().first()

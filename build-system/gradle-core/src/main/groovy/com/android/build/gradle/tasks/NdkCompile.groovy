@@ -178,6 +178,10 @@ class NdkCompile extends NdkTask {
             sb.append('LOCAL_CFLAGS := ').append(ndk.cFlags).append('\n')
         }
 
+        if (ndk.cppFlags != null) {
+            sb.append('LOCAL_CPPFLAGS := ').append(ndk.cppFlags).append('\n')
+        }
+
         // To support debugging from Android Studio.
         sb.append("LOCAL_LDFLAGS := -Wl,--build-id\n")
 
