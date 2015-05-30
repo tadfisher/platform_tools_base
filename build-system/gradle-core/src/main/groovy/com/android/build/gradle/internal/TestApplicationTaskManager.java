@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal;
 
-import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 
 import com.android.annotations.NonNull;
@@ -46,7 +45,6 @@ import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 import java.io.File;
-import java.util.LinkedHashMap;
 import java.util.Locale;
 
 import proguard.ParseException;
@@ -214,9 +212,9 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
         try {
 
             // injar: the compilation output
-            proguardTask.injars(pcData.getInputDir());
-            if (pcData.getJavaResourcesInputDir() != null) {
-                proguardTask.injars(pcData.getJavaResourcesInputDir());
+            proguardTask.injars(pcData.getInputDirCallable());
+            if (pcData.getJavaResourcesInputDirCallable() != null) {
+                proguardTask.injars(pcData.getJavaResourcesInputDirCallable());
             }
 
             // All -dontwarn rules for test dependencies should go in here:
