@@ -53,6 +53,8 @@ import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.tooling.BuildException
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 
+import java.util.concurrent.Callable
+
 import static com.android.SdkConstants.FN_ANNOTATIONS_ZIP
 import static com.android.SdkConstants.LIBS_FOLDER
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES
@@ -252,15 +254,14 @@ class LibraryTaskManager extends TaskManager {
             pcData.classGeneratingTask = [variantScope.javacTask.name]
             pcData.libraryGeneratingTask = Collections.singletonList(
                     variantData.variantDependency.packageConfiguration.buildDependencies)
-            pcData.inputFiles = {
-                return variantData.javacTask.outputs.files.files
-            }
-            pcData.inputDir = {
-                return variantScope.javaOutputDir
-            }
-            pcData.inputLibraries = {
-                return Collections.emptyList()
-            }
+            pcData.setInputFiles(new Callable<List<File>>() {
+                @Override
+                List<File> call() throws Exception {
+                    return new ArrayList(variantData.javacTask.outputs.files.files)
+                }
+            })
+            pcData.setInputDir(variantScope.javaOutputDir)
+            pcData.setInputLibraries(Collections.emptyList())
 
             // if needed, instrument the code
             if (instrumented) {
@@ -272,9 +273,9 @@ class LibraryTaskManager extends TaskManager {
             // run proguard on output of compile task
             SpanRecorders.record(ExecutionType.LIB_TASK_MANAGER_CREATE_PROGUARD_TASK) {
                 File outFile = maybeCreateProguardTasks(tasks, variantScope, pcData);
-                pcData.inputFiles = { [outFile] }
-                pcData.inputDir = null
-                pcData.inputLibraries = { [] }
+                pcData.setInputFiles(Collections.singletonList(outFile))
+                pcData.setInputDir()
+                pcData.setInputLibraries(Collections.emptyList())
             }
         } else {
             // package the local jar in libs/
@@ -293,7 +294,7 @@ class LibraryTaskManager extends TaskManager {
                 // TODO: clean this.
                 packageLocalJar.from(pcData.inputLibraries)
                 TaskManager.optionalDependsOn(packageLocalJar, pcData.libraryGeneratingTask)
-                pcData.libraryGeneratingTask = Collections.singletonList(packageLocalJar)
+                pcData.setLibraryGeneratingTask(Collections.singletonList(packageLocalJar))
 
                 // jar the classes.
                 Jar jar = project.tasks.create("package${fullName.capitalize()}Jar", Jar);
