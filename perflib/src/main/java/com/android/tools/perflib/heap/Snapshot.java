@@ -23,6 +23,7 @@ import com.android.tools.perflib.heap.analysis.ShortestDistanceVisitor;
 import com.android.tools.perflib.heap.analysis.TopologicalSort;
 import com.android.tools.perflib.heap.io.HprofBuffer;
 import com.google.common.collect.ImmutableList;
+import gnu.trove.THashSet;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,6 +58,9 @@ public class Snapshot {
     private ImmutableList<Instance> mTopSort;
 
     private Dominators mDominators;
+
+    //  The set of all classes that are (sub)class(es) of java.lang.ref.Reference.
+    private THashSet<ClassObj> mReferenceClasses = new THashSet<ClassObj>();
 
     private int[] mTypeSizes;
 
@@ -122,6 +126,10 @@ public class Snapshot {
     public Collection<RootObj> getGCRoots() {
         // Roots are always in the default heap.
         return mHeaps.get(DEFAULT_HEAP_ID).mRoots;
+    }
+
+    public final void addReferenceClass(@NonNull ClassObj referenceClass) {
+        mReferenceClasses.add(referenceClass);
     }
 
     public final void addStackFrame(@NonNull StackFrame theFrame) {
@@ -192,7 +200,7 @@ public class Snapshot {
     }
 
     @Nullable
-    public final Instance findReference(long id) {
+    public final Instance findInstance(long id) {
         //noinspection ForLoopReplaceableByForEach
         for (int i = 0; i < mHeaps.size(); i++) {
             Instance instance = mHeaps.get(i).getInstance(id);
@@ -260,6 +268,18 @@ public class Snapshot {
                 }
             }
         }
+    }
+
+    public void resolveReferences() {
+        ArrayList<ClassObj> referenceSubclasses = new ArrayList<ClassObj>();
+        for (ClassObj referenceClass : mReferenceClasses) {
+            referenceClass.setIsSoftReferenceType();
+            for (ClassObj subClass : referenceClass.getSubclasses()) {
+                referenceSubclasses.add(subClass);
+                subClass.setIsSoftReferenceType();
+            }
+        }
+        mReferenceClasses.addAll(referenceSubclasses);
     }
 
     // TODO: Break dominator computation into fixed chunks, because it can be unbounded/expensive.
