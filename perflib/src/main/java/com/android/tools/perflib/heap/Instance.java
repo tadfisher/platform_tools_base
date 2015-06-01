@@ -63,7 +63,11 @@ public abstract class Instance {
     private long[] mRetainedSizes;
 
     //  List of all objects that hold a live reference to this object
-    private final ArrayList<Instance> mReferences = new ArrayList<Instance>();
+    private final ArrayList<Instance> mHardReferences = new ArrayList<Instance>();
+
+    //  List of all objects that hold a soft/weak/phantom reference to this object.
+    //  Don't create an actual list until we need to.
+    private ArrayList<Instance> mSoftReferences = null;
 
     Instance(long id, @NonNull StackTrace stackTrace) {
         mId = id;
@@ -165,7 +169,7 @@ public abstract class Instance {
 
     public long getTotalRetainedSize() {
         if (mRetainedSizes == null) {
-          return 0;
+            return 0;
         }
 
         long totalSize = 0;
@@ -177,12 +181,29 @@ public abstract class Instance {
 
     //  Add to the list of objects that have a hard reference to this Instance
     public void addReference(Instance reference) {
-        mReferences.add(reference);
+        if (reference.getIsSoftReferenceType()) {
+            if (mSoftReferences == null) {
+                mSoftReferences = new ArrayList<Instance>();
+            }
+            mSoftReferences.add(reference);
+        }
+        else {
+            mHardReferences.add(reference);
+        }
     }
 
     @NonNull
-    public ArrayList<Instance> getReferences() {
-        return mReferences;
+    public ArrayList<Instance> getHardReferences() {
+        return mHardReferences;
+    }
+
+    @Nullable
+    public ArrayList<Instance> getSoftReferences() {
+        return mSoftReferences;
+    }
+
+    public boolean getIsSoftReferenceType() {
+        return false;
     }
 
     @Nullable
@@ -190,7 +211,7 @@ public abstract class Instance {
         switch (type) {
             case OBJECT:
                 long id = readId();
-                return mHeap.mSnapshot.findReference(id);
+                return mHeap.mSnapshot.findInstance(id);
             case BOOLEAN:
                 return getBuffer().readByte() != 0;
             case CHAR:
