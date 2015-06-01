@@ -196,6 +196,7 @@ public class HprofParser {
                 //  this is fine
             }
             mSnapshot.resolveClasses();
+            mSnapshot.resolveReferences();
             // TODO: enable this after the dominators computation is also optimized.
             // mSnapshot.computeRetainedSizes();
         } catch (Exception e) {
@@ -545,6 +546,10 @@ public class HprofParser {
         theClass.setInstanceSize(instanceSize);
 
         mSnapshot.addClass(id, theClass);
+
+        if ("java.lang.ref.Reference".equals(theClass.getClassName())) {
+            mSnapshot.addReferenceClass(theClass);
+        }
 
         return bytesRead;
     }
