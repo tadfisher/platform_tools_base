@@ -283,12 +283,12 @@ public class PkgDescTest extends TestCase {
         assertFalse(p.hasMinPlatformToolsRev());
         assertNull(p.getMinPlatformToolsRev());
 
-        assertEquals("doc-19", p.getInstallId());
+        assertEquals("doc", p.getInstallId());
         assertEquals(FileOp.append(mRoot, "docs"),
                 p.getCanonicalInstallFolder(mRoot));
 
         assertEquals("<PkgDesc Type=doc Android=API 19 MajorRev=1>", p.toString());
-        assertEquals("Documentation for Android SDK 19", p.getListDescription());
+        assertEquals("Documentation for Android SDK", p.getListDescription());
     }
 
     public final void testPkgDescDoc_Update() throws Exception {

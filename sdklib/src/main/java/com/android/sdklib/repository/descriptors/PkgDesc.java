@@ -473,7 +473,7 @@ public class PkgDesc implements IPkgDesc {
 
         // Packages that have a full revision are generally updates if it increases
         // but keeps the same kind of preview (e.g. previews are only updates by previews.)
-        if (hasFullRevision()) {
+        if (hasFullRevision() && isPreview() == existingDesc.isPreview()) {
             // If both packages match in their preview type (both previews or both not previews)
             // then is the RC/preview number an update?
             return getFullRevision().compareTo(existingDesc.getFullRevision(),
