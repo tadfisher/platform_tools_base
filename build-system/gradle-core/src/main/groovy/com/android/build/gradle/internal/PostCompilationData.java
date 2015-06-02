@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.google.common.util.concurrent.Callables;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -29,11 +30,11 @@ import java.util.concurrent.Callable;
  */
 public class PostCompilationData {
 
-    @Nullable
-    private List<?> classGeneratingTasks;
+    @NonNull
+    private List<?> classGeneratingTasks = Collections.EMPTY_LIST;
 
-    @Nullable
-    private List<?> libraryGeneratingTasks;
+    @NonNull
+    private List<?> libraryGeneratingTasks = Collections.EMPTY_LIST;
 
     @Nullable
     private Callable<List<File>> inputFiles;
@@ -47,21 +48,21 @@ public class PostCompilationData {
     @Nullable
     private Callable<List<File>> inputLibraries;
 
-    @Nullable
+    @NonNull
     public List<?> getClassGeneratingTasks() {
         return classGeneratingTasks;
     }
 
-    public void setClassGeneratingTasks(@Nullable List<?> classGeneratingTasks) {
+    public void setClassGeneratingTasks(@NonNull List<?> classGeneratingTasks) {
         this.classGeneratingTasks = classGeneratingTasks;
     }
 
-    @Nullable
+    @NonNull
     public List<?> getLibraryGeneratingTasks() {
         return libraryGeneratingTasks;
     }
 
-    public void setLibraryGeneratingTasks(@Nullable List<?> libraryGeneratingTasks) {
+    public void setLibraryGeneratingTasks(@NonNull List<?> libraryGeneratingTasks) {
         this.libraryGeneratingTasks = libraryGeneratingTasks;
     }
 
