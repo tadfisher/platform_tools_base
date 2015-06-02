@@ -33,9 +33,11 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
 
 import org.gradle.api.Project;
+import org.gradle.model.ModelMap;
 import org.gradle.model.internal.core.ModelPath;
 import org.gradle.model.internal.registry.ModelRegistry;
 import org.gradle.model.internal.type.ModelType;
+import org.gradle.platform.base.ComponentSpecContainer;
 import org.gradle.tooling.provider.model.ToolingModelBuilder;
 
 /**
@@ -73,8 +75,9 @@ public class ComponentModelBuilder implements ToolingModelBuilder {
                 new ModelPath(ANDROID_BUILDER),
                 ModelType.of(AndroidBuilder.class));
         DefaultAndroidComponentSpec componentSpec = (DefaultAndroidComponentSpec) registry.realize(
-                new ModelPath(ANDROID_COMPONENT_SPEC),
-                ModelType.of(AndroidComponentSpec.class));
+                new ModelPath("components"),
+                ModelType.of(ComponentSpecContainer.class))
+                        .get(AndroidComponentModelPlugin.COMPONENT_NAME);
         VariantManager variantManager = componentSpec.getVariantManager();
         TaskManager taskManager = registry.realize(
                 new ModelPath(TASK_MANAGER),
