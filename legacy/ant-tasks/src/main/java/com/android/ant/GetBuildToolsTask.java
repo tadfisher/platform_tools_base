@@ -86,6 +86,5 @@ public class GetBuildToolsTask extends Task {
         antProject.setProperty("aidl", buildToolInfo.getPath(BuildToolInfo.PathId.AIDL));
         antProject.setProperty("aapt", buildToolInfo.getPath(BuildToolInfo.PathId.AAPT));
         antProject.setProperty("zipalign", buildToolInfo.getPath(BuildToolInfo.PathId.ZIP_ALIGN));
-        antProject.setProperty("dx", buildToolInfo.getPath(BuildToolInfo.PathId.DX));
-    }
+        antProject.setProperty("dx", buildToolInfo.getPath(BuildToolInfo.PathId.DX));    }
 }
