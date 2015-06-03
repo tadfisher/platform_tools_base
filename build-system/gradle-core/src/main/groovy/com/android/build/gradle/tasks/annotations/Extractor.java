@@ -232,21 +232,12 @@ public class Extractor {
 
     public void removeTypedefClasses() {
         if (classDir != null && classFiles != null && !classFiles.isEmpty()) {
-            int count = 0;
-            for (File file : classFiles) {
-                if (!file.isAbsolute()) {
-                    file = new File(classDir, file.getPath());
-                }
-                if (file.exists()) {
-                    boolean deleted = file.delete();
-                    if (deleted) {
-                        count++;
-                    } else {
-                        warning("Could not delete typedef class " + file.getPath());
-                    }
-                }
-            }
-            info("Deleted " + count + " typedef annotation classes");
+            boolean quiet = false;
+            boolean verbose = false;
+            boolean dryRun = false;
+            //noinspection ConstantConditions
+            RmTypeDefs remover = new RmTypeDefs(this, quiet, verbose, dryRun);
+            remover.remove(classFiles);
         }
     }
 
