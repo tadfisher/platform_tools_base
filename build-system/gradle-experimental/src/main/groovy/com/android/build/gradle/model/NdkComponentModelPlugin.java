@@ -118,8 +118,9 @@ public class NdkComponentModelPlugin implements Plugin<Project> {
         @Mutate
         public void addDefaultNativeSourceSet(
                 @Path("android.sources") AndroidComponentModelSourceSet sources) {
-            sources.addDefaultSourceSet("c", CSourceSet.class);
-            sources.addDefaultSourceSet("cpp", CppSourceSet.class);
+            //sources.addDefaultSourceSet("c", CSourceSet.class);
+            //sources.addDefaultSourceSet("cpp", CppSourceSet.class);
+            sources.addDefaultSourceSet("jni", AndroidLanguageSourceSet.class);
         }
 
         @Model(ModelConstants.NDK_HANDLER)
