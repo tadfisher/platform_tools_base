@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.core.NdkConfig;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.managed.ProductFlavor;
+import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.ClassField;
 import com.android.builder.model.SigningConfig;
@@ -41,14 +42,17 @@ public class ProductFlavorAdaptor implements CoreProductFlavor {
     @NonNull
     protected final ProductFlavor productFlavor;
 
+    private NdkConfig ndkConfig;
+
     public ProductFlavorAdaptor(@NonNull ProductFlavor productFlavor) {
         this.productFlavor = productFlavor;
+        ndkConfig = new NdkConfigAdaptor(productFlavor.getNdkConfig());
     }
 
     @NonNull
     @Override
     public String getName() {
-        return productFlavor.getName();
+        return productFlavor.getName().equals("defaultConfig") ? BuilderConstants.MAIN : productFlavor.getName();
     }
 
     @Nullable
@@ -102,19 +106,19 @@ public class ProductFlavorAdaptor implements CoreProductFlavor {
     @Nullable
     @Override
     public Boolean getMultiDexEnabled() {
-        return null;
+        return productFlavor.getMultiDexEnabled();
     }
 
     @Nullable
     @Override
     public File getMultiDexKeepFile() {
-        return null;
+        return productFlavor.getMultiDexKeepFile();
     }
 
     @Nullable
     @Override
     public File getMultiDexKeepProguard() {
-        return null;
+        return productFlavor.getMultiDexKeepProguard();
     }
 
     @Nullable
@@ -223,7 +227,7 @@ public class ProductFlavorAdaptor implements CoreProductFlavor {
 
     @Override
     public NdkConfig getNdkConfig() {
-        return new NdkConfigAdaptor(productFlavor.getNdkConfig());
+        return ndkConfig;
     }
 
     @Override

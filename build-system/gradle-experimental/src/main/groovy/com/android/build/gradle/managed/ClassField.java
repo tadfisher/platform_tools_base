@@ -17,6 +17,7 @@
 package com.android.build.gradle.managed;
 
 import org.gradle.model.Managed;
+import org.gradle.model.ModelSet;
 
 /**
  * A Managed ClassField.
