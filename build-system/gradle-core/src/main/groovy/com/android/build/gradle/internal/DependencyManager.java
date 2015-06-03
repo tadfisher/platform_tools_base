@@ -766,7 +766,9 @@ public class DependencyManager {
 
             Set<? extends DependencyResult> dependencies = resolvedComponentResult.getDependencies();
             for (DependencyResult dependencyResult : dependencies) {
-                if (dependencyResult instanceof ResolvedDependencyResult) {
+                if (dependencyResult instanceof ResolvedDependencyResult
+                        && !resolvedComponentResult.equals(
+                                ((ResolvedDependencyResult) dependencyResult).getSelected())) {
                     addDependency(
                             ((ResolvedDependencyResult) dependencyResult).getSelected(),
                             configDependencies,
