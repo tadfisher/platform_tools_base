@@ -18,6 +18,7 @@ package com.android.builder.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.sun.istack.internal.NotNull;
 
 import java.util.Collection;
 import java.util.Map;
@@ -149,7 +150,7 @@ public interface ProductFlavor extends BaseConfig {
     /**
      * Returns the arguments for the test instrumentation runner.
      */
-    @Nullable
+    @NotNull
     Map<String, String> getTestInstrumentationRunnerArguments();
 
     /**

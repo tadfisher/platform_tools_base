@@ -191,7 +191,7 @@ public class ProductFlavorAdaptor implements CoreProductFlavor {
     @Override
     public Map<String, String> getTestInstrumentationRunnerArguments() {
         // TODO: To be implemented.
-        return null;
+        return Maps.newHashMap();
     }
 
     @Nullable
