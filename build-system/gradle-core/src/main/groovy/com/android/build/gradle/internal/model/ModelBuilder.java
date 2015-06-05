@@ -41,6 +41,7 @@ import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.builder.Version;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.AaptOptions;
 import com.android.builder.model.AndroidArtifact;
@@ -94,6 +95,8 @@ public class ModelBuilder implements ToolingModelBuilder {
     private final NdkHandler ndkHandler;
     @NonNull
     private Map<Abi, NativeToolchain> toolchains;
+    @NonNull
+    private NativeLibraryFactory nativeLibFactory;
 
     private final boolean isLibrary;
 
@@ -104,6 +107,7 @@ public class ModelBuilder implements ToolingModelBuilder {
             @NonNull AndroidConfig config,
             @NonNull ExtraModelInfo extraModelInfo,
             @NonNull NdkHandler ndkHandler,
+            @NonNull NativeLibraryFactory nativeLibraryFactory,
             boolean isLibrary) {
         this.androidBuilder = androidBuilder;
         this.config = config;
@@ -111,6 +115,7 @@ public class ModelBuilder implements ToolingModelBuilder {
         this.variantManager = variantManager;
         this.taskManager = taskManager;
         this.ndkHandler = ndkHandler;
+        this.nativeLibFactory = nativeLibraryFactory;
         this.isLibrary = isLibrary;
     }
 
@@ -339,22 +344,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                     ? ImmutableList.of(sysrootFlag)
                     : ImmutableList.of(sysrootFlag, ndkConfig.getcFlags());
 
-            // The DSL currently do not support all options available in the model such as the
-            // include dirs and the defines.  Therefore, just pass an empty collection for now.
-            @SuppressWarnings("ConstantConditions")
-            NativeLibrary lib = new NativeLibraryImpl(
-                    ndkConfig.getModuleName(),
-                    toolchain.getName(),
-                    abi.getName(),
-                    Collections.<File>emptyList(),  /*cIncludeDirs*/
-                    Collections.<File>emptyList(),  /*cppIncludeDirs*/
-                    Collections.<File>emptyList(),  /*cSystemIncludeDirs*/
-                    ndkHandler.getStlIncludes(ndkConfig.getStl(), abi),
-                    Collections.<String>emptyList(),  /*cDefines*/
-                    Collections.<String>emptyList(),  /*cppDefines*/
-                    cFlags,
-                    cFlags,  // TODO: NdkConfig should allow cppFlags to be set separately.
-                    ImmutableList.of(variantData.getScope().getNdkDebuggableLibraryFolders(abi)));
+            NativeLibrary lib = nativeLibFactory.create(variantData, toolchain.getName(), abi);
             nativeLibraries.add(lib);
         }
         return nativeLibraries;
