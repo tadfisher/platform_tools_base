@@ -115,7 +115,7 @@ public class DependencyManager {
         PrepareLibraryTask prepareLibTask = prepareTaskMap.get(lib.getNonTransitiveRepresentation());
         if (prepareLibTask != null) {
             prepareDependenciesTask.dependsOn(prepareLibTask);
-            prepareLibTask.dependsOn(variantData.preBuildTask);
+            prepareLibTask.dependsOn(variantData.getScope().getPreBuildTask().getName());
         }
 
         for (LibraryDependency childLib : lib.getDependencies()) {

@@ -454,7 +454,7 @@ public abstract class TaskManager {
         AndroidTask<ProcessManifest> processManifest = androidTasks.create(tasks,
                 new ProcessManifest.ConfigAction(scope));
 
-        processManifest.dependsOn(tasks, scope.getVariantData().prepareDependenciesTask);
+        processManifest.dependsOn(tasks, scope.getPrepareDependenciesTask());
 
         BaseVariantOutputData variantOutputData = scope.getVariantData().getOutputs().get(0);
         variantOutputData.getScope().setManifestProcessorTask(processManifest);
@@ -467,7 +467,7 @@ public abstract class TaskManager {
         AndroidTask<ProcessTestManifest> processTestManifestTask = androidTasks.create(tasks,
                 new ProcessTestManifest.ConfigAction(scope));
 
-        processTestManifestTask.dependsOn(tasks, scope.getVariantData().prepareDependenciesTask);
+        processTestManifestTask.dependsOn(tasks, scope.getPrepareDependenciesTask());
 
         BaseVariantOutputData variantOutputData = scope.getVariantData().getOutputs().get(0);
         variantOutputData.getScope().setManifestProcessorTask(processTestManifestTask);
@@ -484,7 +484,7 @@ public abstract class TaskManager {
         // get single output for now.
         BaseVariantOutputData variantOutputData = variantData.getOutputs().get(0);
 
-        scope.getRenderscriptCompileTask().dependsOn(tasks, variantData.prepareDependenciesTask);
+        scope.getRenderscriptCompileTask().dependsOn(tasks, scope.getPrepareDependenciesTask());
         if (config.getType().isForTesting()) {
             scope.getRenderscriptCompileTask().dependsOn(tasks,
                     variantOutputData.getScope().getManifestProcessorTask());
@@ -527,7 +527,7 @@ public abstract class TaskManager {
                         includeDependencies,
                         process9Patch));
         mergeResourcesTask.dependsOn(tasks,
-                scope.getVariantData().prepareDependenciesTask,
+                scope.getPrepareDependenciesTask(),
                 scope.getResourceGenTask());
         scope.setMergeResourcesTask(mergeResourcesTask);
         return scope.getMergeResourcesTask();
@@ -537,7 +537,7 @@ public abstract class TaskManager {
     public void createMergeAssetsTask(TaskFactory tasks, VariantScope scope) {
         AndroidTask<MergeAssets> mergeAssetsTask = androidTasks.create(tasks, new MergeAssets.ConfigAction(scope));
         mergeAssetsTask.dependsOn(tasks,
-                scope.getVariantData().prepareDependenciesTask,
+                scope.getPrepareDependenciesTask(),
                 scope.getAssetGenTask());
         scope.setMergeAssetsTask(mergeAssetsTask);
     }
@@ -892,7 +892,7 @@ public abstract class TaskManager {
     public void createAidlTask(@NonNull TaskFactory tasks, @NonNull VariantScope scope) {
         scope.setAidlCompileTask(androidTasks.create(tasks, new AidlCompile.ConfigAction(scope)));
         scope.getSourceGenTask().dependsOn(tasks, scope.getAidlCompileTask());
-        scope.getAidlCompileTask().dependsOn(tasks, scope.getVariantData().prepareDependenciesTask);
+        scope.getAidlCompileTask().dependsOn(tasks, scope.getPrepareDependenciesTask());
     }
 
     /**
@@ -910,7 +910,7 @@ public abstract class TaskManager {
 
         javacTask.optionalDependsOn(tasks, scope.getSourceGenTask());
         javacTask.dependsOn(tasks,
-                scope.getVariantData().prepareDependenciesTask,
+                scope.getPrepareDependenciesTask(),
                 scope.getProcessJavaResourcesTask());
 
         // TODO - dependency information for the compile classpath is being lost.
@@ -989,7 +989,7 @@ public abstract class TaskManager {
                 scope.getTaskName("compile", "Ndk"),
                 NdkCompile.class);
 
-        ndkCompile.dependsOn(variantData.preBuildTask);
+        ndkCompile.dependsOn(scope.getPreBuildTask().getName());
 
         ndkCompile.setAndroidBuilder(androidBuilder);
         ndkCompile.setNdkDirectory(sdkHandler.getNdkFolder());
@@ -2329,28 +2329,27 @@ public abstract class TaskManager {
         createCompileAnchorTask(tasks, scope);
     }
 
-    private void createPreBuildTasks(@NonNull TaskFactory tasks, @NonNull VariantScope scope) {
-        final BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
-        variantData.preBuildTask = project.getTasks().create(scope.getTaskName("pre", "Build"));
+    private void createPreBuildTasks(@NonNull TaskFactory tasks, @NonNull final VariantScope scope) {
+        scope.setPreBuildTask(androidTasks.create(tasks, new TaskConfigAction<Task>() {
+                    @Override
+                    public String getName() {
+                        return scope.getTaskName("pre", "Build");
+                    }
 
-        PrepareDependenciesTask prepareDependenciesTask = project.getTasks().create(
-                scope.getTaskName("prepare", "Dependencies"), PrepareDependenciesTask.class);
+                    @Override
+                    public Class<Task> getType() {
+                        return Task.class;
+                    }
 
-        variantData.prepareDependenciesTask = prepareDependenciesTask;
-        prepareDependenciesTask.dependsOn(variantData.preBuildTask);
+                    @Override
+                    public void execute(Task task) {
+                        scope.getVariantData().preBuildTask = task;
+                    }
+                }));
 
-        prepareDependenciesTask.setAndroidBuilder(androidBuilder);
-        prepareDependenciesTask.setVariant(variantData);
-
-        // for all libraries required by the configurations of this variant, make this task
-        // depend on all the tasks preparing these libraries.
-        VariantDependencies configurationDependencies = variantData.getVariantDependency();
-        prepareDependenciesTask.addChecker(configurationDependencies.getChecker());
-
-        for (LibraryDependencyImpl lib : configurationDependencies.getLibraries()) {
-            dependencyManager.addDependencyToPrepareTask(variantData, prepareDependenciesTask, lib);
-        }
-
+        scope.setPrepareDependenciesTask(androidTasks.create(tasks,
+                new PrepareDependenciesTask.ConfigAction(scope, dependencyManager)));
+        scope.getPrepareDependenciesTask().dependsOn(tasks, scope.getPreBuildTask());
     }
 
     private void createCompileAnchorTask(@NonNull TaskFactory tasks, @NonNull final VariantScope scope) {
@@ -2397,8 +2396,8 @@ public abstract class TaskManager {
                     }
 
                 }));
-        scope.getCheckManifestTask().dependsOn(tasks, variantData.preBuildTask);
-        variantData.prepareDependenciesTask.dependsOn(scope.getCheckManifestTask().getName());
+        scope.getCheckManifestTask().dependsOn(tasks, scope.getPreBuildTask());
+        scope.getPrepareDependenciesTask().dependsOn(tasks, scope.getCheckManifestTask());
     }
 
     public static void optionalDependsOn(@NonNull Task main, Task... dependencies) {
