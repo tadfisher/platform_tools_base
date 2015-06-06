@@ -15,15 +15,19 @@
  */
 package com.android.build.gradle.internal.tasks;
 
+import com.android.build.gradle.internal.DependencyManager;
 import com.android.build.gradle.internal.dependency.DependencyChecker;
+import com.android.build.gradle.internal.dependency.LibraryDependencyImpl;
+import com.android.build.gradle.internal.dependency.VariantDependencies;
+import com.android.build.gradle.internal.scope.TaskConfigAction;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.SyncIssue;
 import com.android.sdklib.SdkVersionInfo;
-import com.android.utils.Pair;
 import com.android.utils.StringHelper;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 import org.gradle.api.GradleException;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
@@ -31,7 +35,6 @@ import org.gradle.api.tasks.TaskAction;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class PrepareDependenciesTask extends BaseTask {
 
@@ -94,5 +97,48 @@ public class PrepareDependenciesTask extends BaseTask {
 
     public void setVariant(BaseVariantData variant) {
         this.variant = variant;
+    }
+
+    public static class ConfigAction implements TaskConfigAction<PrepareDependenciesTask> {
+
+        private final VariantScope scope;
+
+        private final DependencyManager dependencyManager;
+
+        public ConfigAction(VariantScope scope, DependencyManager dependencyManager) {
+            this.scope = scope;
+            this.dependencyManager = dependencyManager;
+        }
+
+
+
+        @Override
+        public String getName() {
+            return scope.getTaskName("prepare", "Dependencies");
+        }
+
+        @Override
+        public Class<PrepareDependenciesTask> getType() {
+            return PrepareDependenciesTask.class;
+        }
+
+        @Override
+        public void execute(PrepareDependenciesTask prepareDependenciesTask) {
+            BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
+            prepareDependenciesTask.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
+            prepareDependenciesTask.variant = variantData;
+
+            // for all libraries required by the configurations of this variant, make this task
+            // depend on all the tasks preparing these libraries.
+            VariantDependencies configurationDependencies = variantData.getVariantDependency();
+            prepareDependenciesTask.addChecker(configurationDependencies.getChecker());
+
+            for (LibraryDependencyImpl lib : configurationDependencies.getLibraries()) {
+                dependencyManager.addDependencyToPrepareTask(variantData, prepareDependenciesTask,
+                        lib);
+            }
+
+            variantData.prepareDependenciesTask = prepareDependenciesTask;
+        }
     }
 }

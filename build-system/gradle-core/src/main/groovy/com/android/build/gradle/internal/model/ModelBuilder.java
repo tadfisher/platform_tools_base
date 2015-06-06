@@ -307,7 +307,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                 variantType.getArtifactName(),
                 variantData.assembleVariantTask.getName(),
                 variantData.compileTask.getName(),
-                Sets.newHashSet(variantData.prepareDependenciesTask.getName(),
+                Sets.newHashSet(variantData.getScope().getPrepareDependenciesTask().getName(),
                         taskManager.createMockableJar.getName()),
                 extraGeneratedSourceFolders != null ? extraGeneratedSourceFolders : Collections.<File>emptyList(),
                 (variantData.javacTask != null) ?

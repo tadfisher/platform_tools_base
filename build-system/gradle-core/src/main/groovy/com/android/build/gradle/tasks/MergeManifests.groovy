@@ -176,7 +176,7 @@ public class MergeManifests extends ManifestProcessorTask {
 
             processManifestTask.androidBuilder = scope.globalScope.androidBuilder
 
-            processManifestTask.dependsOn variantData.prepareDependenciesTask
+            processManifestTask.dependsOn scope.variantScope.getPrepareDependenciesTask().getName()
             if (variantData.generateApkDataTask != null) {
                 processManifestTask.dependsOn variantData.generateApkDataTask
             }
