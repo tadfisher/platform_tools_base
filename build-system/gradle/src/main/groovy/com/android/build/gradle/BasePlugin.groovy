@@ -369,7 +369,7 @@ public abstract class BasePlugin {
                 extension,
                 extraModelInfo,
                 ndkHandler,
-                new NativeLibraryFactoryImpl(ndkHandler),
+                new NativeLibraryFactoryImpl(project, ndkHandler),
                 isLibrary())
         registry.register(modelBuilder);
 
