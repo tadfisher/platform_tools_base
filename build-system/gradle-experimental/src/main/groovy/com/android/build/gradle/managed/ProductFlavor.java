@@ -22,6 +22,11 @@ import com.android.annotations.Nullable;
 import org.gradle.api.Named;
 import org.gradle.model.Managed;
 import org.gradle.model.ModelSet;
+import org.gradle.model.Unmanaged;
+
+import java.io.File;
+import java.util.List;
+import java.util.Set;
 
 import java.io.File;
 import java.util.Collection;
@@ -29,6 +34,8 @@ import java.util.Map;
 
 /**
  * A Managed product flavor.
+ *
+ * TODO: Convert Unmanaged Collection to Managed type when Gradle provides ModelSet for basic class.
  */
 @Managed
 public interface ProductFlavor extends Named {
@@ -37,17 +44,25 @@ public interface ProductFlavor extends Named {
     String getDimension();
     void setDimension(String dimension);
 
-    @Nullable
+    @NonNull
     ModelSet<ClassField> getBuildConfigFields();
 
-    @Nullable
+    @NonNull
     ModelSet<ClassField> getResValues();
 
+    @Unmanaged
+    Set<File> getProguardFiles();
+    void setProguardFiles(Set<File> files);
+
+    @Unmanaged
+    Set<File> getConsumerProguardFiles();
+    void setConsumerProguardFiles(Set<File> files);
+
+    @Unmanaged
+    Set<File> getTestProguardFiles();
+    void setTestProguardFiles(Set<File> files);
+
     // TODO: Add the commented fields.
-    //ModelSet<String> getProguardFiles();
-
-    //ModelSet<String> getConsumerProguardFiles();
-
     //Map<String, Object> getManifestPlaceholders();
 
     @Nullable
@@ -112,9 +127,10 @@ public interface ProductFlavor extends Named {
     Boolean getTestFunctionalTest();
     void setTestFunctionalTest(Boolean testFunctionalTest);
 
-    //@NonNull
-    //Collection<String> getResourceConfigurations();
-    //void setResourceConfigurations(Collection<String> resourceConfigurations);
+    @Unmanaged
+    @Nullable
+    Set<String> getResourceConfigurations();
+    void setResourceConfigurations(Set<String> resourceConfigurations);
 
     SigningConfig getSigningConfig();
     void setSigningConfig(SigningConfig signingConfig);
@@ -124,6 +140,7 @@ public interface ProductFlavor extends Named {
 
     NdkConfig getNdkConfig();
 
-    String getJarJarRuleFile();
-    void setJarJarRuleFile(String jarJarRuleFile);
+    @Unmanaged
+    List<File> getJarJarRuleFiles();
+    void setJarJarRuleFiles(List<File> jarJarRuleFiles);
 }

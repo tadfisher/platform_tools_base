@@ -19,9 +19,16 @@ package com.android.build.gradle.managed;
 import org.gradle.api.Named;
 import org.gradle.model.Managed;
 import org.gradle.model.ModelSet;
+import org.gradle.model.Unmanaged;
+
+import java.io.File;
+import java.util.List;
+import java.util.Set;
 
 /**
  * A Managed build type.
+ *
+ * TODO: Convert Unmanaged Collection to Managed type when Gradle provides ModelSet for basic class.
  */
 @Managed
 public interface BuildType extends Named {
@@ -30,11 +37,19 @@ public interface BuildType extends Named {
 
     ModelSet<ClassField> getResValues();
 
+    @Unmanaged
+    Set<File> getProguardFiles();
+    void setProguardFiles(Set<File> files);
+
+    @Unmanaged
+    Set<File> getConsumerProguardFiles();
+    void setConsumerProguardFiles(Set<File> files);
+
+    @Unmanaged
+    Set<File> getTestProguardFiles();
+    void setTestProguardFiles(Set<File> files);
+
     // TODO: Add the commented fields.
-    //ModelSet<String> getProguardFiles();
-
-    //ModelSet<String> getConsumerProguardFiles();
-
     //Map<String, Object> getManifestPlaceholders();
 
     Boolean getMultiDexEnabled();
@@ -87,4 +102,8 @@ public interface BuildType extends Named {
 
     Boolean getShrinkResources();
     void setShrinkResources(Boolean shrinkResources);
+
+    @Unmanaged
+    List<File> getJarJarRuleFiles();
+    void setJarJarRuleFiles(List<File> jarJarRuleFiles);
 }
