@@ -22,9 +22,12 @@ import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.NdkConfig;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
+import com.android.build.gradle.tasks.NdkCompile;
 import com.android.builder.model.NativeLibrary;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+
+import org.gradle.api.Project;
 
 import java.io.File;
 import java.util.Collections;
@@ -35,9 +38,14 @@ import java.util.List;
  */
 public class DefaultNativeLibraryFactory implements NativeLibraryFactory {
 
-    NdkHandler ndkHandler;
+    @NonNull
+    final Project project;
 
-    public DefaultNativeLibraryFactory(NdkHandler ndkHandler) {
+    @NonNull
+    final NdkHandler ndkHandler;
+
+    public DefaultNativeLibraryFactory(Project project, NdkHandler ndkHandler) {
+        this.project = project;
         this.ndkHandler = ndkHandler;
     }
 
@@ -46,6 +54,10 @@ public class DefaultNativeLibraryFactory implements NativeLibraryFactory {
     public Optional<NativeLibrary> create(
             @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData,
             @NonNull String toolchainName, @NonNull Abi abi) {
+        if (!project.hasProperty(NdkCompile.USE_DEPRECATED_NDK)) {
+            return Optional.absent();
+        }
+
         NdkConfig ndkConfig = variantData.getVariantConfiguration().getNdkConfig();
 
         String sysrootFlag = "--sysroot=" + ndkHandler.getSysroot(abi);
