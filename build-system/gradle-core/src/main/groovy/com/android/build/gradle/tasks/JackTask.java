@@ -112,6 +112,9 @@ public class JackTask extends AbstractAndroidCompile
 
             // wait for the task completion.
             job.await();
+            if (!job.isSuccessful()) {
+                throw new RuntimeException("Compilation failed, see logs for details");
+            }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException(e);
@@ -121,19 +124,9 @@ public class JackTask extends AbstractAndroidCompile
 
     private void doMinification() throws ProcessException, IOException {
 
-        if (System.getenv("USE_JACK_API") == null ||
-                !androidBuilder.convertByteCodeUsingJackApis(
-                        getDestinationDir(),
-                        getJackFile(),
-                        getClasspath().getFiles(),
-                        getPackagedLibraries(),
-                        getSource().getFiles(),
-                        getProguardFiles(),
-                        getMappingFile(),
-                        getJarJarRuleFiles(),
-                        getIncrementalDir(),
-                        isMultiDexEnabled(),
-                        getMinSdkVersion())) {
+        if (androidBuilder.getTargetInfo().getBuildTools().getRevision().getMajor() < 23 ||
+            (System.getenv("USE_JACK_API") != null && System.getenv("USE_JACK_API")
+                .equals("false"))) {
 
             // no incremental support through command line so far.
             androidBuilder.convertByteCodeWithJack(
@@ -149,6 +142,19 @@ public class JackTask extends AbstractAndroidCompile
                     getMinSdkVersion(),
                     isDebugLog,
                     getJavaMaxHeapSize());
+        } else  {
+            androidBuilder.convertByteCodeUsingJackApis(
+                    getDestinationDir(),
+                    getJackFile(),
+                    getClasspath().getFiles(),
+                    getPackagedLibraries(),
+                    getSource().getFiles(),
+                    getProguardFiles(),
+                    getMappingFile(),
+                    getJarJarRuleFiles(),
+                    getIncrementalDir(),
+                    isMultiDexEnabled(),
+                    getMinSdkVersion());
         }
 
     }
@@ -418,8 +424,6 @@ public class JackTask extends AbstractAndroidCompile
             jackTask.setJackFile(scope.getJackClassesZip());
             jackTask.setTempFolder(new File(scope.getGlobalScope().getIntermediatesDir(),
                     "/tmp/jack/" + scope.getVariantConfiguration().getDirName()));
-
-
 
             if (config.isMinifyEnabled()) {
                 ConventionMappingHelper.map(jackTask, "proguardFiles", new Callable<List<File>>() {

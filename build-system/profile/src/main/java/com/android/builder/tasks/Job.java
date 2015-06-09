@@ -64,6 +64,10 @@ public class Job<T> {
         return mResult.get();
     }
 
+    public boolean isSuccessful() {
+        return mResult.get();
+    }
+
     @Override
     public String toString() {
         return Objects.toStringHelper(this)
