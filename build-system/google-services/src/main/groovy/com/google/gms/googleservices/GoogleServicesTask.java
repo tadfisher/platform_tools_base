@@ -44,6 +44,9 @@ public class GoogleServicesTask extends DefaultTask {
     private static final String STATUS_DISABLED = "1";
     private static final String STATUS_ENABLED = "2";
 
+    private static final String XML_HEADER = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<resources>\n";
+    private static final String XML_FOOTER = "</resources>\n";
+
     /**
      * The input is not technically optional but we want to control the error message.
      * Without @Optional, Gradle will complain itself the file is missing.
@@ -90,6 +93,10 @@ public class GoogleServicesTask extends DefaultTask {
         if (clientObject != null) {
             handleAnalytics(clientObject, resValues);
             handleAdsService(clientObject, resValues);
+
+            // TODO: handleAppinvite has dependency on handleAnalytics because we also need to put
+            // ga_trackingId into ai_config.xml. Remove this dependency if possible
+            handleAppinviteService(clientObject, resValues);
         } else {
             getLogger().warn("No matching client found for package name '" + packageName + "'");
         }
@@ -106,6 +113,7 @@ public class GoogleServicesTask extends DefaultTask {
     /**
      * Handle project_info/project_number for @string/gcm_defaultSenderId, and fill the res map with the read value.
      * @param rootObject the root Json object.
+     * @param resValues a Map that store key and value
      * @throws IOException
      */
     private void handleProjectNumber(JsonObject rootObject, Map<String, String> resValues)
@@ -126,6 +134,7 @@ public class GoogleServicesTask extends DefaultTask {
     /**
      * Handle a client object for analytics (@xml/global_tracker)
      * @param clientObject the client Json object.
+     * @param resValues a Map that store key and value
      * @throws IOException
      */
     private void handleAnalytics(JsonObject clientObject, Map<String, String> resValues)
@@ -153,8 +162,9 @@ public class GoogleServicesTask extends DefaultTask {
     }
 
     /**
-     * Handle a client object for analytics (@xml/global_tracker)
+     * Handle a client object for AdsService
      * @param clientObject the client Json object.
+     * @param resValues a Map that store key and value
      * @throws IOException
      */
     private void handleAdsService(JsonObject clientObject, Map<String, String> resValues)
@@ -166,6 +176,54 @@ public class GoogleServicesTask extends DefaultTask {
         findStringByName(adsService, "test_interstitial_ad_unit_id", resValues);
     }
 
+    /**
+     * Handle a client object for Appinvite (@xml/ai_config)
+     * Need to be called after handleAnalytics() as it requires "ga_trackingId" fetched in "analytics_service"
+     *
+     * @param clientObject the client Json object.
+     * @param resValues a Map that store key and value
+     * @throws IOException
+     */
+    private void handleAppinviteService(JsonObject clientObject, Map<String, String> resValues) throws IOException {
+        JsonObject appinviteService = getServiceByName(clientObject, "appinvite_service");
+        if (appinviteService == null) return;
+
+        JsonArray otherPlatformOauthClientArray = appinviteService.getAsJsonArray("other_platform_oauth_client");
+
+        if (otherPlatformOauthClientArray != null) {
+            final int count = otherPlatformOauthClientArray.size();
+
+            // Could be more than one oauth client, for now just use the first one we found
+            // TODO: Find a better way to do this
+            for (int i = 0; i < count; i++) {
+                JsonElement otherPlatformOauthClient = otherPlatformOauthClientArray.get(i);
+                if (otherPlatformOauthClient == null || !otherPlatformOauthClient.isJsonObject()) continue;
+
+                JsonPrimitive id = otherPlatformOauthClient.getAsJsonObject().getAsJsonPrimitive("client_id");
+                if (id == null) continue;
+
+                File xml = new File(intermediateDir, "xml");
+                if (!xml.exists() && !xml.mkdirs()) {
+                    throw new GradleException("Failed to create folder: " + xml);
+                }
+
+                Files.write(getAppinviteContent(resValues, id.getAsString()),
+                        new File(xml, "ai_config.xml"),
+                        Charsets.UTF_8);
+
+                // Skip the rest of other platform oauth client
+                return;
+            }
+        }
+        getLogger().warn("Appinvite is enabled but no other platform oauth client is found.");
+    }
+
+    /**
+     * Find stringName from jsonObject and add the key, value pair to the resValues
+     * @param jsonObject the JsonObject to be inspected.
+     * @param stringName the name that we want to find
+     * @param resValues a Map that store key and value
+     */
     private static void findStringByName(JsonObject jsonObject, String stringName,
             Map<String, String> resValues) {
         JsonPrimitive id = jsonObject.getAsJsonPrimitive(stringName);
@@ -240,30 +298,61 @@ public class GoogleServicesTask extends DefaultTask {
         return service;
     }
 
-
+    /**
+     * Generate the XML content for Analytics
+     * @param ga_trackingId Global Tracker ID
+     * @return a String that contain XML formatted information
+     */
     private static String getGlobalTrackerContent(String ga_trackingId) {
-        return "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                "<resources>\n" +
+        return XML_HEADER +
                 "    <string name=\"ga_trackingId\">" + ga_trackingId + "</string>\n" +
-                "</resources>\n";
+                XML_FOOTER;
     }
 
+    /**
+     * Generate the XML content for (key, value) in entries
+     * @param entries the map that store all (key, value)
+     * @return a String that contain XML formatted information
+     */
     private static String getValuesContent(Map<String, String> entries) {
         StringBuilder sb = new StringBuilder(256);
 
-        sb.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                "<resources>\n");
+        sb.append(XML_HEADER);
 
         for (Map.Entry<String, String> entry : entries.entrySet()) {
             sb.append("    <string name=\"").append(entry.getKey()).append("\">")
                     .append(entry.getValue()).append("</string>\n");
         }
 
-        sb.append("</resources>\n");
+        sb.append(XML_FOOTER);
 
         return sb.toString();
     }
 
+    /**
+     * Generate the XML content for Appinvite Service
+     * @param entries the map that store all (key, value)
+     * @param clientID the client ID for iOS platform
+     * @return a String that contain XML formatted information
+     */
+    private static String getAppinviteContent(Map<String, String> entries, String clientID) {
+        StringBuilder sb = new StringBuilder(256);
+
+        sb.append(XML_HEADER);
+
+        if (entries.containsKey("ga_trackingId")) {
+            sb.append("    <string name=\"ga_trackingId\">" + entries.get("ga_trackingId") + "</string>\n");
+        }
+
+        sb.append("    <string name=\"ai_ios_target_application\">" + clientID + "</string>\n").append(XML_FOOTER);
+
+        return sb.toString();
+    }
+
+    /**
+     * Delete Folder
+     * @param folder the folder to be deleted
+     */
     private static void deleteFolder(final File folder) {
         if (!folder.exists()) {
             return;
