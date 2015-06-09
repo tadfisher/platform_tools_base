@@ -30,6 +30,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.android.annotations.concurrency.Immutable;
 import com.android.builder.compiling.DependencyFileProcessor;
 import com.android.builder.core.BuildToolsServiceLoader.BuildToolServiceLoader;
 import com.android.builder.dependency.ManifestDependency;
@@ -1547,13 +1548,11 @@ public class AndroidBuilder {
                 compilationTask.run();
                 mLogger.info(outputStream.toString());
                 return true;
-            } catch (CompilationException e) {
-                mLogger.error(e, outputStream.toString());
-            } catch (UnrecoverableException e) {
-                mLogger.error(e,
-                        "Something out of Jack control has happened: " + e.getMessage());
-            } catch (ConfigurationException e) {
-                mLogger.error(e, outputStream.toString());
+            } catch (Exception e) {
+                // do not log the exception as it pollutes the output until we can separate
+                // compilation exceptions from the other failures.
+                mLogger.error(null /* throwable */, outputStream.toString());
+                throw new RuntimeException(e.getMessage());
             }
         } catch (ClassNotFoundException e) {
             getLogger().warning("Cannot load Jack APIs v01 " + e.getMessage());
@@ -1634,7 +1633,7 @@ public class AndroidBuilder {
                 mLogger);
     }
 
-    public static List<File> convertLibaryToJackUsingApis(
+    public static List<File> convertLibraryToJackUsingApis(
             @NonNull File inputFile,
             @NonNull File outFile,
             @NonNull DexOptions dexOptions,
@@ -1646,38 +1645,66 @@ public class AndroidBuilder {
 
         BuildToolServiceLoader buildToolServiceLoader = BuildToolsServiceLoader.INSTANCE
                 .forVersion(buildToolInfo);
-        if (System.getenv("USE_JACK_API") != null) {
-            try {
-                Optional<JillProvider> jillProviderOptional = buildToolServiceLoader
-                        .getSingleService(logger, BuildToolsServiceLoader.JILL);
 
-                if (jillProviderOptional.isPresent()) {
-                    com.android.jill.api.v01.Api01Config config =
-                            jillProviderOptional.get().createConfig(
-                                    com.android.jill.api.v01.Api01Config.class);
-
-                    config.setInputJavaBinaryFile(inputFile);
-                    config.setOutputJackFile(outFile);
-                    config.setVerbose(verbose);
-
-                    Api01TranslationTask translationTask = config.getTask();
-                    translationTask.run();
-
-                    return ImmutableList.of(outFile);
-                }
-
-            } catch (ClassNotFoundException e) {
-                logger.warning("Cannot find the jill tool in the classpath, reverting to native");
-            } catch (com.android.jill.api.ConfigNotSupportedException e) {
-                logger.warning(e.getMessage() + ", reverting to native");
-            } catch (com.android.jill.api.v01.ConfigurationException e) {
-                logger.warning(e.getMessage() + ", reverting to native");
-            } catch (TranslationException e) {
-                logger.error(e, "In process translation failed, reverting to native, file a bug");
-            }
+        if (buildToolInfo.getRevision().getMajor() < 22 ||
+                (System.getenv("USE_JACK_API") != null
+                        && System.getenv("USE_JACK_API").equals("false"))) {
+            return convertLibraryToJack(inputFile, outFile, dexOptions, buildToolInfo, verbose,
+                    processExecutor, processOutputHandler, logger);
         }
-        return convertLibraryToJack(inputFile, outFile, dexOptions, buildToolInfo, verbose,
-                processExecutor, processOutputHandler, logger);
+
+        try {
+            Optional<JillProvider> jillProviderOptional = buildToolServiceLoader
+                    .getSingleService(logger, BuildToolsServiceLoader.JILL);
+
+            File jayceDir = new File(outFile.getParentFile().getParent(), "jayce");
+            if (!jayceDir.exists()) {
+                if (!jayceDir.mkdirs()) {
+                    throw new RuntimeException(
+                            "Cannot create temporary dir " + jayceDir.getAbsolutePath());
+                }
+            }
+            File jayceFile = new File(jayceDir, outFile.getName());
+            if (!jillProviderOptional.isPresent()) {
+                throw new RuntimeException(
+                        "Cannot find the jill tool, disable jack and file a bug");
+            }
+            com.android.jill.api.v01.Api01Config config =
+                    jillProviderOptional.get().createConfig(
+                            com.android.jill.api.v01.Api01Config.class);
+
+            config.setInputJavaBinaryFile(inputFile);
+            config.setOutputJackFile(jayceFile);
+            config.setVerbose(verbose);
+
+            Api01TranslationTask translationTask = config.getTask();
+            translationTask.run();
+
+            // now run jack to produce the pre-dex file.
+            Optional<JackProvider> jackProviderOptional = buildToolServiceLoader
+                    .getSingleService(logger, BuildToolsServiceLoader.JACK);
+            if (!jackProviderOptional.isPresent()) {
+                throw new RuntimeException(
+                        "Cannot find the jack tool, disable jack and file a bug");
+            }
+
+            Api01Config jackConfig = jackProviderOptional.get()
+                    .createConfig(Api01Config.class);
+
+            jackConfig.setImportedJackLibraryFiles(ImmutableList.of(jayceFile));
+            jackConfig.setOutputJackFile(outFile);
+            jackConfig.getTask().run();
+
+            return ImmutableList.of(outFile);
+
+        } catch (ClassNotFoundException e) {
+            logger.warning("Cannot find the jill tool in the classpath, "
+                    + "set USE_JACK_API=false to use the native integration");
+            throw new RuntimeException(e);
+        } catch (Exception e) {
+            logger.error(e, "Cannot convert library");
+            throw new RuntimeException(e);
+        }
     }
 
     public static List<File> convertLibraryToJack(
