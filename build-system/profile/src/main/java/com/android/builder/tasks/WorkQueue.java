@@ -226,7 +226,8 @@ public class WorkQueue<T> implements Runnable {
                 try {
                     mQueueThreadContext.runTask(job);
                 } catch (Exception e) {
-                    Logger.getAnonymousLogger().log(Level.WARNING, "Exception while processing task ", e);
+                    e.printStackTrace();
+                    Logger.getAnonymousLogger().log(Level.FINE, "Exception while processing task ", e);
                     job.error();
                     return;
                 }
