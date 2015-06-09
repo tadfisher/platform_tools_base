@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.integration.application
 
-import com.android.build.gradle.integration.common.truth.ApkSubject;
-
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.builder.core.BuilderConstants.DEBUG;
 import static org.junit.Assert.assertEquals;
@@ -35,8 +33,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import java.util.Collection;
 
 /**
  * test jarjar integration with the Jack Tool.
