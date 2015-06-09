@@ -138,4 +138,20 @@ android {
 
         Truth.assert_().that(generatedResFolders).contains(generatedResFolder.getCanonicalFile())
     }
+
+    @Test
+    public void "test appinvite res file is generated"() {
+        checkAppinvite(generatedFreeResFolder, "free.ai_config.xml")
+        checkAppinvite(generatedPaidResFolder, "paid.ai_config.xml")
+    }
+
+    private static void checkAppinvite(File generatedResFolder, String goldenFileName) {
+        File xmlFolder = new File(generatedResFolder, "xml")
+        File appinvite_config = new File(xmlFolder, "ai_config.xml")
+        Assert.assertTrue(appinvite_config.isFile())
+
+        File goldenFile = new File(resDataFolder, goldenFileName)
+        Truth.assert_().that(Files.toString(appinvite_config, Charsets.UTF_8).trim())
+                .isEqualTo(Files.toString(goldenFile, Charsets.UTF_8).trim())
+    }
 }
