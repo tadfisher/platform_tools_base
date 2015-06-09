@@ -112,7 +112,9 @@ public class JackTask extends AbstractAndroidCompile
             SimpleWorkQueue.push(job);
 
             // wait for the task completion.
-            job.await();
+            if (!job.await()) {
+                throw new RuntimeException("Compilation failed, see logs for details");
+            }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException(e);
@@ -122,21 +124,8 @@ public class JackTask extends AbstractAndroidCompile
 
     private void doMinification() throws ProcessException, IOException {
 
-        if (System.getenv("USE_JACK_API") == null) {
-            androidBuilder.convertByteCodeUsingJackApis(
-                    getDestinationDir(),
-                    getJackFile(),
-                    getClasspath().getFiles(),
-                    getPackagedLibraries(),
-                    getSource().getFiles(),
-                    getProguardFiles(),
-                    getMappingFile(),
-                    getJarJarRuleFiles(),
-                    getIncrementalDir(),
-                    getJavaResourcesFolder(),
-                    isMultiDexEnabled(),
-                    getMinSdkVersion());
-        } else {
+        if (Boolean.valueOf(System.getenv("DISABLE_JACK_API")) ||
+                androidBuilder.getTargetInfo().getBuildTools().getRevision().getMajor() < 23) {
             // no incremental support through command line so far.
             androidBuilder.convertByteCodeWithJack(
                     getDestinationDir(),
@@ -151,6 +140,20 @@ public class JackTask extends AbstractAndroidCompile
                     getMinSdkVersion(),
                     isDebugLog,
                     getJavaMaxHeapSize());
+        } else  {
+            androidBuilder.convertByteCodeUsingJackApis(
+                    getDestinationDir(),
+                    getJackFile(),
+                    getClasspath().getFiles(),
+                    getPackagedLibraries(),
+                    getSource().getFiles(),
+                    getProguardFiles(),
+                    getMappingFile(),
+                    getJarJarRuleFiles(),
+                    getIncrementalDir(),
+                    getJavaResourcesFolder(),
+                    isMultiDexEnabled(),
+                    getMinSdkVersion());
         }
 
     }

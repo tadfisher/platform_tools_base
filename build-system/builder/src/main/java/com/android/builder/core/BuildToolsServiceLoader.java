@@ -174,20 +174,25 @@ public enum BuildToolsServiceLoader {
          * {@link com.android.builder.core.BuildToolsServiceLoader.Service} type in the context
          * of the build-tools version this instance was created for.
          *
+         * @param logger to log events.
          * @param serviceType the requested service type encapsulation.
          * @param <T> the type of service
          * @return a {@link ServiceLoader} instance for the T service type.
          * @throws ClassNotFoundException
          */
         @NonNull
-        public synchronized  <T> ServiceLoader<T> getServiceLoader(Service<T> serviceType)
+        public synchronized  <T> ServiceLoader<T> getServiceLoader(
+                ILogger logger,
+                Service<T> serviceType)
                 throws ClassNotFoundException {
 
             Optional<ServiceLoader<T>> serviceLoaderOptional =
                     getLoadedServiceLoader(serviceType.getServiceClass());
             if (serviceLoaderOptional.isPresent()) {
+                logger.info("Returning loaded service %s", serviceType);
                 return serviceLoaderOptional.get();
             }
+            logger.info("Loading service %s", serviceType);
 
             File buildToolLocation = buildToolInfo.getLocation();
             if (System.getenv("USE_JACK_LOCATION") != null) {
@@ -224,7 +229,7 @@ public enum BuildToolsServiceLoader {
                 ILogger logger,
                 Service<T> serviceType) throws ClassNotFoundException {
             logger.verbose("Looking for %1$s", serviceType);
-            ServiceLoader<T> serviceLoader = getServiceLoader(serviceType);
+            ServiceLoader<T> serviceLoader = getServiceLoader(logger, serviceType);
             logger.verbose("Got a serviceLoader %1$d",
                     Integer.toHexString(System.identityHashCode(serviceLoader)));
             Iterator<T> serviceIterator = serviceLoader.iterator();

@@ -74,7 +74,6 @@ public class MinifyLibAndAppWithJavaResTest {
 
     @Test
     void testReleasePackaging() {
-        Assume.assumeFalse("Ignore until Jack fixed proguard confusion", GradleTestProject.USE_JACK)
         File releaseApk = project.getSubproject("app").getApk("release")
         assertNotNull(releaseApk)
         ApkSubject apkSubject = assertThatApk(releaseApk);
