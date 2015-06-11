@@ -20,6 +20,8 @@ import com.android.annotations.NonNull;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.testing.TestData;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 
 import java.util.Locale;
 import java.util.Map;
@@ -33,8 +35,12 @@ public abstract class AbstractTestDataImpl implements TestData {
     @NonNull
     private final VariantConfiguration<?, ?, ?> testVariantConfig;
 
+    @NonNull
+    private Map<String, String> extraInstrumentationTestRunnerArgs;
+
     public AbstractTestDataImpl(@NonNull VariantConfiguration<?, ?, ?> testVariantConfig) {
         this.testVariantConfig = testVariantConfig;
+        this.extraInstrumentationTestRunnerArgs = Maps.newHashMap();
     }
 
     @NonNull
@@ -46,7 +52,16 @@ public abstract class AbstractTestDataImpl implements TestData {
     @NonNull
     @Override
     public Map<String, String> getInstrumentationRunnerArguments() {
-        return testVariantConfig.getInstrumentationRunnerArguments();
+        return ImmutableMap.<String, String>builder()
+                .putAll(testVariantConfig.getInstrumentationRunnerArguments())
+                .putAll(extraInstrumentationTestRunnerArgs)
+                .build();
+    }
+
+    public void setExtraInstrumentationTestRunnerArgs(
+            @NonNull Map<String, String> extraInstrumentationTestRunnerArgs) {
+        this.extraInstrumentationTestRunnerArgs =
+                ImmutableMap.copyOf(extraInstrumentationTestRunnerArgs);
     }
 
     @Override
