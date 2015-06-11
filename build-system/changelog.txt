@@ -10,6 +10,9 @@
 - Unit testing improvements
   * Run javac on main and test sources, even if useJack is true.
   * Correctly recognize per-build-type dependencies.
+- When building aar, do not provide automatic @{applicationId} placeholder
+  in manifest merger.
+- Introduce support for incremental compilation support with Jill and Jack.
 
 1.2.0
 - Unit testing improvements
