@@ -201,6 +201,10 @@ public class NdkHandler {
         return ndkDirectory;
     }
 
+    public boolean isNdkDirConfigured() {
+        return ndkDirectory != null;
+    }
+
     private static String getToolchainPrefix(Toolchain toolchain, Abi abi) {
         if (toolchain == Toolchain.GCC) {
             return abi.getGccToolchainPrefix();
@@ -250,8 +254,7 @@ public class NdkHandler {
                 });
 
         if (toolchainPaths == null) {
-            throw new InvalidUserDataException("Unable to find toolchain: "
-                    + prebuiltFolder);
+            throw new InvalidUserDataException("Unable to find toolchain: " + prebuiltFolder);
         }
         if (toolchainPaths.length == 1) {
             return toolchainPaths[0];
