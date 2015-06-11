@@ -24,8 +24,8 @@ import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.AndroidVersion.AndroidVersionException;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.SdkManager;
 import com.android.sdklib.io.FileOp;
+import com.android.sdklib.repository.local.LocalSdk;
 import com.android.utils.StdLogger;
 import com.google.common.collect.Lists;
 
@@ -135,25 +135,22 @@ public class ManifestMergerTask extends SingleDependencyTask {
             ManifestMerger merger = new ManifestMerger(
                     MergerLog.wrapSdkLog(new StdLogger(StdLogger.Level.VERBOSE)),
                     new ICallback() {
-                        SdkManager mManager;
+                        LocalSdk mSdk;
                         @Override
                         public int queryCodenameApiLevel(@NonNull String codename) {
-                            if (mManager == null) {
+                            if (mSdk == null) {
                                 File sdkDir = TaskHelper.getSdkLocation(getProject());
-                                mManager = SdkManager.createManager(sdkDir.getPath(),
-                                        new StdLogger(StdLogger.Level.VERBOSE));
+                                mSdk = new LocalSdk(sdkDir);
                             }
-                            if (mManager != null) {
-                                try {
-                                    AndroidVersion version = new AndroidVersion(codename);
-                                    IAndroidTarget t = mManager.getTargetFromHashString(
-                                            AndroidTargetHash.getPlatformHashString(version));
-                                    if (t != null) {
-                                        return t.getVersion().getApiLevel();
-                                    }
-                                } catch (AndroidVersionException ignored) {
-                                    // Not a valid API or codename.
+                            try {
+                                AndroidVersion version = new AndroidVersion(codename);
+                                IAndroidTarget t = mSdk.getTargetFromHashString(
+                                        AndroidTargetHash.getPlatformHashString(version));
+                                if (t != null) {
+                                    return t.getVersion().getApiLevel();
                                 }
+                            } catch (AndroidVersionException ignored) {
+                                // Not a valid API or codename.
                             }
                             return ICallback.UNKNOWN_CODENAME;
                         }

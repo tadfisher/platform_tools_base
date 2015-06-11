@@ -16,12 +16,12 @@
 
 package com.android.sdklib.internal.repository.packages;
 
-import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.archives.Archive;
 import com.android.sdklib.internal.repository.sources.SdkSource;
 import com.android.sdklib.repository.FullRevision;
 import com.android.sdklib.repository.descriptors.IPkgDesc;
 import com.android.sdklib.repository.descriptors.PkgDesc;
+import com.android.sdklib.repository.local.LocalSdk;
 
 import java.io.File;
 import java.util.Properties;
@@ -134,7 +134,7 @@ public class MockEmptyPackage extends MajorRevisionPackage {
     }
 
     @Override
-    public File getInstallFolder(String osSdkRoot, SdkManager sdkManager) {
+    public File getInstallFolder(String osSdkRoot, LocalSdk sdk) {
         return new File(new File(osSdkRoot, "mock"), mTestHandle);
     }
 

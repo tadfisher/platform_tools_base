@@ -43,7 +43,7 @@ public class DeviceManagerTest extends SdkManagerTestCase {
 
     private DeviceManager createDeviceManager() {
         log = super.getLog();
-        File sdkLocation = getSdkManager().getLocalSdk().getLocation();
+        File sdkLocation = getSdk().getLocation();
         return DeviceManager.createInstance(sdkLocation, log);
     }
 

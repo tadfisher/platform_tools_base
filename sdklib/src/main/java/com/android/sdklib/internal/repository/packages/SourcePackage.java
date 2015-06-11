@@ -22,7 +22,6 @@ import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.AndroidVersion.AndroidVersionException;
-import com.android.sdklib.SdkManager;
 import com.android.sdklib.repository.IDescription;
 import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.archives.Archive;
@@ -32,6 +31,7 @@ import com.android.sdklib.repository.MajorRevision;
 import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.sdklib.repository.descriptors.IPkgDesc;
 import com.android.sdklib.repository.descriptors.PkgDesc;
+import com.android.sdklib.repository.local.LocalSdk;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.w3c.dom.Node;
@@ -304,11 +304,11 @@ public class SourcePackage extends MajorRevisionPackage implements IAndroidVersi
      * A sources package is typically installed in SDK/sources/platform.
      *
      * @param osSdkRoot The OS path of the SDK root folder.
-     * @param sdkManager An existing SDK manager to list current platforms and addons.
+     * @param sdk An existing SDK manager to list current platforms and addons.
      * @return A new {@link File} corresponding to the directory to use to install this package.
      */
     @Override
-    public File getInstallFolder(String osSdkRoot, SdkManager sdkManager) {
+    public File getInstallFolder(String osSdkRoot, LocalSdk sdk) {
         File folder = new File(osSdkRoot, SdkConstants.FD_PKG_SOURCES);
         folder = new File(folder, "android-" + mVersion.getApiString());    //$NON-NLS-1$
         return folder;

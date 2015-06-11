@@ -16,8 +16,6 @@
 
 package com.android.sdklib;
 
-import com.android.sdklib.SdkManager.LayoutlibVersion;
-
 import junit.framework.TestCase;
 
 /**

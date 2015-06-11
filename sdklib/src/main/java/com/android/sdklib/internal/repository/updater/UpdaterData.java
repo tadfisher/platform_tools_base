@@ -21,7 +21,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
-import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.repository.AdbWrapper;
 import com.android.sdklib.internal.repository.DownloadCache;
@@ -33,7 +32,6 @@ import com.android.sdklib.internal.repository.NullTaskMonitor;
 import com.android.sdklib.internal.repository.archives.Archive;
 import com.android.sdklib.internal.repository.archives.ArchiveInstaller;
 import com.android.sdklib.internal.repository.packages.AddonPackage;
-import com.android.sdklib.repository.License;
 import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.internal.repository.packages.PlatformToolPackage;
 import com.android.sdklib.internal.repository.packages.ToolPackage;
@@ -43,8 +41,10 @@ import com.android.sdklib.internal.repository.sources.SdkSourceCategory;
 import com.android.sdklib.internal.repository.sources.SdkSources;
 import com.android.sdklib.internal.repository.updater.SettingsController.OnChangedListener;
 import com.android.sdklib.repository.ISdkChangeListener;
+import com.android.sdklib.repository.License;
 import com.android.sdklib.repository.SdkAddonConstants;
 import com.android.sdklib.repository.SdkRepoConstants;
+import com.android.sdklib.repository.local.LocalSdk;
 import com.android.sdklib.util.LineUtil;
 import com.android.utils.ILogger;
 import com.android.utils.IReaderLogger;
@@ -55,6 +55,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -99,7 +100,7 @@ public class UpdaterData implements IUpdaterData {
     private final ILogger mSdkLog;
     private ITaskFactory mTaskFactory;
 
-    private SdkManager mSdkManager;
+    private LocalSdk mSdk;
     private AvdManager mAvdManager;
     /**
      * The current {@link PackageLoader} to use.
@@ -167,8 +168,8 @@ public class UpdaterData implements IUpdaterData {
     }
 
     @Override
-    public SdkManager getSdkManager() {
-        return mSdkManager;
+    public LocalSdk getSdk() {
+        return mSdk;
     }
 
     @Override
@@ -248,15 +249,15 @@ public class UpdaterData implements IUpdaterData {
     }
 
     /**
-     * Initializes the {@link SdkManager} and the {@link AvdManager}.
+     * Initializes the {@link LocalSdk} and the {@link AvdManager}.
      * Extracted so that we can override this in unit tests.
      */
     @VisibleForTesting(visibility=Visibility.PRIVATE)
     protected void initSdk() {
-        setSdkManager(SdkManager.createManager(mOsSdkRoot, mSdkLog));
+        setSdk(new LocalSdk(new File(mOsSdkRoot)));
         try {
           mAvdManager = null;
-          mAvdManager = AvdManager.getInstance(mSdkManager.getLocalSdk(), mSdkLog);
+          mAvdManager = AvdManager.getInstance(mSdk, mSdkLog);
         } catch (AndroidLocationException e) {
             mSdkLog.error(e, "Unable to read AVDs: " + e.getMessage());  //$NON-NLS-1$
 
@@ -303,8 +304,8 @@ public class UpdaterData implements IUpdaterData {
     }
 
     @VisibleForTesting(visibility=Visibility.PRIVATE)
-    protected void setSdkManager(SdkManager sdkManager) {
-        mSdkManager = sdkManager;
+    public void setSdk(LocalSdk sdk) {
+        mSdk = sdk;
     }
 
     /**
@@ -316,7 +317,7 @@ public class UpdaterData implements IUpdaterData {
      */
     public void reloadSdk() {
         // reload SDK
-        mSdkManager.reloadSdk(mSdkLog);
+        mSdk = new LocalSdk(mSdk.getLocation());
 
         // reload AVDs
         if (mAvdManager != null) {
@@ -391,7 +392,7 @@ public class UpdaterData implements IUpdaterData {
 
         if (packages == null) {
             // load on demand the first time
-            packages = parser.parseSdk(getOsSdkRoot(), getSdkManager(), monitor);
+            packages = parser.parseSdk(getOsSdkRoot(), getSdk(), monitor);
         }
 
         return packages;
@@ -485,7 +486,7 @@ public class UpdaterData implements IUpdaterData {
                         if (installer.install(ai,
                                               mOsSdkRoot,
                                               forceHttp,
-                                              mSdkManager,
+                                              mSdk,
                                               getDownloadCache(),
                                               monitor)) {
                             // We installed this archive.
@@ -533,17 +534,6 @@ public class UpdaterData implements IUpdaterData {
                         // This allows internal methods to not have to care in case
                         // they abort early
                         monitor.incProgress(nextProgress - monitor.getProgress());
-                    }
-                }
-
-                if (installedAddon) {
-                    // Update the USB vendor ids for adb
-                    try {
-                        mSdkManager.updateAdb();
-                        monitor.log("Updated ADB to support the USB devices declared in the SDK add-ons.");
-                    } catch (Exception e) {
-                        mSdkLog.error(e, "Update ADB failed");
-                        monitor.logError("failed to update adb to support the USB devices declared in the SDK add-ons.");
                     }
                 }
 

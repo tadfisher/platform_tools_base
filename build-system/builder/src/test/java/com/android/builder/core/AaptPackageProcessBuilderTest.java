@@ -22,8 +22,8 @@ import com.android.builder.model.AaptOptions;
 import com.android.ide.common.process.ProcessInfo;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.SdkManager;
 import com.android.sdklib.repository.FullRevision;
+import com.android.sdklib.repository.local.LocalSdk;
 import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
 import com.google.common.collect.ImmutableList;
@@ -55,13 +55,12 @@ public class AaptPackageProcessBuilderTest extends TestCase {
     public void setUp() throws Exception {
         super.setUp();
         MockitoAnnotations.initMocks(this);
-        SdkManager sdkManager = SdkManager.createManager(getSdkDir().getAbsolutePath(), mLogger);
-        assert sdkManager != null;
-        mBuildToolInfo = sdkManager.getBuildTool(FullRevision.parseRevision("21"));
+        LocalSdk sdk = new LocalSdk(getSdkDir());
+        mBuildToolInfo = sdk.getBuildTool(FullRevision.parseRevision("21"));
         if (mBuildToolInfo == null) {
             throw new RuntimeException("Test requires build-tools 21");
         }
-        for (IAndroidTarget iAndroidTarget : sdkManager.getTargets()) {
+        for (IAndroidTarget iAndroidTarget : sdk.getTargets()) {
             if (iAndroidTarget.getVersion().getApiLevel() == 21) {
                 mIAndroidTarget = iAndroidTarget;
             }
@@ -269,14 +268,13 @@ public class AaptPackageProcessBuilderTest extends TestCase {
                 .setPreferredDensity("xhdpi");
 
 
-        SdkManager sdkManager = SdkManager.createManager(getSdkDir().getAbsolutePath(), mLogger);
-        assert sdkManager != null;
-        BuildToolInfo buildToolInfo = sdkManager.getBuildTool(FullRevision.parseRevision("20"));
+        LocalSdk sdk = new LocalSdk(getSdkDir());
+        BuildToolInfo buildToolInfo = sdk.getBuildTool(FullRevision.parseRevision("20"));
         if (buildToolInfo == null) {
             throw new RuntimeException("Test requires build-tools 20");
         }
         IAndroidTarget androidTarget = null;
-        for (IAndroidTarget iAndroidTarget : sdkManager.getTargets()) {
+        for (IAndroidTarget iAndroidTarget : sdk.getTargets()) {
             if (iAndroidTarget.getVersion().getApiLevel() < 20) {
                 androidTarget = iAndroidTarget;
                 break;
@@ -317,14 +315,13 @@ public class AaptPackageProcessBuilderTest extends TestCase {
                 .setPreferredDensity("xhdpi");
 
 
-        SdkManager sdkManager = SdkManager.createManager(getSdkDir().getAbsolutePath(), mLogger);
-        assert sdkManager != null;
-        BuildToolInfo buildToolInfo = sdkManager.getBuildTool(FullRevision.parseRevision("21"));
+        LocalSdk sdk = new LocalSdk(getSdkDir());
+        BuildToolInfo buildToolInfo = sdk.getBuildTool(FullRevision.parseRevision("21"));
         if (buildToolInfo == null) {
             throw new RuntimeException("Test requires build-tools 21");
         }
         IAndroidTarget androidTarget = null;
-        for (IAndroidTarget iAndroidTarget : sdkManager.getTargets()) {
+        for (IAndroidTarget iAndroidTarget : sdk.getTargets()) {
             if (iAndroidTarget.getVersion().getApiLevel() < 21) {
                 androidTarget = iAndroidTarget;
                 break;
@@ -367,14 +364,13 @@ public class AaptPackageProcessBuilderTest extends TestCase {
                 .setPreferredDensity("xhdpi");
 
 
-        SdkManager sdkManager = SdkManager.createManager(getSdkDir().getAbsolutePath(), mLogger);
-        assert sdkManager != null;
-        BuildToolInfo buildToolInfo = sdkManager.getBuildTool(FullRevision.parseRevision("21"));
+        LocalSdk sdk = new LocalSdk(getSdkDir());
+        BuildToolInfo buildToolInfo = sdk.getBuildTool(FullRevision.parseRevision("21"));
         if (buildToolInfo == null) {
             throw new RuntimeException("Test requires build-tools 21");
         }
         IAndroidTarget androidTarget = null;
-        for (IAndroidTarget iAndroidTarget : sdkManager.getTargets()) {
+        for (IAndroidTarget iAndroidTarget : sdk.getTargets()) {
             if (iAndroidTarget.getVersion().getApiLevel() < 21) {
                 androidTarget = iAndroidTarget;
                 break;
@@ -422,14 +418,13 @@ public class AaptPackageProcessBuilderTest extends TestCase {
                 .setPreferredDensity("xhdpi");
 
 
-        SdkManager sdkManager = SdkManager.createManager(getSdkDir().getAbsolutePath(), mLogger);
-        assert sdkManager != null;
-        BuildToolInfo buildToolInfo = sdkManager.getBuildTool(FullRevision.parseRevision("21"));
+        LocalSdk sdk = new LocalSdk(getSdkDir());
+        BuildToolInfo buildToolInfo = sdk.getBuildTool(FullRevision.parseRevision("21"));
         if (buildToolInfo == null) {
             throw new RuntimeException("Test requires build-tools 21");
         }
         IAndroidTarget androidTarget = null;
-        for (IAndroidTarget iAndroidTarget : sdkManager.getTargets()) {
+        for (IAndroidTarget iAndroidTarget : sdk.getTargets()) {
             if (iAndroidTarget.getVersion().getApiLevel() < 21) {
                 androidTarget = iAndroidTarget;
                 break;
@@ -478,14 +473,13 @@ public class AaptPackageProcessBuilderTest extends TestCase {
                         .of("en", "fr", "es", "de", "it", "mdpi", "hdpi", "xhdpi", "xxhdpi"))
                 .setSplits(ImmutableList.of("mdpi", "hdpi", "xhdpi", "xxhdpi"));
 
-        SdkManager sdkManager = SdkManager.createManager(getSdkDir().getAbsolutePath(), mLogger);
-        assert sdkManager != null;
-        BuildToolInfo buildToolInfo = sdkManager.getBuildTool(FullRevision.parseRevision("20"));
+        LocalSdk sdk = new LocalSdk(getSdkDir());
+        BuildToolInfo buildToolInfo = sdk.getBuildTool(FullRevision.parseRevision("20"));
         if (buildToolInfo == null) {
             throw new RuntimeException("Test requires build-tools 20");
         }
         IAndroidTarget androidTarget = null;
-        for (IAndroidTarget iAndroidTarget : sdkManager.getTargets()) {
+        for (IAndroidTarget iAndroidTarget : sdk.getTargets()) {
             if (iAndroidTarget.getVersion().getApiLevel() >= 20) {
                 androidTarget = iAndroidTarget;
                 break;
@@ -530,14 +524,13 @@ public class AaptPackageProcessBuilderTest extends TestCase {
                 .setResourceConfigs(ImmutableList
                         .of("en", "fr", "es", "de", "it", "mdpi", "hdpi", "xhdpi", "xxhdpi"));
 
-        SdkManager sdkManager = SdkManager.createManager(getSdkDir().getAbsolutePath(), mLogger);
-        assert sdkManager != null;
-        BuildToolInfo buildToolInfo = sdkManager.getBuildTool(FullRevision.parseRevision("21"));
+        LocalSdk sdk = new LocalSdk(getSdkDir());
+        BuildToolInfo buildToolInfo = sdk.getBuildTool(FullRevision.parseRevision("21"));
         if (buildToolInfo == null) {
             throw new RuntimeException("Test requires build-tools 21");
         }
         IAndroidTarget androidTarget = null;
-        for (IAndroidTarget iAndroidTarget : sdkManager.getTargets()) {
+        for (IAndroidTarget iAndroidTarget : sdk.getTargets()) {
             if (iAndroidTarget.getVersion().getApiLevel() >= 21) {
                 androidTarget = iAndroidTarget;
                 break;
@@ -584,14 +577,13 @@ public class AaptPackageProcessBuilderTest extends TestCase {
                 .setSplits(ImmutableList.of("mdpi", "hdpi", "xhdpi", "xxhdpi"))
                 .setPreferredDensity("hdpi");
 
-        SdkManager sdkManager = SdkManager.createManager(getSdkDir().getAbsolutePath(), mLogger);
-        assert sdkManager != null;
-        BuildToolInfo buildToolInfo = sdkManager.getBuildTool(FullRevision.parseRevision("21"));
+        LocalSdk sdk = new LocalSdk(getSdkDir());
+        BuildToolInfo buildToolInfo = sdk.getBuildTool(FullRevision.parseRevision("21"));
         if (buildToolInfo == null) {
             throw new RuntimeException("Test requires build-tools 21");
         }
         IAndroidTarget androidTarget = null;
-        for (IAndroidTarget iAndroidTarget : sdkManager.getTargets()) {
+        for (IAndroidTarget iAndroidTarget : sdk.getTargets()) {
             if (iAndroidTarget.getVersion().getApiLevel() >= 21) {
                 androidTarget = iAndroidTarget;
                 break;
@@ -632,14 +624,13 @@ public class AaptPackageProcessBuilderTest extends TestCase {
                 .setResourceConfigs(ImmutableList.of("en", "fr", "es", "de", "it"))
                 .setPreferredDensity("hdpi");
 
-        SdkManager sdkManager = SdkManager.createManager(getSdkDir().getAbsolutePath(), mLogger);
-        assert sdkManager != null;
-        BuildToolInfo buildToolInfo = sdkManager.getBuildTool(FullRevision.parseRevision("21"));
+        LocalSdk sdk = new LocalSdk(getSdkDir());
+        BuildToolInfo buildToolInfo = sdk.getBuildTool(FullRevision.parseRevision("21"));
         if (buildToolInfo == null) {
             throw new RuntimeException("Test requires build-tools 21");
         }
         IAndroidTarget androidTarget = null;
-        for (IAndroidTarget iAndroidTarget : sdkManager.getTargets()) {
+        for (IAndroidTarget iAndroidTarget : sdk.getTargets()) {
             if (iAndroidTarget.getVersion().getApiLevel() >= 21) {
                 androidTarget = iAndroidTarget;
                 break;

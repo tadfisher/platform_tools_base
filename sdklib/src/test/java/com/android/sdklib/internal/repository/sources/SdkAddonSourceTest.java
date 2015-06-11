@@ -16,17 +16,17 @@
 
 package com.android.sdklib.internal.repository.sources;
 
-import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.ITaskMonitor;
-import com.android.sdklib.internal.repository.MockEmptySdkManager;
 import com.android.sdklib.internal.repository.MockMonitor;
 import com.android.sdklib.internal.repository.packages.AddonPackage;
 import com.android.sdklib.internal.repository.packages.ExtraPackage;
 import com.android.sdklib.internal.repository.packages.IMinToolsDependency;
 import com.android.sdklib.internal.repository.packages.Package;
-import com.android.sdklib.internal.repository.sources.SdkAddonSource;
 import com.android.sdklib.repository.SdkAddonConstants;
+import com.android.sdklib.repository.local.LocalSdk;
 import com.android.utils.Pair;
+
+import junit.framework.TestCase;
 
 import org.w3c.dom.Document;
 
@@ -37,8 +37,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-
-import junit.framework.TestCase;
 
 /**
  * Tests for {@link SdkAddonSource}.
@@ -200,7 +198,7 @@ public class SdkAddonSourceTest extends TestCase {
         // Check the extra packages path, vendor, install folder
 
         final String osSdkPath = "SDK";
-        final SdkManager sdkManager = new MockEmptySdkManager(osSdkPath);
+        final LocalSdk sdk = new LocalSdk();
 
         ArrayList<String> extraPaths   = new ArrayList<String>();
         ArrayList<String> extraVendors = new ArrayList<String>();
@@ -210,7 +208,7 @@ public class SdkAddonSourceTest extends TestCase {
                 ExtraPackage ep = (ExtraPackage) p;
                 extraPaths.add(ep.getPath());
                 extraVendors.add(ep.getVendorId() + "/" + ep.getVendorDisplay());
-                extraInstall.add(ep.getInstallFolder(osSdkPath, sdkManager));
+                extraInstall.add(ep.getInstallFolder(osSdkPath, sdk));
             }
         }
         assertEquals(
@@ -308,7 +306,7 @@ public class SdkAddonSourceTest extends TestCase {
         // Check the extra packages path, vendor, install folder
 
         final String osSdkPath = "SDK";
-        final SdkManager sdkManager = new MockEmptySdkManager(osSdkPath);
+        final LocalSdk sdk = new LocalSdk();
 
         ArrayList<String> extraPaths   = new ArrayList<String>();
         ArrayList<String> extraVendors = new ArrayList<String>();
@@ -318,7 +316,7 @@ public class SdkAddonSourceTest extends TestCase {
                 ExtraPackage ep = (ExtraPackage) p;
                 extraPaths.add(ep.getPath());
                 extraVendors.add(ep.getVendorId() + "/" + ep.getVendorDisplay());
-                extraInstall.add(ep.getInstallFolder(osSdkPath, sdkManager));
+                extraInstall.add(ep.getInstallFolder(osSdkPath, sdk));
             }
         }
         assertEquals(
@@ -416,7 +414,7 @@ public class SdkAddonSourceTest extends TestCase {
         // Check the extra packages: path, vendor, install folder, old-paths
 
         final String osSdkPath = "SDK";
-        final SdkManager sdkManager = new MockEmptySdkManager(osSdkPath);
+        final LocalSdk sdk = new LocalSdk();
 
         ArrayList<String> extraPaths   = new ArrayList<String>();
         ArrayList<String> extraVendors = new ArrayList<String>();
@@ -428,7 +426,7 @@ public class SdkAddonSourceTest extends TestCase {
                 // combine path and old-paths in the form "path [old_path1, old_path2]"
                 extraPaths.add(ep.getPath() + " " + Arrays.toString(ep.getOldPaths()));
                 extraVendors.add(ep.getVendorId() + "/" + ep.getVendorDisplay());
-                extraInstall.add(ep.getInstallFolder(osSdkPath, sdkManager));
+                extraInstall.add(ep.getInstallFolder(osSdkPath, sdk));
 
                 ArrayList<String> filePaths = new ArrayList<String>();
                 for (String filePath : ep.getProjectFiles()) {
@@ -561,7 +559,7 @@ public class SdkAddonSourceTest extends TestCase {
 
         // Check the extra packages: path, vendor, install folder, old-paths
         final String osSdkPath = "SDK";
-        final SdkManager sdkManager = new MockEmptySdkManager(osSdkPath);
+        final LocalSdk sdk = new LocalSdk();
 
         ArrayList<String> extraPaths   = new ArrayList<String>();
         ArrayList<String> extraVendors = new ArrayList<String>();
@@ -573,7 +571,7 @@ public class SdkAddonSourceTest extends TestCase {
                 // combine path and old-paths in the form "path [old_path1, old_path2]"
                 extraPaths.add(ep.getPath() + " " + Arrays.toString(ep.getOldPaths()));
                 extraVendors.add(ep.getVendorId() + "/" + ep.getVendorDisplay());
-                extraInstall.add(ep.getInstallFolder(osSdkPath, sdkManager));
+                extraInstall.add(ep.getInstallFolder(osSdkPath, sdk));
 
                 ArrayList<String> filePaths = new ArrayList<String>();
                 for (String filePath : ep.getProjectFiles()) {
@@ -708,7 +706,7 @@ public class SdkAddonSourceTest extends TestCase {
 
         // Check the extra packages: path, vendor, install folder, old-paths
         final String osSdkPath = "SDK";
-        final SdkManager sdkManager = new MockEmptySdkManager(osSdkPath);
+        final LocalSdk sdk = new LocalSdk();
 
         ArrayList<String> extraPaths   = new ArrayList<String>();
         ArrayList<String> extraVendors = new ArrayList<String>();
@@ -720,7 +718,7 @@ public class SdkAddonSourceTest extends TestCase {
                 // combine path and old-paths in the form "path [old_path1, old_path2]"
                 extraPaths.add(ep.getPath() + " " + Arrays.toString(ep.getOldPaths()));
                 extraVendors.add(ep.getVendorId() + "/" + ep.getVendorDisplay());
-                extraInstall.add(ep.getInstallFolder(osSdkPath, sdkManager));
+                extraInstall.add(ep.getInstallFolder(osSdkPath, sdk));
 
                 ArrayList<String> filePaths = new ArrayList<String>();
                 for (String filePath : ep.getProjectFiles()) {
@@ -870,7 +868,7 @@ public class SdkAddonSourceTest extends TestCase {
 
         // Check the extra packages: path, vendor, install folder, old-paths
         final String osSdkPath = "SDK";
-        final SdkManager sdkManager = new MockEmptySdkManager(osSdkPath);
+        final LocalSdk sdk = new LocalSdk();
 
         ArrayList<String> extraPaths   = new ArrayList<String>();
         ArrayList<String> extraVendors = new ArrayList<String>();
@@ -882,7 +880,7 @@ public class SdkAddonSourceTest extends TestCase {
                 // combine path and old-paths in the form "path [old_path1, old_path2]"
                 extraPaths.add(ep.getPath() + " " + Arrays.toString(ep.getOldPaths()));
                 extraVendors.add(ep.getVendorId() + "/" + ep.getVendorDisplay());
-                extraInstall.add(ep.getInstallFolder(osSdkPath, sdkManager));
+                extraInstall.add(ep.getInstallFolder(osSdkPath, sdk));
 
                 ArrayList<String> filePaths = new ArrayList<String>();
                 for (String filePath : ep.getProjectFiles()) {
@@ -1032,7 +1030,7 @@ public class SdkAddonSourceTest extends TestCase {
 
         // Check the extra packages: path, vendor, install folder, old-paths
         final String osSdkPath = "SDK";
-        final SdkManager sdkManager = new MockEmptySdkManager(osSdkPath);
+        final LocalSdk sdk = new LocalSdk();
 
         ArrayList<String> extraPaths   = new ArrayList<String>();
         ArrayList<String> extraVendors = new ArrayList<String>();
@@ -1044,7 +1042,7 @@ public class SdkAddonSourceTest extends TestCase {
                 // combine path and old-paths in the form "path [old_path1, old_path2]"
                 extraPaths.add(ep.getPath() + " " + Arrays.toString(ep.getOldPaths()));
                 extraVendors.add(ep.getVendorId() + "/" + ep.getVendorDisplay());
-                extraInstall.add(ep.getInstallFolder(osSdkPath, sdkManager));
+                extraInstall.add(ep.getInstallFolder(osSdkPath, sdk));
 
                 ArrayList<String> filePaths = new ArrayList<String>();
                 for (String filePath : ep.getProjectFiles()) {

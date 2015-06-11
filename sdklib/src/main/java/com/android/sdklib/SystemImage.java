@@ -23,6 +23,7 @@ import com.android.sdklib.devices.Abi;
 import com.android.sdklib.internal.androidTarget.PlatformTarget;
 import com.android.sdklib.io.FileOp;
 import com.android.sdklib.repository.descriptors.IdDisplay;
+import com.android.sdklib.repository.local.LocalSdk;
 import com.google.common.base.Objects;
 
 import java.io.File;
@@ -100,7 +101,7 @@ public class SystemImage implements ISystemImage {
      * Creates a {@link SystemImage} description for a non-existing platform system image folder.
      * The actual location is computed based on the {@code locationType}.
      *
-     * @param sdkManager The current SDK manager.
+     * @param sdk The current local sdk.
      * @param locationType Where the system image folder is located for this ABI.
      * @param tag The tag of the system-image. Use {@link #DEFAULT_TAG} for backward compatibility.
      * @param abiType The ABI type. For example, one of {@link SdkConstants#ABI_ARMEABI},
@@ -111,13 +112,13 @@ public class SystemImage implements ISystemImage {
      *         {@link ISystemImage.LocationType#IN_SYSTEM_IMAGE} is not a {@link PlatformTarget}.
      */
     public SystemImage(
-            @NonNull  SdkManager sdkManager,
+            @NonNull  LocalSdk sdk,
             @NonNull  IAndroidTarget target,
             @NonNull  LocationType locationType,
             @NonNull  IdDisplay tag,
             @NonNull  String abiType,
             @NonNull  File[] skins) {
-        this(sdkManager, target, locationType, tag, null /*addonVendor*/, abiType, skins);
+        this(sdk, target, locationType, tag, null /*addonVendor*/, abiType, skins);
     }
 
 
@@ -126,7 +127,7 @@ public class SystemImage implements ISystemImage {
      * for either platform or add-on.
      * The actual location is computed based on the {@code locationType}.
      *
-     * @param sdkManager The current SDK manager.
+     * @param sdk The current local sdk.
      * @param locationType Where the system image folder is located for this ABI.
      * @param tag The tag of the system-image. Use {@link #DEFAULT_TAG} for backward compatibility.
      * @param addonVendor Non-null add-on vendor name. Null for platforms.
@@ -138,7 +139,7 @@ public class SystemImage implements ISystemImage {
      *         {@link ISystemImage.LocationType#IN_SYSTEM_IMAGE} is not a {@link PlatformTarget}.
      */
     public SystemImage(
-            @NonNull  SdkManager sdkManager,
+            @NonNull  LocalSdk sdk,
             @NonNull  IAndroidTarget target,
             @NonNull  LocationType locationType,
             @NonNull  IdDisplay tag,
@@ -162,7 +163,7 @@ public class SystemImage implements ISystemImage {
             break;
 
         case IN_SYSTEM_IMAGE:
-            location = getCanonicalFolder(sdkManager.getLocation(),
+            location = getCanonicalFolder(sdk.getLocation(),
                                           target.getVersion(),
                                           tag.getId(),
                                           addonVendor == null ? null : addonVendor.getId(),
@@ -194,7 +195,7 @@ public class SystemImage implements ISystemImage {
      */
     @NonNull
     private static File getCanonicalFolder(
-            @NonNull  String sdkOsPath,
+            @NonNull  File sdkOsPath,
             @NonNull  AndroidVersion platformVersion,
             @Nullable String tagId,
             @Nullable String addonVendorId,

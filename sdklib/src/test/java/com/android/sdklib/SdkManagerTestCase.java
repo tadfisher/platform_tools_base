@@ -52,6 +52,7 @@ import com.android.sdklib.repository.FullRevision;
 import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.sdklib.repository.local.LocalPlatformPkgInfo;
+import com.android.sdklib.repository.local.LocalSdk;
 import com.android.sdklib.repository.local.LocalSysImgPkgInfo;
 import com.android.utils.ILogger;
 
@@ -73,7 +74,7 @@ public abstract class SdkManagerTestCase extends AndroidLocationTestCase {
     protected static final String TARGET_DIR_NAME_0 = "v0_0";
     private File mFakeSdk;
     private MockLog mLog;
-    private SdkManager mSdkManager;
+    private LocalSdk mLocalSdk;
     private AvdManager mAvdManager;
     private int mRepoXsdLevel;
 
@@ -82,9 +83,14 @@ public abstract class SdkManagerTestCase extends AndroidLocationTestCase {
         return mLog;
     }
 
-    /** Returns the {@link SdkManager} for this test case. */
-    public SdkManager getSdkManager() {
-        return mSdkManager;
+    /** Returns the {@link LocalSdk} for this test case. */
+    public LocalSdk getSdk() {
+        return mLocalSdk;
+    }
+
+    /** Sets the {@link LocalSdk} for this test case. */
+    public void setSdk(LocalSdk sdk) {
+        mLocalSdk = sdk;
     }
 
     /** Returns the {@link AvdManager} for this test case. */
@@ -110,13 +116,12 @@ public abstract class SdkManagerTestCase extends AndroidLocationTestCase {
      * android-home or the fake SDK. The SDK will be reparsed.
      */
     protected void createSdkAvdManagers() throws AndroidLocationException {
-        mSdkManager = SdkManager.createManager(mFakeSdk.getAbsolutePath(), mLog);
-        assertNotNull("SdkManager location was invalid", mSdkManager);
+        mLocalSdk = new LocalSdk(mFakeSdk);
         // Note: it's safe to use the default AvdManager implementation since makeFakeAndroidHome
         // above overrides the ANDROID_HOME folder to use a temp folder; consequently all
         // the AVDs created here will be located in this temp folder and will not alter
         // or pollute the default user's AVD folder.
-        mAvdManager = new AvdManager(mSdkManager.getLocalSdk(), mLog) {
+        mAvdManager = new AvdManager(mLocalSdk, mLog) {
             @Override
             protected boolean createSdCard(
                     String toolLocation,

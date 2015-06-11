@@ -24,7 +24,7 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISystemImage;
-import com.android.sdklib.SdkManager.LayoutlibVersion;
+import com.android.sdklib.LayoutlibVersion;
 import com.android.sdklib.repository.descriptors.IdDisplay;
 import com.android.utils.SparseArray;
 import com.google.common.collect.ImmutableList;

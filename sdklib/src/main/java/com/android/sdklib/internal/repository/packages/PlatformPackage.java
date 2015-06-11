@@ -24,14 +24,14 @@ import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.SdkManager;
-import com.android.sdklib.repository.IDescription;
 import com.android.sdklib.internal.repository.sources.SdkSource;
+import com.android.sdklib.repository.IDescription;
 import com.android.sdklib.repository.MajorRevision;
 import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.sdklib.repository.descriptors.IPkgDesc;
 import com.android.sdklib.repository.descriptors.PkgDesc;
+import com.android.sdklib.repository.local.LocalSdk;
 import com.android.utils.Pair;
 
 import org.w3c.dom.Node;
@@ -106,7 +106,7 @@ public class PlatformPackage extends MinToolsPackage
 
     /**
      * Creates a new platform package based on an actual {@link IAndroidTarget} (which
-     * must have {@link IAndroidTarget#isPlatform()} true) from the {@link SdkManager}.
+     * must have {@link IAndroidTarget#isPlatform()} true) from the {@link LocalSdk}.
      * This is used to list local SDK folders in which case there is one archive which
      * URL is the actual target location.
      * <p/>
@@ -307,14 +307,14 @@ public class PlatformPackage extends MinToolsPackage
      * has this platform version installed, we'll use that one.
      *
      * @param osSdkRoot The OS path of the SDK root folder.
-     * @param sdkManager An existing SDK manager to list current platforms and addons.
+     * @param sdk An existing SDK manager to list current platforms and addons.
      * @return A new {@link File} corresponding to the directory to use to install this package.
      */
     @Override
-    public File getInstallFolder(String osSdkRoot, SdkManager sdkManager) {
+    public File getInstallFolder(String osSdkRoot, LocalSdk sdk) {
 
         // First find if this platform is already installed. If so, reuse the same directory.
-        for (IAndroidTarget target : sdkManager.getTargets()) {
+        for (IAndroidTarget target : sdk.getTargets()) {
             if (target.isPlatform() && target.getVersion().equals(mVersion)) {
                 return new File(target.getLocation());
             }

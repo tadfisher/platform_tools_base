@@ -18,8 +18,8 @@ package com.android.build.gradle.integration.common.utils;
 
 import com.android.annotations.NonNull;
 import com.android.sdklib.BuildToolInfo;
-import com.android.sdklib.SdkManager;
 import com.android.sdklib.repository.FullRevision;
+import com.android.sdklib.repository.local.LocalSdk;
 import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
 
@@ -72,9 +72,8 @@ public class SdkHelper {
             @NonNull FullRevision fullRevision,
             @NonNull BuildToolInfo.PathId pathId) {
         ILogger logger = new StdLogger(StdLogger.Level.VERBOSE);
-        SdkManager sdkManager = SdkManager.createManager(findSdkDir().getAbsolutePath(), logger);
-        assert sdkManager != null;
-        BuildToolInfo buildToolInfo = sdkManager.getBuildTool(fullRevision);
+        LocalSdk sdk = new LocalSdk(findSdkDir());
+        BuildToolInfo buildToolInfo = sdk.getBuildTool(fullRevision);
         if (buildToolInfo == null) {
             throw new RuntimeException("Test requires build-tools " + fullRevision.toString());
         }

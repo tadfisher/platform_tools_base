@@ -16,10 +16,10 @@
 
 package com.android.sdklib.internal.repository.updater;
 
-import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.repository.DownloadCache;
 import com.android.sdklib.internal.repository.ITaskFactory;
+import com.android.sdklib.repository.local.LocalSdk;
 import com.android.utils.ILogger;
 
 
@@ -40,7 +40,7 @@ public interface IUpdaterData {
 
     DownloadCache getDownloadCache();
 
-    SdkManager getSdkManager();
+    LocalSdk getSdk();
 
     AvdManager getAvdManager();
 

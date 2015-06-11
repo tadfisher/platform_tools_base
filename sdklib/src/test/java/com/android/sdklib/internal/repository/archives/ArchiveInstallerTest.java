@@ -28,6 +28,7 @@ import com.android.sdklib.internal.repository.sources.SdkSource;
 import com.android.sdklib.io.IFileOp;
 import com.android.sdklib.io.MockFileOp;
 import com.android.sdklib.repository.PkgProps;
+import com.android.sdklib.repository.local.LocalSdk;
 import com.android.utils.Pair;
 
 import java.io.File;
@@ -48,7 +49,7 @@ public class ArchiveInstallerTest extends TestCase {
     private String mSdkRoot;
     private MockFileOp mFile;
     private MockArchiveInstaller mArchInst;
-    private MockEmptySdkManager mSdkMan;
+    private LocalSdk mSdk;
 
     private class MockArchiveInstaller extends ArchiveInstaller {
 
@@ -100,7 +101,7 @@ public class ArchiveInstallerTest extends TestCase {
         mFile = new MockFileOp();
         mArchInst = new MockArchiveInstaller(mFile);
         mSdkRoot = "/sdk";
-        mSdkMan = new MockEmptySdkManager(mSdkRoot);
+        mSdk = new LocalSdk(new File(mSdkRoot));
         mMon = new MockMonitor();
     }
 
@@ -111,7 +112,7 @@ public class ArchiveInstallerTest extends TestCase {
         MockEmptyPackage p = new MockEmptyPackage("testPkg");
         ArchiveReplacement ar = new ArchiveReplacement(p.getArchives()[0], null /*replaced*/);
 
-        assertFalse(mArchInst.install(ar, mSdkRoot, false /*forceHttp*/, mSdkMan,
+        assertFalse(mArchInst.install(ar, mSdkRoot, false /*forceHttp*/, mSdk,
                 null /*UrlCache*/, mMon));
         assertTrue(mMon.getCapturedLog().indexOf("Skipping already installed archive") != -1);
     }
@@ -126,7 +127,7 @@ public class ArchiveInstallerTest extends TestCase {
         mArchInst.setDownloadResponse(
                 p.getArchives()[0], createFile("/sdk", "tmp", "download1.zip"));
 
-        assertTrue(mArchInst.install(ar, mSdkRoot, false /*forceHttp*/, mSdkMan,
+        assertTrue(mArchInst.install(ar, mSdkRoot, false /*forceHttp*/, mSdk,
                 null /*UrlCache*/, mMon));
 
         // check what was created
@@ -171,7 +172,7 @@ public class ArchiveInstallerTest extends TestCase {
         mArchInst.setDownloadResponse(
                 newPkg.getArchives()[0], createFile("/sdk", "tmp", "download1.zip"));
 
-        assertTrue(mArchInst.install(ar, mSdkRoot, false /*forceHttp*/, mSdkMan,
+        assertTrue(mArchInst.install(ar, mSdkRoot, false /*forceHttp*/, mSdk,
                 null /*UrlCache*/, mMon));
 
         // check what was created
@@ -243,7 +244,7 @@ public class ArchiveInstallerTest extends TestCase {
         mArchInst.setDownloadResponse(
                 newPkg.getArchives()[0], createFile("/sdk", "tmp", "download1.zip"));
 
-        assertTrue(mArchInst.install(ar, mSdkRoot, false /*forceHttp*/, mSdkMan,
+        assertTrue(mArchInst.install(ar, mSdkRoot, false /*forceHttp*/, mSdk,
                 null /*UrlCache*/, mMon));
 
         // check what was created

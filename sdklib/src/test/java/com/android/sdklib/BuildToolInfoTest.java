@@ -19,6 +19,7 @@ package com.android.sdklib;
 import com.android.annotations.Nullable;
 import com.android.sdklib.repository.FullRevision;
 import com.android.sdklib.repository.NoPreviewRevision;
+import com.android.sdklib.repository.local.LocalSdk;
 import com.android.utils.ILogger;
 
 import java.util.Properties;
@@ -75,8 +76,8 @@ public class BuildToolInfoTest extends SdkManagerTestCase {
     }
 
     public void testGetCurrentJvmVersion() {
-        SdkManager sdkman = getSdkManager();
-        BuildToolInfo bt = sdkman.getBuildTool(new FullRevision(18, 3, 4, 5));
+        LocalSdk sdk = getSdk();
+        BuildToolInfo bt = sdk.getBuildTool(new FullRevision(18, 3, 4, 5));
         assertNotNull(bt);
 
         // Check the actual JVM running this test.

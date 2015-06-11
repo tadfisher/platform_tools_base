@@ -17,11 +17,7 @@
 package com.android.ide.common.repository;
 
 import com.android.annotations.Nullable;
-import com.android.sdklib.SdkManager;
 import com.android.sdklib.repository.local.LocalSdk;
-import com.android.utils.ILogger;
-import com.android.utils.StdLogger;
-
 import junit.framework.TestCase;
 
 import java.io.File;
@@ -87,11 +83,9 @@ public class SdkMavenRepositoryTest extends TestCase {
         assertTrue(SdkMavenRepository.ANDROID.isInstalled(sdkHome));
         assertTrue(SdkMavenRepository.GOOGLE.isInstalled(sdkHome));
 
-        ILogger logger = new StdLogger(StdLogger.Level.INFO);
-        SdkManager sdkManager = SdkManager.createManager(sdkHome.getPath(), logger);
-        assertNotNull(sdkManager);
-        assertTrue(SdkMavenRepository.ANDROID.isInstalled(sdkManager.getLocalSdk()));
-        assertTrue(SdkMavenRepository.GOOGLE.isInstalled(sdkManager.getLocalSdk()));
+        LocalSdk sdk = new LocalSdk(sdkHome);
+        assertTrue(SdkMavenRepository.ANDROID.isInstalled(sdk));
+        assertTrue(SdkMavenRepository.GOOGLE.isInstalled(sdk));
     }
 
     public void testGetDirName() {

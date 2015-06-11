@@ -20,7 +20,6 @@ import com.android.SdkConstants;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
-import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.CanceledByUserException;
 import com.android.sdklib.internal.repository.DownloadCache;
 import com.android.sdklib.internal.repository.ITaskMonitor;
@@ -29,6 +28,7 @@ import com.android.sdklib.internal.repository.sources.SdkSource;
 import com.android.sdklib.io.FileOp;
 import com.android.sdklib.io.IFileOp;
 import com.android.sdklib.repository.RepoConstants;
+import com.android.sdklib.repository.local.LocalSdk;
 import com.android.utils.GrabProcessOutput;
 import com.android.utils.GrabProcessOutput.IProcessOutput;
 import com.android.utils.GrabProcessOutput.Wait;
@@ -114,7 +114,7 @@ public class ArchiveInstaller {
     public boolean install(ArchiveReplacement archiveInfo,
             String osSdkRoot,
             boolean forceHttp,
-            SdkManager sdkManager,
+            LocalSdk sdk,
             DownloadCache cache,
             ITaskMonitor monitor) {
 
@@ -146,7 +146,7 @@ public class ArchiveInstaller {
         File propsFile = files == null ? null : files.getSecond();
         if (tmpFile != null) {
             // Unarchive calls the pre/postInstallHook methods.
-            if (unarchive(archiveInfo, osSdkRoot, tmpFile, sdkManager, monitor)) {
+            if (unarchive(archiveInfo, osSdkRoot, tmpFile, sdk, monitor)) {
                 monitor.log("Installed %1$s", name);
                 // Delete the temp archive if it exists, only on success
                 mFileOp.deleteFileOrFolder(tmpFile);
@@ -598,7 +598,7 @@ public class ArchiveInstaller {
     private boolean unarchive(ArchiveReplacement archiveInfo,
             String osSdkRoot,
             File archiveFile,
-            SdkManager sdkManager,
+            LocalSdk sdk,
             ITaskMonitor monitor) {
         boolean success = false;
         Archive newArchive = archiveInfo.getNewArchive();
@@ -642,7 +642,7 @@ public class ArchiveInstaller {
         try {
             // -0- Compute destination directory and check install pre-conditions
 
-            destFolder = pkg.getInstallFolder(osSdkRoot, sdkManager);
+            destFolder = pkg.getInstallFolder(osSdkRoot, sdk);
 
             if (destFolder == null) {
                 // this should not seriously happen.
@@ -721,7 +721,7 @@ public class ArchiveInstaller {
                 File oldFolder = oldPath == null ? null : new File(oldPath);
                 if (oldFolder == null && oldArchive.getParentPackage() != null) {
                     oldFolder = oldArchive.getParentPackage().getInstallFolder(
-                            osSdkRoot, sdkManager);
+                            osSdkRoot, sdk);
                 }
                 if (oldFolder != null && mFileOp.exists(oldFolder) &&
                         !oldFolder.equals(destFolder)) {

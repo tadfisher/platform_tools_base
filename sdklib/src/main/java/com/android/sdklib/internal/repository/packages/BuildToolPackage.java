@@ -20,7 +20,6 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
-import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.sources.SdkSource;
 import com.android.sdklib.repository.FullRevision;
 import com.android.sdklib.repository.FullRevision.PreviewComparison;
@@ -29,6 +28,7 @@ import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.PreciseRevision;
 import com.android.sdklib.repository.descriptors.IPkgDesc;
 import com.android.sdklib.repository.descriptors.PkgDesc;
+import com.android.sdklib.repository.local.LocalSdk;
 
 import org.w3c.dom.Node;
 
@@ -292,11 +292,11 @@ public class BuildToolPackage extends FullRevisionPackage {
      * Revision spaces are replaced by underscores for ease of use in command-line.
      *
      * @param osSdkRoot The OS path of the SDK root folder.
-     * @param sdkManager An existing SDK manager to list current platforms and addons.
+     * @param sdk An existing SDK manager to list current platforms and addons.
      * @return A new {@link File} corresponding to the directory to use to install this package.
      */
     @Override
-    public File getInstallFolder(String osSdkRoot, SdkManager sdkManager) {
+    public File getInstallFolder(String osSdkRoot, LocalSdk sdk) {
         File folder = new File(osSdkRoot, SdkConstants.FD_BUILD_TOOLS);
         StringBuilder sb = new StringBuilder();
 

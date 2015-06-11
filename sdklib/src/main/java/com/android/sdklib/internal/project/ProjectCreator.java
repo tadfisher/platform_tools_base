@@ -20,8 +20,8 @@ import com.android.SdkConstants;
 import com.android.io.FileWrapper;
 import com.android.io.FolderWrapper;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
+import com.android.sdklib.repository.local.LocalSdk;
 import com.android.utils.ILogger;
 import com.android.xml.AndroidManifest;
 import com.android.xml.AndroidXPathFactory;
@@ -156,19 +156,19 @@ public class ProjectCreator {
     private final ILogger mLog;
     /** The OS path of the SDK folder. */
     private final String mSdkFolder;
-    /** The {@link SdkManager} instance. */
-    private final SdkManager mSdkManager;
+    /** The {@link LocalSdk} instance. */
+    private final LocalSdk mSdk;
 
     /**
      * Helper class to create android projects.
      *
-     * @param sdkManager The {@link SdkManager} instance.
+     * @param sdk The {@link LocalSdk} instance.
      * @param sdkFolder The OS path of the SDK folder.
      * @param level The {@link OutputLevel} verbosity.
      * @param log Logger for errors and output. Cannot be null.
      */
-    public ProjectCreator(SdkManager sdkManager, String sdkFolder, OutputLevel level, ILogger log) {
-        mSdkManager = sdkManager;
+    public ProjectCreator(LocalSdk sdk, String sdkFolder, OutputLevel level, ILogger log) {
+        mSdk = sdk;
         mSdkFolder = sdkFolder;
         mLevel = level;
         mLog = log;
@@ -580,7 +580,7 @@ public class ProjectCreator {
                             SdkConstants.FN_ANDROID_MANIFEST_XML),
                     keywords, target);
 
-            String buildToolRev = mSdkManager.getLatestBuildTool().getRevision().toString();
+            String buildToolRev = mSdk.getLatestBuildTool().getRevision().toString();
 
             keywords.put(PH_BUILD_TOOL_REV, buildToolRev);
             keywords.put(PH_ARTIFACT_VERSION, artifactVersion);
@@ -695,7 +695,7 @@ public class ProjectCreator {
 
         if (props != null) {
             String targetHash = props.getProperty(ProjectProperties.PROPERTY_TARGET);
-            originalTarget = mSdkManager.getTargetFromHashString(targetHash);
+            originalTarget = mSdk.getTargetFromHashString(targetHash);
 
             // if the project is already setup with proguard, we won't copy the proguard config.
             hasProguard = props.getProperty(ProjectProperties.PROPERTY_PROGUARD_CONFIG) != null;
@@ -1002,7 +1002,7 @@ public class ProjectCreator {
      */
     @SuppressWarnings("deprecation")
     public void updateTestProject(final String folderPath, final String pathToMainProject,
-            final SdkManager sdkManager) {
+            final LocalSdk sdk) {
         // since this is an update, check the folder does point to a project
         if (checkProjectFolder(folderPath, SdkConstants.FN_ANDROID_MANIFEST_XML) == null) {
             return;
@@ -1050,7 +1050,7 @@ public class ProjectCreator {
             return;
         }
 
-        IAndroidTarget target = sdkManager.getTargetFromHashString(targetHash);
+        IAndroidTarget target = sdk.getTargetFromHashString(targetHash);
         if (target == null) {
             mLog.error(null, "Main project target %1$s is not a valid target.", targetHash);
             return;

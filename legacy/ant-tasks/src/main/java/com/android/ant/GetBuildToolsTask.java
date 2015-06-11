@@ -17,20 +17,22 @@
 package com.android.ant;
 
 import com.android.sdklib.BuildToolInfo;
-import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.repository.FullRevision;
-import com.android.utils.StdLogger;
+import com.android.sdklib.repository.local.LocalSdk;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
+
+import java.io.File;
 
 public class GetBuildToolsTask extends Task {
 
     private static final FullRevision MIN_BUILD_TOOLS_REV = new FullRevision(19, 1, 0);
 
     private String mName;
+
     private boolean mVerbose = false;
 
     public void setName(String name) {
@@ -45,19 +47,14 @@ public class GetBuildToolsTask extends Task {
     public void execute() throws BuildException {
         Project antProject = getProject();
 
-        SdkManager sdkManager = SdkManager.createManager(
-                antProject.getProperty(ProjectProperties.PROPERTY_SDK),
-                new StdLogger(mVerbose ?  StdLogger.Level.VERBOSE : StdLogger.Level.ERROR));
-
-        if (sdkManager == null) {
-            throw new BuildException("Unable to parse the SDK!");
-        }
+        LocalSdk localSdk = new LocalSdk(
+                new File(antProject.getProperty(ProjectProperties.PROPERTY_SDK)));
 
         BuildToolInfo buildToolInfo = null;
 
         String buildToolsVersion = antProject.getProperty(ProjectProperties.PROPERTY_BUILD_TOOLS);
         if (buildToolsVersion != null) {
-            buildToolInfo = sdkManager.getBuildTool(FullRevision.parseRevision(buildToolsVersion));
+            buildToolInfo = localSdk.getBuildTool(FullRevision.parseRevision(buildToolsVersion));
 
             if (buildToolInfo == null) {
                 throw new BuildException(
@@ -67,7 +64,7 @@ public class GetBuildToolsTask extends Task {
 
         if (buildToolInfo == null) {
             // get the latest one instead
-            buildToolInfo = sdkManager.getLatestBuildTool();
+            buildToolInfo = localSdk.getLatestBuildTool();
 
             if (buildToolInfo == null) {
                 throw new BuildException("SDK does not have any Build Tools installed.");

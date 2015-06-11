@@ -33,6 +33,7 @@ import com.android.sdklib.internal.repository.sources.SdkSources;
 import com.android.sdklib.internal.repository.sources.SdkSysImgSource;
 import com.android.sdklib.repository.SdkAddonsListConstants;
 import com.android.sdklib.repository.SdkRepoConstants;
+import com.android.sdklib.repository.local.LocalSdk;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -395,7 +396,7 @@ public class PackageLoader {
                 }
 
                 // The local package list has changed, make sure to refresh it
-                mUpdaterData.getSdkManager().reloadSdk(mUpdaterData.getSdkLog());
+                mUpdaterData.setSdk(new LocalSdk(mUpdaterData.getSdk().getLocation()));
                 mUpdaterData.getLocalSdkParser().clearPackages();
                 final Package[] localPkgs = mUpdaterData.getInstalledPackages(
                         new NullTaskMonitor(mUpdaterData.getSdkLog()));

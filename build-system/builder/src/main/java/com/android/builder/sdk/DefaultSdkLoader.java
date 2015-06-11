@@ -23,29 +23,18 @@ import static com.android.SdkConstants.FD_SUPPORT;
 import static com.android.SdkConstants.FD_TOOLS;
 import static com.android.SdkConstants.FN_ADB;
 import static com.android.SdkConstants.FN_ANNOTATIONS_JAR;
-import static com.android.SdkConstants.FN_SOURCE_PROP;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.SdkManager;
 import com.android.sdklib.repository.FullRevision;
-import com.android.sdklib.repository.PkgProps;
+import com.android.sdklib.repository.local.LocalSdk;
 import com.android.utils.ILogger;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.io.Closeables;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.util.List;
-import java.util.Properties;
 
 /**
  * Singleton-based implementation of SdkLoader for a standard SDK
@@ -56,7 +45,7 @@ public class DefaultSdkLoader implements SdkLoader {
 
     @NonNull
     private final File mSdkLocation;
-    private SdkManager mSdkManager;
+    private LocalSdk mSdk;
     private SdkInfo mSdkInfo;
     private final ImmutableList<File> mRepositories;
 
@@ -83,12 +72,12 @@ public class DefaultSdkLoader implements SdkLoader {
             @NonNull ILogger logger) {
         init(logger);
 
-        IAndroidTarget target = mSdkManager.getTargetFromHashString(targetHash);
+        IAndroidTarget target = mSdk.getTargetFromHashString(targetHash);
         if (target == null) {
             throw new IllegalStateException("failed to find target with hash string '" + targetHash + "' in: " + mSdkLocation);
         }
 
-        BuildToolInfo buildToolInfo = mSdkManager.getBuildTool(buildToolRevision);
+        BuildToolInfo buildToolInfo = mSdk.getBuildTool(buildToolRevision);
         if (buildToolInfo == null) {
             throw new IllegalStateException("failed to find Build Tools revision "
                     + buildToolRevision.toString());
@@ -116,12 +105,8 @@ public class DefaultSdkLoader implements SdkLoader {
     }
 
     private synchronized void init(@NonNull ILogger logger) {
-        if (mSdkManager == null) {
-            mSdkManager = SdkManager.createManager(mSdkLocation.getPath(), logger);
-
-            if (mSdkManager == null) {
-                throw new IllegalStateException("failed to parse SDK! Check console for details");
-            }
+        if (mSdk == null) {
+            mSdk = new LocalSdk(mSdkLocation);
 
             File toolsFolder = new File(mSdkLocation, FD_TOOLS);
             File supportToolsFolder = new File(toolsFolder, FD_SUPPORT);
@@ -131,41 +116,6 @@ public class DefaultSdkLoader implements SdkLoader {
                     new File(supportToolsFolder, FN_ANNOTATIONS_JAR),
                     new File(platformTools, FN_ADB));
         }
-    }
-
-    @Nullable
-    private FullRevision getPlatformToolsRevision(@NonNull File platformToolsFolder) {
-        if (!platformToolsFolder.isDirectory()) {
-            return null;
-        }
-
-        Reader reader = null;
-        try {
-            reader = new InputStreamReader(
-                    new FileInputStream(new File(platformToolsFolder, FN_SOURCE_PROP)),
-                    Charsets.UTF_8);
-            Properties props = new Properties();
-            props.load(reader);
-
-            String value = props.getProperty(PkgProps.PKG_REVISION);
-
-            return FullRevision.parseRevision(value);
-
-        } catch (FileNotFoundException ignore) {
-            // return null below.
-        } catch (IOException ignore) {
-            // return null below.
-        } catch (NumberFormatException ignore) {
-            // return null below.
-        } finally {
-            try {
-                Closeables.close(reader, true /* swallowIOException */);
-            } catch (IOException e) {
-                // cannot happen
-            }
-        }
-
-        return null;
     }
 
     @NonNull

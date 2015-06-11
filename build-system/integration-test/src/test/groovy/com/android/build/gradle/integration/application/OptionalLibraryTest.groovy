@@ -15,13 +15,13 @@
  */
 
 package com.android.build.gradle.integration.application
+
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.SyncIssue
 import com.android.sdklib.IAndroidTarget
-import com.android.sdklib.SdkManager
-import com.android.utils.NullLogger
+import com.android.sdklib.repository.local.LocalSdk
 import groovy.transform.CompileStatic
 import org.junit.After
 import org.junit.Assume
@@ -30,6 +30,7 @@ import org.junit.Test
 
 import static com.android.SdkConstants.FN_FRAMEWORK_LIBRARY
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+
 /**
  * Test for BuildConfig field declared in build type, flavors, and variant and how they
  * override each other
@@ -90,10 +91,8 @@ class OptionalLibraryTest {
 
         // get the SDK folder
         File sdkLocation = new File(System.getenv("ANDROID_HOME"))
-        SdkManager sdkManager = SdkManager.createManager(
-                sdkLocation.getAbsolutePath(),
-                new NullLogger())
-        IAndroidTarget target = sdkManager.getTargetFromHashString('android-23')
+        LocalSdk sdk = new LocalSdk(sdkLocation)
+        IAndroidTarget target = sdk.getTargetFromHashString('android-23')
 
         File targetLocation = new File(target.getLocation())
 
@@ -119,10 +118,8 @@ class OptionalLibraryTest {
 
         // get the SDK folder
         File sdkLocation = new File(System.getenv("ANDROID_HOME"))
-        SdkManager sdkManager = SdkManager.createManager(
-                sdkLocation.getAbsolutePath(),
-                new NullLogger())
-        IAndroidTarget target = sdkManager.getTargetFromHashString('android-23')
+        LocalSdk sdk = new LocalSdk(sdkLocation)
+        IAndroidTarget target = sdk.getTargetFromHashString('android-23')
 
         File targetLocation = new File(target.getLocation())
 

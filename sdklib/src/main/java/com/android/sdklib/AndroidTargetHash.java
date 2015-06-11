@@ -19,6 +19,7 @@ package com.android.sdklib;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.sdklib.repository.descriptors.IdDisplay;
+import com.android.sdklib.repository.local.LocalSdk;
 import com.google.common.base.Splitter;
 
 import java.util.List;
@@ -31,7 +32,7 @@ public abstract class AndroidTargetHash {
 
     /**
      * Prefix used to build hash strings for platform targets
-     * @see SdkManager#getTargetFromHashString(String)
+     * @see LocalSdk#getTargetFromHashString(String)
      */
     public static final String PLATFORM_HASH_PREFIX = "android-";
 

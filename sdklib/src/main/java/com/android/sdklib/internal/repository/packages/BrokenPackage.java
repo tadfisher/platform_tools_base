@@ -18,12 +18,12 @@ package com.android.sdklib.internal.repository.packages;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.sdklib.SdkManager;
 import com.android.sdklib.repository.IDescription;
 import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.archives.Archive;
 import com.android.sdklib.repository.FullRevision;
 import com.android.sdklib.repository.descriptors.IPkgDesc;
+import com.android.sdklib.repository.local.LocalSdk;
 
 import java.io.File;
 import java.util.Properties;
@@ -182,7 +182,7 @@ public class BrokenPackage extends MajorRevisionPackage
      * {@inheritDoc}
      */
     @Override
-    public File getInstallFolder(String osSdkRoot, SdkManager sdkManager) {
+    public File getInstallFolder(String osSdkRoot, LocalSdk sdk) {
         // We should not be attempting to install a broken package.
         return null;
     }

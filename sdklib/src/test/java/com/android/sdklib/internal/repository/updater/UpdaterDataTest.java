@@ -17,11 +17,11 @@
 package com.android.sdklib.internal.repository.updater;
 
 import com.android.annotations.NonNull;
-import com.android.sdklib.SdkManager;
 import com.android.sdklib.SdkManagerTestCase;
 import com.android.sdklib.internal.repository.packages.MockEmptyPackage;
 import com.android.sdklib.mock.MockLog;
 import com.android.sdklib.repository.PkgProps;
+import com.android.sdklib.repository.local.LocalSdk;
 import com.android.utils.IReaderLogger;
 import com.google.common.base.Charsets;
 
@@ -103,9 +103,9 @@ public class UpdaterDataTest extends SdkManagerTestCase {
     };
 
     public final void testAcceptLicenses_Empty() {
-        SdkManager sdkman = getSdkManager();
+        LocalSdk sdk = getSdk();
         MockReaderLogger inputLog = new MockReaderLogger(new MockLog(), "");
-        UpdaterData data = new UpdaterData(sdkman.getLocation(), inputLog);
+        UpdaterData data = new UpdaterData(sdk.getLocation().getAbsolutePath(), inputLog);
         String acceptLicenses = null;
         List<ArchiveInfo> archives = new ArrayList<ArchiveInfo>();
         data.acceptLicense(archives , acceptLicenses, 3);
@@ -115,9 +115,9 @@ public class UpdaterDataTest extends SdkManagerTestCase {
     }
 
     public final void testAcceptLicenses_NoAnswer() {
-        SdkManager sdkman = getSdkManager();
+        LocalSdk sdk = getSdk();
         MockReaderLogger inputLog = new MockReaderLogger(new MockLog(), "");
-        UpdaterData data = new UpdaterData(sdkman.getLocation(), inputLog);
+        UpdaterData data = new UpdaterData(sdk.getLocation().getAbsolutePath(), inputLog);
         String acceptLicenses = null;
         List<ArchiveInfo> infos = new ArrayList<ArchiveInfo>();
 
@@ -154,9 +154,9 @@ public class UpdaterDataTest extends SdkManagerTestCase {
 
 
     public final void testAcceptLicenses_Answer() {
-        SdkManager sdkman = getSdkManager();
+        LocalSdk sdk = getSdk();
         MockReaderLogger inputLog = new MockReaderLogger(new MockLog(), "yes");
-        UpdaterData data = new UpdaterData(sdkman.getLocation(), inputLog);
+        UpdaterData data = new UpdaterData(sdk.getLocation().getAbsolutePath(), inputLog);
         String acceptLicenses = null;
         List<ArchiveInfo> infos = new ArrayList<ArchiveInfo>();
 

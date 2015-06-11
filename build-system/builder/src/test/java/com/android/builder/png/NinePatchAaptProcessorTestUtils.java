@@ -24,8 +24,8 @@ import com.android.annotations.NonNull;
 import com.android.ide.common.internal.PngCruncher;
 import com.android.ide.common.internal.PngException;
 import com.android.sdklib.BuildToolInfo;
-import com.android.sdklib.SdkManager;
 import com.android.sdklib.repository.FullRevision;
+import com.android.sdklib.repository.local.LocalSdk;
 import com.android.testutils.TestUtils;
 import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
@@ -70,9 +70,8 @@ public class NinePatchAaptProcessorTestUtils {
      */
     static File getAapt(FullRevision fullRevision) {
         ILogger logger = new StdLogger(StdLogger.Level.VERBOSE);
-        SdkManager sdkManager = SdkManager.createManager(getSdkDir().getAbsolutePath(), logger);
-        assert sdkManager != null;
-        BuildToolInfo buildToolInfo = sdkManager.getLatestBuildTool();
+        LocalSdk sdk = new LocalSdk(getSdkDir());
+        BuildToolInfo buildToolInfo = sdk.getLatestBuildTool();
         if (buildToolInfo == null || buildToolInfo.getRevision().compareTo(fullRevision) < 0) {
             throw new RuntimeException("Test requires build-tools " + fullRevision.toShortString());
         }

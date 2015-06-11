@@ -140,23 +140,6 @@ import java.util.*;
  * not altered after creation, so its value is not influenced by the internal state after
  * it returns.
  * <p/>
- *
- * Implementation Background:
- * <ul>
- * <li> The sdk manager has a set of "Package" classes that cover both local
- *      and remote SDK operations.
- * <li> Goal was to split it in 2 cleanly separated parts: {@link LocalSdk} parses sdk on disk,
- *      and a separate class wraps the downloaded manifest (this is now handled within Studio only)
- * <li> The local SDK should be a singleton accessible somewhere, so there will be one in ADT
- *      (via the Sdk instance), one in Studio, and one in the command line tool. <br/>
- *      Right now there's a bit of mess with some classes creating a temp LocalSdkParser,
- *      some others using an SdkManager instance, and that needs to be sorted out.
- * <li> As a transition, the SdkManager instance wraps a LocalSdk and uses this. Eventually the
- *      SdkManager.java class will go away (its name is totally misleading, for starters.)
- * <li> The current LocalSdkParser stays as-is for compatibility purposes and the goal is also
- *      to totally remove it when the SdkManager class goes away.
- * </ul>
- * @version 2 of the {@code SdkManager} class, essentially.
  */
 public class LocalSdk {
 

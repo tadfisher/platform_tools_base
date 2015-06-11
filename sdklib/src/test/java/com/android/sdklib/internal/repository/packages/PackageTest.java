@@ -16,7 +16,6 @@
 
 package com.android.sdklib.internal.repository.packages;
 
-import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.archives.ArchFilter;
 import com.android.sdklib.internal.repository.archives.Archive;
 import com.android.sdklib.internal.repository.sources.SdkRepoSource;
@@ -25,6 +24,7 @@ import com.android.sdklib.repository.FullRevision;
 import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.descriptors.IPkgDesc;
 import com.android.sdklib.repository.descriptors.PkgDesc;
+import com.android.sdklib.repository.local.LocalSdk;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -58,7 +58,7 @@ public class PackageTest extends TestCase {
         }
 
         @Override
-        public File getInstallFolder(String osSdkRoot, SdkManager sdkManager) {
+        public File getInstallFolder(String osSdkRoot, LocalSdk sdk) {
             throw new UnsupportedOperationException("abstract method not used in test"); //$NON-NLS-1$
         }
 

@@ -21,7 +21,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
-import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.LocalSdkParser;
 import com.android.sdklib.internal.repository.NullTaskMonitor;
 import com.android.sdklib.internal.repository.archives.Archive;
@@ -35,6 +34,7 @@ import com.android.sdklib.repository.descriptors.IdDisplay;
 import com.android.sdklib.repository.descriptors.PkgDesc;
 import com.android.sdklib.repository.descriptors.PkgDescExtra;
 import com.android.sdklib.repository.local.LocalExtraPkgInfo;
+import com.android.sdklib.repository.local.LocalSdk;
 import com.android.utils.NullLogger;
 import org.w3c.dom.Node;
 
@@ -545,18 +545,18 @@ public class ExtraPackage extends NoPreviewRevisionPackage
      * A "tool" package should always be located in SDK/tools.
      *
      * @param osSdkRoot The OS path of the SDK root folder. Must NOT be null.
-     * @param sdkManager An existing SDK manager to list current platforms and addons.
+     * @param sdk An existing SDK manager to list current platforms and addons.
      *                   Not used in this implementation.
      * @return A new {@link File} corresponding to the directory to use to install this package.
      */
     @Override
-    public File getInstallFolder(String osSdkRoot, SdkManager sdkManager) {
+    public File getInstallFolder(String osSdkRoot, LocalSdk sdk) {
 
         // First find if this extra is already installed. If so, reuse the same directory.
         LocalSdkParser localParser = new LocalSdkParser();
         Package[] pkgs = localParser.parseSdk(
                 osSdkRoot,
-                sdkManager,
+                sdk,
                 LocalSdkParser.PARSE_EXTRAS,
                 new NullTaskMonitor(NullLogger.getLogger()));
 

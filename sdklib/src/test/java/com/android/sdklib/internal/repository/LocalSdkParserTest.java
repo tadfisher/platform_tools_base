@@ -19,7 +19,6 @@ package com.android.sdklib.internal.repository;
 import com.android.SdkConstants;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISystemImage.LocationType;
-import com.android.sdklib.SdkManager;
 import com.android.sdklib.SdkManagerTestCase;
 import com.android.sdklib.SystemImage;
 import com.android.sdklib.internal.androidTarget.PlatformTarget;
@@ -27,6 +26,7 @@ import com.android.sdklib.internal.repository.archives.ArchFilter;
 import com.android.sdklib.internal.repository.archives.HostOs;
 import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.io.FileOp;
+import com.android.sdklib.repository.local.LocalSdk;
 
 import java.io.File;
 import java.util.Arrays;
@@ -34,15 +34,17 @@ import java.util.regex.Pattern;
 
 public class LocalSdkParserTest extends SdkManagerTestCase {
 
-    private SdkManager mSdkMan;
+    private LocalSdk mSdk;
+
     private LocalSdkParser mParser;
+
     private MockMonitor mMonitor;
 
     @Override
     public void setUp() throws Exception {
         super.setUp();
 
-        mSdkMan = getSdkManager();
+        mSdk = getSdk();
         mParser = new LocalSdkParser();
         mMonitor = new MockMonitor();
     }
@@ -53,121 +55,125 @@ public class LocalSdkParserTest extends SdkManagerTestCase {
 
         assertEquals(
                 "[Android SDK Tools, revision 1.0.1, " +
-                 "Android SDK Platform-tools, revision 17.1.2, " +
-                 "Android SDK Build-tools, revision 18.3.4 rc5, " +
-                 "Android SDK Build-tools, revision 3.0.1, " +
-                 "Android SDK Build-tools, revision 3, " +
-                 "SDK Platform Android 0.0, API 0, revision 1, " +
-                 "Sources for Android SDK, API 0, revision 0]",
-                Arrays.toString(sort(mParser.parseSdk(mSdkMan.getLocation(), mSdkMan, mMonitor))));
+                        "Android SDK Platform-tools, revision 17.1.2, " +
+                        "Android SDK Build-tools, revision 18.3.4 rc5, " +
+                        "Android SDK Build-tools, revision 3.0.1, " +
+                        "Android SDK Build-tools, revision 3, " +
+                        "SDK Platform Android 0.0, API 0, revision 1, " +
+                        "Sources for Android SDK, API 0, revision 0]",
+                Arrays.toString(sort(mParser
+                        .parseSdk(mSdk.getLocation().getAbsolutePath(), mSdk, mMonitor))));
 
         assertEquals(
                 "[SDK Platform Android 0.0, API 0, revision 1, " +
-                 "Sources for Android SDK, API 0, revision 0]",
-                 Arrays.toString(sort(mParser.parseSdk(mSdkMan.getLocation(),
-                         mSdkMan,
-                         LocalSdkParser.PARSE_PLATFORMS | LocalSdkParser.PARSE_SOURCES,
-                         mMonitor))));
+                        "Sources for Android SDK, API 0, revision 0]",
+                Arrays.toString(sort(mParser.parseSdk(mSdk.getLocation().getAbsolutePath(),
+                        mSdk,
+                        LocalSdkParser.PARSE_PLATFORMS | LocalSdkParser.PARSE_SOURCES,
+                        mMonitor))));
 
         assertEquals(
                 "[SDK Platform Android 0.0, API 0, revision 1]",
-                Arrays.toString(mParser.parseSdk(mSdkMan.getLocation(),
-                        mSdkMan,
+                Arrays.toString(mParser.parseSdk(mSdk.getLocation().getAbsolutePath(),
+                        mSdk,
                         LocalSdkParser.PARSE_PLATFORMS,
                         mMonitor)));
 
         assertEquals(
                 "[Sources for Android SDK, API 0, revision 0]",
-                Arrays.toString(mParser.parseSdk(mSdkMan.getLocation(),
-                        mSdkMan,
+                Arrays.toString(mParser.parseSdk(mSdk.getLocation().getAbsolutePath(),
+                        mSdk,
                         LocalSdkParser.PARSE_SOURCES,
                         mMonitor)));
 
         assertEquals(
                 "[Android SDK Tools, revision 1.0.1]",
-                Arrays.toString(mParser.parseSdk(mSdkMan.getLocation(),
-                        mSdkMan,
+                Arrays.toString(mParser.parseSdk(mSdk.getLocation().getAbsolutePath(),
+                        mSdk,
                         LocalSdkParser.PARSE_TOOLS,
                         mMonitor)));
 
         assertEquals(
                 "[Android SDK Platform-tools, revision 17.1.2]",
-                Arrays.toString(mParser.parseSdk(mSdkMan.getLocation(),
-                        mSdkMan,
+                Arrays.toString(mParser.parseSdk(mSdk.getLocation().getAbsolutePath(),
+                        mSdk,
                         LocalSdkParser.PARSE_PLATFORM_TOOLS,
                         mMonitor)));
 
         assertEquals(
                 "[Android SDK Build-tools, revision 18.3.4 rc5, " +
-                 "Android SDK Build-tools, revision 3.0.1, " +
-                 "Android SDK Build-tools, revision 3]",
-                Arrays.toString(sort(mParser.parseSdk(mSdkMan.getLocation(),
-                        mSdkMan,
+                        "Android SDK Build-tools, revision 3.0.1, " +
+                        "Android SDK Build-tools, revision 3]",
+                Arrays.toString(sort(mParser.parseSdk(mSdk.getLocation().getAbsolutePath(),
+                        mSdk,
                         LocalSdkParser.PARSE_BUILD_TOOLS,
                         mMonitor))));
 
         // Now add a few "platform subfolders" system images and reload the SDK.
         // This disables the "legacy" mode but it still doesn't create any system image package
 
-        IAndroidTarget t = mSdkMan.getTargets()[0];
-        makeSystemImageFolder(new SystemImage(mSdkMan, t,
+        IAndroidTarget t = mSdk.getTargets()[0];
+        makeSystemImageFolder(new SystemImage(mSdk, t,
                 LocationType.IN_IMAGES_SUBFOLDER,
                 SystemImage.DEFAULT_TAG,
                 SdkConstants.ABI_ARMEABI_V7A,
                 FileOp.EMPTY_FILE_ARRAY));
-        makeSystemImageFolder(new SystemImage(mSdkMan, t,
+        makeSystemImageFolder(new SystemImage(mSdk, t,
                 LocationType.IN_IMAGES_SUBFOLDER,
                 SystemImage.DEFAULT_TAG,
                 SdkConstants.ABI_INTEL_ATOM,
                 FileOp.EMPTY_FILE_ARRAY));
 
-        mSdkMan.reloadSdk(getLog());
-        t = mSdkMan.getTargets()[0];
+        mSdk = new LocalSdk(mSdk.getLocation());
+
+        t = mSdk.getTargets()[0];
 
         assertEquals(
                 "[Android SDK Tools, revision 1.0.1, " +
-                 "Android SDK Platform-tools, revision 17.1.2, " +
-                 "Android SDK Build-tools, revision 18.3.4 rc5, " +
-                 "Android SDK Build-tools, revision 3.0.1, " +
-                 "Android SDK Build-tools, revision 3, " +
-                 "SDK Platform Android 0.0, API 0, revision 1, " +
-                 "Sources for Android SDK, API 0, revision 0]",
-                Arrays.toString(sort(mParser.parseSdk(mSdkMan.getLocation(), mSdkMan, mMonitor))));
+                        "Android SDK Platform-tools, revision 17.1.2, " +
+                        "Android SDK Build-tools, revision 18.3.4 rc5, " +
+                        "Android SDK Build-tools, revision 3.0.1, " +
+                        "Android SDK Build-tools, revision 3, " +
+                        "SDK Platform Android 0.0, API 0, revision 1, " +
+                        "Sources for Android SDK, API 0, revision 0]",
+                Arrays.toString(sort(mParser.parseSdk(mSdk.getLocation().getAbsolutePath(),
+                        mSdk, mMonitor))));
 
         // Now add arm + arm v7a images using the new SDK/system-images.
         // The local parser will find the 2 system image packages which are associated
-        // with the PlatformTarget in the SdkManager.
+        // with the PlatformTarget in the LocalSdk.
 
-        makeSystemImageFolder(new SystemImage(mSdkMan, t,
+        makeSystemImageFolder(new SystemImage(mSdk, t,
                 LocationType.IN_SYSTEM_IMAGE,
                 SystemImage.DEFAULT_TAG,
                 SdkConstants.ABI_ARMEABI,
                 FileOp.EMPTY_FILE_ARRAY));
-        makeSystemImageFolder(new SystemImage(mSdkMan, t,
+        makeSystemImageFolder(new SystemImage(mSdk, t,
                 LocationType.IN_SYSTEM_IMAGE,
                 SystemImage.DEFAULT_TAG,
                 SdkConstants.ABI_ARMEABI_V7A,
                 FileOp.EMPTY_FILE_ARRAY));
 
-        mSdkMan.reloadSdk(getLog());
+        mSdk = new LocalSdk(mSdk.getLocation());
 
         assertEquals(
                 "[Android SDK Tools, revision 1.0.1, " +
-                 "Android SDK Platform-tools, revision 17.1.2, " +
-                 "Android SDK Build-tools, revision 18.3.4 rc5, " +
-                 "Android SDK Build-tools, revision 3.0.1, " +
-                 "Android SDK Build-tools, revision 3, " +
-                 "SDK Platform Android 0.0, API 0, revision 1, " +
-                 "Sys-Img v0 for (Default, armeabi-v7a), Android API 0, revision 0, " +
-                 "Sys-Img v0 for (Default, armeabi), Android API 0, revision 0, " +
-                 "Sources for Android SDK, API 0, revision 0]",
-                Arrays.toString(sort(mParser.parseSdk(mSdkMan.getLocation(), mSdkMan, mMonitor))));
+                        "Android SDK Platform-tools, revision 17.1.2, " +
+                        "Android SDK Build-tools, revision 18.3.4 rc5, " +
+                        "Android SDK Build-tools, revision 3.0.1, " +
+                        "Android SDK Build-tools, revision 3, " +
+                        "SDK Platform Android 0.0, API 0, revision 1, " +
+                        "Sys-Img v0 for (Default, armeabi-v7a), Android API 0, revision 0, " +
+                        "Sys-Img v0 for (Default, armeabi), Android API 0, revision 0, " +
+                        "Sources for Android SDK, API 0, revision 0]",
+                Arrays.toString(sort(mParser
+                        .parseSdk(mSdk.getLocation().getAbsolutePath(), mSdk, mMonitor))));
 
         // Now add an x86 image using the new SDK/system-images.
-        // Now this time we do NOT reload the SdkManager instance. Instead the parser
+        // Now this time we do NOT reload the LocalSdk instance. Instead the parser
         // will find an unused system image and load it as a "broken package".
 
-        makeSystemImageFolder(new SystemImage(mSdkMan, t,
+        makeSystemImageFolder(new SystemImage(mSdk, t,
                 LocationType.IN_SYSTEM_IMAGE,
                 SystemImage.DEFAULT_TAG,
                 SdkConstants.ABI_INTEL_ATOM,
@@ -175,55 +181,56 @@ public class LocalSdkParserTest extends SdkManagerTestCase {
 
         assertEquals(
                 "[Android SDK Tools, revision 1.0.1, " +
-                 "Android SDK Platform-tools, revision 17.1.2, " +
-                 "Android SDK Build-tools, revision 18.3.4 rc5, " +
-                 "Android SDK Build-tools, revision 3.0.1, " +
-                 "Android SDK Build-tools, revision 3, " +
-                 "SDK Platform Android 0.0, API 0, revision 1, " +
-                 "Sys-Img v0 for (Default, armeabi-v7a), Android API 0, revision 0, " +
-                 "Sys-Img v0 for (Default, armeabi), Android API 0, revision 0, " +
-                 "Sources for Android SDK, API 0, revision 0, " +
-                 "Broken Intel x86 Atom System Image, API 0]",
-                Arrays.toString(sort(mParser.parseSdk(mSdkMan.getLocation(), mSdkMan, mMonitor))));
+                        "Android SDK Platform-tools, revision 17.1.2, " +
+                        "Android SDK Build-tools, revision 18.3.4 rc5, " +
+                        "Android SDK Build-tools, revision 3.0.1, " +
+                        "Android SDK Build-tools, revision 3, " +
+                        "SDK Platform Android 0.0, API 0, revision 1, " +
+                        "Sys-Img v0 for (Default, armeabi-v7a), Android API 0, revision 0, " +
+                        "Sys-Img v0 for (Default, armeabi), Android API 0, revision 0, " +
+                        "Sources for Android SDK, API 0, revision 0, " +
+                        "Broken Intel x86 Atom System Image, API 0]",
+                Arrays.toString(sort(mParser
+                        .parseSdk(mSdk.getLocation().getAbsolutePath(), mSdk, mMonitor))));
 
         assertEquals(
                 "[Android SDK Tools, revision 1.0.1, " +
-                 "Android SDK Platform-tools, revision 17.1.2, " +
-                 "Android SDK Build-tools, revision 18.3.4 rc5, " +
-                 "Android SDK Build-tools, revision 3.0.1, " +
-                 "Android SDK Build-tools, revision 3, " +
-                 "SDK Platform Android 0.0, API 0, revision 1, " +
-                 "Sys-Img v0 for (Default, armeabi-v7a), Android API 0, revision 0, " +
-                 "Sys-Img v0 for (Default, armeabi), Android API 0, revision 0, " +
-                 "Sources for Android SDK, API 0, revision 0, " +
-                 "Broken Intel x86 Atom System Image, API 0]",
-                 Arrays.toString(sort(mParser.parseSdk(mSdkMan.getLocation(),
-                         mSdkMan,
-                         LocalSdkParser.PARSE_ALL,
-                         mMonitor))));
+                        "Android SDK Platform-tools, revision 17.1.2, " +
+                        "Android SDK Build-tools, revision 18.3.4 rc5, " +
+                        "Android SDK Build-tools, revision 3.0.1, " +
+                        "Android SDK Build-tools, revision 3, " +
+                        "SDK Platform Android 0.0, API 0, revision 1, " +
+                        "Sys-Img v0 for (Default, armeabi-v7a), Android API 0, revision 0, " +
+                        "Sys-Img v0 for (Default, armeabi), Android API 0, revision 0, " +
+                        "Sources for Android SDK, API 0, revision 0, " +
+                        "Broken Intel x86 Atom System Image, API 0]",
+                Arrays.toString(sort(mParser.parseSdk(mSdk.getLocation().getAbsolutePath(),
+                        mSdk,
+                        LocalSdkParser.PARSE_ALL,
+                        mMonitor))));
 
         assertEquals(
                 "[SDK Platform Android 0.0, API 0, revision 1, " +
-                 "Sys-Img v0 for (Default, armeabi-v7a), Android API 0, revision 0, " +
-                 "Sys-Img v0 for (Default, armeabi), Android API 0, revision 0, " +
-                 "Sources for Android SDK, API 0, revision 0, " +
-                 "Broken Intel x86 Atom System Image, API 0]",
-                 Arrays.toString(sort(mParser.parseSdk(mSdkMan.getLocation(),
-                         mSdkMan,
-                         LocalSdkParser.PARSE_PLATFORMS | // platform also loads system-images
-                                 LocalSdkParser.PARSE_SOURCES,
-                         mMonitor))));
+                        "Sys-Img v0 for (Default, armeabi-v7a), Android API 0, revision 0, " +
+                        "Sys-Img v0 for (Default, armeabi), Android API 0, revision 0, " +
+                        "Sources for Android SDK, API 0, revision 0, " +
+                        "Broken Intel x86 Atom System Image, API 0]",
+                Arrays.toString(sort(mParser.parseSdk(mSdk.getLocation().getAbsolutePath(),
+                        mSdk,
+                        LocalSdkParser.PARSE_PLATFORMS | // platform also loads system-images
+                                LocalSdkParser.PARSE_SOURCES,
+                        mMonitor))));
 
         assertEquals(
                 "[Sources for Android SDK, API 0, revision 0]",
-                 Arrays.toString(mParser.parseSdk(mSdkMan.getLocation(),
-                         mSdkMan,
-                         LocalSdkParser.PARSE_SOURCES,
-                         mMonitor)));
+                Arrays.toString(mParser.parseSdk(mSdk.getLocation().getAbsolutePath(),
+                        mSdk,
+                        LocalSdkParser.PARSE_SOURCES,
+                        mMonitor)));
     }
 
     public void testLocalSdkParser_Platform_DefaultSkin() throws Exception {
-        IAndroidTarget[] targets = mSdkMan.getTargets();
+        IAndroidTarget[] targets = mSdk.getTargets();
 
         assertEquals(
                 "[PlatformTarget API 0 rev 1]",
@@ -234,7 +241,8 @@ public class LocalSdkParserTest extends SdkManagerTestCase {
         assertEquals("[SDK/platforms/v0_0/skins/HVGA]",
                 sanitizeInput(p.getSkins()));
 
-        assertEquals("[SystemImage tag=default, ABI=armeabi, location in legacy folder='SDK/platforms/v0_0/images']",
+        assertEquals(
+                "[SystemImage tag=default, ABI=armeabi, location in legacy folder='SDK/platforms/v0_0/images']",
                 sanitizeInput(p.getSystemImages()));
 
         // the in-platform system image has no skins
@@ -247,7 +255,7 @@ public class LocalSdkParserTest extends SdkManagerTestCase {
         File siArm = makeSystemImageFolder(TARGET_DIR_NAME_0, "tag-1", "x86");
         makeFakeSkin(siArm, "Tag1ArmSkin");
 
-        IAndroidTarget[] targets = mSdkMan.getTargets();
+        IAndroidTarget[] targets = mSdk.getTargets();
 
         assertEquals(
                 "[PlatformTarget API 0 rev 1]",
@@ -257,12 +265,12 @@ public class LocalSdkParserTest extends SdkManagerTestCase {
 
         assertEquals(
                 "[SDK/platforms/v0_0/skins/HVGA, " +
-                 "SDK/system-images/v0_0/tag-1/x86/skins/Tag1ArmSkin]",
+                        "SDK/system-images/v0_0/tag-1/x86/skins/Tag1ArmSkin]",
                 sanitizeInput(p.getSkins()));
 
         assertEquals(
                 "[SystemImage tag=default, ABI=armeabi, location in legacy folder='SDK/platforms/v0_0/images', " +
-                 "SystemImage tag=tag-1, ABI=x86, location in system image='SDK/system-images/v0_0/tag-1/x86']",
+                        "SystemImage tag=tag-1, ABI=x86, location in system image='SDK/system-images/v0_0/tag-1/x86']",
                 sanitizeInput(p.getSystemImages()));
 
         // the in-platform system image has no skins, the second one has a custom skin
@@ -275,11 +283,11 @@ public class LocalSdkParserTest extends SdkManagerTestCase {
     public void testLocalSdkParser_BuildTools_InvalidOs() throws Exception {
         assertEquals(
                 "[Android SDK Build-tools, revision 18.3.4 rc5, " +
-                 "Android SDK Build-tools, revision 3.0.1, " +
-                 "Android SDK Build-tools, revision 3, " +
-                 "Platform Tools, revision 17.1.2, Tools, revision 1.0.1]",
-                Arrays.toString(sort(mParser.parseSdk(mSdkMan.getLocation(),
-                        mSdkMan,
+                        "Android SDK Build-tools, revision 3.0.1, " +
+                        "Android SDK Build-tools, revision 3, " +
+                        "Platform Tools, revision 17.1.2, Tools, revision 1.0.1]",
+                Arrays.toString(sort(mParser.parseSdk(mSdk.getLocation().getAbsolutePath(),
+                        mSdk,
                         LocalSdkParser.PARSE_BUILD_TOOLS |
                                 LocalSdkParser.PARSE_EXTRAS,
                         mMonitor))));
@@ -293,18 +301,18 @@ public class LocalSdkParserTest extends SdkManagerTestCase {
                 others[i++] = o;
             }
         }
-        createFakeBuildTools(new File(mSdkMan.getLocation()), others[0].toString(), "5.0.1");
-        createFakeBuildTools(new File(mSdkMan.getLocation()), others[1].toString(), "5.0.2");
+        createFakeBuildTools(mSdk.getLocation(), others[0].toString(), "5.0.1");
+        createFakeBuildTools(mSdk.getLocation(), others[1].toString(), "5.0.2");
 
         assertEquals(
                 "[Android SDK Build-tools, revision 18.3.4 rc5, " +
-                "Android SDK Build-tools, revision 3.0.1, " +
-                "Android SDK Build-tools, revision 3, " +
-                "Broken Build-Tools Package, revision 5.0.2, " +
-                "Broken Build-Tools Package, revision 5.0.1, " +
-                "Platform Tools, revision 17.1.2, Tools, revision 1.0.1]",
-                Arrays.toString(sort(mParser.parseSdk(mSdkMan.getLocation(),
-                        mSdkMan,
+                        "Android SDK Build-tools, revision 3.0.1, " +
+                        "Android SDK Build-tools, revision 3, " +
+                        "Broken Build-Tools Package, revision 5.0.2, " +
+                        "Broken Build-Tools Package, revision 5.0.1, " +
+                        "Platform Tools, revision 17.1.2, Tools, revision 1.0.1]",
+                Arrays.toString(sort(mParser.parseSdk(mSdk.getLocation().getAbsolutePath(),
+                        mSdk,
                         LocalSdkParser.PARSE_BUILD_TOOLS |
                                 LocalSdkParser.PARSE_EXTRAS,
                         mMonitor))));
@@ -319,7 +327,7 @@ public class LocalSdkParserTest extends SdkManagerTestCase {
 
     private String sanitizeInput(Object[] array) {
         String input = Arrays.toString(array);
-        String sdkPath = mSdkMan.getLocation();
+        String sdkPath = mSdk.getLocation().getAbsolutePath();
         input = input.replaceAll(Pattern.quote(sdkPath), "SDK");
         input = input.replace(File.separatorChar, '/');
         return input;

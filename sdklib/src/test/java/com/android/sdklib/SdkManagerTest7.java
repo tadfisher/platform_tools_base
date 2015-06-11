@@ -18,6 +18,7 @@ package com.android.sdklib;
 
 
 import com.android.sdklib.repository.FullRevision;
+import com.android.sdklib.repository.local.LocalSdk;
 import com.google.common.collect.Sets;
 
 import java.util.Arrays;
@@ -34,19 +35,10 @@ public class SdkManagerTest7 extends SdkManagerTestCase {
 
     public void testSdkManager_getBuildTools() {
         // There is no build-tools folder in this repository.
-        SdkManager sdkman = getSdkManager();
+        LocalSdk sdk = getSdk();
 
-        Set<FullRevision> v = sdkman.getBuildTools();
-        // Make sure we get a stable set -- hashmap order isn't stable and can't be used in tests.
-        if (!(v instanceof TreeSet<?>)) {
-            v = Sets.newTreeSet(v);
-        }
-
-        assertEquals("", getLog().toString());              // no errors in the logger
-        assertEquals("[]", Arrays.toString(v.toArray()));
-
-        assertNull(sdkman.getBuildTool(new FullRevision(1)));
-        assertNull(sdkman.getBuildTool(new FullRevision(3, 0, 0)));
-        assertNull(sdkman.getBuildTool(new FullRevision(12, 3, 4, 5)));
+        assertNull(sdk.getBuildTool(new FullRevision(1)));
+        assertNull(sdk.getBuildTool(new FullRevision(3, 0, 0)));
+        assertNull(sdk.getBuildTool(new FullRevision(12, 3, 4, 5)));
     }
 }

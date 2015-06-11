@@ -19,7 +19,6 @@ package com.android.sdklib.internal.repository.updater;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskFactory;
 import com.android.sdklib.internal.repository.ITaskMonitor;
@@ -27,9 +26,9 @@ import com.android.sdklib.internal.repository.NullTaskMonitor;
 import com.android.sdklib.internal.repository.UserCredentials;
 import com.android.sdklib.internal.repository.archives.Archive;
 import com.android.sdklib.repository.SdkRepoConstants;
+import com.android.sdklib.repository.local.LocalSdk;
 import com.android.utils.ILogger;
 import com.android.utils.IReaderLogger;
-import com.android.utils.NullLogger;
 import com.android.utils.Pair;
 
 import java.io.File;
@@ -61,7 +60,7 @@ public class SdkUpdaterNoWindow {
      * and outputs to the given SDK logger.
      *
      * @param osSdkRoot The OS path of the SDK folder to update.
-     * @param sdkManager An existing SDK manager to list current platforms and addons.
+     * @param sdk An existing SDK manager to list current platforms and addons.
      * @param sdkLog A logger object, that should ideally output to a write-only console.
      * @param force The reply to any question asked by the update process. Currently this will
      *   be yes/no for ability to replace modified samples or restart ADB.
@@ -70,7 +69,7 @@ public class SdkUpdaterNoWindow {
      * @param proxyHost An optional HTTP/HTTPS proxy host. Can be null.
      */
     public SdkUpdaterNoWindow(String osSdkRoot,
-            SdkManager sdkManager,
+            LocalSdk sdk,
             ILogger sdkLog,
             boolean force,
             boolean useHttp,
@@ -106,7 +105,7 @@ public class SdkUpdaterNoWindow {
 
         mUpdaterData.getLocalSdkParser().parseSdk(
                 osSdkRoot,
-                sdkManager,
+                sdk,
                 new NullTaskMonitor(sdkLog));
     }
 
@@ -180,8 +179,8 @@ public class SdkUpdaterNoWindow {
         // when we provide a proper UI for this.
         assert mSdkLog instanceof IReaderLogger;
 
-        SdkManager sm = mUpdaterData.getSdkManager();
-        IAndroidTarget target = sm.getTargetFromHashString(hashString);
+        LocalSdk sdk = mUpdaterData.getSdk();
+        IAndroidTarget target = sdk.getTargetFromHashString(hashString);
 
         if (target == null) {
             // Otherwise try to install it.
@@ -196,8 +195,8 @@ public class SdkUpdaterNoWindow {
                     null); //acceptLicense
 
             if (installed != null) {
-                sm.reloadSdk(new NullLogger());
-                target = sm.getTargetFromHashString(hashString);
+                sdk = new LocalSdk(sdk.getLocation());
+                target = sdk.getTargetFromHashString(hashString);
             }
         }
 

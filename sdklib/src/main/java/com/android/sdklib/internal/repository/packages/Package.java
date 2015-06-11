@@ -22,7 +22,6 @@ import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.sdklib.AndroidVersion;
-import com.android.sdklib.SdkManager;
 import com.android.sdklib.repository.IDescription;
 import com.android.sdklib.repository.IListDescription;
 import com.android.sdklib.internal.repository.ITaskMonitor;
@@ -35,6 +34,8 @@ import com.android.sdklib.repository.*;
 import com.android.sdklib.repository.descriptors.IPkgDesc;
 
 import com.android.sdklib.repository.descriptors.PkgDesc;
+import com.android.sdklib.repository.local.LocalSdk;
+
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.w3c.dom.Node;
 
@@ -613,11 +614,11 @@ public abstract class Package implements IDescription, IListDescription, Compara
      * installation so this method must not attempt to create them.
      *
      * @param osSdkRoot The OS path of the SDK root folder.
-     * @param sdkManager An existing SDK manager to list current platforms and addons.
+     * @param sdk An existing SDK manager to list current platforms and addons.
      * @return A new {@link File} corresponding to the directory to use to install this package.
      */
     @NonNull
-    public abstract File getInstallFolder(String osSdkRoot, SdkManager sdkManager);
+    public abstract File getInstallFolder(String osSdkRoot, LocalSdk sdk);
 
     /**
      * Hook called right before an archive is installed. The archive has already

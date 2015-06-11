@@ -24,15 +24,21 @@ import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.AndroidVersion.AndroidVersionException;
-import com.android.sdklib.SdkManager;
 import com.android.sdklib.SystemImage;
 import com.android.sdklib.devices.Abi;
 import com.android.sdklib.internal.repository.sources.SdkSource;
-import com.android.sdklib.repository.*;
+import com.android.sdklib.repository.IDescription;
+import com.android.sdklib.repository.MajorRevision;
+import com.android.sdklib.repository.PkgProps;
+import com.android.sdklib.repository.SdkAddonConstants;
+import com.android.sdklib.repository.SdkRepoConstants;
+import com.android.sdklib.repository.SdkSysImgConstants;
 import com.android.sdklib.repository.descriptors.IPkgDesc;
 import com.android.sdklib.repository.descriptors.IdDisplay;
 import com.android.sdklib.repository.descriptors.PkgDesc;
+import com.android.sdklib.repository.local.LocalSdk;
 import com.android.sdklib.repository.local.LocalSysImgPkgInfo;
+
 import org.w3c.dom.Node;
 
 import java.io.File;
@@ -200,7 +206,7 @@ public class SystemImagePackage extends MajorRevisionPackage
 
     /**
      * Creates a {@link BrokenPackage} representing a system image that failed to load
-     * with the regular {@link SdkManager} workflow.
+     * with the regular {@link LocalSdk} workflow.
      *
      * @param abiDir The SDK/system-images/android-N/tag/abi folder
      * @param props The properties located in {@code abiDir} or null if not found.
@@ -503,11 +509,11 @@ public class SystemImagePackage extends MajorRevisionPackage
      * The name needs to be sanitized to be acceptable as a directory name.
      *
      * @param osSdkRoot The OS path of the SDK root folder.
-     * @param sdkManager An existing SDK manager to list current platforms and addons.
+     * @param sdk An existing SDK manager to list current platforms and addons.
      * @return A new {@link File} corresponding to the directory to use to install this package.
      */
     @Override
-    public File getInstallFolder(String osSdkRoot, SdkManager sdkManager) {
+    public File getInstallFolder(String osSdkRoot, LocalSdk sdk) {
         File folder = new File(osSdkRoot, SdkConstants.FD_SYSTEM_IMAGES);
         folder = new File(folder, AndroidTargetHash.getPlatformHashString(mVersion));
 

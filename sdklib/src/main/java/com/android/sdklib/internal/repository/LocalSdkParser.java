@@ -22,7 +22,6 @@ import com.android.io.FileWrapper;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISystemImage;
 import com.android.sdklib.ISystemImage.LocationType;
-import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.androidTarget.PlatformTarget;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.repository.packages.AddonPackage;
@@ -39,6 +38,7 @@ import com.android.sdklib.internal.repository.packages.ToolPackage;
 import com.android.sdklib.io.FileOp;
 import com.android.sdklib.repository.AddonManifestIniProps;
 import com.android.sdklib.repository.descriptors.PkgType;
+import com.android.sdklib.repository.local.LocalSdk;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
 import com.google.common.collect.Lists;
@@ -75,13 +75,13 @@ public class LocalSdkParser {
     public static final int PARSE_DOCS           = PkgType.PKG_DOC.getIntValue();
     /**
      * Equivalent to parsing the SDK/platforms folder but does so
-     * by using the <em>valid</em> targets loaded by the {@link SdkManager}.
+     * by using the <em>valid</em> targets loaded by the {@link LocalSdk}.
      * Parsing the platforms also parses the SDK/system-images folder.
      */
     public static final int PARSE_PLATFORMS      = PkgType.PKG_PLATFORM.getIntValue();
     /**
      * Equivalent to parsing the SDK/addons folder but does so
-     * by using the <em>valid</em> targets loaded by the {@link SdkManager}.
+     * by using the <em>valid</em> targets loaded by the {@link LocalSdk}.
      */
     public static final int PARSE_ADDONS         = PkgType.PKG_ADDON.getIntValue();
     /** Parse the SDK/samples folder.
@@ -124,17 +124,17 @@ public class LocalSdkParser {
      * <p/>
      * Equivalent to calling {@code parseSdk(..., PARSE_ALL, ...); }
      *
-     * @param osSdkRoot The path to the SDK folder, typically {@code sdkManager.getLocation()}.
-     * @param sdkManager An existing SDK manager to list current platforms and addons.
+     * @param osSdkRoot The path to the SDK folder, typically {@code sdk.getLocation()}.
+     * @param sdk An existing SDK manager to list current platforms and addons.
      * @param monitor A monitor to track progress. Cannot be null.
      * @return The packages found. Can be retrieved later using {@link #getPackages()}.
      */
     @NonNull
     public Package[] parseSdk(
             @NonNull String osSdkRoot,
-            @NonNull SdkManager sdkManager,
+            @NonNull LocalSdk sdk,
             @NonNull ITaskMonitor monitor) {
-        return parseSdk(osSdkRoot, sdkManager, PARSE_ALL, monitor);
+        return parseSdk(osSdkRoot, sdk, PARSE_ALL, monitor);
     }
 
     /**
@@ -143,8 +143,8 @@ public class LocalSdkParser {
      * Store the packages internally. You can use {@link #getPackages()} to retrieve them
      * at any time later.
      *
-     * @param osSdkRoot The path to the SDK folder, typically {@code sdkManager.getLocation()}.
-     * @param sdkManager An existing SDK manager to list current platforms and addons.
+     * @param osSdkRoot The path to the SDK folder, typically {@code sdk.getLocation()}.
+     * @param sdk An existing local SDK to list current platforms and addons.
      * @param parseFilter Either {@link #PARSE_ALL} or an ORed combination of the other
      *      {@code PARSE_} constants to indicate what should be parsed.
      * @param monitor A monitor to track progress. Cannot be null.
@@ -153,7 +153,7 @@ public class LocalSdkParser {
     @NonNull
     public Package[] parseSdk(
             @NonNull String osSdkRoot,
-            @NonNull SdkManager sdkManager,
+            @NonNull LocalSdk sdk,
             int parseFilter,
             @NonNull ITaskMonitor monitor) {
         ArrayList<Package> packages = new ArrayList<Package>();
@@ -195,15 +195,15 @@ public class LocalSdkParser {
         monitor.incProgress(1);
 
         if ((parseFilter & PARSE_BUILD_TOOLS) != 0) {
-            scanBuildTools(sdkManager, visited, packages, monitor);
+            scanBuildTools(sdk, visited, packages, monitor);
         }
         monitor.incProgress(1);
 
-        // for platforms, add-ons and samples, rely on the SdkManager parser
+        // for platforms, add-ons and samples, rely on the LocalSdk parser
         if ((parseFilter & (PARSE_ADDONS | PARSE_PLATFORMS)) != 0) {
             File samplesRoot = new File(osSdkRoot, SdkConstants.FD_SAMPLES);
 
-            for(IAndroidTarget target : sdkManager.getTargets()) {
+            for(IAndroidTarget target : sdk.getTargets()) {
                 Properties props = parseProperties(new File(target.getLocation(),
                         SdkConstants.FN_SOURCE_PROP));
 
@@ -265,19 +265,19 @@ public class LocalSdkParser {
         monitor.incProgress(1);
 
         if ((parseFilter & PARSE_PLATFORMS) != 0) {
-            scanMissingSystemImages(sdkManager, visited, packages, monitor);
+            scanMissingSystemImages(sdk, visited, packages, monitor);
         }
         monitor.incProgress(1);
         if ((parseFilter & PARSE_ADDONS) != 0) {
-            scanMissingAddons(sdkManager, visited, packages, monitor);
+            scanMissingAddons(sdk, visited, packages, monitor);
         }
         monitor.incProgress(1);
         if ((parseFilter & PARSE_SAMPLES) != 0) {
-            scanMissingSamples(sdkManager, visited, packages, monitor);
+            scanMissingSamples(sdk, visited, packages, monitor);
         }
         monitor.incProgress(1);
         if ((parseFilter & PARSE_EXTRAS) != 0) {
-            scanExtras(sdkManager, visited, packages, monitor);
+            scanExtras(sdk, visited, packages, monitor);
         }
         monitor.incProgress(1);
         if ((parseFilter & PARSE_EXTRAS) != 0) {
@@ -285,7 +285,7 @@ public class LocalSdkParser {
         }
         monitor.incProgress(1);
         if ((parseFilter & PARSE_SOURCES) != 0) {
-            scanSources(sdkManager, visited, packages, monitor);
+            scanSources(sdk, visited, packages, monitor);
         }
         monitor.incProgress(1);
 
@@ -299,11 +299,11 @@ public class LocalSdkParser {
      * Find any directory in the /extras/vendors/path folders for extra packages.
      * This isn't a recursive search.
      */
-    private void scanExtras(SdkManager sdkManager,
+    private void scanExtras(LocalSdk sdk,
             HashSet<File> visited,
             ArrayList<Package> packages,
             ILogger log) {
-        File root = new File(sdkManager.getLocation(), SdkConstants.FD_EXTRAS);
+        File root = new File(sdk.getLocation(), SdkConstants.FD_EXTRAS);
 
         for (File vendor : listFilesNonNull(root)) {
             if (vendor.isDirectory()) {
@@ -355,11 +355,11 @@ public class LocalSdkParser {
      * <p/>
      * The use case is to find samples dirs under /samples when their target isn't loaded.
      */
-    private void scanMissingSamples(SdkManager sdkManager,
+    private void scanMissingSamples(LocalSdk sdk,
             HashSet<File> visited,
             ArrayList<Package> packages,
             ILogger log) {
-        File root = new File(sdkManager.getLocation());
+        File root = sdk.getLocation();
         root = new File(root, SdkConstants.FD_SAMPLES);
 
         for (File dir : listFilesNonNull(root)) {
@@ -379,22 +379,22 @@ public class LocalSdkParser {
     }
 
     /**
-     * The sdk manager only lists valid addons. However here we also want to find "broken"
+     * The sdk only lists valid addons. However here we also want to find "broken"
      * addons, i.e. addons that failed to load for some reason.
      * <p/>
      * Find any other sub-directories under the /add-ons root that hasn't been visited yet
      * and assume they contain broken addons.
      */
-    private void scanMissingAddons(SdkManager sdkManager,
+    private void scanMissingAddons(LocalSdk sdk,
             HashSet<File> visited,
             ArrayList<Package> packages,
             ILogger log) {
-        File addons = new File(new File(sdkManager.getLocation()), SdkConstants.FD_ADDONS);
+        File addons = new File(sdk.getLocation(), SdkConstants.FD_ADDONS);
 
         for (File dir : listFilesNonNull(addons)) {
             if (dir.isDirectory() && !visited.contains(dir)) {
                 Pair<Map<String, String>, String> infos =
-                    parseAddonProperties(dir, sdkManager.getTargets(), log);
+                    parseAddonProperties(dir, sdk.getTargets(), log);
                 Properties sourceProps =
                     parseProperties(new File(dir, SdkConstants.FN_SOURCE_PROP));
 
@@ -520,15 +520,15 @@ public class LocalSdkParser {
 
 
     /**
-     * The sdk manager only lists valid system image via its addons or platform targets.
+     * The sdk only lists valid system image via its addons or platform targets.
      * However here we also want to find "broken" system images, that is system images
      * that are located in the sdk/system-images folder but somehow not loaded properly.
      */
-    private void scanMissingSystemImages(SdkManager sdkManager,
+    private void scanMissingSystemImages(LocalSdk sdk,
             HashSet<File> visited,
             ArrayList<Package> packages,
             ILogger log) {
-        File siRoot = new File(sdkManager.getLocation(), SdkConstants.FD_SYSTEM_IMAGES);
+        File siRoot = new File(sdk.getLocation(), SdkConstants.FD_SYSTEM_IMAGES);
 
         // The system-images folder contains a list of platform folders.
         for (File platformDir : listFilesNonNull(siRoot)) {
@@ -577,11 +577,11 @@ public class LocalSdkParser {
     /**
      * Scan the sources/folders and register valid as well as broken source packages.
      */
-    private void scanSources(SdkManager sdkManager,
+    private void scanSources(LocalSdk sdk,
             HashSet<File> visited,
             ArrayList<Package> packages,
             ILogger log) {
-        File srcRoot = new File(sdkManager.getLocation(), SdkConstants.FD_PKG_SOURCES);
+        File srcRoot = new File(sdk.getLocation(), SdkConstants.FD_PKG_SOURCES);
 
         // The sources folder contains a list of platform folders.
         for (File platformDir : listFilesNonNull(srcRoot)) {
@@ -693,11 +693,11 @@ public class LocalSdkParser {
      * Scan the build-tool/folders and register valid as well as broken build tool packages.
      */
     private void scanBuildTools(
-            SdkManager sdkManager,
+            LocalSdk sdk,
             HashSet<File> visited,
             ArrayList<Package> packages,
             ILogger log) {
-        File buildToolRoot = new File(sdkManager.getLocation(), SdkConstants.FD_BUILD_TOOLS);
+        File buildToolRoot = new File(sdk.getLocation(), SdkConstants.FD_BUILD_TOOLS);
 
         // The build-tool root folder contains a list of revisioned folders.
         for (File buildToolDir : listFilesNonNull(buildToolRoot)) {

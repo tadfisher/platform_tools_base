@@ -17,14 +17,11 @@
 package com.android.ant;
 
 import com.android.SdkConstants;
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.IAndroidTarget.OptionalLibrary;
-import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.project.ProjectProperties;
-import com.android.utils.ILogger;
+import com.android.sdklib.repository.local.LocalSdk;
 import com.android.xml.AndroidManifest;
 import com.android.xml.AndroidXPathFactory;
 
@@ -120,44 +117,10 @@ public class GetTargetTask extends Task {
 
         // load up the sdk targets.
         final ArrayList<String> messages = new ArrayList<String>();
-        SdkManager manager = SdkManager.createManager(sdkDir.getPath(), new ILogger() {
-            @Override
-            public void error(@Nullable Throwable t, @Nullable String errorFormat,
-                    Object... args) {
-                if (errorFormat != null) {
-                    messages.add(String.format("Error: " + errorFormat, args));
-                }
-                if (t != null) {
-                    messages.add("Error: " + t.getMessage());
-                }
-            }
-
-            @Override
-            public void info(@NonNull String msgFormat, Object... args) {
-                messages.add(String.format(msgFormat, args));
-            }
-
-            @Override
-            public void verbose(@NonNull String msgFormat, Object... args) {
-                info(msgFormat, args);
-            }
-
-            @Override
-            public void warning(@NonNull String warningFormat, Object... args) {
-                messages.add(String.format("Warning: " + warningFormat, args));
-            }
-        });
-
-        if (manager == null) {
-            // since we failed to parse the SDK, lets display the parsing output.
-            for (String msg : messages) {
-                System.out.println(msg);
-            }
-            throw new BuildException("Failed to parse SDK content.");
-        }
+        LocalSdk sdk = new LocalSdk(sdkDir);
 
         // resolve it
-        IAndroidTarget androidTarget = manager.getTargetFromHashString(targetHashString);
+        IAndroidTarget androidTarget = sdk.getTargetFromHashString(targetHashString);
 
         if (androidTarget == null) {
             throw new BuildException(String.format(
