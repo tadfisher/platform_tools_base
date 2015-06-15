@@ -35,6 +35,7 @@ import com.android.builder.core.VariantConfiguration;
 import com.android.builder.tasks.Job;
 import com.android.builder.tasks.JobContext;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
@@ -62,7 +63,7 @@ import proguard.gradle.ProGuardTask;
  * Decoration for the {@link ProGuardTask} so it implements shared interfaces with our custom
  * tasks.
  */
-public class AndroidProGuardTask extends ProGuardTask implements FileSupplier {
+public class AndroidProGuardTask extends ProGuardTask implements FileSupplier, JavaResourcesProvider {
 
     /**
      * resulting obfuscation mapping file.
@@ -80,6 +81,8 @@ public class AndroidProGuardTask extends ProGuardTask implements FileSupplier {
     @InputFile
     @Optional
     File testedAppMappingFile;
+
+    File obfuscatedClassesJar;
 
     @Override
     public void printmapping(Object printMapping) throws ParseException {
@@ -139,6 +142,12 @@ public class AndroidProGuardTask extends ProGuardTask implements FileSupplier {
         super.proguard();
     }
 
+    @NonNull
+    @Override
+    public ImmutableList<JavaResourcesLocation> getJavaResourcesProviders() {
+        return ImmutableList.of(new JavaResourcesLocation(Type.JAR, obfuscatedClassesJar));
+    }
+
     public static class ConfigAction implements TaskConfigAction<AndroidProGuardTask> {
 
         private VariantScope scope;
@@ -191,6 +200,7 @@ public class AndroidProGuardTask extends ProGuardTask implements FileSupplier {
                             + "/classes-proguard/" + variantData.getVariantConfiguration().getDirName()
                             + "/classes.jar");
             variantData.obfuscatedClassesJar = outFile;
+            proguardTask.obfuscatedClassesJar = outFile;
 
             // --- Proguard Config ---
 
