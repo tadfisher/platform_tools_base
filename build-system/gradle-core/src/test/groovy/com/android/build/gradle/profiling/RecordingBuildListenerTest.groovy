@@ -54,6 +54,9 @@ class RecordingBuildListenerTest {
     Task mTask
 
     @Mock
+    Task mSecondTask;
+
+    @Mock
     TaskState mTaskState
 
     @Mock
@@ -108,6 +111,10 @@ class RecordingBuildListenerTest {
         when(mTask.getName()).thenReturn("taskName")
         when(mTask.getProject()).thenReturn(mProject)
         when(mProject.getName()).thenReturn("projectName")
+
+        when(mSecondTask.getName()).thenReturn("task2Name")
+        when(mSecondTask.getProject()).thenReturn(mProject)
+        when(mProject.getName()).thenReturn("projectName")
     }
 
     @Test
@@ -153,6 +160,47 @@ class RecordingBuildListenerTest {
         assertNotNull(record);
         assertEquals(3, record.id)
         assertEquals(2, record.parentId)
+        assertEquals(0, record.attributes.size())
+        assertEquals(ExecutionType.SOME_RANDOM_PROCESSING, record.type)
+    }
+
+    @Test
+    public void "simulate tasks un-ordered lifecycle events delivery"() {
+
+        TestExecutionRecordWriter recordWriter = new TestExecutionRecordWriter()
+        ProcessRecorderFactory.initializeForTests(recordWriter)
+
+        RecordingBuildListener listener = new RecordingBuildListener(ThreadRecorder.get());
+
+        listener.beforeExecute(mTask);
+        listener.beforeExecute(mSecondTask);
+        ThreadRecorder.get().record(ExecutionType.SOME_RANDOM_PROCESSING) {
+            Logger.getAnonymousLogger().finest("useless block")
+        }
+        listener.afterExecute(mTask, mTaskState)
+        listener.afterExecute(mSecondTask, mTaskState);
+
+        ProcessRecorderFactory.shutdown()
+
+        assertEquals(5, recordWriter.getRecords().size())
+        ExecutionRecord record = getRecordForId(recordWriter.getRecords(), 2)
+        assertEquals(2, record.id)
+        assertEquals(0, record.parentId)
+        assertEquals(2, record.attributes.size())
+        ensurePropertyValue(record.attributes, "task", "taskName")
+        ensurePropertyValue(record.attributes, "project", "projectName")
+
+        record = getRecordForId(recordWriter.getRecords(), 3)
+        assertEquals(3, record.id)
+        assertEquals(0, record.parentId)
+        assertEquals(2, record.attributes.size())
+        ensurePropertyValue(record.attributes, "task", "task2Name")
+        ensurePropertyValue(record.attributes, "project", "projectName")
+
+        record = getRecordForId(recordWriter.getRecords(), 4)
+        assertNotNull(record);
+        assertEquals(4, record.id)
+        assertEquals(3, record.parentId)
         assertEquals(0, record.attributes.size())
         assertEquals(ExecutionType.SOME_RANDOM_PROCESSING, record.type)
     }

@@ -112,7 +112,11 @@ public class ThreadRecorder implements Recorder {
 
     @Override
     public void closeRecord(ExecutionRecord executionRecord) {
-        if (recordStacks.get().pop() != executionRecord.id) {
+        // there is no contract that allocationRecordId and closeRecord will be called in the
+        // right order to maintain the stack integrity. Therefore, I used an API which makes
+        // no assumption on where in the stack the allocated ID is so these Apis can be called
+        // in various orders as long as allocationRecordId is called before closeRecord.
+        if (!recordStacks.get().removeFirstOccurrence(executionRecord.id)) {
             logger.severe("Internal Error : mixed records in profiling stack");
         }
         ProcessRecorder.get().writeRecord(executionRecord);
