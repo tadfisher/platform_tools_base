@@ -1,0 +1,2318 @@
+#
+# A fatal error has been detected by the Java Runtime Environment:
+#
+#  SIGSEGV (0xb) at pc=0x00007f0f6aee4463, pid=31543, tid=139702604769024
+#
+# JRE version: Java(TM) SE Runtime Environment (7.0_67-b01) (build 1.7.0_67-b01)
+# Java VM: Java HotSpot(TM) 64-Bit Server VM (24.65-b04 mixed mode linux-amd64 compressed oops)
+# Problematic frame:
+# C  [libc.so.6+0x150463]  __nss_hosts_lookup+0x191e3
+#
+# Failed to write core dump. Core dumps have been disabled. To enable core dumping, try "ulimit -c unlimited" before starting Java again
+#
+# If you would like to submit a bug report, please visit:
+#   http://bugreport.sun.com/bugreport/crash.jsp
+# The crash happened outside the Java Virtual Machine in native code.
+# See problematic frame for where to report the bug.
+#
+
+---------------  T H R E A D  ---------------
+
+Current thread (0x00007f0e8800b800):  JavaThread "Daemon worker" [_thread_in_native, id=31611, stack(0x00007f0f0c11a000,0x00007f0f0c21b000)]
+
+siginfo:si_signo=SIGSEGV: si_errno=0, si_code=2 (SEGV_ACCERR), si_addr=0x00007f0f0c019000
+
+Registers:
+RAX=0x00007f0e84b46940, RBX=0x0000000000006c63, RCX=0x0000000000008000, RDX=0x00000000000065d3
+RSP=0x00007f0f0c2152c8, RBP=0x00007f0f0c215320, RSI=0x00007f0f0c018f92, RDI=0x00007f0e84b46ed0
+R8 =0x00007f0e84b46940, R9 =0x00007f0f6aee4440, R10=0x00007f0e84000078, R11=0x00007f0f6af1beb0
+R12=0x00007f0f0c00f62b, R13=0x00007f0e849fb350, R14=0x0000000000002e37, R15=0x00007f0e846c5140
+RIP=0x00007f0f6aee4463, EFLAGS=0x0000000000010202, CSGSFS=0x0000000000000033, ERR=0x0000000000000004
+  TRAPNO=0x000000000000000e
+
+Top of Stack: (sp=0x00007f0f0c2152c8)
+0x00007f0f0c2152c8:   00007f0f63be4bce 00000000b0000c90
+0x00007f0f0c2152d8:   6c63370e00000000 0000000000006572
+0x00007f0f0c2152e8:   0000000000000a03 00007f0e849fb350
+0x00007f0f0c2152f8:   00007f0e846d0920 00007f0e846c5140
+0x00007f0f0c215308:   00007f0e84b5bac0 00000000f8e91715
+0x00007f0f0c215318:   00007f0f0c215380 00007f0f0c215360
+0x00007f0f0c215328:   00007f0f63be50b0 0000002f0c215360
+0x00007f0f0c215338:   00007f0f0c215380 000000000000002f
+0x00007f0f0c215348:   00007f0e8800b9e8 00007f0f0c215380
+0x00007f0f0c215358:   00007f0f0c215858 00007f0f0c2157c0
+0x00007f0f0c215368:   00007f0f63be3eed 0100003000000000
+0x00007f0f0c215378:   00007f0e846c5140 72646e612f6d6f63
+0x00007f0f0c215388:   6c6975622f64696f 656c646172672f64
+0x00007f0f0c215398:   4a2f736b7361742f 246b7361546b6361
+0x00007f0f0c2153a8:   007373616c632e31 00007f0f00000000
+0x00007f0f0c2153b8:   00007f0e00000000 00007f0eb1a5ef20
+0x00007f0f0c2153c8:   00007f0f6a639a8a 00007f0e8800e800
+0x00007f0f0c2153d8:   00007f0e8800b800 00007f0f0c2155b0
+0x00007f0f0c2153e8:   00007f0f6a615cd1 00007f0eb0ea96a8
+0x00007f0f0c2153f8:   00007f0f6a639a8a 00007f0e8800e800
+0x00007f0f0c215408:   00007f0e8800b800 00007f0f0c2155e0
+0x00007f0f0c215418:   00007f0f0c2154f0 00007f0e8800e800
+0x00007f0f0c215428:   00007f0e84000a30 00007f0f0c215600
+0x00007f0f0c215438:   00007f0f6a615cd1 00007f0f00000000
+0x00007f0f0c215448:   00007f0f0c215520 00000000000003d8
+0x00007f0f0c215458:   00007f0f6a639a8a 00007f0e8800e800
+0x00007f0f0c215468:   00007f0f0c215540 00007f0ea4009e20
+0x00007f0f0c215478:   00007f0e00000000 00007f0e84000a30
+0x00007f0f0c215488:   00007f0e8800b800 00007f0f0c2155e0
+0x00007f0f0c215498:   00007f0f6a639a8a 00007f0e8800e800
+0x00007f0f0c2154a8:   00007f0e8800b800 00007f0f0c215680
+0x00007f0f0c2154b8:   00007f0f6a615cd1 00007f0ea4009e20 
+
+Instructions: (pc=0x00007f0f6aee4463)
+0x00007f0f6aee4443:   80 00 00 00 0f 28 4e fe 0f 28 56 0e 0f 28 5e 1e
+0x00007f0f6aee4453:   0f 28 66 2e 0f 28 6e 3e 0f 28 76 4e 0f 28 7e 5e
+0x00007f0f6aee4463:   44 0f 28 46 6e 44 0f 28 4e 7e 48 8d b6 80 00 00
+0x00007f0f6aee4473:   00 66 45 0f 3a 0f c8 02 44 0f 29 4f 70 66 44 0f 
+
+Register to memory mapping:
+
+RAX=0x00007f0e84b46940 is an unknown value
+RBX=0x0000000000006c63 is an unknown value
+RCX=0x0000000000008000 is an unknown value
+RDX=0x00000000000065d3 is an unknown value
+RSP=0x00007f0f0c2152c8 is pointing into the stack for thread: 0x00007f0e8800b800
+RBP=0x00007f0f0c215320 is pointing into the stack for thread: 0x00007f0e8800b800
+RSI=0x00007f0f0c018f92 is an unknown value
+RDI=0x00007f0e84b46ed0 is an unknown value
+R8 =0x00007f0e84b46940 is an unknown value
+R9 =0x00007f0f6aee4440: <offset 0x150440> in /lib/x86_64-linux-gnu/libc.so.6 at 0x00007f0f6ad94000
+R10=0x00007f0e84000078 is an unknown value
+R11=0x00007f0f6af1beb0: <offset 0x187eb0> in /lib/x86_64-linux-gnu/libc.so.6 at 0x00007f0f6ad94000
+R12=0x00007f0f0c00f62b is an unknown value
+R13=0x00007f0e849fb350 is an unknown value
+R14=0x0000000000002e37 is an unknown value
+R15=0x00007f0e846c5140 is an unknown value
+
+
+Stack: [0x00007f0f0c11a000,0x00007f0f0c21b000],  sp=0x00007f0f0c2152c8,  free space=1004k
+Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)
+C  [libc.so.6+0x150463]  __nss_hosts_lookup+0x191e3
+C  [libzip.so+0x50b0]  ZIP_GetEntry+0xd0
+C  [libzip.so+0x3eed]  Java_java_util_zip_ZipFile_getEntry+0xad
+j  java.util.zip.ZipFile.getEntry(J[BZ)J+0
+j  java.util.zip.ZipFile.getEntry(Ljava/lang/String;)Ljava/util/zip/ZipEntry;+38
+j  java.util.jar.JarFile.getEntry(Ljava/lang/String;)Ljava/util/zip/ZipEntry;+2
+j  java.util.jar.JarFile.getJarEntry(Ljava/lang/String;)Ljava/util/jar/JarEntry;+2
+j  sun.misc.URLClassPath$JarLoader.getResource(Ljava/lang/String;Z)Lsun/misc/Resource;+48
+j  sun.misc.URLClassPath.getResource(Ljava/lang/String;Z)Lsun/misc/Resource;+53
+j  java.net.URLClassLoader$1.run()Ljava/lang/Class;+26
+j  java.net.URLClassLoader$1.run()Ljava/lang/Object;+1
+v  ~StubRoutines::call_stub
+V  [libjvm.so+0x5ffb65]  JavaCalls::call_helper(JavaValue*, methodHandle*, JavaCallArguments*, Thread*)+0x365
+V  [libjvm.so+0x5fe5c8]  JavaCalls::call(JavaValue*, methodHandle, JavaCallArguments*, Thread*)+0x28
+V  [libjvm.so+0x684ee4]  JVM_DoPrivileged+0x2a4
+j  java.security.AccessController.doPrivileged(Ljava/security/PrivilegedExceptionAction;Ljava/security/AccessControlContext;)Ljava/lang/Object;+0
+j  java.net.URLClassLoader.findClass(Ljava/lang/String;)Ljava/lang/Class;+13
+j  java.lang.ClassLoader.loadClass(Ljava/lang/String;Z)Ljava/lang/Class;+70
+j  java.lang.ClassLoader.loadClass(Ljava/lang/String;)Ljava/lang/Class;+3
+v  ~StubRoutines::call_stub
+V  [libjvm.so+0x5ffb65]  JavaCalls::call_helper(JavaValue*, methodHandle*, JavaCallArguments*, Thread*)+0x365
+V  [libjvm.so+0x5fe5c8]  JavaCalls::call(JavaValue*, methodHandle, JavaCallArguments*, Thread*)+0x28
+V  [libjvm.so+0x5fe897]  JavaCalls::call_virtual(JavaValue*, KlassHandle, Symbol*, Symbol*, JavaCallArguments*, Thread*)+0x197
+V  [libjvm.so+0x5fe966]  JavaCalls::call_virtual(JavaValue*, Handle, KlassHandle, Symbol*, Symbol*, Handle, Thread*)+0x56
+V  [libjvm.so+0x922249]  SystemDictionary::load_instance_class(Symbol*, Handle, Thread*)+0x419
+V  [libjvm.so+0x9229f1]  SystemDictionary::resolve_instance_class_or_null(Symbol*, Handle, Handle, Thread*)+0x791
+V  [libjvm.so+0x922e54]  SystemDictionary::resolve_or_null(Symbol*, Handle, Handle, Thread*)+0x54
+V  [libjvm.so+0x923f34]  SystemDictionary::resolve_or_fail(Symbol*, Handle, Handle, bool, Thread*)+0x34
+V  [libjvm.so+0x490c28]  constantPoolOopDesc::klass_at_impl(constantPoolHandle, int, Thread*)+0x278
+V  [libjvm.so+0x5f7af4]  InterpreterRuntime::_new(JavaThread*, constantPoolOopDesc*, int)+0x74
+j  com.android.build.gradle.tasks.JackTask.compile()V+8
+v  ~StubRoutines::call_stub
+V  [libjvm.so+0x5ffb65]  JavaCalls::call_helper(JavaValue*, methodHandle*, JavaCallArguments*, Thread*)+0x365
+V  [libjvm.so+0x5fe5c8]  JavaCalls::call(JavaValue*, methodHandle, JavaCallArguments*, Thread*)+0x28
+V  [libjvm.so+0x893d0f]  Reflection::invoke(instanceKlassHandle, methodHandle, Handle, bool, objArrayHandle, BasicType, objArrayHandle, bool, Thread*)+0x47f
+V  [libjvm.so+0x894ac0]  Reflection::invoke_method(oopDesc*, Handle, objArrayHandle, Thread*)+0x160
+V  [libjvm.so+0x687d74]  JVM_InvokeMethod+0x224
+j  sun.reflect.NativeMethodAccessorImpl.invoke0(Ljava/lang/reflect/Method;Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;+0
+j  sun.reflect.NativeMethodAccessorImpl.invoke(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;+87
+j  sun.reflect.DelegatingMethodAccessorImpl.invoke(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;+6
+j  java.lang.reflect.Method.invoke(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;+57
+j  org.gradle.internal.reflect.JavaMethod.invoke(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;+6
+j  org.gradle.api.internal.project.taskfactory.AnnotationProcessingTaskFactory$StandardTaskAction.doExecute(Lorg/gradle/api/Task;Ljava/lang/String;)V+17
+j  org.gradle.api.internal.project.taskfactory.AnnotationProcessingTaskFactory$StandardTaskAction.execute(Lorg/gradle/api/Task;)V+32
+j  org.gradle.api.internal.project.taskfactory.AnnotationProcessingTaskFactory$StandardTaskAction.execute(Ljava/lang/Object;)V+5
+j  org.gradle.api.internal.AbstractTask$TaskActionWrapper.execute(Lorg/gradle/api/Task;)V+28
+j  org.gradle.api.internal.AbstractTask$TaskActionWrapper.execute(Ljava/lang/Object;)V+5
+j  org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeAction(Lorg/gradle/api/internal/TaskInternal;Lorg/gradle/api/internal/tasks/ContextAwareTaskAction;Lorg/gradle/api/internal/tasks/TaskExecutionContext;)V+9
+j  org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeActions(Lorg/gradle/api/internal/TaskInternal;Lorg/gradle/api/internal/tasks/TaskStateInternal;Lorg/gradle/api/internal/tasks/TaskExecutionContext;)Lorg/gradle/api/GradleException;+79
+j  org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.execute(Lorg/gradle/api/internal/TaskInternal;Lorg/gradle/api/internal/tasks/TaskStateInternal;Lorg/gradle/api/internal/tasks/TaskExecutionContext;)V+19
+j  org.gradle.api.internal.tasks.execution.PostExecutionAnalysisTaskExecuter.execute(Lorg/gradle/api/internal/TaskInternal;Lorg/gradle/api/internal/tasks/TaskStateInternal;Lorg/gradle/api/internal/tasks/TaskExecutionContext;)V+7
+j  org.gradle.api.internal.tasks.execution.SkipUpToDateTaskExecuter.execute(Lorg/gradle/api/internal/TaskInternal;Lorg/gradle/api/internal/tasks/TaskStateInternal;Lorg/gradle/api/internal/tasks/TaskExecutionContext;)V+133
+j  org.gradle.api.internal.tasks.execution.ValidatingTaskExecuter.execute(Lorg/gradle/api/internal/TaskInternal;Lorg/gradle/api/internal/tasks/TaskStateInternal;Lorg/gradle/api/internal/tasks/TaskExecutionContext;)V+215
+j  org.gradle.api.internal.tasks.execution.SkipEmptySourceFilesTaskExecuter.execute(Lorg/gradle/api/internal/TaskInternal;Lorg/gradle/api/internal/tasks/TaskStateInternal;Lorg/gradle/api/internal/tasks/TaskExecutionContext;)V+56
+j  org.gradle.api.internal.tasks.execution.SkipTaskWithNoActionsExecuter.execute(Lorg/gradle/api/internal/TaskInternal;Lorg/gradle/api/internal/tasks/TaskStateInternal;Lorg/gradle/api/internal/tasks/TaskExecutionContext;)V+110
+j  org.gradle.api.internal.tasks.execution.SkipOnlyIfTaskExecuter.execute(Lorg/gradle/api/internal/TaskInternal;Lorg/gradle/api/internal/tasks/TaskStateInternal;Lorg/gradle/api/internal/tasks/TaskExecutionContext;)V+84
+j  org.gradle.api.internal.tasks.execution.ExecuteAtMostOnceTaskExecuter.execute(Lorg/gradle/api/internal/TaskInternal;Lorg/gradle/api/internal/tasks/TaskStateInternal;Lorg/gradle/api/internal/tasks/TaskExecutionContext;)V+26
+j  org.gradle.api.internal.AbstractTask.executeWithoutThrowingTaskFailure()V+16
+j  org.gradle.execution.taskgraph.AbstractTaskPlanExecutor$TaskExecutorWorker.executeTask(Lorg/gradle/execution/taskgraph/TaskInfo;)V+38
+j  org.gradle.execution.taskgraph.AbstractTaskPlanExecutor$TaskExecutorWorker.processTask(Lorg/gradle/execution/taskgraph/TaskInfo;)V+2
+j  org.gradle.execution.taskgraph.AbstractTaskPlanExecutor$TaskExecutorWorker.run()V+56
+j  org.gradle.execution.taskgraph.DefaultTaskPlanExecutor.process(Lorg/gradle/execution/taskgraph/TaskExecutionPlan;Lorg/gradle/api/execution/TaskExecutionListener;)V+6
+j  org.gradle.execution.taskgraph.DefaultTaskGraphExecuter.execute()V+46
+j  org.gradle.execution.SelectedTaskExecutionAction.execute(Lorg/gradle/execution/BuildExecutionContext;)V+41
+j  org.gradle.execution.DefaultBuildExecuter.execute(I)V+36
+j  org.gradle.execution.DefaultBuildExecuter.access$200(Lorg/gradle/execution/DefaultBuildExecuter;I)V+2
+j  org.gradle.execution.DefaultBuildExecuter$2.proceed()V+10
+j  org.gradle.execution.DryRunBuildExecutionAction.execute(Lorg/gradle/execution/BuildExecutionContext;)V+68
+j  org.gradle.execution.DefaultBuildExecuter.execute(I)V+36
+j  org.gradle.execution.DefaultBuildExecuter.execute()V+2
+j  org.gradle.initialization.DefaultGradleLauncher.doBuildStages(Lorg/gradle/initialization/DefaultGradleLauncher$Stage;)V+184
+j  org.gradle.initialization.DefaultGradleLauncher.doBuild(Lorg/gradle/initialization/DefaultGradleLauncher$Stage;)Lorg/gradle/BuildResult;+27
+j  org.gradle.initialization.DefaultGradleLauncher.run()Lorg/gradle/BuildResult;+4
+j  org.gradle.launcher.exec.InProcessBuildActionExecuter$DefaultBuildController.run()Lorg/gradle/api/internal/GradleInternal;+5
+j  org.gradle.launcher.cli.ExecuteBuildAction.run(Lorg/gradle/initialization/BuildController;)Ljava/lang/Void;+11
+j  org.gradle.launcher.cli.ExecuteBuildAction.run(Lorg/gradle/initialization/BuildController;)Ljava/lang/Object;+2
+j  org.gradle.launcher.exec.InProcessBuildActionExecuter.execute(Lorg/gradle/initialization/BuildAction;Lorg/gradle/initialization/BuildCancellationToken;Lorg/gradle/launcher/exec/BuildActionParameters;)Ljava/lang/Object;+19
+j  org.gradle.launcher.exec.InProcessBuildActionExecuter.execute(Lorg/gradle/initialization/BuildAction;Lorg/gradle/initialization/BuildCancellationToken;Ljava/lang/Object;)Ljava/lang/Object;+7
+j  org.gradle.launcher.daemon.server.exec.ExecuteBuild.doBuild(Lorg/gradle/launcher/daemon/server/exec/DaemonCommandExecution;Lorg/gradle/launcher/daemon/protocol/Build;)V+47
+j  org.gradle.launcher.daemon.server.exec.BuildCommandOnly.execute(Lorg/gradle/launcher/daemon/server/exec/DaemonCommandExecution;)V+49
+j  org.gradle.launcher.daemon.server.exec.DaemonCommandExecution.proceed()Z+28
+j  org.gradle.launcher.daemon.server.exec.WatchForDisconnection.execute(Lorg/gradle/launcher/daemon/server/exec/DaemonCommandExecution;)V+19
+j  org.gradle.launcher.daemon.server.exec.DaemonCommandExecution.proceed()Z+28
+j  org.gradle.launcher.daemon.server.exec.ResetDeprecationLogger.execute(Lorg/gradle/launcher/daemon/server/exec/DaemonCommandExecution;)V+4
+j  org.gradle.launcher.daemon.server.exec.DaemonCommandExecution.proceed()Z+28
+j  org.gradle.launcher.daemon.server.exec.StartStopIfBuildAndStop.execute(Lorg/gradle/launcher/daemon/server/exec/DaemonCommandExecution;)V+34
+j  org.gradle.launcher.daemon.server.exec.DaemonCommandExecution.proceed()Z+28
+j  org.gradle.launcher.daemon.server.exec.ForwardClientInput$2.call()Ljava/lang/Void;+4
+j  org.gradle.launcher.daemon.server.exec.ForwardClientInput$2.call()Ljava/lang/Object;+1
+j  org.gradle.util.Swapper.swap(Ljava/lang/Object;Ljava/util/concurrent/Callable;)Ljava/lang/Object;+21
+j  org.gradle.launcher.daemon.server.exec.ForwardClientInput.execute(Lorg/gradle/launcher/daemon/server/exec/DaemonCommandExecution;)V+63
+j  org.gradle.launcher.daemon.server.exec.DaemonCommandExecution.proceed()Z+28
+j  org.gradle.launcher.daemon.server.exec.LogToClient.doBuild(Lorg/gradle/launcher/daemon/server/exec/DaemonCommandExecution;Lorg/gradle/launcher/daemon/protocol/Build;)V+92
+j  org.gradle.launcher.daemon.server.exec.BuildCommandOnly.execute(Lorg/gradle/launcher/daemon/server/exec/DaemonCommandExecution;)V+49
+j  org.gradle.launcher.daemon.server.exec.DaemonCommandExecution.proceed()Z+28
+j  org.gradle.launcher.daemon.server.exec.EstablishBuildEnvironment.doBuild(Lorg/gradle/launcher/daemon/server/exec/DaemonCommandExecution;Lorg/gradle/launcher/daemon/protocol/Build;)V+237
+j  org.gradle.launcher.daemon.server.exec.BuildCommandOnly.execute(Lorg/gradle/launcher/daemon/server/exec/DaemonCommandExecution;)V+49
+j  org.gradle.launcher.daemon.server.exec.DaemonCommandExecution.proceed()Z+28
+j  org.gradle.launcher.daemon.server.exec.DaemonHygieneAction.execute(Lorg/gradle/launcher/daemon/server/exec/DaemonCommandExecution;)V+1
+j  org.gradle.launcher.daemon.server.exec.DaemonCommandExecution.proceed()Z+28
+...<more frames>...
+
+Java frames: (J=compiled Java code, j=interpreted, Vv=VM code)
+j  java.util.zip.ZipFile.getEntry(J[BZ)J+0
+j  java.util.zip.ZipFile.getEntry(Ljava/lang/String;)Ljava/util/zip/ZipEntry;+38
+j  java.util.jar.JarFile.getEntry(Ljava/lang/String;)Ljava/util/zip/ZipEntry;+2
+j  java.util.jar.JarFile.getJarEntry(Ljava/lang/String;)Ljava/util/jar/JarEntry;+2
+j  sun.misc.URLClassPath$JarLoader.getResource(Ljava/lang/String;Z)Lsun/misc/Resource;+48
+j  sun.misc.URLClassPath.getResource(Ljava/lang/String;Z)Lsun/misc/Resource;+53
+j  java.net.URLClassLoader$1.run()Ljava/lang/Class;+26
+j  java.net.URLClassLoader$1.run()Ljava/lang/Object;+1
+v  ~StubRoutines::call_stub
+j  java.security.AccessController.doPrivileged(Ljava/security/PrivilegedExceptionAction;Ljava/security/AccessControlContext;)Ljava/lang/Object;+0
+j  java.net.URLClassLoader.findClass(Ljava/lang/String;)Ljava/lang/Class;+13
+j  java.lang.ClassLoader.loadClass(Ljava/lang/String;Z)Ljava/lang/Class;+70
+j  java.lang.ClassLoader.loadClass(Ljava/lang/String;)Ljava/lang/Class;+3
+v  ~StubRoutines::call_stub
+j  com.android.build.gradle.tasks.JackTask.compile()V+8
+v  ~StubRoutines::call_stub
+j  sun.reflect.NativeMethodAccessorImpl.invoke0(Ljava/lang/reflect/Method;Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;+0
+j  sun.reflect.NativeMethodAccessorImpl.invoke(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;+87
+j  sun.reflect.DelegatingMethodAccessorImpl.invoke(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;+6
+j  java.lang.reflect.Method.invoke(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;+57
+j  org.gradle.internal.reflect.JavaMethod.invoke(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;+6
+j  org.gradle.api.internal.project.taskfactory.AnnotationProcessingTaskFactory$StandardTaskAction.doExecute(Lorg/gradle/api/Task;Ljava/lang/String;)V+17
+j  org.gradle.api.internal.project.taskfactory.AnnotationProcessingTaskFactory$StandardTaskAction.execute(Lorg/gradle/api/Task;)V+32
+j  org.gradle.api.internal.project.taskfactory.AnnotationProcessingTaskFactory$StandardTaskAction.execute(Ljava/lang/Object;)V+5
+j  org.gradle.api.internal.AbstractTask$TaskActionWrapper.execute(Lorg/gradle/api/Task;)V+28
+j  org.gradle.api.internal.AbstractTask$TaskActionWrapper.execute(Ljava/lang/Object;)V+5
+j  org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeAction(Lorg/gradle/api/internal/TaskInternal;Lorg/gradle/api/internal/tasks/ContextAwareTaskAction;Lorg/gradle/api/internal/tasks/TaskExecutionContext;)V+9
+j  org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeActions(Lorg/gradle/api/internal/TaskInternal;Lorg/gradle/api/internal/tasks/TaskStateInternal;Lorg/gradle/api/internal/tasks/TaskExecutionContext;)Lorg/gradle/api/GradleException;+79
+j  org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.execute(Lorg/gradle/api/internal/TaskInternal;Lorg/gradle/api/internal/tasks/TaskStateInternal;Lorg/gradle/api/internal/tasks/TaskExecutionContext;)V+19
+j  org.gradle.api.internal.tasks.execution.PostExecutionAnalysisTaskExecuter.execute(Lorg/gradle/api/internal/TaskInternal;Lorg/gradle/api/internal/tasks/TaskStateInternal;Lorg/gradle/api/internal/tasks/TaskExecutionContext;)V+7
+j  org.gradle.api.internal.tasks.execution.SkipUpToDateTaskExecuter.execute(Lorg/gradle/api/internal/TaskInternal;Lorg/gradle/api/internal/tasks/TaskStateInternal;Lorg/gradle/api/internal/tasks/TaskExecutionContext;)V+133
+j  org.gradle.api.internal.tasks.execution.ValidatingTaskExecuter.execute(Lorg/gradle/api/internal/TaskInternal;Lorg/gradle/api/internal/tasks/TaskStateInternal;Lorg/gradle/api/internal/tasks/TaskExecutionContext;)V+215
+j  org.gradle.api.internal.tasks.execution.SkipEmptySourceFilesTaskExecuter.execute(Lorg/gradle/api/internal/TaskInternal;Lorg/gradle/api/internal/tasks/TaskStateInternal;Lorg/gradle/api/internal/tasks/TaskExecutionContext;)V+56
+j  org.gradle.api.internal.tasks.execution.SkipTaskWithNoActionsExecuter.execute(Lorg/gradle/api/internal/TaskInternal;Lorg/gradle/api/internal/tasks/TaskStateInternal;Lorg/gradle/api/internal/tasks/TaskExecutionContext;)V+110
+j  org.gradle.api.internal.tasks.execution.SkipOnlyIfTaskExecuter.execute(Lorg/gradle/api/internal/TaskInternal;Lorg/gradle/api/internal/tasks/TaskStateInternal;Lorg/gradle/api/internal/tasks/TaskExecutionContext;)V+84
+j  org.gradle.api.internal.tasks.execution.ExecuteAtMostOnceTaskExecuter.execute(Lorg/gradle/api/internal/TaskInternal;Lorg/gradle/api/internal/tasks/TaskStateInternal;Lorg/gradle/api/internal/tasks/TaskExecutionContext;)V+26
+j  org.gradle.api.internal.AbstractTask.executeWithoutThrowingTaskFailure()V+16
+j  org.gradle.execution.taskgraph.AbstractTaskPlanExecutor$TaskExecutorWorker.executeTask(Lorg/gradle/execution/taskgraph/TaskInfo;)V+38
+j  org.gradle.execution.taskgraph.AbstractTaskPlanExecutor$TaskExecutorWorker.processTask(Lorg/gradle/execution/taskgraph/TaskInfo;)V+2
+j  org.gradle.execution.taskgraph.AbstractTaskPlanExecutor$TaskExecutorWorker.run()V+56
+j  org.gradle.execution.taskgraph.DefaultTaskPlanExecutor.process(Lorg/gradle/execution/taskgraph/TaskExecutionPlan;Lorg/gradle/api/execution/TaskExecutionListener;)V+6
+j  org.gradle.execution.taskgraph.DefaultTaskGraphExecuter.execute()V+46
+j  org.gradle.execution.SelectedTaskExecutionAction.execute(Lorg/gradle/execution/BuildExecutionContext;)V+41
+j  org.gradle.execution.DefaultBuildExecuter.execute(I)V+36
+j  org.gradle.execution.DefaultBuildExecuter.access$200(Lorg/gradle/execution/DefaultBuildExecuter;I)V+2
+j  org.gradle.execution.DefaultBuildExecuter$2.proceed()V+10
+j  org.gradle.execution.DryRunBuildExecutionAction.execute(Lorg/gradle/execution/BuildExecutionContext;)V+68
+j  org.gradle.execution.DefaultBuildExecuter.execute(I)V+36
+j  org.gradle.execution.DefaultBuildExecuter.execute()V+2
+j  org.gradle.initialization.DefaultGradleLauncher.doBuildStages(Lorg/gradle/initialization/DefaultGradleLauncher$Stage;)V+184
+j  org.gradle.initialization.DefaultGradleLauncher.doBuild(Lorg/gradle/initialization/DefaultGradleLauncher$Stage;)Lorg/gradle/BuildResult;+27
+j  org.gradle.initialization.DefaultGradleLauncher.run()Lorg/gradle/BuildResult;+4
+j  org.gradle.launcher.exec.InProcessBuildActionExecuter$DefaultBuildController.run()Lorg/gradle/api/internal/GradleInternal;+5
+j  org.gradle.launcher.cli.ExecuteBuildAction.run(Lorg/gradle/initialization/BuildController;)Ljava/lang/Void;+11
+j  org.gradle.launcher.cli.ExecuteBuildAction.run(Lorg/gradle/initialization/BuildController;)Ljava/lang/Object;+2
+j  org.gradle.launcher.exec.InProcessBuildActionExecuter.execute(Lorg/gradle/initialization/BuildAction;Lorg/gradle/initialization/BuildCancellationToken;Lorg/gradle/launcher/exec/BuildActionParameters;)Ljava/lang/Object;+19
+j  org.gradle.launcher.exec.InProcessBuildActionExecuter.execute(Lorg/gradle/initialization/BuildAction;Lorg/gradle/initialization/BuildCancellationToken;Ljava/lang/Object;)Ljava/lang/Object;+7
+j  org.gradle.launcher.daemon.server.exec.ExecuteBuild.doBuild(Lorg/gradle/launcher/daemon/server/exec/DaemonCommandExecution;Lorg/gradle/launcher/daemon/protocol/Build;)V+47
+j  org.gradle.launcher.daemon.server.exec.BuildCommandOnly.execute(Lorg/gradle/launcher/daemon/server/exec/DaemonCommandExecution;)V+49
+j  org.gradle.launcher.daemon.server.exec.DaemonCommandExecution.proceed()Z+28
+j  org.gradle.launcher.daemon.server.exec.WatchForDisconnection.execute(Lorg/gradle/launcher/daemon/server/exec/DaemonCommandExecution;)V+19
+j  org.gradle.launcher.daemon.server.exec.DaemonCommandExecution.proceed()Z+28
+j  org.gradle.launcher.daemon.server.exec.ResetDeprecationLogger.execute(Lorg/gradle/launcher/daemon/server/exec/DaemonCommandExecution;)V+4
+j  org.gradle.launcher.daemon.server.exec.DaemonCommandExecution.proceed()Z+28
+j  org.gradle.launcher.daemon.server.exec.StartStopIfBuildAndStop.execute(Lorg/gradle/launcher/daemon/server/exec/DaemonCommandExecution;)V+34
+j  org.gradle.launcher.daemon.server.exec.DaemonCommandExecution.proceed()Z+28
+j  org.gradle.launcher.daemon.server.exec.ForwardClientInput$2.call()Ljava/lang/Void;+4
+j  org.gradle.launcher.daemon.server.exec.ForwardClientInput$2.call()Ljava/lang/Object;+1
+j  org.gradle.util.Swapper.swap(Ljava/lang/Object;Ljava/util/concurrent/Callable;)Ljava/lang/Object;+21
+j  org.gradle.launcher.daemon.server.exec.ForwardClientInput.execute(Lorg/gradle/launcher/daemon/server/exec/DaemonCommandExecution;)V+63
+j  org.gradle.launcher.daemon.server.exec.DaemonCommandExecution.proceed()Z+28
+j  org.gradle.launcher.daemon.server.exec.LogToClient.doBuild(Lorg/gradle/launcher/daemon/server/exec/DaemonCommandExecution;Lorg/gradle/launcher/daemon/protocol/Build;)V+92
+j  org.gradle.launcher.daemon.server.exec.BuildCommandOnly.execute(Lorg/gradle/launcher/daemon/server/exec/DaemonCommandExecution;)V+49
+j  org.gradle.launcher.daemon.server.exec.DaemonCommandExecution.proceed()Z+28
+j  org.gradle.launcher.daemon.server.exec.EstablishBuildEnvironment.doBuild(Lorg/gradle/launcher/daemon/server/exec/DaemonCommandExecution;Lorg/gradle/launcher/daemon/protocol/Build;)V+237
+j  org.gradle.launcher.daemon.server.exec.BuildCommandOnly.execute(Lorg/gradle/launcher/daemon/server/exec/DaemonCommandExecution;)V+49
+j  org.gradle.launcher.daemon.server.exec.DaemonCommandExecution.proceed()Z+28
+j  org.gradle.launcher.daemon.server.exec.DaemonHygieneAction.execute(Lorg/gradle/launcher/daemon/server/exec/DaemonCommandExecution;)V+1
+j  org.gradle.launcher.daemon.server.exec.DaemonCommandExecution.proceed()Z+28
+j  org.gradle.launcher.daemon.server.exec.StartBuildOrRespondWithBusy$1.run()V+44
+j  org.gradle.launcher.daemon.server.DaemonStateCoordinator$1.run()V+4
+j  org.gradle.internal.concurrent.DefaultExecutorFactory$StoppableExecutorImpl$1.run()V+18
+j  java.util.concurrent.ThreadPoolExecutor.runWorker(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V+95
+j  java.util.concurrent.ThreadPoolExecutor$Worker.run()V+5
+j  java.lang.Thread.run()V+11
+v  ~StubRoutines::call_stub
+
+---------------  P R O C E S S  ---------------
+
+Java Threads: ( => current thread )
+  0x00007f0e84403000 JavaThread "pool-1-thread-4" [_thread_blocked, id=31734, stack(0x00007f0f0748e000,0x00007f0f0758f000)]
+  0x00007f0e84401000 JavaThread "pool-1-thread-3" [_thread_blocked, id=31691, stack(0x00007f0f07690000,0x00007f0f07791000)]
+  0x00007f0e843fc800 JavaThread "pool-1-thread-2" [_thread_blocked, id=31661, stack(0x00007f0f07892000,0x00007f0f07993000)]
+  0x00007f0e84400000 JavaThread "pool-1-thread-1" [_thread_blocked, id=31660, stack(0x00007f0f07a94000,0x00007f0f07b95000)]
+  0x00007f0e845b2800 JavaThread "File lock request listener" [_thread_in_native, id=31617, stack(0x00007f0f07e94000,0x00007f0f07f95000)]
+  0x00007f0e8400f800 JavaThread "Stdin handler" [_thread_blocked, id=31614, stack(0x00007f0f0c019000,0x00007f0f0c11a000)]
+=>0x00007f0e8800b800 JavaThread "Daemon worker" [_thread_in_native, id=31611, stack(0x00007f0f0c11a000,0x00007f0f0c21b000)]
+  0x00007f0e8800a800 JavaThread "Cancel handler" [_thread_blocked, id=31610, stack(0x00007f0f0c21b000,0x00007f0f0c31c000)]
+  0x00007f0e88006000 JavaThread "Handler for socket connection from /0:0:0:0:0:0:0:1:43765 to /0:0:0:0:0:0:0:1:34983" [_thread_in_native, id=31609, stack(0x00007f0f0c31c000,0x00007f0f0c41d000)]
+  0x00007f0e94007000 JavaThread "Daemon" [_thread_blocked, id=31608, stack(0x00007f0f0c41d000,0x00007f0f0c51e000)]
+  0x00007f0f646ce000 JavaThread "Incoming local TCP Connector on port 43765" [_thread_in_native, id=31607, stack(0x00007f0f0c51e000,0x00007f0f0c61f000)]
+  0x00007f0f640e4800 JavaThread "Service Thread" daemon [_thread_blocked, id=31605, stack(0x00007f0f0d6d5000,0x00007f0f0d7d6000)]
+  0x00007f0f640e2000 JavaThread "C2 CompilerThread1" daemon [_thread_blocked, id=31604, stack(0x00007f0f0d7d6000,0x00007f0f0d8d7000)]
+  0x00007f0f640df000 JavaThread "C2 CompilerThread0" daemon [_thread_blocked, id=31603, stack(0x00007f0f0d8d7000,0x00007f0f0d9d8000)]
+  0x00007f0ea8001000 JavaThread "JDWP Command Reader" daemon [_thread_in_native, id=31602, stack(0x00007f0f0d9d8000,0x00007f0f0dad9000)]
+  0x00007f0f640dc800 JavaThread "JDWP Event Helper Thread" daemon [_thread_blocked, id=31580, stack(0x00007f0f0dad9000,0x00007f0f0dbda000)]
+  0x00007f0f640d9000 JavaThread "JDWP Transport Listener: dt_socket" daemon [_thread_blocked, id=31579, stack(0x00007f0f0dbda000,0x00007f0f0dcdb000)]
+  0x00007f0f640cd000 JavaThread "Signal Dispatcher" daemon [_thread_blocked, id=31578, stack(0x00007f0f0dedf000,0x00007f0f0dfe0000)]
+  0x00007f0f640a6000 JavaThread "Finalizer" daemon [_thread_blocked, id=31577, stack(0x00007f0f0dfe0000,0x00007f0f0e0e1000)]
+  0x00007f0f640a4000 JavaThread "Reference Handler" daemon [_thread_blocked, id=31576, stack(0x00007f0f0e0e1000,0x00007f0f0e1e2000)]
+  0x00007f0f6400c000 JavaThread "main" [_thread_blocked, id=31546, stack(0x00007f0f6b890000,0x00007f0f6b991000)]
+
+Other Threads:
+  0x00007f0f6409f800 VMThread [stack: 0x00007f0f0e1e2000,0x00007f0f0e2e3000] [id=31575]
+  0x00007f0f640e7000 WatcherThread [stack: 0x00007f0f0d5d4000,0x00007f0f0d6d5000] [id=31606]
+
+VM state:not at safepoint (normal execution)
+
+VM Mutex/Monitor currently owned by a thread: None
+
+Heap
+ PSYoungGen      total 165376K, used 157868K [0x00000000eaa80000, 0x00000000f8100000, 0x0000000100000000)
+  eden space 122880K, 99% used [0x00000000eaa80000,0x00000000f2193090,0x00000000f2280000)
+  from space 42496K, 84% used [0x00000000f5080000,0x00000000f7398010,0x00000000f7a00000)
+  to   space 47104K, 0% used [0x00000000f2280000,0x00000000f2280000,0x00000000f5080000)
+ ParOldGen       total 686080K, used 603653K [0x00000000c0000000, 0x00000000e9e00000, 0x00000000eaa80000)
+  object space 686080K, 87% used [0x00000000c0000000,0x00000000e4d81410,0x00000000e9e00000)
+ PSPermGen       total 56832K, used 56385K [0x00000000b0000000, 0x00000000b3780000, 0x00000000c0000000)
+  object space 56832K, 99% used [0x00000000b0000000,0x00000000b3710778,0x00000000b3780000)
+
+Card table byte_map: [0x00007f0f6095f000,0x00007f0f60be0000] byte_map_base: 0x00007f0f603df000
+
+Polling page: 0x00007f0f6b9b1000
+
+Code Cache  [0x00007f0f60be0000, 0x00007f0f61890000, 0x00007f0f63be0000)
+ total_blobs=4632 nmethods=4012 adapters=581 free_code_cache=36351Kb largest_free_block=37058240
+
+Compilation events (10 events):
+Event: 333.619 Thread 0x00007f0f640df000 4077             sun.security.provider.MD5::implCompress (1508 bytes)
+Event: 333.619 Thread 0x00007f0f640e2000 4078             sun.security.provider.ByteArrayAccess::b2iLittle64 (614 bytes)
+Event: 333.621 Thread 0x00007f0f640e2000 nmethod 4078 0x00007f0f61871fd0 code [0x00007f0f61872120, 0x00007f0f61872398]
+Event: 333.633 Thread 0x00007f0f640df000 nmethod 4077 0x00007f0f61874310 code [0x00007f0f61874480, 0x00007f0f61875188]
+Event: 337.506 Thread 0x00007f0f640e2000 4079             java.util.regex.Pattern::split (261 bytes)
+Event: 337.520 Thread 0x00007f0f640df000 4080             org.gradle.internal.service.DefaultServiceRegistry$OwnServices::getService (265 bytes)
+Event: 337.534 Thread 0x00007f0f640df000 nmethod 4080 0x00007f0f61875e10 code [0x00007f0f61876020, 0x00007f0f61876ae8]
+Event: 337.547 Thread 0x00007f0f640e2000 nmethod 4079 0x00007f0f61880190 code [0x00007f0f618804e0, 0x00007f0f61882ae8]
+Event: 337.593 Thread 0x00007f0f640df000 4081             org.gradle.api.internal.file.pattern.PatternMatcherFactory::compile (121 bytes)
+Event: 337.638 Thread 0x00007f0f640df000 nmethod 4081 0x00007f0f61884450 code [0x00007f0f618847c0, 0x00007f0f61886a70]
+
+GC Heap History (10 events):
+Event: 297.644 GC heap before
+{Heap before GC invocations=36 (full 0):
+ PSYoungGen      total 145920K, used 145824K [0x00000000eaa80000, 0x00000000f8200000, 0x0000000100000000)
+  eden space 135680K, 100% used [0x00000000eaa80000,0x00000000f2f00000,0x00000000f2f00000)
+  from space 10240K, 99% used [0x00000000f3100000,0x00000000f3ae8010,0x00000000f3b00000)
+  to   space 42496K, 0% used [0x00000000f5880000,0x00000000f5880000,0x00000000f8200000)
+ ParOldGen       total 686080K, used 529961K [0x00000000c0000000, 0x00000000e9e00000, 0x00000000eaa80000)
+  object space 686080K, 77% used [0x00000000c0000000,0x00000000e058a470,0x00000000e9e00000)
+ PSPermGen       total 56320K, used 56081K [0x00000000b0000000, 0x00000000b3700000, 0x00000000c0000000)
+  object space 56320K, 99% used [0x00000000b0000000,0x00000000b36c45d0,0x00000000b3700000)
+Event: 297.659 GC heap after
+Heap after GC invocations=36 (full 0):
+ PSYoungGen      total 169984K, used 10368K [0x00000000eaa80000, 0x00000000f7c00000, 0x0000000100000000)
+  eden space 133632K, 0% used [0x00000000eaa80000,0x00000000eaa80000,0x00000000f2d00000)
+  from space 36352K, 28% used [0x00000000f5880000,0x00000000f62a0000,0x00000000f7c00000)
+  to   space 40448K, 0% used [0x00000000f2d00000,0x00000000f2d00000,0x00000000f5480000)
+ ParOldGen       total 686080K, used 539585K [0x00000000c0000000, 0x00000000e9e00000, 0x00000000eaa80000)
+  object space 686080K, 78% used [0x00000000c0000000,0x00000000e0ef0480,0x00000000e9e00000)
+ PSPermGen       total 56320K, used 56081K [0x00000000b0000000, 0x00000000b3700000, 0x00000000c0000000)
+  object space 56320K, 99% used [0x00000000b0000000,0x00000000b36c45d0,0x00000000b3700000)
+}
+Event: 299.200 GC heap before
+{Heap before GC invocations=37 (full 0):
+ PSYoungGen      total 169984K, used 144000K [0x00000000eaa80000, 0x00000000f7c00000, 0x0000000100000000)
+  eden space 133632K, 100% used [0x00000000eaa80000,0x00000000f2d00000,0x00000000f2d00000)
+  from space 36352K, 28% used [0x00000000f5880000,0x00000000f62a0000,0x00000000f7c00000)
+  to   space 40448K, 0% used [0x00000000f2d00000,0x00000000f2d00000,0x00000000f5480000)
+ ParOldGen       total 686080K, used 539585K [0x00000000c0000000, 0x00000000e9e00000, 0x00000000eaa80000)
+  object space 686080K, 78% used [0x00000000c0000000,0x00000000e0ef0480,0x00000000e9e00000)
+ PSPermGen       total 56320K, used 56081K [0x00000000b0000000, 0x00000000b3700000, 0x00000000c0000000)
+  object space 56320K, 99% used [0x00000000b0000000,0x00000000b36c4700,0x00000000b3700000)
+Event: 299.214 GC heap after
+Heap after GC invocations=37 (full 0):
+ PSYoungGen      total 141824K, used 10016K [0x00000000eaa80000, 0x00000000f7700000, 0x0000000100000000)
+  eden space 131584K, 0% used [0x00000000eaa80000,0x00000000eaa80000,0x00000000f2b00000)
+  from space 10240K, 97% used [0x00000000f2d00000,0x00000000f36c8000,0x00000000f3700000)
+  to   space 38912K, 0% used [0x00000000f5100000,0x00000000f5100000,0x00000000f7700000)
+ ParOldGen       total 686080K, used 549337K [0x00000000c0000000, 0x00000000e9e00000, 0x00000000eaa80000)
+  object space 686080K, 80% used [0x00000000c0000000,0x00000000e1876480,0x00000000e9e00000)
+ PSPermGen       total 56320K, used 56081K [0x00000000b0000000, 0x00000000b3700000, 0x00000000c0000000)
+  object space 56320K, 99% used [0x00000000b0000000,0x00000000b36c4700,0x00000000b3700000)
+}
+Event: 306.629 GC heap before
+{Heap before GC invocations=38 (full 0):
+ PSYoungGen      total 141824K, used 141600K [0x00000000eaa80000, 0x00000000f7700000, 0x0000000100000000)
+  eden space 131584K, 100% used [0x00000000eaa80000,0x00000000f2b00000,0x00000000f2b00000)
+  from space 10240K, 97% used [0x00000000f2d00000,0x00000000f36c8000,0x00000000f3700000)
+  to   space 38912K, 0% used [0x00000000f5100000,0x00000000f5100000,0x00000000f7700000)
+ ParOldGen       total 686080K, used 549337K [0x00000000c0000000, 0x00000000e9e00000, 0x00000000eaa80000)
+  object space 686080K, 80% used [0x00000000c0000000,0x00000000e1876480,0x00000000e9e00000)
+ PSPermGen       total 56320K, used 56091K [0x00000000b0000000, 0x00000000b3700000, 0x00000000c0000000)
+  object space 56320K, 99% used [0x00000000b0000000,0x00000000b36c6c38,0x00000000b3700000)
+Event: 306.648 GC heap after
+Heap after GC invocations=38 (full 0):
+ PSYoungGen      total 162304K, used 11712K [0x00000000eaa80000, 0x00000000f7100000, 0x0000000100000000)
+  eden space 129536K, 0% used [0x00000000eaa80000,0x00000000eaa80000,0x00000000f2900000)
+  from space 32768K, 35% used [0x00000000f5100000,0x00000000f5c70000,0x00000000f7100000)
+  to   space 36864K, 0% used [0x00000000f2900000,0x00000000f2900000,0x00000000f4d00000)
+ ParOldGen       total 686080K, used 558449K [0x00000000c0000000, 0x00000000e9e00000, 0x00000000eaa80000)
+  object space 686080K, 81% used [0x00000000c0000000,0x00000000e215c480,0x00000000e9e00000)
+ PSPermGen       total 56320K, used 56091K [0x00000000b0000000, 0x00000000b3700000, 0x00000000c0000000)
+  object space 56320K, 99% used [0x00000000b0000000,0x00000000b36c6c38,0x00000000b3700000)
+}
+Event: 314.976 GC heap before
+{Heap before GC invocations=39 (full 0):
+ PSYoungGen      total 162304K, used 141248K [0x00000000eaa80000, 0x00000000f7100000, 0x0000000100000000)
+  eden space 129536K, 100% used [0x00000000eaa80000,0x00000000f2900000,0x00000000f2900000)
+  from space 32768K, 35% used [0x00000000f5100000,0x00000000f5c70000,0x00000000f7100000)
+  to   space 36864K, 0% used [0x00000000f2900000,0x00000000f2900000,0x00000000f4d00000)
+ ParOldGen       total 686080K, used 558449K [0x00000000c0000000, 0x00000000e9e00000, 0x00000000eaa80000)
+  object space 686080K, 81% used [0x00000000c0000000,0x00000000e215c480,0x00000000e9e00000)
+ PSPermGen       total 56320K, used 56304K [0x00000000b0000000, 0x00000000b3700000, 0x00000000c0000000)
+  object space 56320K, 99% used [0x00000000b0000000,0x00000000b36fc048,0x00000000b3700000)
+Event: 315.001 GC heap after
+Heap after GC invocations=39 (full 0):
+ PSYoungGen      total 164352K, used 35360K [0x00000000eaa80000, 0x00000000f7a00000, 0x0000000100000000)
+  eden space 127488K, 0% used [0x00000000eaa80000,0x00000000eaa80000,0x00000000f2700000)
+  from space 36864K, 95% used [0x00000000f2900000,0x00000000f4b88010,0x00000000f4d00000)
+  to   space 42496K, 0% used [0x00000000f5080000,0x00000000f5080000,0x00000000f7a00000)
+ ParOldGen       total 686080K, used 569224K [0x00000000c0000000, 0x00000000e9e00000, 0x00000000eaa80000)
+  object space 686080K, 82% used [0x00000000c0000000,0x00000000e2be23f0,0x00000000e9e00000)
+ PSPermGen       total 56320K, used 56304K [0x00000000b0000000, 0x00000000b3700000, 0x00000000c0000000)
+  object space 56320K, 99% used [0x00000000b0000000,0x00000000b36fc048,0x00000000b3700000)
+}
+Event: 319.182 GC heap before
+{Heap before GC invocations=40 (full 0):
+ PSYoungGen      total 164352K, used 162848K [0x00000000eaa80000, 0x00000000f7a00000, 0x0000000100000000)
+  eden space 127488K, 100% used [0x00000000eaa80000,0x00000000f2700000,0x00000000f2700000)
+  from space 36864K, 95% used [0x00000000f2900000,0x00000000f4b88010,0x00000000f4d00000)
+  to   space 42496K, 0% used [0x00000000f5080000,0x00000000f5080000,0x00000000f7a00000)
+ ParOldGen       total 686080K, used 569224K [0x00000000c0000000, 0x00000000e9e00000, 0x00000000eaa80000)
+  object space 686080K, 82% used [0x00000000c0000000,0x00000000e2be23f0,0x00000000e9e00000)
+ PSPermGen       total 56832K, used 56351K [0x00000000b0000000, 0x00000000b3780000, 0x00000000c0000000)
+  object space 56832K, 99% used [0x00000000b0000000,0x00000000b3707ec8,0x00000000b3780000)
+Event: 319.229 GC heap after
+Heap after GC invocations=40 (full 0):
+ PSYoungGen      total 165376K, used 35936K [0x00000000eaa80000, 0x00000000f8100000, 0x0000000100000000)
+  eden space 122880K, 0% used [0x00000000eaa80000,0x00000000eaa80000,0x00000000f2280000)
+  from space 42496K, 84% used [0x00000000f5080000,0x00000000f7398010,0x00000000f7a00000)
+  to   space 47104K, 0% used [0x00000000f2280000,0x00000000f2280000,0x00000000f5080000)
+ ParOldGen       total 686080K, used 603653K [0x00000000c0000000, 0x00000000e9e00000, 0x00000000eaa80000)
+  object space 686080K, 87% used [0x00000000c0000000,0x00000000e4d81410,0x00000000e9e00000)
+ PSPermGen       total 56832K, used 56351K [0x00000000b0000000, 0x00000000b3780000, 0x00000000c0000000)
+  object space 56832K, 99% used [0x00000000b0000000,0x00000000b3707ec8,0x00000000b3780000)
+}
+
+Deoptimization events (10 events):
+Event: 6.177 Thread 0x00007f0e8800b800 Uncommon trap: reason=unloaded action=reinterpret pc=0x00007f0f60ec5f80 method=groovy.lang.MetaClassImpl.checkIfStdMethod(Lgroovy/lang/MetaMethod;)V @ 171
+Event: 6.181 Thread 0x00007f0e8800b800 Uncommon trap: reason=unloaded action=reinterpret pc=0x00007f0f60c7147c method=groovy.lang.MetaClassImpl.checkIfStdMethod(Lgroovy/lang/MetaMethod;)V @ 171
+Event: 6.183 Thread 0x00007f0e8800b800 Uncommon trap: reason=unreached action=reinterpret pc=0x00007f0f60ee4160 method=groovy.lang.MetaClassImpl.findPropertyMethod(Ljava/lang/Object;ZZ)Lgroovy/lang/MetaMethod; @ 69
+Event: 6.190 Thread 0x00007f0e8800b800 Uncommon trap: reason=bimorphic action=maybe_recompile pc=0x00007f0f60def164 method=org.codehaus.groovy.util.SingleKeyHashMap.get(Ljava/lang/Object;)Ljava/lang/Object; @ 43
+Event: 6.211 Thread 0x00007f0e8800b800 Uncommon trap: reason=bimorphic action=maybe_recompile pc=0x00007f0f60def164 method=org.codehaus.groovy.util.SingleKeyHashMap.get(Ljava/lang/Object;)Ljava/lang/Object; @ 43
+Event: 6.324 Thread 0x00007f0e8800b800 Uncommon trap: reason=null_check action=make_not_entrant pc=0x00007f0f60e02518 method=java.beans.Introspector.addPropertyDescriptor(Ljava/beans/PropertyDescriptor;)V @ 13
+Event: 6.596 Thread 0x00007f0e8800b800 Uncommon trap: reason=array_check action=maybe_recompile pc=0x00007f0f60f26df8 method=java.util.TimSort.binarySort([Ljava/lang/Object;IIILjava/util/Comparator;)V @ 215
+Event: 6.606 Thread 0x00007f0e8800b800 Uncommon trap: reason=array_check action=maybe_recompile pc=0x00007f0f60f26df8 method=java.util.TimSort.binarySort([Ljava/lang/Object;IIILjava/util/Comparator;)V @ 215
+Event: 6.606 Thread 0x00007f0e8800b800 Uncommon trap: reason=array_check action=maybe_recompile pc=0x00007f0f60f26f38 method=java.util.TimSort.binarySort([Ljava/lang/Object;IIILjava/util/Comparator;)V @ 183
+Event: 6.606 Thread 0x00007f0e8800b800 Uncommon trap: reason=array_check action=maybe_recompile pc=0x00007f0f60f26df8 method=java.util.TimSort.binarySort([Ljava/lang/Object;IIILjava/util/Comparator;)V @ 215
+
+Internal exceptions (10 events):
+Event: 276.529 Thread 0x00007f0e5d3b2800 Threw 0x00000000f3f23f70 at /HUDSON/workspace/7u-2-build-linux-amd64/jdk7u67/1368/hotspot/src/share/vm/prims/jvm.cpp:1244
+Event: 276.529 Thread 0x00007f0e5d3b2800 Threw 0x00000000f3f28268 at /HUDSON/workspace/7u-2-build-linux-amd64/jdk7u67/1368/hotspot/src/share/vm/prims/jvm.cpp:1244
+Event: 277.164 Thread 0x00007f0e5d3aa800 Threw 0x00000000ecdc6510 at /HUDSON/workspace/7u-2-build-linux-amd64/jdk7u67/1368/hotspot/src/share/vm/prims/jvm.cpp:1244
+Event: 277.166 Thread 0x00007f0e5d3aa800 Threw 0x00000000ed0c6028 at /HUDSON/workspace/7u-2-build-linux-amd64/jdk7u67/1368/hotspot/src/share/vm/prims/jvm.cpp:1244
+Event: 311.088 Thread 0x00007f0e5d3ca000 Threw 0x00000000eb7bcf58 at /HUDSON/workspace/7u-2-build-linux-amd64/jdk7u67/1368/hotspot/src/share/vm/prims/jvm.cpp:1244
+Event: 311.090 Thread 0x00007f0e5d3ca000 Threw 0x00000000eb7c1240 at /HUDSON/workspace/7u-2-build-linux-amd64/jdk7u67/1368/hotspot/src/share/vm/prims/jvm.cpp:1244
+Event: 311.099 Thread 0x00007f0e5d3c6000 Threw 0x00000000eb7a8b40 at /HUDSON/workspace/7u-2-build-linux-amd64/jdk7u67/1368/hotspot/src/share/vm/prims/jvm.cpp:1244
+Event: 311.100 Thread 0x00007f0e5d3c6000 Threw 0x00000000eb7ac178 at /HUDSON/workspace/7u-2-build-linux-amd64/jdk7u67/1368/hotspot/src/share/vm/prims/jvm.cpp:1244
+Event: 337.645 Thread 0x00007f0e8800b800 Threw 0x00000000f20f02c8 at /HUDSON/workspace/7u-2-build-linux-amd64/jdk7u67/1368/hotspot/src/share/vm/interpreter/interpreterRuntime.cpp:347
+Event: 337.649 Thread 0x00007f0e8800b800 Threw 0x00000000f20f9fe8 at /HUDSON/workspace/7u-2-build-linux-amd64/jdk7u67/1368/hotspot/src/share/vm/prims/jvm.cpp:1244
+
+Events (10 events):
+Event: 319.900 Executing VM operation: FindDeadlocks done
+Event: 319.900 Executing VM operation: FindDeadlocks
+Event: 319.900 Executing VM operation: FindDeadlocks done
+Event: 319.900 Executing VM operation: FindDeadlocks
+Event: 319.900 Executing VM operation: FindDeadlocks done
+Event: 333.325 Executing VM operation: BulkRevokeBias
+Event: 333.326 Executing VM operation: BulkRevokeBias done
+Event: 333.327 Thread 0x00007f0e5c06c800 Thread exited: 0x00007f0e5c06c800
+Event: 337.649 loading class 0x00007f0e84afa3a0
+Event: 337.649 loading class 0x00007f0e84afa3a0 done
+
+
+Dynamic libraries:
+00400000-00401000 r-xp 00000000 fc:01 1705400                            /usr/local/google/home/jedo/tools/jdk1.7.0_67/bin/java
+00600000-00601000 rw-p 00000000 fc:01 1705400                            /usr/local/google/home/jedo/tools/jdk1.7.0_67/bin/java
+00c2b000-00c4c000 rw-p 00000000 00:00 0                                  [heap]
+b0000000-b3780000 rw-p 00000000 00:00 0 
+b3780000-c0000000 rw-p 00000000 00:00 0 
+c0000000-e9e00000 rw-p 00000000 00:00 0 
+e9e00000-eaa80000 rw-p 00000000 00:00 0 
+eaa80000-f8100000 rw-p 00000000 00:00 0 
+f8100000-100000000 ---p 00000000 00:00 0 
+7f0db0000000-7f0db0021000 rw-p 00000000 00:00 0 
+7f0db0021000-7f0db4000000 ---p 00000000 00:00 0 
+7f0db8000000-7f0db8045000 rw-p 00000000 00:00 0 
+7f0db8045000-7f0dbc000000 ---p 00000000 00:00 0 
+7f0dbc000000-7f0dbc021000 rw-p 00000000 00:00 0 
+7f0dbc021000-7f0dc0000000 ---p 00000000 00:00 0 
+7f0dc0000000-7f0dc0021000 rw-p 00000000 00:00 0 
+7f0dc0021000-7f0dc4000000 ---p 00000000 00:00 0 
+7f0dc4000000-7f0dc402b000 rw-p 00000000 00:00 0 
+7f0dc402b000-7f0dc8000000 ---p 00000000 00:00 0 
+7f0dc8000000-7f0dc8021000 rw-p 00000000 00:00 0 
+7f0dc8021000-7f0dcc000000 ---p 00000000 00:00 0 
+7f0dcc000000-7f0dcc031000 rw-p 00000000 00:00 0 
+7f0dcc031000-7f0dd0000000 ---p 00000000 00:00 0 
+7f0dd0000000-7f0dd0021000 rw-p 00000000 00:00 0 
+7f0dd0021000-7f0dd4000000 ---p 00000000 00:00 0 
+7f0dd4000000-7f0dd4049000 rw-p 00000000 00:00 0 
+7f0dd4049000-7f0dd8000000 ---p 00000000 00:00 0 
+7f0dd8000000-7f0dd8052000 rw-p 00000000 00:00 0 
+7f0dd8052000-7f0ddc000000 ---p 00000000 00:00 0 
+7f0ddc000000-7f0ddc052000 rw-p 00000000 00:00 0 
+7f0ddc052000-7f0de0000000 ---p 00000000 00:00 0 
+7f0de0000000-7f0de0021000 rw-p 00000000 00:00 0 
+7f0de0021000-7f0de4000000 ---p 00000000 00:00 0 
+7f0de4000000-7f0de4021000 rw-p 00000000 00:00 0 
+7f0de4021000-7f0de8000000 ---p 00000000 00:00 0 
+7f0de8000000-7f0de8021000 rw-p 00000000 00:00 0 
+7f0de8021000-7f0dec000000 ---p 00000000 00:00 0 
+7f0dec000000-7f0dec035000 rw-p 00000000 00:00 0 
+7f0dec035000-7f0df0000000 ---p 00000000 00:00 0 
+7f0df0000000-7f0df0067000 rw-p 00000000 00:00 0 
+7f0df0067000-7f0df4000000 ---p 00000000 00:00 0 
+7f0df4000000-7f0df4036000 rw-p 00000000 00:00 0 
+7f0df4036000-7f0df8000000 ---p 00000000 00:00 0 
+7f0df8000000-7f0df8021000 rw-p 00000000 00:00 0 
+7f0df8021000-7f0dfc000000 ---p 00000000 00:00 0 
+7f0dfc000000-7f0dfc021000 rw-p 00000000 00:00 0 
+7f0dfc021000-7f0e00000000 ---p 00000000 00:00 0 
+7f0e00000000-7f0e0005e000 rw-p 00000000 00:00 0 
+7f0e0005e000-7f0e04000000 ---p 00000000 00:00 0 
+7f0e04000000-7f0e04021000 rw-p 00000000 00:00 0 
+7f0e04021000-7f0e08000000 ---p 00000000 00:00 0 
+7f0e08000000-7f0e08021000 rw-p 00000000 00:00 0 
+7f0e08021000-7f0e0c000000 ---p 00000000 00:00 0 
+7f0e0c000000-7f0e0c250000 rw-p 00000000 00:00 0 
+7f0e0c250000-7f0e10000000 ---p 00000000 00:00 0 
+7f0e10000000-7f0e10021000 rw-p 00000000 00:00 0 
+7f0e10021000-7f0e14000000 ---p 00000000 00:00 0 
+7f0e14000000-7f0e14021000 rw-p 00000000 00:00 0 
+7f0e14021000-7f0e18000000 ---p 00000000 00:00 0 
+7f0e18000000-7f0e18021000 rw-p 00000000 00:00 0 
+7f0e18021000-7f0e1c000000 ---p 00000000 00:00 0 
+7f0e1c000000-7f0e1c021000 rw-p 00000000 00:00 0 
+7f0e1c021000-7f0e20000000 ---p 00000000 00:00 0 
+7f0e20000000-7f0e20051000 rw-p 00000000 00:00 0 
+7f0e20051000-7f0e24000000 ---p 00000000 00:00 0 
+7f0e24000000-7f0e24028000 rw-p 00000000 00:00 0 
+7f0e24028000-7f0e28000000 ---p 00000000 00:00 0 
+7f0e28000000-7f0e28021000 rw-p 00000000 00:00 0 
+7f0e28021000-7f0e2c000000 ---p 00000000 00:00 0 
+7f0e2c000000-7f0e2c021000 rw-p 00000000 00:00 0 
+7f0e2c021000-7f0e30000000 ---p 00000000 00:00 0 
+7f0e30000000-7f0e30021000 rw-p 00000000 00:00 0 
+7f0e30021000-7f0e34000000 ---p 00000000 00:00 0 
+7f0e34000000-7f0e34021000 rw-p 00000000 00:00 0 
+7f0e34021000-7f0e38000000 ---p 00000000 00:00 0 
+7f0e38000000-7f0e38023000 rw-p 00000000 00:00 0 
+7f0e38023000-7f0e3c000000 ---p 00000000 00:00 0 
+7f0e3c000000-7f0e3c021000 rw-p 00000000 00:00 0 
+7f0e3c021000-7f0e40000000 ---p 00000000 00:00 0 
+7f0e40000000-7f0e4004c000 rw-p 00000000 00:00 0 
+7f0e4004c000-7f0e44000000 ---p 00000000 00:00 0 
+7f0e44000000-7f0e44021000 rw-p 00000000 00:00 0 
+7f0e44021000-7f0e48000000 ---p 00000000 00:00 0 
+7f0e48000000-7f0e4802d000 rw-p 00000000 00:00 0 
+7f0e4802d000-7f0e4c000000 ---p 00000000 00:00 0 
+7f0e4c000000-7f0e4c049000 rw-p 00000000 00:00 0 
+7f0e4c049000-7f0e50000000 ---p 00000000 00:00 0 
+7f0e50000000-7f0e50082000 rw-p 00000000 00:00 0 
+7f0e50082000-7f0e54000000 ---p 00000000 00:00 0 
+7f0e54000000-7f0e54049000 rw-p 00000000 00:00 0 
+7f0e54049000-7f0e58000000 ---p 00000000 00:00 0 
+7f0e58000000-7f0e58021000 rw-p 00000000 00:00 0 
+7f0e58021000-7f0e5c000000 ---p 00000000 00:00 0 
+7f0e5c000000-7f0e5de36000 rw-p 00000000 00:00 0 
+7f0e5de36000-7f0e60000000 ---p 00000000 00:00 0 
+7f0e60000000-7f0e60021000 rw-p 00000000 00:00 0 
+7f0e60021000-7f0e64000000 ---p 00000000 00:00 0 
+7f0e64000000-7f0e642c8000 rw-p 00000000 00:00 0 
+7f0e642c8000-7f0e68000000 ---p 00000000 00:00 0 
+7f0e68000000-7f0e68058000 rw-p 00000000 00:00 0 
+7f0e68058000-7f0e6c000000 ---p 00000000 00:00 0 
+7f0e6c000000-7f0e6c021000 rw-p 00000000 00:00 0 
+7f0e6c021000-7f0e70000000 ---p 00000000 00:00 0 
+7f0e70000000-7f0e70021000 rw-p 00000000 00:00 0 
+7f0e70021000-7f0e74000000 ---p 00000000 00:00 0 
+7f0e74000000-7f0e74021000 rw-p 00000000 00:00 0 
+7f0e74021000-7f0e78000000 ---p 00000000 00:00 0 
+7f0e78000000-7f0e78021000 rw-p 00000000 00:00 0 
+7f0e78021000-7f0e7c000000 ---p 00000000 00:00 0 
+7f0e7c000000-7f0e7c067000 rw-p 00000000 00:00 0 
+7f0e7c067000-7f0e80000000 ---p 00000000 00:00 0 
+7f0e80000000-7f0e80021000 rw-p 00000000 00:00 0 
+7f0e80021000-7f0e84000000 ---p 00000000 00:00 0 
+7f0e84000000-7f0e84f13000 rw-p 00000000 00:00 0 
+7f0e84f13000-7f0e88000000 ---p 00000000 00:00 0 
+7f0e88000000-7f0e88021000 rw-p 00000000 00:00 0 
+7f0e88021000-7f0e8c000000 ---p 00000000 00:00 0 
+7f0e8c000000-7f0e8c021000 rw-p 00000000 00:00 0 
+7f0e8c021000-7f0e90000000 ---p 00000000 00:00 0 
+7f0e90000000-7f0e90021000 rw-p 00000000 00:00 0 
+7f0e90021000-7f0e94000000 ---p 00000000 00:00 0 
+7f0e94000000-7f0e94048000 rw-p 00000000 00:00 0 
+7f0e94048000-7f0e98000000 ---p 00000000 00:00 0 
+7f0e98000000-7f0e997f8000 rw-p 00000000 00:00 0 
+7f0e997f8000-7f0e9c000000 ---p 00000000 00:00 0 
+7f0e9c000000-7f0e9c021000 rw-p 00000000 00:00 0 
+7f0e9c021000-7f0ea0000000 ---p 00000000 00:00 0 
+7f0ea0000000-7f0ea0021000 rw-p 00000000 00:00 0 
+7f0ea0021000-7f0ea4000000 ---p 00000000 00:00 0 
+7f0ea4000000-7f0ea5115000 rw-p 00000000 00:00 0 
+7f0ea5115000-7f0ea8000000 ---p 00000000 00:00 0 
+7f0ea8000000-7f0ea8021000 rw-p 00000000 00:00 0 
+7f0ea8021000-7f0eac000000 ---p 00000000 00:00 0 
+7f0eac000000-7f0eac0d1000 rw-p 00000000 00:00 0 
+7f0eac0d1000-7f0eb0000000 ---p 00000000 00:00 0 
+7f0eb0000000-7f0eb0046000 rw-p 00000000 00:00 0 
+7f0eb0046000-7f0eb4000000 ---p 00000000 00:00 0 
+7f0eb4000000-7f0eb4021000 rw-p 00000000 00:00 0 
+7f0eb4021000-7f0eb8000000 ---p 00000000 00:00 0 
+7f0eb8000000-7f0eb81aa000 rw-p 00000000 00:00 0 
+7f0eb81aa000-7f0ebc000000 ---p 00000000 00:00 0 
+7f0ebc000000-7f0ebc021000 rw-p 00000000 00:00 0 
+7f0ebc021000-7f0ec0000000 ---p 00000000 00:00 0 
+7f0ec0000000-7f0ec0021000 rw-p 00000000 00:00 0 
+7f0ec0021000-7f0ec4000000 ---p 00000000 00:00 0 
+7f0ec8000000-7f0ec8021000 rw-p 00000000 00:00 0 
+7f0ec8021000-7f0ecc000000 ---p 00000000 00:00 0 
+7f0ed0000000-7f0ed0021000 rw-p 00000000 00:00 0 
+7f0ed0021000-7f0ed4000000 ---p 00000000 00:00 0 
+7f0ed8000000-7f0ed8021000 rw-p 00000000 00:00 0 
+7f0ed8021000-7f0edc000000 ---p 00000000 00:00 0 
+7f0ee0000000-7f0ee0021000 rw-p 00000000 00:00 0 
+7f0ee0021000-7f0ee4000000 ---p 00000000 00:00 0 
+7f0ee8000000-7f0ee8021000 rw-p 00000000 00:00 0 
+7f0ee8021000-7f0eec000000 ---p 00000000 00:00 0 
+7f0ef0000000-7f0ef0021000 rw-p 00000000 00:00 0 
+7f0ef0021000-7f0ef4000000 ---p 00000000 00:00 0 
+7f0ef8000000-7f0ef8021000 rw-p 00000000 00:00 0 
+7f0ef8021000-7f0efc000000 ---p 00000000 00:00 0 
+7f0f00000000-7f0f00021000 rw-p 00000000 00:00 0 
+7f0f00021000-7f0f04000000 ---p 00000000 00:00 0 
+7f0f04860000-7f0f04863000 ---p 00000000 00:00 0 
+7f0f04863000-7f0f04961000 rw-p 00000000 00:00 0 
+7f0f04961000-7f0f04964000 ---p 00000000 00:00 0 
+7f0f04964000-7f0f04a62000 rw-p 00000000 00:00 0 
+7f0f04a62000-7f0f04a65000 ---p 00000000 00:00 0 
+7f0f04a65000-7f0f04b63000 rw-p 00000000 00:00 0 
+7f0f04b63000-7f0f04b66000 ---p 00000000 00:00 0 
+7f0f04b66000-7f0f04c64000 rw-p 00000000 00:00 0 
+7f0f04c64000-7f0f04c67000 ---p 00000000 00:00 0 
+7f0f04c67000-7f0f04d65000 rw-p 00000000 00:00 0 
+7f0f04d65000-7f0f04d68000 ---p 00000000 00:00 0 
+7f0f04d68000-7f0f04e66000 rw-p 00000000 00:00 0 
+7f0f04e66000-7f0f04e69000 ---p 00000000 00:00 0 
+7f0f04e69000-7f0f04f67000 rw-p 00000000 00:00 0 
+7f0f04f67000-7f0f04f6a000 ---p 00000000 00:00 0 
+7f0f04f6a000-7f0f05068000 rw-p 00000000 00:00 0 
+7f0f05068000-7f0f0506b000 ---p 00000000 00:00 0 
+7f0f0506b000-7f0f05169000 rw-p 00000000 00:00 0 
+7f0f05216000-7f0f0526a000 r--s 0038d000 fc:01 3810809                    /usr/local/google/home/jedo/src/1.3.dev/tools/base/build-system/integration-test/test-projects/minifyLibWithJavaResUsingJack/app/build/intermediates/jill/debug/jayce/android-61d92cddc71fb20af4773ce58301541abeaa8deb.jar
+7f0f0526a000-7f0f0526d000 ---p 00000000 00:00 0 
+7f0f0526d000-7f0f0536b000 rw-p 00000000 00:00 0 
+7f0f0536b000-7f0f0536e000 ---p 00000000 00:00 0 
+7f0f0536e000-7f0f0546c000 rw-p 00000000 00:00 0 
+7f0f0546c000-7f0f0546f000 ---p 00000000 00:00 0 
+7f0f0546f000-7f0f0556d000 rw-p 00000000 00:00 0 
+7f0f0556d000-7f0f05570000 ---p 00000000 00:00 0 
+7f0f05570000-7f0f0566e000 rw-p 00000000 00:00 0 
+7f0f0566e000-7f0f05671000 ---p 00000000 00:00 0 
+7f0f05671000-7f0f0576f000 rw-p 00000000 00:00 0 
+7f0f0576f000-7f0f05772000 ---p 00000000 00:00 0 
+7f0f05772000-7f0f05870000 rw-p 00000000 00:00 0 
+7f0f05870000-7f0f05873000 ---p 00000000 00:00 0 
+7f0f05873000-7f0f05971000 rw-p 00000000 00:00 0 
+7f0f05971000-7f0f05974000 ---p 00000000 00:00 0 
+7f0f05974000-7f0f05a72000 rw-p 00000000 00:00 0 
+7f0f05a72000-7f0f05a75000 ---p 00000000 00:00 0 
+7f0f05a75000-7f0f05b73000 rw-p 00000000 00:00 0 
+7f0f05c74000-7f0f05c77000 ---p 00000000 00:00 0 
+7f0f05c77000-7f0f05d75000 rw-p 00000000 00:00 0 
+7f0f05d75000-7f0f05d78000 ---p 00000000 00:00 0 
+7f0f05d78000-7f0f05e76000 rw-p 00000000 00:00 0 
+7f0f05e76000-7f0f05e79000 ---p 00000000 00:00 0 
+7f0f05e79000-7f0f05f77000 rw-p 00000000 00:00 0 
+7f0f05f77000-7f0f05f7a000 ---p 00000000 00:00 0 
+7f0f05f7a000-7f0f06078000 rw-p 00000000 00:00 0 
+7f0f06078000-7f0f0607b000 ---p 00000000 00:00 0 
+7f0f0607b000-7f0f06179000 rw-p 00000000 00:00 0 
+7f0f06179000-7f0f0617c000 ---p 00000000 00:00 0 
+7f0f0617c000-7f0f0627a000 rw-p 00000000 00:00 0 
+7f0f0627a000-7f0f0627d000 ---p 00000000 00:00 0 
+7f0f0627d000-7f0f0637b000 rw-p 00000000 00:00 0 
+7f0f0637b000-7f0f0637e000 ---p 00000000 00:00 0 
+7f0f0637e000-7f0f0647c000 rw-p 00000000 00:00 0 
+7f0f0647c000-7f0f0647f000 ---p 00000000 00:00 0 
+7f0f0647f000-7f0f0657d000 rw-p 00000000 00:00 0 
+7f0f06588000-7f0f0667e000 r--s 017b0000 fc:01 1581268                    /usr/local/google/home/jedo/oss/android-sdk_1738612_linux-x86/platforms/android-21/android.jar
+7f0f0667f000-7f0f06683000 r--s 0002d000 fc:01 1706194                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/ext/sunjce_provider.jar
+7f0f06683000-7f0f066b5000 r-xp 00000000 fc:01 1706122                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/amd64/libsunec.so
+7f0f066b5000-7f0f068b4000 ---p 00032000 fc:01 1706122                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/amd64/libsunec.so
+7f0f068b4000-7f0f068ba000 rw-p 00031000 fc:01 1706122                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/amd64/libsunec.so
+7f0f068ba000-7f0f068ca000 rw-p 00000000 00:00 0 
+7f0f068ca000-7f0f068cb000 r--s 00003000 fc:01 1706192                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/ext/sunec.jar
+7f0f068cb000-7f0f068ce000 r--s 00037000 fc:01 1706191                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/ext/sunpkcs11.jar
+7f0f068ce000-7f0f068d0000 r--s 00019000 fc:01 1706188                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/jce.jar
+7f0f068d0000-7f0f06963000 r--s 0086e000 fc:01 1333520                    /usr/local/google/home/jedo/Downloads/jack.jar
+7f0f06965000-7f0f069a0000 r--s 002da000 fc:01 1314836                    /usr/local/google/home/jedo/Downloads/jill.jar
+7f0f069a0000-7f0f069a3000 ---p 00000000 00:00 0 
+7f0f069a3000-7f0f06aa1000 rw-p 00000000 00:00 0 
+7f0f06aa1000-7f0f06aa4000 ---p 00000000 00:00 0 
+7f0f06aa4000-7f0f06ba2000 rw-p 00000000 00:00 0 
+7f0f06ba2000-7f0f06ba5000 ---p 00000000 00:00 0 
+7f0f06ba5000-7f0f06ca3000 rw-p 00000000 00:00 0 
+7f0f06ca3000-7f0f06ca6000 ---p 00000000 00:00 0 
+7f0f06ca6000-7f0f06da4000 rw-p 00000000 00:00 0 
+7f0f06da4000-7f0f06da7000 ---p 00000000 00:00 0 
+7f0f06da7000-7f0f06ea5000 rw-p 00000000 00:00 0 
+7f0f06ea5000-7f0f06ea8000 ---p 00000000 00:00 0 
+7f0f06ea8000-7f0f06fa6000 rw-p 00000000 00:00 0 
+7f0f06fa6000-7f0f06fa9000 ---p 00000000 00:00 0 
+7f0f06fa9000-7f0f070a7000 rw-p 00000000 00:00 0 
+7f0f070a7000-7f0f070aa000 ---p 00000000 00:00 0 
+7f0f070aa000-7f0f071a8000 rw-p 00000000 00:00 0 
+7f0f071a8000-7f0f071ab000 ---p 00000000 00:00 0 
+7f0f071ab000-7f0f072a9000 rw-p 00000000 00:00 0 
+7f0f072a9000-7f0f072ac000 ---p 00000000 00:00 0 
+7f0f072ac000-7f0f073aa000 rw-p 00000000 00:00 0 
+7f0f0748e000-7f0f07491000 ---p 00000000 00:00 0 
+7f0f07491000-7f0f0758f000 rw-p 00000000 00:00 0                          [stack:31734]
+7f0f0758f000-7f0f07592000 ---p 00000000 00:00 0 
+7f0f07592000-7f0f07690000 rw-p 00000000 00:00 0 
+7f0f07690000-7f0f07693000 ---p 00000000 00:00 0 
+7f0f07693000-7f0f07791000 rw-p 00000000 00:00 0                          [stack:31691]
+7f0f07791000-7f0f07794000 ---p 00000000 00:00 0 
+7f0f07794000-7f0f07892000 rw-p 00000000 00:00 0 
+7f0f07892000-7f0f07895000 ---p 00000000 00:00 0 
+7f0f07895000-7f0f07993000 rw-p 00000000 00:00 0                          [stack:31661]
+7f0f07a94000-7f0f07a97000 ---p 00000000 00:00 0 
+7f0f07a97000-7f0f07b95000 rw-p 00000000 00:00 0                          [stack:31660]
+7f0f07b95000-7f0f07b9d000 r-xp 00000000 fc:01 1706119                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/amd64/libmanagement.so
+7f0f07b9d000-7f0f07d9c000 ---p 00008000 fc:01 1706119                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/amd64/libmanagement.so
+7f0f07d9c000-7f0f07d9d000 rw-p 00007000 fc:01 1706119                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/amd64/libmanagement.so
+7f0f07d9d000-7f0f07da5000 r--s 000a8000 fc:01 2926712                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/com/android/tools/external/lombok/lombok-ast/0.2.3/lombok-ast-0.2.3.jar
+7f0f07da5000-7f0f07da6000 r--s 00004000 fc:01 2926624                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/com/intellij/annotations/12.0/annotations-12.0.jar
+7f0f07da6000-7f0f07da8000 r--s 0000d000 fc:01 2922805                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/commons-codec/commons-codec/1.4/commons-codec-1.4.jar
+7f0f07da8000-7f0f07daa000 r--s 0000d000 fc:01 2926271                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/commons-logging/commons-logging/1.1.1/commons-logging-1.1.1.jar
+7f0f07daa000-7f0f07daf000 r--s 00028000 fc:01 2923761                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/org/apache/httpcomponents/httpcore/4.1/httpcore-4.1.jar
+7f0f07daf000-7f0f07db0000 r--s 00004000 fc:01 2923846                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/org/ow2/asm/asm-analysis/5.0.3/asm-analysis-5.0.3.jar
+7f0f07db0000-7f0f07db3000 r--s 0002d000 fc:01 2928252                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/com/android/tools/lint/lint-api/24.3.0-beta2/lint-api-24.3.0-beta2.jar
+7f0f07db3000-7f0f07db4000 r--s 0000a000 fc:01 2922511                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/net/sf/kxml/kxml2/2.3.0/kxml2-2.3.0.jar
+7f0f07db4000-7f0f07dbb000 r--s 00053000 fc:01 2923678                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/org/apache/commons/commons-compress/1.8.1/commons-compress-1.8.1.jar
+7f0f07dbb000-7f0f07dc0000 r--s 0002a000 fc:01 2926466                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/com/google/code/gson/gson/2.2.4/gson-2.2.4.jar
+7f0f07dc0000-7f0f07dc3000 r--s 00013000 fc:01 2928222                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/com/android/tools/layoutlib/layoutlib-api/24.3.0-beta2/layoutlib-api-24.3.0-beta2.jar
+7f0f07dc3000-7f0f07dc5000 r--s 00005000 fc:01 2923803                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/org/apache/httpcomponents/httpmime/4.1/httpmime-4.1.jar
+7f0f07dc5000-7f0f07dcd000 r--s 0004e000 fc:01 2923723                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/org/apache/httpcomponents/httpclient/4.1.1/httpclient-4.1.1.jar
+7f0f07dcd000-7f0f07dce000 r--s 00005000 fc:01 2885823                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/com/android/tools/dvlib/24.3.0-beta2/dvlib-24.3.0-beta2.jar
+7f0f07dce000-7f0f07df9000 r--s 001f9000 fc:01 2926519                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/com/google/guava/guava/17.0/guava-17.0.jar
+7f0f07df9000-7f0f07dfa000 r--s 00001000 fc:01 2883742                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/com/android/tools/annotations/24.3.0-beta2/annotations-24.3.0-beta2.jar
+7f0f07dfa000-7f0f07e0c000 r--s 00220000 fc:01 2924410                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/org/eclipse/jdt/core/compiler/ecj/4.4/ecj-4.4.jar
+7f0f07e0c000-7f0f07e12000 r--s 0009f000 fc:01 2928267                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/com/android/tools/lint/lint-checks/24.3.0-beta2/lint-checks-24.3.0-beta2.jar
+7f0f07e12000-7f0f07e22000 r--s 000d6000 fc:01 2922422                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/net/sf/proguard/proguard-base/5.2.1/proguard-base-5.2.1.jar
+7f0f07e22000-7f0f07e27000 r--s 00043000 fc:01 2885746                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/com/android/tools/ddms/ddmlib/24.3.0-beta2/ddmlib-24.3.0-beta2.jar
+7f0f07e27000-7f0f07e35000 r--s 00081000 fc:01 2922860                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/org/bouncycastle/bcpkix-jdk15on/1.48/bcpkix-jdk15on-1.48.jar
+7f0f07e35000-7f0f07e38000 r--s 00028000 fc:01 2928314                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/com/android/tools/build/manifest-merger/24.3.0-beta2/manifest-merger-24.3.0-beta2.jar
+7f0f07e38000-7f0f07e39000 r--s 0000c000 fc:01 2923890                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/org/ow2/asm/asm/5.0.3/asm-5.0.3.jar
+7f0f07e39000-7f0f07e3b000 r--s 00006000 fc:01 2945100                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/com/android/tools/jack/jack-api/0.9.0/jack-api-0.9.0.jar
+7f0f07e3b000-7f0f07e45000 r--s 000ab000 fc:01 2928643                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/com/android/tools/sdklib/24.3.0-beta2/sdklib-24.3.0-beta2.jar
+7f0f07e45000-7f0f07e47000 r--s 00015000 fc:01 2885731                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/com/android/tools/common/24.3.0-beta2/common-24.3.0-beta2.jar
+7f0f07e47000-7f0f07e48000 r--s 00002000 fc:01 2885688                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/com/android/tools/build/builder-test-api/1.3.0-beta2/builder-test-api-1.3.0-beta2.jar
+7f0f07e48000-7f0f07e4a000 r--s 00005000 fc:01 2945095                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/com/android/tools/jill/jill-api/0.9.0/jill-api-0.9.0.jar
+7f0f07e4a000-7f0f07e52000 r--s 00067000 fc:01 2928625                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/com/android/tools/sdk-common/24.3.0-beta2/sdk-common-24.3.0-beta2.jar
+7f0f07e52000-7f0f07e54000 r--s 00002000 fc:01 2926658                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/com/squareup/javawriter/2.5.0/javawriter-2.5.0.jar
+7f0f07e54000-7f0f07e56000 r--s 00004000 fc:01 2885673                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/com/android/tools/build/builder-model/1.3.0-beta2/builder-model-1.3.0-beta2.jar
+7f0f07e56000-7f0f07e58000 r--s 00006000 fc:01 2923869                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/org/ow2/asm/asm-tree/5.0.3/asm-tree-5.0.3.jar
+7f0f07e58000-7f0f07e8b000 r--s 00203000 fc:01 2922847                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/org/bouncycastle/bcprov-jdk15on/1.48/bcprov-jdk15on-1.48.jar
+7f0f07e8b000-7f0f07e8e000 r--s 00020000 fc:01 2928237                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/com/android/tools/lint/lint/24.3.0-beta2/lint-24.3.0-beta2.jar
+7f0f07e8e000-7f0f07e94000 r--s 0003f000 fc:01 2885658                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/com/android/tools/build/builder/1.3.0-beta2/builder-1.3.0-beta2.jar
+7f0f07e94000-7f0f07e97000 ---p 00000000 00:00 0 
+7f0f07e97000-7f0f07f95000 rw-p 00000000 00:00 0                          [stack:31617]
+7f0f07f95000-7f0f08000000 r--s 00e22000 fc:01 1706369                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/lib/tools.jar
+7f0f08000000-7f0f08021000 rw-p 00000000 00:00 0 
+7f0f08021000-7f0f0c000000 ---p 00000000 00:00 0 
+7f0f0c000000-7f0f0c001000 r--s 00002000 fc:01 2922470                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/net/sf/proguard/proguard-gradle/5.2.1/proguard-gradle-5.2.1.jar
+7f0f0c001000-7f0f0c016000 r--s 00145000 fc:01 2886943                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/com/android/tools/build/gradle-core/1.3.0-beta2/gradle-core-1.3.0-beta2.jar
+7f0f0c016000-7f0f0c017000 r--s 00003000 fc:01 3037044                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/com/google/gms/google-services/1.3.0-beta2/google-services-1.3.0-beta2.jar
+7f0f0c017000-7f0f0c019000 r--s 00012000 fc:01 2886928                    /usr/local/google/home/jedo/src/1.3.dev/out/repo/com/android/tools/build/gradle/1.3.0-beta2/gradle-1.3.0-beta2.jar
+7f0f0c019000-7f0f0c01c000 ---p 00000000 00:00 0 
+7f0f0c01c000-7f0f0c11a000 rw-p 00000000 00:00 0                          [stack:31614]
+7f0f0c11a000-7f0f0c11d000 ---p 00000000 00:00 0 
+7f0f0c11d000-7f0f0c21b000 rw-p 00000000 00:00 0                          [stack:31611]
+7f0f0c21b000-7f0f0c21e000 ---p 00000000 00:00 0 
+7f0f0c21e000-7f0f0c31c000 rw-p 00000000 00:00 0                          [stack:31610]
+7f0f0c31c000-7f0f0c31f000 ---p 00000000 00:00 0 
+7f0f0c31f000-7f0f0c41d000 rw-p 00000000 00:00 0                          [stack:31609]
+7f0f0c41d000-7f0f0c420000 ---p 00000000 00:00 0 
+7f0f0c420000-7f0f0c51e000 rw-p 00000000 00:00 0                          [stack:31608]
+7f0f0c51e000-7f0f0c521000 ---p 00000000 00:00 0 
+7f0f0c521000-7f0f0c61f000 rw-p 00000000 00:00 0                          [stack:31607]
+7f0f0c61f000-7f0f0c635000 r-xp 00000000 fc:00 1312293                    /lib/x86_64-linux-gnu/libgcc_s.so.1
+7f0f0c635000-7f0f0c834000 ---p 00016000 fc:00 1312293                    /lib/x86_64-linux-gnu/libgcc_s.so.1
+7f0f0c834000-7f0f0c835000 rw-p 00015000 fc:00 1312293                    /lib/x86_64-linux-gnu/libgcc_s.so.1
+7f0f0c835000-7f0f0c91b000 r-xp 00000000 fc:00 1059232                    /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19
+7f0f0c91b000-7f0f0cb1a000 ---p 000e6000 fc:00 1059232                    /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19
+7f0f0cb1a000-7f0f0cb22000 r--p 000e5000 fc:00 1059232                    /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19
+7f0f0cb22000-7f0f0cb24000 rw-p 000ed000 fc:00 1059232                    /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19
+7f0f0cb24000-7f0f0cb39000 rw-p 00000000 00:00 0 
+7f0f0cb39000-7f0f0cb3d000 r-xp 00000000 fc:00 1582489                    /tmp/native-platform3703120682292434284dir/libnative-platform.so
+7f0f0cb3d000-7f0f0cd3c000 ---p 00004000 fc:00 1582489                    /tmp/native-platform3703120682292434284dir/libnative-platform.so
+7f0f0cd3c000-7f0f0cd3d000 rw-p 00003000 fc:00 1582489                    /tmp/native-platform3703120682292434284dir/libnative-platform.so
+7f0f0cd3d000-7f0f0cd3e000 r--s 00001000 fc:01 2920925                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/gradle-plugin-development-2.2.jar
+7f0f0cd3e000-7f0f0cd40000 r--s 00002000 fc:01 2920924                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/gradle-cunit-2.2.jar
+7f0f0cd40000-7f0f0cd45000 r--s 00036000 fc:01 2920923                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/gradle-ide-native-2.2.jar
+7f0f0cd45000-7f0f0cd4f000 r--s 00251000 fc:01 1706053                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/resources.jar
+7f0f0cd86000-7f0f0cd88000 rw-p 00000000 00:00 0 
+7f0f0cd88000-7f0f0cd89000 r--p 00000000 00:00 0 
+7f0f0cd89000-7f0f0cd90000 r--s 00000000 fc:00 1189684                    /usr/lib/x86_64-linux-gnu/gconv/gconv-modules.cache
+7f0f0cd90000-7f0f0cd94000 r--s 0008a000 fc:01 1705440                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/jsse.jar
+7f0f0cd94000-7f0f0cd99000 r--s 00013000 fc:01 2920922                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/gradle-language-native-2.2.jar
+7f0f0cd99000-7f0f0cda4000 r--s 0004d000 fc:01 2920921                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/gradle-platform-native-2.2.jar
+7f0f0cda4000-7f0f0cda8000 r--s 00025000 fc:01 2920946                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/bcpg-jdk15-1.46.jar
+7f0f0cda8000-7f0f0cdaa000 r--s 00008000 fc:01 2920920                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/gradle-language-groovy-2.2.jar
+7f0f0cdaa000-7f0f0cdaf000 r--s 00022000 fc:01 2920919                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/gradle-language-java-2.2.jar
+7f0f0cdaf000-7f0f0cdb2000 r--s 00007000 fc:01 2920918                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/gradle-language-jvm-2.2.jar
+7f0f0cdb2000-7f0f0cdb5000 r--s 00009000 fc:01 2920917                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/gradle-platform-jvm-2.2.jar
+7f0f0cdb5000-7f0f0cdba000 r--s 00018000 fc:01 2920916                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/gradle-platform-base-2.2.jar
+7f0f0cdba000-7f0f0cdbf000 r--s 00026000 fc:01 2920915                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/gradle-build-init-2.2.jar
+7f0f0cdbf000-7f0f0cdc2000 r--s 0001d000 fc:01 2920914                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/gradle-jacoco-2.2.jar
+7f0f0cdc2000-7f0f0cdc5000 r--s 0000d000 fc:01 2920913                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/gradle-ivy-2.2.jar
+7f0f0cdc5000-7f0f0cdc7000 r--s 00002000 fc:01 2920912                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/gradle-publish-2.2.jar
+7f0f0cdc7000-7f0f0cdc9000 r--s 00005000 fc:01 2920950                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jatl-0.2.2.jar
+7f0f0cdc9000-7f0f0cdcb000 r--s 0000f000 fc:01 2920911                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/gradle-reporting-2.2.jar
+7f0f0cdcb000-7f0f0cdd0000 r--s 00034000 fc:01 2920910                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/gradle-diagnostics-2.2.jar
+7f0f0cdd0000-7f0f0cdd7000 r--s 00090000 fc:01 2920909                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/gradle-build-comparison-2.2.jar
+7f0f0cdd7000-7f0f0cdde000 r--s 00035000 fc:01 2920949                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/simple-4.1.21.jar
+7f0f0cdde000-7f0f0cdea000 r--s 00100000 fc:01 2920947                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/rhino-1.7R3.jar
+7f0f0cdea000-7f0f0cdef000 r--s 0001f000 fc:01 2920908                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/gradle-javascript-2.2.jar
+7f0f0cdef000-7f0f0cdf1000 r--s 0000e000 fc:01 2920907                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/gradle-ear-2.2.jar
+7f0f0cdf1000-7f0f0cdf4000 r--s 0001d000 fc:01 2920906                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/gradle-signing-2.2.jar
+7f0f0cdf4000-7f0f0cdf5000 r--s 00002000 fc:01 2920945                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/sonar-batch-bootstrapper-2.9.jar
+7f0f0cdf5000-7f0f0cdf8000 r--s 00018000 fc:01 2920905                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/gradle-sonar-2.2.jar
+7f0f0cdf8000-7f0f0cdfb000 r--s 00017000 fc:01 2920904                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/gradle-scala-2.2.jar
+7f0f0cdfb000-7f0f0cdfd000 r--s 0000e000 fc:01 2920903                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/gradle-announce-2.2.jar
+7f0f0cdfd000-7f0f0ce0b000 r--s 000bc000 fc:01 2920902                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/gradle-ide-2.2.jar
+7f0f0ce0b000-7f0f0ce0d000 r--s 00000000 fc:01 2920944                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/plexus-component-annotations-1.5.2.jar
+7f0f0ce0d000-7f0f0ce10000 r--s 0000c000 fc:01 2920943                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/pmaven-groovy-0.8-20100325.jar
+7f0f0ce10000-7f0f0ce11000 r--s 00004000 fc:01 2920942                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/pmaven-common-0.8-20100325.jar
+7f0f0ce11000-7f0f0ce15000 r--s 0001e000 fc:01 2920901                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/gradle-maven-2.2.jar
+7f0f0ce15000-7f0f0ce2d000 r--s 0013b000 fc:01 2920940                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/bndlib-2.1.0.jar
+7f0f0ce2d000-7f0f0ce2f000 r--s 0000d000 fc:01 2920934                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jetty-plus-6.1.25.jar
+7f0f0ce2f000-7f0f0ce31000 r--s 0001f000 fc:01 2920933                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/servlet-api-2.5-20081211.jar
+7f0f0ce31000-7f0f0ce33000 r--s 00004000 fc:01 2920900                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/gradle-osgi-2.2.jar
+7f0f0ce33000-7f0f0ce38000 r--s 00068000 fc:01 2920939                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/antlr-2.7.7.jar
+7f0f0ce38000-7f0f0ce39000 r--s 00002000 fc:01 2920938                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/ant-antlr-1.9.3.jar
+7f0f0ce39000-7f0f0ce3b000 r--s 00004000 fc:01 2920899                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/gradle-antlr-2.2.jar
+7f0f0ce3b000-7f0f0ce3e000 r--s 0001e000 fc:01 2920961                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jsp-api-2.1-6.1.14.jar
+7f0f0ce3e000-7f0f0ce61000 r--s 00344000 fc:01 2920960                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/core-3.1.1.jar
+7f0f0ce61000-7f0f0ce62000 r--s 00006000 fc:01 2920959                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jetty-naming-6.1.25.jar
+7f0f0ce62000-7f0f0ce63000 r--s 00002000 fc:01 2920937                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/geronimo-annotation_1.0_spec-1.0.jar
+7f0f0ce63000-7f0f0ce65000 r--s 00002000 fc:01 2920936                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jetty-annotations-6.1.25.jar
+7f0f0ce65000-7f0f0ce76000 r--s 000ea000 fc:01 2920935                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jsp-2.1-6.1.14.jar
+7f0f0ce76000-7f0f0ce7a000 r--s 00028000 fc:01 2920932                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jetty-util-6.1.25.jar
+7f0f0ce7a000-7f0f0ce81000 r--s 0007d000 fc:01 2920931                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jetty-6.1.25.jar
+7f0f0ce81000-7f0f0ce83000 r--s 00009000 fc:01 2920898                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/gradle-jetty-2.2.jar
+7f0f0ce83000-7f0f0ce88000 r--s 00041000 fc:01 2920897                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/gradle-code-quality-2.2.jar
+7f0f0ce88000-7f0f0ce8a000 r--s 00009000 fc:01 2920969                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/hamcrest-core-1.3.jar
+7f0f0ce8a000-7f0f0ce90000 r--s 00033000 fc:01 2920958                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/snakeyaml-1.6.jar
+7f0f0ce90000-7f0f0ce92000 r--s 00006000 fc:01 2920957                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jcommander-1.12.jar
+7f0f0ce92000-7f0f0ce97000 r--s 00040000 fc:01 2920956                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/bsh-2.0b4.jar
+7f0f0ce97000-7f0f0ce99000 r--s 00009000 fc:01 2920930                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/commons-cli-1.2.jar
+7f0f0ce99000-7f0f0cea2000 r--s 00089000 fc:01 2920929                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/testng-6.3.1.jar
+7f0f0cea2000-7f0f0cea8000 r--s 00036000 fc:01 2920928                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/junit-4.11.jar
+7f0f0cea8000-7f0f0ceb4000 r--s 00075000 fc:01 2920896                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/gradle-plugins-2.2.jar
+7f0f0ceb4000-7f0f0ceb7000 r--s 00011000 fc:01 2920926                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/gradle-plugin-use-2.2.jar
+7f0f0ceb7000-7f0f0cecf000 r--s 00115000 fc:01 2920967                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/xercesImpl-2.9.1.jar
+7f0f0cecf000-7f0f0ced7000 r--s 00028000 fc:01 2920968                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/xml-apis-1.3.04.jar
+7f0f0ced7000-7f0f0cedd000 r--s 0005b000 fc:01 2920966                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jcifs-1.3.17.jar
+7f0f0cedd000-7f0f0cee3000 r--s 00031000 fc:01 2920965                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/httpcore-4.2.2.jar
+7f0f0cee3000-7f0f0cee9000 r--s 00033000 fc:01 2920964                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/commons-codec-1.6.jar
+7f0f0cee9000-7f0f0ceec000 r--s 0001c000 fc:01 2920963                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/nekohtml-1.9.14.jar
+7f0f0ceec000-7f0f0cef5000 r--s 00060000 fc:01 2920962                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/httpclient-4.2.2.jar
+7f0f0cef5000-7f0f0cef7000 r--s 00007000 fc:01 2920951                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/gradle-resources-http-2.2.jar
+7f0f0cef7000-7f0f0cf1f000 r--s 00194000 fc:01 2920955                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/bcprov-jdk15-1.46.jar
+7f0f0cf1f000-7f0f0cf23000 r--s 0001d000 fc:01 2920954                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/xbean-reflect-3.4.jar
+7f0f0cf23000-7f0f0cf28000 r--s 0002a000 fc:01 2920948                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/gson-2.2.4.jar
+7f0f0cf28000-7f0f0cf2c000 r--s 0003d000 fc:01 2920953                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jsch-0.1.51.jar
+7f0f0cf2c000-7f0f0cf45000 r--s 00129000 fc:01 2920941                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/maven-ant-tasks-2.1.3.jar
+7f0f0cf45000-7f0f0cf54000 r--s 000d9000 fc:01 2920952                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/ivy-2.2.0.jar
+7f0f0cf54000-7f0f0cf58000 r--s 0001e000 fc:01 2920895                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jarjar-aether-impl-1.13.1.jar
+7f0f0cf58000-7f0f0cf5b000 r--s 00027000 fc:01 2920894                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jarjar-maven-model-3.0.4.jar
+7f0f0cf5b000-7f0f0cf5e000 r--s 0000b000 fc:01 2920893                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jarjar-maven-artifact-3.0.4.jar
+7f0f0cf5e000-7f0f0cf62000 r--s 0001e000 fc:01 2920892                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jarjar-aether-util-1.13.1.jar
+7f0f0cf62000-7f0f0cf64000 r--s 00007000 fc:01 2920891                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jarjar-wagon-http-shared4-2.4.jar
+7f0f0cf64000-7f0f0cf71000 r--s 00083000 fc:01 2920890                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jarjar-maven-core-3.0.4.jar
+7f0f0cf71000-7f0f0cf73000 r--s 00003000 fc:01 2920889                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jarjar-aether-spi-1.13.1.jar
+7f0f0cf73000-7f0f0cf75000 r--s 00009000 fc:01 2920888                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jarjar-maven-settings-builder-3.0.4.jar
+7f0f0cf75000-7f0f0cf79000 r--s 00014000 fc:01 2920887                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jarjar-aether-api-1.13.1.jar
+7f0f0cf79000-7f0f0cf7a000 r--s 00002000 fc:01 2920886                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jarjar-wagon-http-2.4.jar
+7f0f0cf7a000-7f0f0cf81000 r--s 00042000 fc:01 2920885                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jarjar-maven-compat-3.0.4.jar
+7f0f0cf81000-7f0f0cf83000 r--s 00006000 fc:01 2920884                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jarjar-aether-connector-wagon-1.13.1.jar
+7f0f0cf83000-7f0f0cf85000 r--s 00000000 fc:01 2920883                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jarjar-plexus-component-annotations-1.5.5.jar
+7f0f0cf85000-7f0f0cf87000 r--s 00006000 fc:01 2920882                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jarjar-plexus-sec-dispatcher-1.3.jar
+7f0f0cf87000-7f0f0cf8c000 r--s 00022000 fc:01 2920881                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jarjar-maven-model-builder-3.0.4.jar
+7f0f0cf8c000-7f0f0cf8e000 r--s 0000b000 fc:01 2920880                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jarjar-maven-plugin-api-3.0.4.jar
+7f0f0cf8e000-7f0f0cf91000 r--s 0000a000 fc:01 2920879                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jarjar-plexus-classworlds-2.4.jar
+7f0f0cf91000-7f0f0cf95000 r--s 00035000 fc:01 2920878                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jarjar-plexus-utils-2.0.6.jar
+7f0f0cf95000-7f0f0cf97000 r--s 0000e000 fc:01 2920877                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jarjar-plexus-interpolation-1.14.jar
+7f0f0cf97000-7f0f0cf99000 r--s 00002000 fc:01 2920876                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jarjar-plexus-cipher-1.7.jar
+7f0f0cf99000-7f0f0cf9b000 r--s 0000c000 fc:01 2920875                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jarjar-wagon-provider-api-2.4.jar
+7f0f0cf9b000-7f0f0cf9d000 r--s 0000d000 fc:01 2920874                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jarjar-maven-aether-provider-3.0.4.jar
+7f0f0cf9d000-7f0f0cfa5000 r--s 00031000 fc:01 2920873                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jarjar-plexus-container-default-1.5.5.jar
+7f0f0cfa5000-7f0f0cfa6000 r--s 00007000 fc:01 2920872                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jarjar-maven-repository-metadata-3.0.4.jar
+7f0f0cfa6000-7f0f0cfa7000 r--s 0000b000 fc:01 2920871                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/jarjar-maven-settings-3.0.4.jar
+7f0f0cfa7000-7f0f0cfbf000 r--s 000b5000 fc:01 2920927                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/plugins/gradle-dependency-management-2.2.jar
+7f0f0cfbf000-7f0f0cfcf000 r-xp 00000000 fc:01 1706125                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/amd64/libnio.so
+7f0f0cfcf000-7f0f0d1cf000 ---p 00010000 fc:01 1706125                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/amd64/libnio.so
+7f0f0d1cf000-7f0f0d1d0000 rw-p 00010000 fc:01 1706125                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/amd64/libnio.so
+7f0f0d1d0000-7f0f0d351000 rw-p 00000000 00:00 0 
+7f0f0d351000-7f0f0d367000 r-xp 00000000 fc:01 1706099                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/amd64/libnet.so
+7f0f0d367000-7f0f0d567000 ---p 00016000 fc:01 1706099                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/amd64/libnet.so
+7f0f0d567000-7f0f0d568000 rw-p 00016000 fc:01 1706099                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/amd64/libnet.so
+7f0f0d568000-7f0f0d569000 r--s 00005000 fc:01 2920823                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/gradle-wrapper-2.2.jar
+7f0f0d569000-7f0f0d572000 r--s 0002c000 fc:01 2920828                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/gradle-tooling-api-2.2.jar
+7f0f0d572000-7f0f0d574000 r--s 00002000 fc:01 2920852                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/gradle-open-api-2.2.jar
+7f0f0d574000-7f0f0d57a000 r--s 00032000 fc:01 2920854                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/jaxen-1.1.jar
+7f0f0d57a000-7f0f0d57f000 r--s 00048000 fc:01 2920853                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/dom4j-1.6.1.jar
+7f0f0d57f000-7f0f0d58a000 r--s 00059000 fc:01 2920827                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/gradle-ui-2.2.jar
+7f0f0d58a000-7f0f0d58c000 r--s 00006000 fc:01 2920848                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/gradle-resources-2.2.jar
+7f0f0d58c000-7f0f0d58e000 r--s 00007000 fc:01 2920870                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/objenesis-1.2.jar
+7f0f0d58e000-7f0f0d590000 r--s 00000000 fc:01 2920869                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/minlog-1.2.jar
+7f0f0d590000-7f0f0d592000 r--s 0000f000 fc:01 2920868                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/reflectasm-1.07-shaded.jar
+7f0f0d592000-7f0f0d596000 r--s 00026000 fc:01 2920859                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/kryo-2.20.jar
+7f0f0d596000-7f0f0d59f000 r--s 00039000 fc:01 2920847                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/gradle-messaging-2.2.jar
+7f0f0d59f000-7f0f0d5a0000 r--s 00003000 fc:01 2920867                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/native-platform-freebsd-amd64-0.10.jar
+7f0f0d5a0000-7f0f0d5a1000 r--s 00003000 fc:01 2920866                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/native-platform-freebsd-i386-0.10.jar
+7f0f0d5a1000-7f0f0d5a2000 r--s 00005000 fc:01 2920865                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/native-platform-windows-i386-0.10.jar
+7f0f0d5a2000-7f0f0d5a3000 r--s 00005000 fc:01 2920864                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/native-platform-windows-amd64-0.10.jar
+7f0f0d5a3000-7f0f0d5a4000 r--s 00003000 fc:01 2920863                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/native-platform-linux-i386-0.10.jar
+7f0f0d5a4000-7f0f0d5a5000 r--s 00003000 fc:01 2920862                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/native-platform-linux-amd64-0.10.jar
+7f0f0d5a5000-7f0f0d5a6000 r--s 00002000 fc:01 2920861                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/native-platform-osx-amd64-0.10.jar
+7f0f0d5a6000-7f0f0d5a7000 r--s 00002000 fc:01 2920860                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/native-platform-osx-i386-0.10.jar
+7f0f0d5a7000-7f0f0d5a9000 r--s 00008000 fc:01 2920857                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/jansi-1.2.1.jar
+7f0f0d5a9000-7f0f0d5ac000 r--s 0000d000 fc:01 2920856                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/native-platform-0.10.jar
+7f0f0d5ac000-7f0f0d5b0000 r--s 000e4000 fc:01 2920855                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/jna-3.2.7.jar
+7f0f0d5b0000-7f0f0d5b2000 r--s 00008000 fc:01 2920829                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/gradle-native-2.2.jar
+7f0f0d5b2000-7f0f0d5b4000 r--s 00005000 fc:01 2920826                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/gradle-cli-2.2.jar
+7f0f0d5b4000-7f0f0d5b6000 r--s 00003000 fc:01 2920846                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/gradle-base-services-groovy-2.2.jar
+7f0f0d5b6000-7f0f0d5b8000 r--s 0000a000 fc:01 2920834                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/gradle-model-groovy-2.2.jar
+7f0f0d5b8000-7f0f0d5bc000 r--s 0001b000 fc:01 2920833                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/gradle-model-core-2.2.jar
+7f0f0d5bc000-7f0f0d5bd000 r--s 00000000 fc:01 2920849                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/gradle-docs-2.2.jar
+7f0f0d5bd000-7f0f0d5c0000 r--s 0001b000 fc:01 2920844                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/jarjar-1.3.jar
+7f0f0d5c0000-7f0f0d5c6000 r--s 0003b000 fc:01 2920841                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/logback-classic-1.0.13.jar
+7f0f0d5c6000-7f0f0d5d4000 r--s 0007f000 fc:01 2920837                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/commons-collections-3.2.1.jar
+7f0f0d5d4000-7f0f0d5d5000 ---p 00000000 00:00 0 
+7f0f0d5d5000-7f0f0d6d5000 rw-p 00000000 00:00 0                          [stack:31606]
+7f0f0d6d5000-7f0f0d6d8000 ---p 00000000 00:00 0 
+7f0f0d6d8000-7f0f0d7d6000 rw-p 00000000 00:00 0                          [stack:31605]
+7f0f0d7d6000-7f0f0d7d9000 ---p 00000000 00:00 0 
+7f0f0d7d9000-7f0f0d8d7000 rw-p 00000000 00:00 0                          [stack:31604]
+7f0f0d8d7000-7f0f0d8da000 ---p 00000000 00:00 0 
+7f0f0d8da000-7f0f0d9d8000 rw-p 00000000 00:00 0                          [stack:31603]
+7f0f0d9d8000-7f0f0d9db000 ---p 00000000 00:00 0 
+7f0f0d9db000-7f0f0dad9000 rw-p 00000000 00:00 0                          [stack:31602]
+7f0f0dad9000-7f0f0dadc000 ---p 00000000 00:00 0 
+7f0f0dadc000-7f0f0dbda000 rw-p 00000000 00:00 0                          [stack:31580]
+7f0f0dbda000-7f0f0dbdd000 ---p 00000000 00:00 0 
+7f0f0dbdd000-7f0f0dcdb000 rw-p 00000000 00:00 0                          [stack:31579]
+7f0f0dcdb000-7f0f0dcdf000 r-xp 00000000 fc:01 1706142                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/amd64/libdt_socket.so
+7f0f0dcdf000-7f0f0dede000 ---p 00004000 fc:01 1706142                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/amd64/libdt_socket.so
+7f0f0dede000-7f0f0dedf000 rw-p 00003000 fc:01 1706142                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/amd64/libdt_socket.so
+7f0f0dedf000-7f0f0dee2000 ---p 00000000 00:00 0 
+7f0f0dee2000-7f0f0dfe0000 rw-p 00000000 00:00 0                          [stack:31578]
+7f0f0dfe0000-7f0f0dfe3000 ---p 00000000 00:00 0 
+7f0f0dfe3000-7f0f0e0e1000 rw-p 00000000 00:00 0                          [stack:31577]
+7f0f0e0e1000-7f0f0e0e4000 ---p 00000000 00:00 0 
+7f0f0e0e4000-7f0f0e1e2000 rw-p 00000000 00:00 0                          [stack:31576]
+7f0f0e1e2000-7f0f0e1e3000 ---p 00000000 00:00 0 
+7f0f0e1e3000-7f0f10000000 rw-p 00000000 00:00 0                          [stack:31575]
+7f0f10000000-7f0f10021000 rw-p 00000000 00:00 0 
+7f0f10021000-7f0f14000000 ---p 00000000 00:00 0 
+7f0f14000000-7f0f14021000 rw-p 00000000 00:00 0 
+7f0f14021000-7f0f18000000 ---p 00000000 00:00 0 
+7f0f18000000-7f0f18021000 rw-p 00000000 00:00 0 
+7f0f18021000-7f0f1c000000 ---p 00000000 00:00 0 
+7f0f1c000000-7f0f1c021000 rw-p 00000000 00:00 0 
+7f0f1c021000-7f0f20000000 ---p 00000000 00:00 0 
+7f0f20000000-7f0f20021000 rw-p 00000000 00:00 0 
+7f0f20021000-7f0f24000000 ---p 00000000 00:00 0 
+7f0f24000000-7f0f24021000 rw-p 00000000 00:00 0 
+7f0f24021000-7f0f28000000 ---p 00000000 00:00 0 
+7f0f28000000-7f0f28021000 rw-p 00000000 00:00 0 
+7f0f28021000-7f0f2c000000 ---p 00000000 00:00 0 
+7f0f2c000000-7f0f2c002000 r--s 00003000 fc:01 2920851                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/jcl-over-slf4j-1.7.7.jar
+7f0f2c002000-7f0f2c00c000 r--s 0005d000 fc:01 2920840                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/logback-core-1.0.13.jar
+7f0f2c00c000-7f0f2c077000 r--s 00685000 fc:01 2920832                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/groovy-all-2.3.6.jar
+7f0f2c077000-7f0f2c09f000 r--s 001cf000 fc:01 2920831                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/guava-jdk5-17.0.jar
+7f0f2c09f000-7f0f2c0be000 r--s 001cc000 fc:01 2920836                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/ant-1.9.3.jar
+7f0f2c0be000-7f0f2c0ef000 r--s 00191000 fc:01 2920825                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/gradle-core-2.2.jar
+7f0f2c0ef000-7f0f2fe41000 rw-p 00000000 00:00 0 
+7f0f2fe41000-7f0f30000000 r--s 039e5000 fc:01 1706090                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/rt.jar
+7f0f30000000-7f0f30021000 rw-p 00000000 00:00 0 
+7f0f30021000-7f0f34000000 ---p 00000000 00:00 0 
+7f0f34000000-7f0f34021000 rw-p 00000000 00:00 0 
+7f0f34021000-7f0f38000000 ---p 00000000 00:00 0 
+7f0f38000000-7f0f38021000 rw-p 00000000 00:00 0 
+7f0f38021000-7f0f3c000000 ---p 00000000 00:00 0 
+7f0f3c000000-7f0f3c021000 rw-p 00000000 00:00 0 
+7f0f3c021000-7f0f40000000 ---p 00000000 00:00 0 
+7f0f40000000-7f0f40021000 rw-p 00000000 00:00 0 
+7f0f40021000-7f0f44000000 ---p 00000000 00:00 0 
+7f0f44000000-7f0f44021000 rw-p 00000000 00:00 0 
+7f0f44021000-7f0f48000000 ---p 00000000 00:00 0 
+7f0f48000000-7f0f48021000 rw-p 00000000 00:00 0 
+7f0f48021000-7f0f4c000000 ---p 00000000 00:00 0 
+7f0f4c000000-7f0f4c021000 rw-p 00000000 00:00 0 
+7f0f4c021000-7f0f50000000 ---p 00000000 00:00 0 
+7f0f50000000-7f0f50021000 rw-p 00000000 00:00 0 
+7f0f50021000-7f0f54000000 ---p 00000000 00:00 0 
+7f0f54000000-7f0f54021000 rw-p 00000000 00:00 0 
+7f0f54021000-7f0f58000000 ---p 00000000 00:00 0 
+7f0f58000000-7f0f58021000 rw-p 00000000 00:00 0 
+7f0f58021000-7f0f5c000000 ---p 00000000 00:00 0 
+7f0f5c000000-7f0f5c001000 r--s 00005000 fc:01 2920850                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/log4j-over-slf4j-1.7.7.jar
+7f0f5c001000-7f0f5c002000 r--s 00000000 fc:01 2920845                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/javax.inject-1.jar
+7f0f5c002000-7f0f5c007000 r--s 00041000 fc:01 2920839                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/commons-lang-2.6.jar
+7f0f5c007000-7f0f5ebed000 rw-p 00000000 00:00 0 
+7f0f5ebed000-7f0f5ebee000 ---p 00000000 00:00 0 
+7f0f5ebee000-7f0f5ecee000 rw-p 00000000 00:00 0                          [stack:31574]
+7f0f5ecee000-7f0f5ecef000 ---p 00000000 00:00 0 
+7f0f5ecef000-7f0f5edef000 rw-p 00000000 00:00 0                          [stack:31573]
+7f0f5edef000-7f0f5edf0000 ---p 00000000 00:00 0 
+7f0f5edf0000-7f0f5eef0000 rw-p 00000000 00:00 0                          [stack:31572]
+7f0f5eef0000-7f0f5eef1000 ---p 00000000 00:00 0 
+7f0f5eef1000-7f0f5eff1000 rw-p 00000000 00:00 0                          [stack:31571]
+7f0f5eff1000-7f0f5eff2000 ---p 00000000 00:00 0 
+7f0f5eff2000-7f0f5f0f2000 rw-p 00000000 00:00 0                          [stack:31570]
+7f0f5f0f2000-7f0f5f0f3000 ---p 00000000 00:00 0 
+7f0f5f0f3000-7f0f5f1f3000 rw-p 00000000 00:00 0                          [stack:31569]
+7f0f5f1f3000-7f0f5f1f4000 ---p 00000000 00:00 0 
+7f0f5f1f4000-7f0f5f2f4000 rw-p 00000000 00:00 0                          [stack:31568]
+7f0f5f2f4000-7f0f5f2f5000 ---p 00000000 00:00 0 
+7f0f5f2f5000-7f0f5f3f5000 rw-p 00000000 00:00 0                          [stack:31567]
+7f0f5f3f5000-7f0f5f3f6000 ---p 00000000 00:00 0 
+7f0f5f3f6000-7f0f5f4f6000 rw-p 00000000 00:00 0                          [stack:31566]
+7f0f5f4f6000-7f0f5f4f7000 ---p 00000000 00:00 0 
+7f0f5f4f7000-7f0f5f5f7000 rw-p 00000000 00:00 0                          [stack:31565]
+7f0f5f5f7000-7f0f5f5f8000 ---p 00000000 00:00 0 
+7f0f5f5f8000-7f0f5f6f8000 rw-p 00000000 00:00 0                          [stack:31564]
+7f0f5f6f8000-7f0f5f6f9000 ---p 00000000 00:00 0 
+7f0f5f6f9000-7f0f5f7f9000 rw-p 00000000 00:00 0                          [stack:31563]
+7f0f5f7f9000-7f0f5f7fa000 ---p 00000000 00:00 0 
+7f0f5f7fa000-7f0f5f8fa000 rw-p 00000000 00:00 0                          [stack:31562]
+7f0f5f8fa000-7f0f5f8fb000 ---p 00000000 00:00 0 
+7f0f5f8fb000-7f0f5f9fb000 rw-p 00000000 00:00 0                          [stack:31561]
+7f0f5f9fb000-7f0f5f9fc000 ---p 00000000 00:00 0 
+7f0f5f9fc000-7f0f5fafc000 rw-p 00000000 00:00 0                          [stack:31560]
+7f0f5fafc000-7f0f5fafd000 ---p 00000000 00:00 0 
+7f0f5fafd000-7f0f5fbfd000 rw-p 00000000 00:00 0                          [stack:31559]
+7f0f5fbfd000-7f0f5fbfe000 ---p 00000000 00:00 0 
+7f0f5fbfe000-7f0f5fcfe000 rw-p 00000000 00:00 0                          [stack:31558]
+7f0f5fcfe000-7f0f5fcff000 ---p 00000000 00:00 0 
+7f0f5fcff000-7f0f5fdff000 rw-p 00000000 00:00 0                          [stack:31557]
+7f0f5fdff000-7f0f5fe00000 ---p 00000000 00:00 0 
+7f0f5fe00000-7f0f5ff00000 rw-p 00000000 00:00 0                          [stack:31556]
+7f0f5ff00000-7f0f5ff01000 ---p 00000000 00:00 0 
+7f0f5ff01000-7f0f60001000 rw-p 00000000 00:00 0                          [stack:31555]
+7f0f60001000-7f0f60002000 ---p 00000000 00:00 0 
+7f0f60002000-7f0f60102000 rw-p 00000000 00:00 0                          [stack:31554]
+7f0f60102000-7f0f60103000 ---p 00000000 00:00 0 
+7f0f60103000-7f0f60203000 rw-p 00000000 00:00 0                          [stack:31553]
+7f0f60203000-7f0f60204000 ---p 00000000 00:00 0 
+7f0f60204000-7f0f60304000 rw-p 00000000 00:00 0                          [stack:31552]
+7f0f60304000-7f0f60305000 ---p 00000000 00:00 0 
+7f0f60305000-7f0f60405000 rw-p 00000000 00:00 0                          [stack:31551]
+7f0f60405000-7f0f60406000 ---p 00000000 00:00 0 
+7f0f60406000-7f0f60506000 rw-p 00000000 00:00 0                          [stack:31550]
+7f0f60506000-7f0f60507000 ---p 00000000 00:00 0 
+7f0f60507000-7f0f60607000 rw-p 00000000 00:00 0                          [stack:31549]
+7f0f60607000-7f0f60608000 ---p 00000000 00:00 0 
+7f0f60608000-7f0f60708000 rw-p 00000000 00:00 0                          [stack:31548]
+7f0f60708000-7f0f60709000 ---p 00000000 00:00 0 
+7f0f60709000-7f0f60958000 rw-p 00000000 00:00 0                          [stack:31547]
+7f0f60958000-7f0f6095f000 rw-p 00000000 00:00 0 
+7f0f6095f000-7f0f6097b000 rw-p 00000000 00:00 0 
+7f0f6097b000-7f0f609df000 rw-p 00000000 00:00 0 
+7f0f609df000-7f0f60b2e000 rw-p 00000000 00:00 0 
+7f0f60b2e000-7f0f60b34000 rw-p 00000000 00:00 0 
+7f0f60b34000-7f0f60ba0000 rw-p 00000000 00:00 0 
+7f0f60ba0000-7f0f60bdf000 ---p 00000000 00:00 0 
+7f0f60bdf000-7f0f60be0000 rw-p 00000000 00:00 0 
+7f0f60be0000-7f0f61890000 rwxp 00000000 00:00 0 
+7f0f61890000-7f0f63be0000 rw-p 00000000 00:00 0 
+7f0f63be0000-7f0f63bfa000 r-xp 00000000 fc:01 1706141                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/amd64/libzip.so
+7f0f63bfa000-7f0f63dfa000 ---p 0001a000 fc:01 1706141                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/amd64/libzip.so
+7f0f63dfa000-7f0f63dfb000 rw-p 0001a000 fc:01 1706141                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/amd64/libzip.so
+7f0f63dfb000-7f0f63dff000 r-xp 00000000 fc:00 2002452                    /usr/lib/libnss_cache.so.2.0
+7f0f63dff000-7f0f63ffe000 ---p 00004000 fc:00 2002452                    /usr/lib/libnss_cache.so.2.0
+7f0f63ffe000-7f0f63fff000 r--p 00003000 fc:00 2002452                    /usr/lib/libnss_cache.so.2.0
+7f0f63fff000-7f0f64000000 rw-p 00004000 fc:00 2002452                    /usr/lib/libnss_cache.so.2.0
+7f0f64000000-7f0f646ec000 rw-p 00000000 00:00 0 
+7f0f646ec000-7f0f68000000 ---p 00000000 00:00 0 
+7f0f68000000-7f0f68003000 r--s 00018000 fc:01 2920838                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/commons-io-1.4.jar
+7f0f68003000-7f0f68008000 r--s 00036000 fc:01 2920835                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/asm-all-5.0.3.jar
+7f0f68008000-7f0f680a7000 rw-p 00000000 00:00 0 
+7f0f680a7000-7f0f6810b000 rw-p 00000000 00:00 0 
+7f0f6810b000-7f0f68116000 r-xp 00000000 fc:00 1311531                    /lib/x86_64-linux-gnu/libnss_files-2.19.so
+7f0f68116000-7f0f68315000 ---p 0000b000 fc:00 1311531                    /lib/x86_64-linux-gnu/libnss_files-2.19.so
+7f0f68315000-7f0f68316000 r--p 0000a000 fc:00 1311531                    /lib/x86_64-linux-gnu/libnss_files-2.19.so
+7f0f68316000-7f0f68317000 rw-p 0000b000 fc:00 1311531                    /lib/x86_64-linux-gnu/libnss_files-2.19.so
+7f0f68317000-7f0f6919b000 r--p 00000000 fc:00 664889                     /usr/lib/locale/locale-archive
+7f0f6919b000-7f0f6919e000 r-xp 00000000 fc:01 1706140                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/amd64/libnpt.so
+7f0f6919e000-7f0f6939d000 ---p 00003000 fc:01 1706140                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/amd64/libnpt.so
+7f0f6939d000-7f0f6939e000 rw-p 00002000 fc:01 1706140                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/amd64/libnpt.so
+7f0f6939e000-7f0f693d7000 r-xp 00000000 fc:01 1706123                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/amd64/libjdwp.so
+7f0f693d7000-7f0f695d7000 ---p 00039000 fc:01 1706123                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/amd64/libjdwp.so
+7f0f695d7000-7f0f695d8000 rw-p 00039000 fc:01 1706123                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/amd64/libjdwp.so
+7f0f695d8000-7f0f695d9000 rw-p 00000000 00:00 0 
+7f0f695d9000-7f0f69602000 r-xp 00000000 fc:01 1706151                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/amd64/libjava.so
+7f0f69602000-7f0f69802000 ---p 00029000 fc:01 1706151                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/amd64/libjava.so
+7f0f69802000-7f0f69804000 rw-p 00029000 fc:01 1706151                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/amd64/libjava.so
+7f0f69804000-7f0f69811000 r-xp 00000000 fc:01 1706101                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/amd64/libverify.so
+7f0f69811000-7f0f69a10000 ---p 0000d000 fc:01 1706101                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/amd64/libverify.so
+7f0f69a10000-7f0f69a12000 rw-p 0000c000 fc:01 1706101                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/amd64/libverify.so
+7f0f69a12000-7f0f69a19000 r-xp 00000000 fc:00 1311575                    /lib/x86_64-linux-gnu/librt-2.19.so
+7f0f69a19000-7f0f69c18000 ---p 00007000 fc:00 1311575                    /lib/x86_64-linux-gnu/librt-2.19.so
+7f0f69c18000-7f0f69c19000 r--p 00006000 fc:00 1311575                    /lib/x86_64-linux-gnu/librt-2.19.so
+7f0f69c19000-7f0f69c1a000 rw-p 00007000 fc:00 1311575                    /lib/x86_64-linux-gnu/librt-2.19.so
+7f0f69c1a000-7f0f69d1f000 r-xp 00000000 fc:00 1311530                    /lib/x86_64-linux-gnu/libm-2.19.so
+7f0f69d1f000-7f0f69f1e000 ---p 00105000 fc:00 1311530                    /lib/x86_64-linux-gnu/libm-2.19.so
+7f0f69f1e000-7f0f69f1f000 r--p 00104000 fc:00 1311530                    /lib/x86_64-linux-gnu/libm-2.19.so
+7f0f69f1f000-7f0f69f20000 rw-p 00105000 fc:00 1311530                    /lib/x86_64-linux-gnu/libm-2.19.so
+7f0f69f20000-7f0f6aa90000 r-xp 00000000 fc:01 1706118                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/amd64/server/libjvm.so
+7f0f6aa90000-7f0f6ac8f000 ---p 00b70000 fc:01 1706118                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/amd64/server/libjvm.so
+7f0f6ac8f000-7f0f6ad54000 rw-p 00b6f000 fc:01 1706118                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/jre/lib/amd64/server/libjvm.so
+7f0f6ad54000-7f0f6ad94000 rw-p 00000000 00:00 0 
+7f0f6ad94000-7f0f6af4f000 r-xp 00000000 fc:00 1311568                    /lib/x86_64-linux-gnu/libc-2.19.so
+7f0f6af4f000-7f0f6b14e000 ---p 001bb000 fc:00 1311568                    /lib/x86_64-linux-gnu/libc-2.19.so
+7f0f6b14e000-7f0f6b152000 r--p 001ba000 fc:00 1311568                    /lib/x86_64-linux-gnu/libc-2.19.so
+7f0f6b152000-7f0f6b154000 rw-p 001be000 fc:00 1311568                    /lib/x86_64-linux-gnu/libc-2.19.so
+7f0f6b154000-7f0f6b159000 rw-p 00000000 00:00 0 
+7f0f6b159000-7f0f6b15c000 r-xp 00000000 fc:00 1311537                    /lib/x86_64-linux-gnu/libdl-2.19.so
+7f0f6b15c000-7f0f6b35b000 ---p 00003000 fc:00 1311537                    /lib/x86_64-linux-gnu/libdl-2.19.so
+7f0f6b35b000-7f0f6b35c000 r--p 00002000 fc:00 1311537                    /lib/x86_64-linux-gnu/libdl-2.19.so
+7f0f6b35c000-7f0f6b35d000 rw-p 00003000 fc:00 1311537                    /lib/x86_64-linux-gnu/libdl-2.19.so
+7f0f6b35d000-7f0f6b373000 r-xp 00000000 fc:01 1835102                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/lib/amd64/jli/libjli.so
+7f0f6b373000-7f0f6b573000 ---p 00016000 fc:01 1835102                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/lib/amd64/jli/libjli.so
+7f0f6b573000-7f0f6b574000 rw-p 00016000 fc:01 1835102                    /usr/local/google/home/jedo/tools/jdk1.7.0_67/lib/amd64/jli/libjli.so
+7f0f6b574000-7f0f6b58d000 r-xp 00000000 fc:00 1311570                    /lib/x86_64-linux-gnu/libpthread-2.19.so
+7f0f6b58d000-7f0f6b78c000 ---p 00019000 fc:00 1311570                    /lib/x86_64-linux-gnu/libpthread-2.19.so
+7f0f6b78c000-7f0f6b78d000 r--p 00018000 fc:00 1311570                    /lib/x86_64-linux-gnu/libpthread-2.19.so
+7f0f6b78d000-7f0f6b78e000 rw-p 00019000 fc:00 1311570                    /lib/x86_64-linux-gnu/libpthread-2.19.so
+7f0f6b78e000-7f0f6b792000 rw-p 00000000 00:00 0 
+7f0f6b792000-7f0f6b7b5000 r-xp 00000000 fc:00 1311560                    /lib/x86_64-linux-gnu/ld-2.19.so
+7f0f6b7b5000-7f0f6b7b7000 r--s 00000000 fc:01 2920843                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/jul-to-slf4j-1.7.7.jar
+7f0f6b7b7000-7f0f6b803000 rw-p 00000000 00:00 0 
+7f0f6b803000-7f0f6b890000 rw-p 00000000 00:00 0 
+7f0f6b890000-7f0f6b893000 ---p 00000000 00:00 0 
+7f0f6b893000-7f0f6b995000 rw-p 00000000 00:00 0                          [stack:31546]
+7f0f6b995000-7f0f6b996000 r--s 00000000 fc:01 2920842                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/jcip-annotations-1.0.jar
+7f0f6b996000-7f0f6b998000 r--s 00006000 fc:01 2920830                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/slf4j-api-1.7.7.jar
+7f0f6b998000-7f0f6b999000 r--s 00004000 fc:01 2920858                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/ant-launcher-1.9.3.jar
+7f0f6b999000-7f0f6b99f000 r--s 00026000 fc:01 2920824                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/gradle-base-services-2.2.jar
+7f0f6b99f000-7f0f6b9a7000 r--s 0003c000 fc:01 2920822                    /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/wrapper/dists/gradle-2.2-bin/12uvkna5v3vpqe4ttl7ngmrj7n/gradle-2.2/lib/gradle-launcher-2.2.jar
+7f0f6b9a7000-7f0f6b9a8000 rw-p 00000000 00:00 0 
+7f0f6b9a8000-7f0f6b9b0000 rw-s 00000000 fc:00 1190486                    /tmp/hsperfdata_jedo/31543
+7f0f6b9b0000-7f0f6b9b1000 rw-p 00000000 00:00 0 
+7f0f6b9b1000-7f0f6b9b2000 r--p 00000000 00:00 0 
+7f0f6b9b2000-7f0f6b9b4000 rw-p 00000000 00:00 0 
+7f0f6b9b4000-7f0f6b9b5000 r--p 00022000 fc:00 1311560                    /lib/x86_64-linux-gnu/ld-2.19.so
+7f0f6b9b5000-7f0f6b9b6000 rw-p 00023000 fc:00 1311560                    /lib/x86_64-linux-gnu/ld-2.19.so
+7f0f6b9b6000-7f0f6b9b7000 rw-p 00000000 00:00 0 
+7ffd08ec8000-7ffd08eea000 rw-p 00000000 00:00 0                          [stack]
+7ffd08f90000-7ffd08f92000 r-xp 00000000 00:00 0                          [vdso]
+ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0                  [vsyscall]
+
+VM Arguments:
+jvm_args: -XX:MaxPermSize=256m -XX:+HeapDumpOnOutOfMemoryError -Xmx1024m -Dfile.encoding=UTF-8 -Duser.country=US -Duser.language=en -Duser.variant -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005 
+java_command: org.gradle.launcher.daemon.bootstrap.GradleDaemon 2.2 /usr/local/google/home/jedo/src/1.3.dev/out/.gradle/daemon 120000 469bd8ab-56f4-4014-936b-abcb038eb45b -XX:MaxPermSize=256m -XX:+HeapDumpOnOutOfMemoryError -Xmx1024m -Dfile.encoding=UTF-8 -Duser.country=US -Duser.language=en -Duser.variant -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005
+Launcher Type: SUN_STANDARD
+
+Environment Variables:
+JAVA_HOME=/usr/local/google/home/jedo/tools/jdk7
+PATH=/usr/local/google/home/jedo/tools/jdk7/bin:/usr/local/google/home/jedo/oss/adt/sdk/build-tools/current:/usr/local/google/home/jedo/oss/adt/sdk/platform-tools:/usr/local/google/home/jedo/bin:/usr/local/google/home/jedo/bin:/usr/lib/google-golang/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+SHELL=/bin/bash
+DISPLAY=:0
+
+Signal Handlers:
+SIGSEGV: [libjvm.so+0x99f4a0], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGBUS: [libjvm.so+0x99f4a0], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGFPE: [libjvm.so+0x81a860], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGPIPE: [libjvm.so+0x81a860], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGXFSZ: [libjvm.so+0x81a860], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGILL: [libjvm.so+0x81a860], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGUSR1: SIG_DFL, sa_mask[0]=0x00000000, sa_flags=0x00000000
+SIGUSR2: [libjvm.so+0x81c060], sa_mask[0]=0x00000004, sa_flags=0x10000004
+SIGHUP: [libjvm.so+0x81d160], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGINT: [libjvm.so+0x81d160], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGTERM: [libjvm.so+0x81d160], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGQUIT: [libjvm.so+0x81d160], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+
+
+---------------  S Y S T E M  ---------------
+
+OS:jessie/sid
+
+uname:Linux 3.13.0-52-generic #86-Ubuntu SMP Mon May 4 04:32:59 UTC 2015 x86_64
+libc:glibc 2.19 NPTL 2.19 
+rlimit: STACK 8192k, CORE 0k, NPROC 32768, NOFILE 32768, AS infinity
+load average:14.04 7.20 5.15
+
+/proc/meminfo:
+MemTotal:       65897612 kB
+MemFree:        33486776 kB
+Buffers:         1938540 kB
+Cached:         10326840 kB
+SwapCached:       213948 kB
+Active:         19869400 kB
+Inactive:        8593036 kB
+Active(anon):   13110932 kB
+Inactive(anon):  3706164 kB
+Active(file):    6758468 kB
+Inactive(file):  4886872 kB
+Unevictable:       29608 kB
+Mlocked:           29608 kB
+SwapTotal:      67026940 kB
+SwapFree:       65424952 kB
+Dirty:              3276 kB
+Writeback:             0 kB
+AnonPages:      16069404 kB
+Mapped:           891480 kB
+Shmem:            593044 kB
+Slab:            3020232 kB
+SReclaimable:    2780416 kB
+SUnreclaim:       239816 kB
+KernelStack:       27104 kB
+PageTables:       160520 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:    99975744 kB
+Committed_AS:   41060440 kB
+VmallocTotal:   34359738367 kB
+VmallocUsed:      359876 kB
+VmallocChunk:   34325753820 kB
+HardwareCorrupted:     0 kB
+AnonHugePages:   8022016 kB
+HugePages_Total:       0
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       2048 kB
+DirectMap4k:     1091480 kB
+DirectMap2M:    63842304 kB
+DirectMap1G:     2097152 kB
+
+
+CPU:total 40 (10 cores per cpu, 2 threads per core) family 6 model 62 stepping 4, cmov, cx8, fxsr, mmx, sse, sse2, sse3, ssse3, sse4.1, sse4.2, popcnt, avx, aes, erms, ht, tsc, tscinvbit
+
+/proc/cpuinfo:
+processor	: 0
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 0
+siblings	: 20
+core id		: 0
+cpu cores	: 10
+apicid		: 0
+initial apicid	: 0
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5586.38
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 1
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 0
+siblings	: 20
+core id		: 1
+cpu cores	: 10
+apicid		: 2
+initial apicid	: 2
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5586.38
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 2
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 0
+siblings	: 20
+core id		: 2
+cpu cores	: 10
+apicid		: 4
+initial apicid	: 4
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5586.38
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 3
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 0
+siblings	: 20
+core id		: 3
+cpu cores	: 10
+apicid		: 6
+initial apicid	: 6
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5586.38
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 4
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 0
+siblings	: 20
+core id		: 4
+cpu cores	: 10
+apicid		: 8
+initial apicid	: 8
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5586.38
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 5
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 0
+siblings	: 20
+core id		: 8
+cpu cores	: 10
+apicid		: 16
+initial apicid	: 16
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5586.38
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 6
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 2801.000
+cache size	: 25600 KB
+physical id	: 0
+siblings	: 20
+core id		: 9
+cpu cores	: 10
+apicid		: 18
+initial apicid	: 18
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5586.38
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 7
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 0
+siblings	: 20
+core id		: 10
+cpu cores	: 10
+apicid		: 20
+initial apicid	: 20
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5586.38
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 8
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 0
+siblings	: 20
+core id		: 11
+cpu cores	: 10
+apicid		: 22
+initial apicid	: 22
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5586.38
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 9
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 0
+siblings	: 20
+core id		: 12
+cpu cores	: 10
+apicid		: 24
+initial apicid	: 24
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5586.38
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 10
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 1
+siblings	: 20
+core id		: 0
+cpu cores	: 10
+apicid		: 32
+initial apicid	: 32
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5588.17
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 11
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 2801.000
+cache size	: 25600 KB
+physical id	: 1
+siblings	: 20
+core id		: 1
+cpu cores	: 10
+apicid		: 34
+initial apicid	: 34
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5588.17
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 12
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 1
+siblings	: 20
+core id		: 2
+cpu cores	: 10
+apicid		: 36
+initial apicid	: 36
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5588.17
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 13
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 1
+siblings	: 20
+core id		: 3
+cpu cores	: 10
+apicid		: 38
+initial apicid	: 38
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5588.17
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 14
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 1
+siblings	: 20
+core id		: 4
+cpu cores	: 10
+apicid		: 40
+initial apicid	: 40
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5588.17
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 15
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 1
+siblings	: 20
+core id		: 8
+cpu cores	: 10
+apicid		: 48
+initial apicid	: 48
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5588.17
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 16
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 1
+siblings	: 20
+core id		: 9
+cpu cores	: 10
+apicid		: 50
+initial apicid	: 50
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5588.17
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 17
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 1
+siblings	: 20
+core id		: 10
+cpu cores	: 10
+apicid		: 52
+initial apicid	: 52
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5588.17
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 18
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 1
+siblings	: 20
+core id		: 11
+cpu cores	: 10
+apicid		: 54
+initial apicid	: 54
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5588.17
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 19
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 2801.000
+cache size	: 25600 KB
+physical id	: 1
+siblings	: 20
+core id		: 12
+cpu cores	: 10
+apicid		: 56
+initial apicid	: 56
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5588.17
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 20
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 0
+siblings	: 20
+core id		: 0
+cpu cores	: 10
+apicid		: 1
+initial apicid	: 1
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5586.38
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 21
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 0
+siblings	: 20
+core id		: 1
+cpu cores	: 10
+apicid		: 3
+initial apicid	: 3
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5586.38
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 22
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 0
+siblings	: 20
+core id		: 2
+cpu cores	: 10
+apicid		: 5
+initial apicid	: 5
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5586.38
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 23
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 0
+siblings	: 20
+core id		: 3
+cpu cores	: 10
+apicid		: 7
+initial apicid	: 7
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5586.38
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 24
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 0
+siblings	: 20
+core id		: 4
+cpu cores	: 10
+apicid		: 9
+initial apicid	: 9
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5586.38
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 25
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 0
+siblings	: 20
+core id		: 8
+cpu cores	: 10
+apicid		: 17
+initial apicid	: 17
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5586.38
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 26
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 0
+siblings	: 20
+core id		: 9
+cpu cores	: 10
+apicid		: 19
+initial apicid	: 19
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5586.38
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 27
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 0
+siblings	: 20
+core id		: 10
+cpu cores	: 10
+apicid		: 21
+initial apicid	: 21
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5586.38
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 28
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 0
+siblings	: 20
+core id		: 11
+cpu cores	: 10
+apicid		: 23
+initial apicid	: 23
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5586.38
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 29
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 0
+siblings	: 20
+core id		: 12
+cpu cores	: 10
+apicid		: 25
+initial apicid	: 25
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5586.38
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 30
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 1
+siblings	: 20
+core id		: 0
+cpu cores	: 10
+apicid		: 33
+initial apicid	: 33
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5588.17
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 31
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 1
+siblings	: 20
+core id		: 1
+cpu cores	: 10
+apicid		: 35
+initial apicid	: 35
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5588.17
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 32
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 1
+siblings	: 20
+core id		: 2
+cpu cores	: 10
+apicid		: 37
+initial apicid	: 37
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5588.17
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 33
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 1
+siblings	: 20
+core id		: 3
+cpu cores	: 10
+apicid		: 39
+initial apicid	: 39
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5588.17
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 34
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 1
+siblings	: 20
+core id		: 4
+cpu cores	: 10
+apicid		: 41
+initial apicid	: 41
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5588.17
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 35
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 1
+siblings	: 20
+core id		: 8
+cpu cores	: 10
+apicid		: 49
+initial apicid	: 49
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5588.17
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 36
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 1
+siblings	: 20
+core id		: 9
+cpu cores	: 10
+apicid		: 51
+initial apicid	: 51
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5588.17
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 37
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 1
+siblings	: 20
+core id		: 10
+cpu cores	: 10
+apicid		: 53
+initial apicid	: 53
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5588.17
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 38
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 1
+siblings	: 20
+core id		: 11
+cpu cores	: 10
+apicid		: 55
+initial apicid	: 55
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5588.17
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 39
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+stepping	: 4
+microcode	: 0x428
+cpu MHz		: 1200.000
+cache size	: 25600 KB
+physical id	: 1
+siblings	: 20
+core id		: 12
+cpu cores	: 10
+apicid		: 57
+initial apicid	: 57
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5588.17
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+
+
+Memory: 4k page, physical 65897612k(33486776k free), swap 67026940k(65424952k free)
+
+vm_info: Java HotSpot(TM) 64-Bit Server VM (24.65-b04) for linux-amd64 JRE (1.7.0_67-b01), built on Jul 25 2014 09:20:21 by "java_re" with gcc 4.3.0 20080428 (Red Hat 4.3.0-8)
+
+time: Tue Jun  9 14:02:26 2015
+elapsed time: 337 seconds
+
