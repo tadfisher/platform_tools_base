@@ -67,6 +67,7 @@ public class PackagingUtils {
                 !"java".equalsIgnoreCase(extension) &&        // Java files
                 !"scala".equalsIgnoreCase(extension) &&       // Scala files
                 !"class".equalsIgnoreCase(extension) &&       // Java class files
+                !"so".equalsIgnoreCase(extension) &&          // native .so libraries
                 !"scc".equalsIgnoreCase(extension) &&         // VisualSourceSafe
                 !"swp".equalsIgnoreCase(extension) &&         // vi swap file
                 !"thumbs.db".equalsIgnoreCase(fileName) &&    // image index file
