@@ -1469,6 +1469,7 @@ public class AndroidBuilder {
             @Nullable File mappingFile,
             @NonNull Collection<File> jarJarRulesFiles,
             @Nullable File incrementalDir,
+            @Nullable File javaResourcesFolder,
             boolean multiDex,
             int minSdkVersion) {
 
@@ -1527,6 +1528,11 @@ public class AndroidBuilder {
                         if (incrementalDir.exists()) {
                             config.setIncrementalDir(incrementalDir);
                         }
+                    }
+                    if (javaResourcesFolder != null) {
+                        ArrayList<File> folders = new ArrayList<File>();
+                        folders.add(javaResourcesFolder);
+                        config.setResourceDirs(folders);
                     }
 
                     compilationTask = config.getTask();
@@ -1759,6 +1765,7 @@ public class AndroidBuilder {
             boolean jniDebugBuild,
             @Nullable SigningConfig signingConfig,
             @Nullable PackagingOptions packagingOptions,
+            @Nullable SignedJarBuilder.IZipEntryFilter packagingOptionsFilter,
             @NonNull String outApkLocation)
             throws DuplicateFileException, FileNotFoundException,
             KeytoolException, PackagerException, SigningException {
@@ -1779,7 +1786,7 @@ public class AndroidBuilder {
         try {
             Packager packager = new Packager(
                     outApkLocation, androidResPkgLocation, mergingFolder,
-                    certificateInfo, mCreatedBy, packagingOptions, mLogger);
+                    certificateInfo, mCreatedBy, packagingOptions, packagingOptionsFilter, mLogger);
 
             // add dex folder to the apk root.
             if (dexFolder != null) {
@@ -1791,29 +1798,12 @@ public class AndroidBuilder {
 
             packager.setJniDebugMode(jniDebugBuild);
 
-            // figure out conflicts!
-            JavaResourceProcessor resProcessor = new JavaResourceProcessor(packager);
-
-            if (javaResourcesLocation != null) {
-                resProcessor.addSourceFolder(javaResourcesLocation);
+            if (javaResourcesLocation != null && !packagedJars.isEmpty()) {
+                throw new PackagerException("javaResourcesLocation and packagedJars both provided");
             }
-
-            // add the resources from the jar files.
-            Set<String> hashs = Sets.newHashSet();
-
-            for (File jar : packagedJars) {
-                // TODO remove once we can properly add a library as a dependency of its test.
-                String hash = getFileHash(jar);
-                if (hash == null) {
-                    throw new PackagerException("Unable to compute hash of " + jar.getAbsolutePath());
-                }
-                if (hashs.contains(hash)) {
-                    continue;
-                }
-
-                hashs.add(hash);
-
-                packager.addResourcesFromJar(jar);
+            if (javaResourcesLocation != null || !packagedJars.isEmpty()) {
+                packager.addResources(javaResourcesLocation != null
+                        ? new File(javaResourcesLocation) : packagedJars.iterator().next());
             }
 
             // also add resources from library projects and jars
