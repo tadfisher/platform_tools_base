@@ -58,6 +58,41 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
                         + "</manifest>\n")));
     }
 
+    public void testActivityNotExported() throws Exception {
+        assertEquals("" + "AndroidManifest.xml:10: Error: Activity supporting ACTION_VIEW isn't exported correctly [AppIndexingError]\n"
+                        + "        <activity android:exported=\"false\"\n"
+                        + "        ^\n"
+                        + "1 errors, 0 warnings\n",
+                lintProject(xml("AndroidManifest.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"com.example.helloworld\" >\n"
+                        + "\n"
+                        + "    <application\n"
+                        + "        android:allowBackup=\"true\"\n"
+                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
+                        + "        android:label=\"@string/app_name\"\n"
+                        + "        android:theme=\"@style/AppTheme\" >\n"
+                        + "        <activity android:exported=\"false\"\n"
+                        + "            android:name=\".FullscreenActivity\"\n"
+                        + "            android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
+                        + "            android:label=\"@string/title_activity_fullscreen\"\n"
+                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
+                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
+                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
+                        + "                <!-- Accepts URIs that begin with \"http://example.com/gizmos” -->\n"
+                        + "                <data android:scheme=\"http\"\n"
+                        + "                    android:host=\"example.com\"\n"
+                        + "                    android:pathPrefix=\"/gizmos\" />\n"
+                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
+                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
+                        + "            </intent-filter>\n"
+                        + "        </activity>\n"
+                        + "    </application>\n"
+                        + "\n"
+                        + "</manifest>\n")));
+    }
+
     public void testDataMissing() throws Exception {
         assertEquals(""
                         + "AndroidManifest.xml:15: Error: Missing data node? [AppIndexingError]\n"
@@ -157,7 +192,11 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
 
     public void testNoActivity() throws Exception {
         assertEquals(
-                "No warnings.",
+                ""
+                        + "AndroidManifest.xml:5: Warning: Application should has at least one Activity supporting ACTION_VIEW [AppIndexingWarning]\n"
+                        + "    <application\n"
+                        + "    ^\n"
+                        + "0 errors, 1 warnings\n",
                 lintProject(xml("AndroidManifest.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
