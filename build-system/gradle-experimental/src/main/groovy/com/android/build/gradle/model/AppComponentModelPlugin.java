@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.variant.ApplicationVariantFactory;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.builder.core.AndroidBuilder;
+import com.google.common.base.Preconditions;
 
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -34,6 +35,7 @@ import org.gradle.internal.reflect.Instantiator;
 import org.gradle.internal.service.ServiceRegistry;
 import org.gradle.model.Model;
 import org.gradle.model.RuleSource;
+import org.gradle.model.Validate;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /**
@@ -81,6 +83,14 @@ public class AppComponentModelPlugin implements Plugin<Project> {
                 AndroidConfig extension) {
             Instantiator instantiator = serviceRegistry.get(Instantiator.class);
             return new ApplicationVariantFactory(instantiator, androidBuilder, extension);
+        }
+
+        @Validate
+        public void validateLibraryOptionsNotUsed(
+                com.android.build.gradle.managed.AndroidConfig config) {
+            Preconditions.checkState(config.getPackageBuildConfig() == null,
+                    "Applications always package the generated BuildConfig class, so "
+                            + "packageBuildConfig = false can only be used for libraries.");
         }
     }
 }

@@ -32,6 +32,7 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.internal.reflect.Instantiator;
 import org.gradle.internal.service.ServiceRegistry;
+import org.gradle.model.Defaults;
 import org.gradle.model.Model;
 import org.gradle.model.RuleSource;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
@@ -82,6 +83,11 @@ public class LibraryComponentModelPlugin implements Plugin<Project> {
                 AndroidConfig extension) {
             Instantiator instantiator = serviceRegistry.get(Instantiator.class);
             return new LibraryVariantFactory(instantiator, androidBuilder, extension);
+        }
+
+        @Defaults
+        public void configureAndroidModel(com.android.build.gradle.managed.AndroidConfig model) {
+            model.setPackageBuildConfig(true);
         }
     }
 }

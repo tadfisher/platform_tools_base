@@ -19,6 +19,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibraryApp
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
+import com.android.build.gradle.integration.common.truth.TruthHelper
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
 import org.junit.ClassRule
@@ -81,5 +82,8 @@ model {
     @Test
     void assemble() {
         project.execute("assemble")
+        File releaseAar = project.getSubproject("lib").getAar("release");
+        TruthHelper.assertThatAar(releaseAar)
+                .containsClass("com/example/helloworld/BuildConfig.class");
     }
 }
