@@ -36,7 +36,7 @@ public class AppStringProvider {
             try {
                 inputStream = AppStringProvider.class.getResourceAsStream("resources.properties");
                 if (inputStream == null) {
-                    properties.put("app.name", "Error, cannot find resources.properties for %d");
+                    properties.put("app.name", "Error, cannot find relative resources.properties");
                 } else {
                     properties.load(inputStream);
                 }
@@ -49,7 +49,7 @@ public class AppStringProvider {
                 // load the second resource file, using absolute path.
                 inputStream = AppStringProvider.class.getResourceAsStream("/com/android/tests/util/another.properties");
                 if (inputStream == null) {
-                    properties.put("app.string", "Error, cannot load another.properties %s %d");
+                    properties.put("app.string", "Error, cannot load absolute another.properties");
                 } else {
                     properties.load(inputStream);
                 }
