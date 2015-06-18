@@ -16,16 +16,18 @@
 package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_EXPORTED;
 import static com.android.SdkConstants.ATTR_HOST;
 import static com.android.SdkConstants.ATTR_PATH;
 import static com.android.SdkConstants.ATTR_PATH_PATTERN;
 import static com.android.SdkConstants.ATTR_PATH_PREFIX;
 import static com.android.SdkConstants.ATTR_SCHEME;
-
 import static com.android.xml.AndroidManifest.ATTRIBUTE_MIME_TYPE;
 import static com.android.xml.AndroidManifest.ATTRIBUTE_NAME;
 import static com.android.xml.AndroidManifest.ATTRIBUTE_PORT;
 import static com.android.xml.AndroidManifest.NODE_ACTION;
+import static com.android.xml.AndroidManifest.NODE_ACTIVITY;
+import static com.android.xml.AndroidManifest.NODE_APPLICATION;
 import static com.android.xml.AndroidManifest.NODE_CATEGORY;
 import static com.android.xml.AndroidManifest.NODE_DATA;
 import static com.android.xml.AndroidManifest.NODE_INTENT;
@@ -39,6 +41,7 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.google.common.collect.Lists;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
@@ -48,10 +51,12 @@ import org.w3c.dom.NodeList;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 
 /**
  * Check if the usage of App Indexing is correct.
+ * Will report explicit issues as error, and possible issues as warning to promote app indexing.
  */
 public class AppIndexingApiDetector extends Detector implements Detector.XmlScanner {
 
@@ -78,54 +83,75 @@ public class AppIndexingApiDetector extends Detector implements Detector.XmlScan
     @Override
     @Nullable
     public Collection<String> getApplicableElements() {
-        return Collections.singletonList(NODE_INTENT);
+        return Collections.singletonList(NODE_APPLICATION);
     }
 
     @Override
-    public void visitElement(@NonNull XmlContext context, @NonNull Element intent) {
-        boolean actionView = hasActionView(intent);
-        boolean browsable = isBrowsable(intent);
-        boolean isHttp = false;
+    public void visitElement(@NonNull XmlContext context, @NonNull Element application) {
+        List<Element> activities = extractChildrenByName(application, NODE_ACTIVITY);
+        boolean applicationHasActionView = false;
+        for (Element activity : activities) {
+            List<Element> intents = extractChildrenByName(activity, NODE_INTENT);
+            boolean activityHasActionView = false;
+            for (Element intent : intents) {
+                boolean actionView = hasActionView(intent);
+                boolean browsable = isBrowsable(intent);
+                checkIntentFilter(context, intent, actionView, browsable);
+                if (actionView) {
+                    activityHasActionView = true;
+                }
+            }
+            if (activityHasActionView) {
+                applicationHasActionView = true;
+                if (activity.hasAttributeNS(ANDROID_URI, ATTR_EXPORTED)) {
+                    Attr exported = activity.getAttributeNodeNS(ANDROID_URI, ATTR_EXPORTED);
+                    if (!exported.getValue().equals("true")) {
+                        // Report error if the activity supporting action view is not exported.
+                        context.report(ISSUE_ERROR, activity, context.getLocation(activity),
+                                "Activity supporting ACTION_VIEW isn't exported correctly");
+                    }
+                }
+            }
+        }
+        if (!applicationHasActionView) {
+            // Report warning if there're no
+            context.report(ISSUE_WARNING, application, context.getLocation(application),
+                    "Application should has at least one Activity supporting ACTION_VIEW");
+        }
+    }
+
+    private static void checkIntentFilter(@NonNull XmlContext context, @NonNull Element intent,
+            boolean actionView, boolean browsable) {
         boolean hasScheme = false;
         boolean hasHost = false;
         boolean hasPort = false;
         boolean hasPath = false;
         boolean hasMimeType = false;
-        Element firstData = null;
-        NodeList children = intent.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            Node child = children.item(i);
-            if (child.getNodeType() == Node.ELEMENT_NODE && child.getNodeName().equals(NODE_DATA)) {
-                Element data = (Element) child;
-                if (firstData == null) {
-                    firstData = data;
-                }
-                if (isHttpSchema(data)) {
-                    isHttp = true;
-                }
-                checkSingleData(context, data);
+        List<Element> datas = extractChildrenByName(intent, NODE_DATA);
+        Element firstData = datas.isEmpty() ? null : datas.get(0);
+        for (Element data : datas) {
+            checkSingleData(context, data);
 
-                for (String name : PATH_ATTR_LIST) {
-                    if (data.hasAttributeNS(ANDROID_URI, name)) {
-                        hasPath = true;
-                    }
+            for (String name : PATH_ATTR_LIST) {
+                if (data.hasAttributeNS(ANDROID_URI, name)) {
+                    hasPath = true;
                 }
+            }
 
-                if (data.hasAttributeNS(ANDROID_URI, ATTR_SCHEME)) {
-                    hasScheme = true;
-                }
+            if (data.hasAttributeNS(ANDROID_URI, ATTR_SCHEME)) {
+                hasScheme = true;
+            }
 
-                if (data.hasAttributeNS(ANDROID_URI, ATTR_HOST)) {
-                    hasHost = true;
-                }
+            if (data.hasAttributeNS(ANDROID_URI, ATTR_HOST)) {
+                hasHost = true;
+            }
 
-                if (data.hasAttributeNS(ANDROID_URI, ATTRIBUTE_PORT)) {
-                    hasPort = true;
-                }
+            if (data.hasAttributeNS(ANDROID_URI, ATTRIBUTE_PORT)) {
+                hasPort = true;
+            }
 
-                if (data.hasAttributeNS(ANDROID_URI, ATTRIBUTE_MIME_TYPE)) {
-                    hasMimeType = true;
-                }
+            if (data.hasAttributeNS(ANDROID_URI, ATTRIBUTE_MIME_TYPE)) {
+                hasMimeType = true;
             }
         }
 
@@ -142,75 +168,72 @@ public class AppIndexingApiDetector extends Detector implements Detector.XmlScan
                     "android:host missing");
         }
 
-        if (actionView && browsable) {
-            if (firstData == null) {
-                // If this activity is an ACTION_VIEW action with category BROWSABLE, but doesn't
-                // have data node, it may be a mistake and we will report error.
-                context.report(ISSUE_ERROR, intent, context.getLocation(intent),
-                        "Missing data node?");
-            } else if (!hasScheme && !hasMimeType) {
-                // If this activity is an action view, is browsable, but has neither a
-                // URL nor mimeType, it may be a mistake and we will report error.
-                context.report(ISSUE_ERROR, firstData, context.getLocation(firstData),
-                        "Missing URL for the intent filter?");
+        if (actionView) {
+            if (browsable) {
+                if (firstData == null) {
+                    // If this activity is an ACTION_VIEW action with category BROWSABLE, but
+                    // doesn't have data node, it may be a mistake and we will report error.
+                    context.report(ISSUE_ERROR, intent, context.getLocation(intent),
+                            "Missing data node?");
+                } else if (!hasScheme && !hasMimeType) {
+                    // If this activity is an action view, is browsable, but has neither a
+                    // URL nor mimeType, it may be a mistake and we will report error.
+                    context.report(ISSUE_ERROR, firstData, context.getLocation(firstData),
+                            "Missing URL for the intent filter?");
+                }
+            } else {
+                // If this activity is an ACTION_VIEW action, has a http URL but doesn't have
+                // BROWSABLE, it may be a mistake and and we will report warning.
+                context.report(ISSUE_WARNING, intent, context.getLocation(intent),
+                        "Activity supporting ACTION_VIEW is not set as BROWSABLE");
             }
-        }
-
-        // If this activity is an ACTION_VIEW action, has a http URL but doesn't have
-        // BROWSABLE, it may be a mistake and and we will report warning.
-        if (actionView && isHttp && !browsable) {
-            context.report(ISSUE_WARNING, intent, context.getLocation(intent),
-                    "Activity supporting ACTION_VIEW is not set as BROWSABLE");
         }
     }
 
+    /**
+     * Check if the intent filter supports action view.
+     * @param intent the intent filter
+     * @return true if it does
+     */
     private static boolean hasActionView(Element intent) {
-        NodeList children = intent.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            Node child = children.item(i);
-            if (child.getNodeType() == Node.ELEMENT_NODE &&
-                    child.getNodeName().equals(NODE_ACTION)) {
-                Element action = (Element) child;
-                if (action.hasAttributeNS(ANDROID_URI, ATTRIBUTE_NAME)) {
-                    Attr attr = action.getAttributeNodeNS(ANDROID_URI, ATTRIBUTE_NAME);
-                    if (attr.getValue().equals("android.intent.action.VIEW")) {
-                        return true;
-                    }
+        List<Element> actions = extractChildrenByName(intent, NODE_ACTION);
+        for (Element action : actions) {
+            if (action.hasAttributeNS(ANDROID_URI, ATTRIBUTE_NAME)) {
+                Attr attr = action.getAttributeNodeNS(ANDROID_URI, ATTRIBUTE_NAME);
+                if (attr.getValue().equals("android.intent.action.VIEW")) {
+                    return true;
                 }
             }
         }
         return false;
     }
 
-    private static boolean isBrowsable(Element intent) {
-        NodeList children = intent.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            Node child = children.item(i);
-            if (child.getNodeType() == Node.ELEMENT_NODE &&
-                    child.getNodeName().equals(NODE_CATEGORY)) {
-                Element e = (Element) child;
-                if (e.hasAttributeNS(ANDROID_URI, ATTRIBUTE_NAME)) {
-                    Attr attr = e.getAttributeNodeNS(ANDROID_URI, ATTRIBUTE_NAME);
-                    if (attr.getNodeValue().equals("android.intent.category.BROWSABLE")) {
-                        return true;
-                    }
+    /**
+     * Check if the intent filter is set as browsable.
+     *
+     * @param intent the intent filter.
+     * @return true if it is.
+     */
+    private static boolean isBrowsable(@NonNull Element intent) {
+        List<Element> categories = extractChildrenByName(intent, NODE_CATEGORY);
+        for (Element e : categories) {
+            if (e.hasAttributeNS(ANDROID_URI, ATTRIBUTE_NAME)) {
+                Attr attr = e.getAttributeNodeNS(ANDROID_URI, ATTRIBUTE_NAME);
+                if (attr.getNodeValue().equals("android.intent.category.BROWSABLE")) {
+                    return true;
                 }
             }
         }
         return false;
     }
 
-    private static boolean isHttpSchema(Element data) {
-        if (data.hasAttributeNS(ANDROID_URI, ATTR_SCHEME)) {
-            String value = data.getAttributeNodeNS(ANDROID_URI, ATTR_SCHEME).getValue();
-            if (value.equalsIgnoreCase("http") || value.equalsIgnoreCase("https")) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static void checkSingleData(XmlContext context, Element data) {
+    /**
+     * Check if the attributes in data is legal.
+     *
+     * @param context the Xml content.
+     * @param data    the data node.
+     */
+    private static void checkSingleData(@NonNull XmlContext context, @NonNull Element data) {
         // path, pathPrefix and pathPattern should starts with /.
         for (String name : PATH_ATTR_LIST) {
             if (data.hasAttributeNS(ANDROID_URI, name)) {
@@ -245,5 +268,18 @@ public class AppIndexingApiDetector extends Detector implements Detector.XmlScan
                 }
             }
         }
+    }
+
+    private static List<Element> extractChildrenByName(@NonNull Element node,
+            @NonNull String name) {
+        List<Element> result = Lists.newArrayList();
+        NodeList children = node.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            Node child = children.item(i);
+            if (child.getNodeType() == Node.ELEMENT_NODE && child.getNodeName().equals(name)) {
+                result.add((Element) child);
+            }
+        }
+        return result;
     }
 }
