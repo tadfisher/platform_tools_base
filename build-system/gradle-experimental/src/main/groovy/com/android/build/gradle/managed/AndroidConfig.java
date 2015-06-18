@@ -163,4 +163,13 @@ public interface AndroidConfig {
     @Unmanaged
     Collection<LibraryRequest> getLibraryRequests();
     void setLibraryRequests(Collection<LibraryRequest> libraryRequests);
+
+    /**
+     * Whether to package build config class file
+     *  
+     * This is only applicable to libraries. For applications the
+     * BuildConfig class is always packaged.
+     */
+    Boolean getPackageBuildConfig();
+    void setPackageBuildConfig(Boolean value);
 }
