@@ -77,15 +77,6 @@ public class NdkConfiguration {
                         getCCompiler(binary).define("ANDROID_NDK");
                         getCppCompiler(binary).define("ANDROID_NDK");
 
-                        // Set output library filename.
-                        binary.setSharedLibraryFile(
-                                new File(
-                                        buildDir,
-                                        NdkNamingScheme.getOutputDirectoryName(binary)
-                                                + "/"
-                                                + NdkNamingScheme.getSharedLibraryFileName(
-                                                        ndkConfig.getModuleName())));
-
                         // Replace output directory of compile tasks.
                         binary.getTasks().withType(CCompile.class, new Action<CCompile>() {
                             @Override
@@ -118,40 +109,62 @@ public class NdkConfiguration {
                         binary.getLinker().args("--sysroot=" + sysroot);
                         binary.getLinker().args("-Wl,--build-id");
 
-                        if (ndkConfig.getRenderscriptNdkMode()) {
-                            getCCompiler(binary).args("-I" + sysroot + "/usr/include/rs");
-                            getCCompiler(binary).args("-I" + sysroot + "/usr/include/rs/cpp");
-                            getCppCompiler(binary).args("-I" + sysroot + "/usr/include/rs");
-                            getCppCompiler(binary).args("-I" + sysroot + "/usr/include/rs/cpp");
-                            binary.getLinker().args("-L" + sysroot + "/usr/lib/rs");
-                        }
-
-                        NativeToolSpecificationFactory.create(
-                                ndkHandler,
-                                binary.getBuildType(),
-                                binary.getTargetPlatform()).apply(binary);
-
-                        // Add flags defined in NdkConfig
-                        for (String flag : ndkConfig.getCFlags()) {
-                            getCCompiler(binary).args(flag);
-                        }
-
-                        for (String flag : ndkConfig.getCppFlags()) {
-                            getCppCompiler(binary).args(flag);
-                        }
-
-                        for (String ldLib : ndkConfig.getLdLibs()) {
-                            binary.getLinker().args("-l" + ldLib);
-                        }
-
-                        StlNativeToolSpecification stlConfig = new StlNativeToolSpecification(
-                                ndkHandler,
-                                ndkConfig.getStl(),
-                                binary.getTargetPlatform());
-                        stlConfig.apply(binary);
                     }
 
                 });
+    }
+
+    /**
+     * Configure native binary with variant specific options.
+     */
+    public static void configureBinary(
+            SharedLibraryBinarySpec binary,
+            final File buildDir,
+            final NdkConfig ndkConfig,
+            final NdkHandler ndkHandler) {
+        // Set output library filename.
+        binary.setSharedLibraryFile(
+                new File(
+                        buildDir,
+                        NdkNamingScheme.getOutputDirectoryName(binary)
+                                + "/"
+                                + NdkNamingScheme.getSharedLibraryFileName(
+                                ndkConfig.getModuleName())));
+
+        String sysroot = ndkHandler.getSysroot(
+                Abi.getByName(binary.getTargetPlatform().getName()));
+
+        if (ndkConfig.getRenderscriptNdkMode()) {
+            getCCompiler(binary).args("-I" + sysroot + "/usr/include/rs");
+            getCCompiler(binary).args("-I" + sysroot + "/usr/include/rs/cpp");
+            getCppCompiler(binary).args("-I" + sysroot + "/usr/include/rs");
+            getCppCompiler(binary).args("-I" + sysroot + "/usr/include/rs/cpp");
+            binary.getLinker().args("-L" + sysroot + "/usr/lib/rs");
+        }
+
+        NativeToolSpecificationFactory.create(
+                ndkHandler,
+                binary.getBuildType(),
+                binary.getTargetPlatform()).apply(binary);
+
+        // Add flags defined in NdkConfig
+        for (String flag : ndkConfig.getCFlags()) {
+            getCCompiler(binary).args(flag);
+        }
+
+        for (String flag : ndkConfig.getCppFlags()) {
+            getCppCompiler(binary).args(flag);
+        }
+
+        for (String ldLib : ndkConfig.getLdLibs()) {
+            binary.getLinker().args("-l" + ldLib);
+        }
+
+        StlNativeToolSpecification stlConfig = new StlNativeToolSpecification(
+                ndkHandler,
+                ndkConfig.getStl(),
+                binary.getTargetPlatform());
+        stlConfig.apply(binary);
     }
 
     public static void createTasks(ModelMap<Task> tasks, SharedLibraryBinarySpec binary,
