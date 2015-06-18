@@ -14,22 +14,19 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.dsl;
+package com.android.builder.model;
 
 import com.android.annotations.Nullable;
-import com.android.builder.model.ProductFlavor;
-
-import org.gradle.api.Named;
 
 /**
- * A product flavor with addition properties for building with Gradle plugin.
+ * Interface for objects that can be grouped by its dimension.
  */
-public interface CoreProductFlavor extends ProductFlavor, Named {
+public interface Groupable {
 
+    /**
+     * Returns the dimension or null if not applicable.
+     */
     @Nullable
-    CoreNdkOptions getNdkConfig();
-
-    @Nullable
-    Boolean getUseJack();
+    String getDimension();
 
 }

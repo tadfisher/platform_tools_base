@@ -36,7 +36,7 @@ import com.android.build.OutputFile;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.core.NdkConfig;
+import com.android.build.gradle.internal.dsl.CoreNdkOptions;
 import com.android.build.gradle.internal.coverage.JacocoInstrumentTask;
 import com.android.build.gradle.internal.coverage.JacocoPlugin;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
@@ -1022,9 +1022,9 @@ public abstract class TaskManager {
         ndkCompile.setGeneratedMakefile(new File(scope.getGlobalScope().getIntermediatesDir(),
                 "ndk/" + variantData.getVariantConfiguration().getDirName() + "/Android.mk"));
 
-        ConventionMappingHelper.map(ndkCompile, "ndkConfig", new Callable<NdkConfig>() {
+        ConventionMappingHelper.map(ndkCompile, "ndkConfig", new Callable<CoreNdkOptions>() {
             @Override
-            public NdkConfig call() {
+            public CoreNdkOptions call() {
                 return variantConfig.getNdkConfig();
             }
         });

@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.model.Groupable;
 import com.android.builder.model.Variant;
 
 import org.gradle.api.Named;
@@ -41,7 +42,7 @@ import java.util.Map;
  * TODO: Convert Unmanaged Collection to Managed type when Gradle provides ModelSet for basic class.
  */
 @Managed
-public interface ProductFlavor extends Named {
+public interface ProductFlavor extends Named, Groupable {
 
     /**
      * Map of Build Config Fields where the key is the field name.
@@ -132,6 +133,7 @@ public interface ProductFlavor extends Named {
     /**
      * Returns the flavor dimension or null if not applicable.
      */
+    @Override
     @Nullable
     String getDimension();
     void setDimension(String dimension);
@@ -282,5 +284,5 @@ public interface ProductFlavor extends Named {
     Boolean getUseJack();
     void setUseJack(Boolean useJack);
 
-    NdkConfig getNdkConfig();
+    NdkOptions getNdk();
 }

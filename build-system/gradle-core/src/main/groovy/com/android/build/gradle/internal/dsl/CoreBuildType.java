@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.dsl;
 
-import com.android.build.gradle.internal.core.NdkConfig;
 import com.android.builder.model.BuildType;
 
 /**
@@ -24,7 +23,7 @@ import com.android.builder.model.BuildType;
  */
 public interface CoreBuildType extends BuildType {
 
-    NdkConfig getNdkConfig();
+    CoreNdkOptions getNdkConfig();
 
     Boolean getUseJack();
 
