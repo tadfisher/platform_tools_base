@@ -19,8 +19,10 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibraryApp
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
+import com.android.build.gradle.integration.common.truth.TruthHelper
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
+import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
 /**
@@ -72,6 +74,11 @@ model {
             .forExpermimentalPlugin(true)
             .create();
 
+    @BeforeClass
+    public static void assemble() {
+        project.execute("assemble")
+    }
+
     @AfterClass
     static void cleanUp() {
         project = null
@@ -79,7 +86,9 @@ model {
     }
 
     @Test
-    void assemble() {
-        project.execute("assemble")
+    void "check build config file is included"() {
+        File releaseAar = project.getSubproject("lib").getAar("release");
+        TruthHelper.assertThatAar(releaseAar)
+                .containsClass("com/example/helloworld/BuildConfig.class");
     }
 }
