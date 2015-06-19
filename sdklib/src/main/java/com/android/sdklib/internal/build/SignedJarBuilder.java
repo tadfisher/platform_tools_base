@@ -17,14 +17,10 @@
 package com.android.sdklib.internal.build;
 
 import com.android.SdkConstants;
+import com.android.annotations.NonNull;
 import com.android.sdklib.internal.build.SignedJarBuilder.IZipEntryFilter.ZipAbortException;
 
-import sun.misc.BASE64Encoder;
-import sun.security.pkcs.ContentInfo;
-import sun.security.pkcs.PKCS7;
-import sun.security.pkcs.SignerInfo;
-import sun.security.x509.AlgorithmId;
-import sun.security.x509.X500Name;
+import org.apache.commons.codec.binary.Base64;
 
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
@@ -52,6 +48,12 @@ import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import sun.security.pkcs.ContentInfo;
+import sun.security.pkcs.PKCS7;
+import sun.security.pkcs.SignerInfo;
+import sun.security.x509.AlgorithmId;
+import sun.security.x509.X500Name;
+
 /**
  * A Jar file builder with signature support.
  * 
@@ -65,7 +67,7 @@ public class SignedJarBuilder {
 
     /** Write to another stream and also feed it to the Signature object. */
     private static class SignatureOutputStream extends FilterOutputStream {
-        private Signature mSignature;
+        private final Signature mSignature;
         private int mCount = 0;
 
         public SignatureOutputStream(OutputStream out, Signature sig) {
@@ -85,7 +87,7 @@ public class SignedJarBuilder {
         }
 
         @Override
-        public void write(byte[] b, int off, int len) throws IOException {
+        public void write(@NonNull byte[] b, int off, int len) throws IOException {
             try {
                 mSignature.update(b, off, len);
             } catch (SignatureException e) {
@@ -104,10 +106,10 @@ public class SignedJarBuilder {
     private PrivateKey mKey;
     private X509Certificate mCertificate;
     private Manifest mManifest;
-    private BASE64Encoder mBase64Encoder;
+    private Base64 mBase64Encoder;
     private MessageDigest mMessageDigest;
 
-    private byte[] mBuffer = new byte[4096];
+    private final byte[] mBuffer = new byte[4096];
 
     /**
      * Classes which implement this interface provides a method to check whether a file should
@@ -126,20 +128,7 @@ public class SignedJarBuilder {
             public ZipAbortException() {
                 super();
             }
-
-            public ZipAbortException(String format, Object... args) {
-                super(String.format(format, args));
-            }
-
-            public ZipAbortException(Throwable cause, String format, Object... args) {
-                super(String.format(format, args), cause);
-            }
-
-            public ZipAbortException(Throwable cause) {
-                super(cause);
-            }
         }
-
 
         /**
          * Checks a file for inclusion in a Jar archive.
@@ -161,6 +150,7 @@ public class SignedJarBuilder {
      * @throws IOException
      * @throws NoSuchAlgorithmException
      */
+    @SuppressWarnings("deprecation")
     public SignedJarBuilder(OutputStream out, PrivateKey key, X509Certificate certificate)
             throws IOException, NoSuchAlgorithmException {
         mOutputJar = new JarOutputStream(new BufferedOutputStream(out));
@@ -174,7 +164,7 @@ public class SignedJarBuilder {
             main.putValue("Manifest-Version", "1.0");
             main.putValue("Created-By", "1.0 (Android)");
 
-            mBase64Encoder = new BASE64Encoder();
+            mBase64Encoder = new Base64();
             mMessageDigest = MessageDigest.getInstance(DIGEST_ALGORITHM);
         }
     }
@@ -227,7 +217,7 @@ public class SignedJarBuilder {
                 }
 
                 // if we have a filter, we check the entry against it
-                if (filter != null && filter.checkEntry(name) == false) {
+                if (filter != null && !filter.checkEntry(name)) {
                     continue;
                 }
 
@@ -327,7 +317,7 @@ public class SignedJarBuilder {
                 attr = new Attributes();
                 mManifest.getEntries().put(entry.getName(), attr);
             }
-            attr.putValue(DIGEST_ATTR, mBase64Encoder.encode(mMessageDigest.digest()));
+            attr.putValue(DIGEST_ATTR, mBase64Encoder.encodeToString(mMessageDigest.digest()));
         }
     }
 
@@ -339,7 +329,6 @@ public class SignedJarBuilder {
         main.putValue("Signature-Version", "1.0");
         main.putValue("Created-By", "1.0 (Android)");
 
-        BASE64Encoder base64 = new BASE64Encoder();
         MessageDigest md = MessageDigest.getInstance(DIGEST_ALGORITHM);
         PrintStream print = new PrintStream(
                 new DigestOutputStream(new ByteArrayOutputStream(), md),
@@ -348,7 +337,7 @@ public class SignedJarBuilder {
         // Digest of the entire manifest
         mManifest.write(print);
         print.flush();
-        main.putValue(DIGEST_MANIFEST_ATTR, base64.encode(md.digest()));
+        main.putValue(DIGEST_MANIFEST_ATTR, mBase64Encoder.encodeToString(md.digest()));
 
         Map<String, Attributes> entries = mManifest.getEntries();
         for (Map.Entry<String, Attributes> entry : entries.entrySet()) {
@@ -361,7 +350,7 @@ public class SignedJarBuilder {
             print.flush();
 
             Attributes sfAttr = new Attributes();
-            sfAttr.putValue(DIGEST_ATTR, base64.encode(md.digest()));
+            sfAttr.putValue(DIGEST_ATTR, mBase64Encoder.encodeToString(md.digest()));
             sf.getEntries().put(entry.getKey(), sfAttr);
         }
 
