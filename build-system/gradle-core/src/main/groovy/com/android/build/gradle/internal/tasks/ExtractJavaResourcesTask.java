@@ -23,11 +23,16 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.signing.SignedJarBuilder;
 import com.android.ide.common.packaging.PackagingUtils;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
+import org.gradle.api.Action;
+import org.gradle.api.file.FileTree;
 import org.gradle.api.file.FileVisitDetails;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
+import org.gradle.api.tasks.incremental.InputFileDetails;
 
 import java.io.File;
 import java.util.Set;
@@ -39,50 +44,59 @@ import groovy.lang.Closure;
 /**
  * Extract all packaged jar files java resources into a directory. Each jar file will be extracted
  * in a jar specific folder, and only java resources are extracted.
- *
- * TODO : make this task incremental.
  */
 public class ExtractJavaResourcesTask extends DefaultAndroidTask {
 
     // the fact we use a SET is not right, we should have an ordered list of jars...
-    @InputFiles
-    public Set<File> jarInputFiles;
+    Set<File> jarInputFiles;
 
     @OutputDirectory
     public File outputDir;
 
+    @InputFiles
     public Set<File> getJarInputFiles() {
         return jarInputFiles;
     }
 
     @TaskAction
-    public void extractJavaResources() {
+    public void extractJavaResources(final IncrementalTaskInputs incrementalTaskInputs) {
         final JavaResourceFilter javaResourceFilter = new JavaResourceFilter();
-        if (getJarInputFiles() == null) {
-            return;
-        }
 
-        for (File inputJar : getJarInputFiles()) {
-            if (!inputJar.exists()) {
-                continue;
-            }
-            String folderName = inputJar.getName() +
-                                inputJar.getPath().hashCode();
+        incrementalTaskInputs.outOfDate(new org.gradle.api.Action<InputFileDetails>() {
+            @Override
+            public void execute(InputFileDetails inputFileDetails) {
+                File inputJar = inputFileDetails.getFile();
+                String folderName = inputJar.getName() +
+                        inputJar.getPath().hashCode();
 
-            File outputFolder = new File(outputDir, folderName);
-            if (outputFolder.exists()) {
-                deleteDir(outputFolder);
-            }
-            if (!outputFolder.mkdirs()) {
-                throw new RuntimeException("Cannot create folder to extract java resources in for "
-                        + inputJar.getAbsolutePath());
-            }
+                File outputFolder = new File(outputDir, folderName);
+                if (!outputFolder.exists() && !outputFolder.mkdirs()) {
+                        throw new RuntimeException(
+                                "Cannot create folder to extract java resources in for "
+                                        + inputJar.getAbsolutePath());
+                }
 
-            // create the jar file visitor that will check for out-dated resources.
-            Closure<FileVisitDetails> fileVisitor =
-                    new FileVisitor(this, javaResourceFilter, outputFolder);
-            getProject().zipTree(inputJar).visit(fileVisitor);
-        }
+                // create the jar file visitor that will check for out-dated resources.
+                FileVisitor fileVisitor = new FileVisitor(this, javaResourceFilter, outputFolder);
+                getProject().zipTree(inputJar).visit(fileVisitor);
+
+                // delete the items that were removed since last pass.
+                fileVisitor.removeDeletedItems();
+            }
+        });
+
+        incrementalTaskInputs.removed(new org.gradle.api.Action<InputFileDetails>() {
+            @Override
+            public void execute(InputFileDetails inputFileDetails) {
+                File deletedJar = inputFileDetails.getFile();
+                String folderName = deletedJar.getName() +
+                        deletedJar.getPath().hashCode();
+                File outputFolder = new File(outputDir, folderName);
+                if (outputFolder.exists()) {
+                    deleteDir(outputFolder);
+                }
+            }
+        });
     }
 
 
@@ -107,16 +121,19 @@ public class ExtractJavaResourcesTask extends DefaultAndroidTask {
      * {@link com.android.build.gradle.internal.tasks.ExtractJavaResourcesTask.JavaResourceFilter}
      * filtering will copy matching entries into a extraction folder.
      */
-    private static final class FileVisitor extends Closure<FileVisitDetails> {
+    private final class FileVisitor extends Closure<FileVisitDetails> {
 
         private final JavaResourceFilter javaResourceFilter;
         private final File outputDir;
+        private final FileTree existingResources;
         private final ImmutableList.Builder<String> touchedItems = ImmutableList.builder();
+        private final ImmutableSet.Builder<String> visitedItems = ImmutableSet.builder();
 
         FileVisitor(Object owner, JavaResourceFilter javaResourceFilter, File outputDir) {
             super(owner);
             this.javaResourceFilter = javaResourceFilter;
             this.outputDir = outputDir;
+            this.existingResources = getProject().fileTree(outputDir);
         }
 
         @SuppressWarnings("unused")
@@ -127,6 +144,7 @@ public class ExtractJavaResourcesTask extends DefaultAndroidTask {
             File outputFile = fileVisitDetails.getRelativePath().getFile(outputDir);
             Action action = javaResourceFilter.apply(fileVisitDetails.getPath());
             if (action == Action.COPY) {
+                visitedItems.add(fileVisitDetails.getPath());
                 if (!outputFile.exists() || outputFile.lastModified()
                         < fileVisitDetails.getLastModified()) {
                     fileVisitDetails.copyTo(outputFile);
@@ -134,6 +152,25 @@ public class ExtractJavaResourcesTask extends DefaultAndroidTask {
                     touchedItems.add(fileVisitDetails.getPath());
                 }
             }
+        }
+
+        ImmutableList<String> removeDeletedItems() {
+            final ImmutableList.Builder<String> removedItems = ImmutableList.builder();
+            final Set<String> visitedItems = this.visitedItems.build();
+            existingResources.visit(new Closure<FileVisitDetails>(this) {
+                @SuppressWarnings("unused")
+                void doCall(FileVisitDetails fileDetails) {
+                    if (!fileDetails.isDirectory() &&
+                            !visitedItems.contains(fileDetails.getPath())) {
+
+                        File outputFile = fileDetails.getRelativePath().getFile(outputDir);
+                        if (outputFile.delete()) {
+                            removedItems.add(fileDetails.getPath());
+                        }
+                    }
+                }
+            });
+            return removedItems.build();
         }
 
         ImmutableList<String> getTouchedItems() {
