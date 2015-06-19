@@ -9,6 +9,7 @@ import java.net.URL;
 
 /**
  * String provider getting the string format from a co-bundled resources.properties file.
+ * this is a test.
  */
 public class PropertiesProvider {
 
