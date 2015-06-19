@@ -1,4 +1,4 @@
-apply plugin: 'java'
+apply plugin: 'jacoco'
 
 group = 'com.android.tools.perflib'
 archivesBaseName = 'perflib'
