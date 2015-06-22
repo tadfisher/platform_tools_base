@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 
 import sun.nio.ch.DirectBuffer;
@@ -118,6 +117,36 @@ public class MemoryMappedFileBuffer implements HprofBuffer {
             mByteBuffers[index + 1].get(b, split, b.length - split);
         }
         mCurrentPosition += b.length;
+    }
+
+    @Override
+    public void readSubSequence(@NonNull byte[] b, int sourceStart, int sourceEnd) {
+        assert sourceEnd < mLength;
+        assert sourceEnd >= sourceStart;
+
+        mCurrentPosition += sourceStart;
+
+        int index = getIndex();
+        mByteBuffers[index].position(getOffset());
+        if (b.length <= mByteBuffers[index].remaining()) {
+            mByteBuffers[index].get(b, 0, b.length);
+        } else {
+            int split = mBufferSize - mByteBuffers[index].position();
+            mByteBuffers[index].get(b, 0, split);
+
+            int start = split;
+            int remainingMaxLength = Math.min(sourceEnd - sourceStart - start, b.length - start);
+            int remainingShardCount = (remainingMaxLength + mBufferSize - 1) / mBufferSize;
+            for (int i = 0; i < remainingShardCount; ++i) {
+                int maxToRead = Math.min(remainingMaxLength, mBufferSize);
+                mByteBuffers[index + 1 + i].position(0);
+                mByteBuffers[index + 1 + i].get(b, start, maxToRead);
+                start += maxToRead;
+                remainingMaxLength -= maxToRead;
+            }
+        }
+
+        mCurrentPosition += Math.min(b.length, sourceEnd - sourceStart);
     }
 
     @Override
