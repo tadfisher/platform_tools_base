@@ -32,10 +32,17 @@ import static com.android.xml.AndroidManifest.NODE_INTENT;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.rendering.api.ResourceValue;
+import com.android.ide.common.res2.AbstractResourceRepository;
+import com.android.ide.common.res2.ResourceItem;
+import com.android.ide.common.resources.ResourceUrl;
+import com.android.resources.ResourceType;
+import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
@@ -48,6 +55,8 @@ import org.w3c.dom.NodeList;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
+import java.util.List;
 
 
 /**
@@ -56,7 +65,7 @@ import java.util.Collections;
 public class AppIndexingApiDetector extends Detector implements Detector.XmlScanner {
 
     private static final Implementation IMPLEMENTATION = new Implementation(
-            AppIndexingApiDetector.class, Scope.MANIFEST_SCOPE);
+            AppIndexingApiDetector.class, EnumSet.of(Scope.MANIFEST));
 
     public static final Issue ISSUE_ERROR = Issue.create("AppIndexingError", //$NON-NLS-1$
             "Wrong Usage of App Indexing",
@@ -215,7 +224,8 @@ public class AppIndexingApiDetector extends Detector implements Detector.XmlScan
         for (String name : PATH_ATTR_LIST) {
             if (data.hasAttributeNS(ANDROID_URI, name)) {
                 Attr attr = data.getAttributeNodeNS(ANDROID_URI, name);
-                if (!attr.getValue().startsWith("/")) {
+                String path = tryLookUpStringInResource(context, attr.getValue());
+                if (!path.startsWith("/")) {
                     context.report(ISSUE_ERROR, attr, context.getLocation(attr),
                             "android:" + name + " attribute should start with /");
                 }
@@ -226,7 +236,8 @@ public class AppIndexingApiDetector extends Detector implements Detector.XmlScan
         if (data.hasAttributeNS(ANDROID_URI, ATTRIBUTE_PORT)) {
             Attr attr = data.getAttributeNodeNS(ANDROID_URI, ATTRIBUTE_PORT);
             try {
-                Integer.parseInt(attr.getValue());
+                String port = tryLookUpStringInResource(context, attr.getValue());
+                Integer.parseInt(port);
             } catch (NumberFormatException e) {
                 context.report(ISSUE_ERROR, attr, context.getLocation(attr),
                         "android:port is not a legal number");
@@ -245,5 +256,28 @@ public class AppIndexingApiDetector extends Detector implements Detector.XmlScan
                 }
             }
         }
+    }
+
+    private static String tryLookUpStringInResource(@NonNull XmlContext context,
+            @NonNull String str) {
+        Project project = context.getProject();
+        LintClient client = context.getClient();
+        ResourceUrl style = ResourceUrl.parse(str);
+        if (style == null || style.type != ResourceType.STRING) {
+            return str;
+        }
+        AbstractResourceRepository resources = client.getProjectResources(project, true);
+        if (resources == null) {
+            return str;
+        }
+        List<ResourceItem> items = resources.getResourceItem(ResourceType.STRING, style.name);
+        if (items == null || items.isEmpty()) {
+            return str;
+        }
+        ResourceValue resourceValue = items.get(0).getResourceValue(style.framework);
+        if (resourceValue == null) {
+            return str;
+        }
+        return resourceValue.getValue() == null ? str : resourceValue.getValue();
     }
 }
