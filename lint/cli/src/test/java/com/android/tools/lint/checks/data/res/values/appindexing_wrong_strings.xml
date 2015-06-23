@@ -1,0 +1,4 @@
+<resources>
+    <string name="path_prefix">pathprefix</string>
+    <string name="port">gizmos</string>
+</resources>
