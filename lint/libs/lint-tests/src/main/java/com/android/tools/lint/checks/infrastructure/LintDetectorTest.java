@@ -631,10 +631,6 @@ public abstract class LintDetectorTest extends SdkTestCase {
         @Override
         public AbstractResourceRepository getProjectResources(Project project,
                 boolean includeDependencies) {
-            if (mIncrementalCheck == null) {
-                return null;
-            }
-
             ResourceRepository repository = new ResourceRepository(false);
             ILogger logger = new StdLogger(StdLogger.Level.INFO);
             ResourceMerger merger = new ResourceMerger();
