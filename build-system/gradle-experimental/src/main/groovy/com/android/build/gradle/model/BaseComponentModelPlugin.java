@@ -56,6 +56,7 @@ import com.android.builder.profile.ProcessRecorderFactory;
 import com.android.builder.profile.ThreadRecorder;
 import com.android.builder.sdk.TargetInfo;
 import com.android.builder.signing.DefaultSigningConfig;
+import com.android.ide.common.blame.output.BlameAwareLoggedProcessOutputHandler;
 import com.android.ide.common.internal.ExecutorSingleton;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.signing.KeystoreHelper;
@@ -283,10 +284,17 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
             String creator = "Android Gradle";
             ILogger logger = new LoggerWrapper(project.getLogger());
 
-            return new AndroidBuilder(project.equals(project.getRootProject()) ? project.getName()
-                    : project.getPath(), creator, new GradleProcessExecutor(project),
-                    new GradleJavaProcessExecutor(project), new LoggedProcessOutputHandler(logger),
-                    extraModelInfo, logger, project.getLogger().isEnabled(LogLevel.INFO));
+            return new AndroidBuilder(
+                    project.equals(project.getRootProject()) ? project.getName() : project.getPath(),
+                    creator,
+                    new GradleProcessExecutor(project),
+                    new GradleJavaProcessExecutor(project),
+                    new BlameAwareLoggedProcessOutputHandler(
+                            logger,
+                            extraModelInfo.getErrorFormatMode()),
+                    extraModelInfo,
+                    logger,
+                    project.getLogger().isEnabled(LogLevel.INFO));
 
         }
 
