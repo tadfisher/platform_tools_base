@@ -41,6 +41,6 @@ public class ClassObjTest extends TestCase {
 
     ClassObj dialer = mSnapshot.findClass("com.android.dialer.DialerApplication");
     assertNotNull(dialer);
-    assertEquals(5, dialer.getAllFieldsCount());
+    assertEquals(5+0, dialer.getAllFieldsCount());
   }
 }
