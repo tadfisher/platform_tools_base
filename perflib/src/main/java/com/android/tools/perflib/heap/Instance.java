@@ -184,8 +184,8 @@ public abstract class Instance {
      *
      * @param reference another instance that references this instance
      */
-    public void addReference(@NonNull Instance reference) {
-        if (reference.getIsSoftReference()) {
+    public void addReference(@Nullable Field field, @NonNull Instance reference) {
+        if (reference.getIsSoftReference() && field != null && field.getName().equals("referent")) {
             if (mSoftReferences == null) {
                 mSoftReferences = new ArrayList<Instance>();
             }
