@@ -17,47 +17,29 @@
 package com.android.build.gradle.internal.process;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessResult;
 
-import org.gradle.process.ExecResult;
-import org.gradle.process.internal.ExecException;
-
-/**
- */
-class GradleProcessResult implements ProcessResult {
-
+public class OutputHandlerFailedGradleProcessResult implements ProcessResult {
     @NonNull
-    private final ExecResult result;
+    private final ProcessException failure;
 
-    GradleProcessResult(@NonNull ExecResult result) {
-        this.result = result;
+    OutputHandlerFailedGradleProcessResult(@NonNull ProcessException failure) {
+        this.failure = failure;
     }
 
     @Override
     public ProcessResult assertNormalExitValue() throws ProcessException {
-        try {
-            result.assertNormalExitValue();
-        } catch (ExecException e) {
-            throw new ProcessException(e);
-        }
-
-        return this;
+        throw failure;
     }
 
     @Override
     public int getExitValue() {
-        return result.getExitValue();
+        return -1;
     }
 
     @Override
     public ProcessResult rethrowFailure() throws ProcessException {
-        try {
-            result.rethrowFailure();
-        } catch (ExecException e) {
-            throw new ProcessException(e);
-        }
-        return this;
+        throw failure;
     }
 }
