@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.android.ide.common.blame.output;
 
 import com.android.annotations.NonNull;
@@ -25,7 +26,7 @@ import com.google.gson.GsonBuilder;
 
 import java.util.List;
 
-public class GradleMessageRewriter {
+public class GradleMessageParser {
 
     public static final String STDOUT_ERROR_TAG = "AGPBI: ";
 
@@ -37,7 +38,7 @@ public class GradleMessageRewriter {
     private final Gson mGson;
     private final ErrorFormatMode mErrorFormatMode;
 
-    public GradleMessageRewriter(ToolOutputParser parser, ErrorFormatMode errorFormatMode) {
+    public GradleMessageParser(ToolOutputParser parser, ErrorFormatMode errorFormatMode) {
         mParser = parser;
         mErrorFormatMode = errorFormatMode;
         mGson = createGson();
