@@ -19,7 +19,7 @@ package com.android.build.gradle.internal;
 import static com.android.builder.model.AndroidProject.PROPERTY_BUILD_MODEL_ONLY;
 import static com.android.builder.model.AndroidProject.PROPERTY_BUILD_MODEL_ONLY_ADVANCED;
 import static com.android.builder.model.AndroidProject.PROPERTY_INVOKED_FROM_IDE;
-import static com.android.ide.common.blame.output.GradleMessageRewriter.ErrorFormatMode;
+import static com.android.ide.common.blame.parser.JsonEncodedGradleMessageParser.STDOUT_ERROR_TAG;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -31,16 +31,21 @@ import com.android.build.gradle.internal.model.JavaArtifactImpl;
 import com.android.build.gradle.internal.model.SyncIssueImpl;
 import com.android.build.gradle.internal.model.SyncIssueKey;
 import com.android.build.gradle.internal.variant.DefaultSourceProviderContainer;
-import com.android.builder.core.EvaluationErrorReporter;
+import com.android.builder.core.ErrorReporter;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.ArtifactMetaData;
 import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.SourceProviderContainer;
 import com.android.builder.model.SyncIssue;
+import com.android.ide.common.blame.Message;
+import com.android.ide.common.blame.MessageJsonSerializer;
+import com.android.ide.common.blame.SourceFilePosition;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
@@ -53,7 +58,7 @@ import java.util.Map;
 /**
  * For storing additional model information.
  */
-public class ExtraModelInfo extends EvaluationErrorReporter {
+public class ExtraModelInfo extends ErrorReporter {
 
     @NonNull
     private final Project project;
@@ -71,11 +76,20 @@ public class ExtraModelInfo extends EvaluationErrorReporter {
     private final ListMultimap<String, SourceProviderContainer> extraProductFlavorSourceProviders = ArrayListMultimap.create();
     private final ListMultimap<String, SourceProviderContainer> extraMultiFlavorSourceProviders = ArrayListMultimap.create();
 
+    private final Gson mGson;
+
     public ExtraModelInfo(@NonNull Project project, boolean isLibrary) {
         super(computeModelQueryMode(project));
         this.project = project;
         this.isLibrary = isLibrary;
         errorFormatMode = computeErrorFormatMode(project);
+        if (errorFormatMode == ErrorFormatMode.MACHINE_PARSABLE) {
+            GsonBuilder gsonBuilder = new GsonBuilder();
+            MessageJsonSerializer.registerTypeAdapters(gsonBuilder);
+            mGson = gsonBuilder.create();
+        } else {
+            mGson = null;
+        }
     }
 
     public boolean isLibrary() {
@@ -84,10 +98,6 @@ public class ExtraModelInfo extends EvaluationErrorReporter {
 
     public Map<SyncIssueKey, SyncIssue> getSyncIssues() {
         return syncIssues;
-    }
-
-    public ErrorFormatMode getErrorFormatMode() {
-        return errorFormatMode;
     }
 
     @Override
@@ -138,6 +148,50 @@ public class ExtraModelInfo extends EvaluationErrorReporter {
         }
 
         return false;
+
+    }
+
+    @Override
+    public void receiveMessage(@NonNull Message message) {
+        StringBuilder errorStringBuilder = new StringBuilder();
+        if (errorFormatMode == ErrorFormatMode.HUMAN_READABLE) {
+            for (SourceFilePosition pos : message.getSourceFilePositions()) {
+                errorStringBuilder.append(pos.toString());
+                errorStringBuilder.append(' ');
+            }
+            if (errorStringBuilder.length() > 0) {
+                errorStringBuilder.append(": ");
+            }
+            errorStringBuilder.append(message.getText()).append("\n");
+
+        } else {
+            errorStringBuilder.append(STDOUT_ERROR_TAG)
+                        .append(mGson.toJson(message)).append("\n");
+        }
+
+        String messageString = errorStringBuilder.toString();
+
+        switch (message.getKind()) {
+            case ERROR:
+                project.getLogger().error(messageString);
+                break;
+            case WARNING:
+                project.getLogger().warn(messageString);
+                break;
+            case INFO:
+                project.getLogger().info(messageString);
+                break;
+            case STATISTICS:
+                project.getLogger().trace(messageString);
+                break;
+            case UNKNOWN:
+                project.getLogger().debug(messageString);
+                break;
+            case SIMPLE:
+                project.getLogger().info(messageString);
+                break;
+        }
+
 
     }
 
@@ -282,5 +336,9 @@ public class ExtraModelInfo extends EvaluationErrorReporter {
         }
 
         return false;
+    }
+
+    public enum ErrorFormatMode {
+        MACHINE_PARSABLE, HUMAN_READABLE
     }
 }
