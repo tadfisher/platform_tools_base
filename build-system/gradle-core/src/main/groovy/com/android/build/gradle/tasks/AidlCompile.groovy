@@ -20,22 +20,19 @@ import com.android.SdkConstants
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable
 import com.android.annotations.concurrency.GuardedBy
-import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.scope.ConventionMappingHelper
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.IncrementalTask
-import com.android.build.gradle.internal.variant.ApkVariantData
-import com.android.build.gradle.internal.variant.BaseVariantData
-import com.android.build.gradle.internal.variant.BaseVariantOutputData
 import com.android.builder.compiling.DependencyFileProcessor
 import com.android.builder.core.VariantConfiguration
 import com.android.builder.core.VariantType
 import com.android.builder.internal.incremental.DependencyData
 import com.android.builder.internal.incremental.DependencyDataStore
-import com.android.builder.model.AndroidProject
 import com.android.ide.common.internal.WaitableExecutor
+import com.android.ide.common.process.LoggedProcessOutputHandler
+import com.android.ide.common.process.ProcessOutputHandler
 import com.android.ide.common.res2.FileStatus
 import com.google.common.collect.Lists
 import com.google.common.collect.Multimap
@@ -48,7 +45,6 @@ import org.gradle.api.tasks.util.PatternSet
 
 import java.util.concurrent.Callable
 
-import static com.android.builder.model.AndroidProject.FD_GENERATED
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES
 
 /**
@@ -131,7 +127,8 @@ public class AidlCompile extends IncrementalTask {
                 getSourceOutputDir(),
                 getAidlParcelableDir(),
                 getImportDirs(),
-                dependencyFileProcessor)
+                dependencyFileProcessor,
+                new LoggedProcessOutputHandler(getILogger()))
     }
 
     /**
@@ -157,14 +154,16 @@ public class AidlCompile extends IncrementalTask {
             @NonNull File sourceFolder,
             @NonNull File file,
             @Nullable List<File> importFolders,
-            @NonNull DependencyFileProcessor dependencyFileProcessor) {
+            @NonNull DependencyFileProcessor dependencyFileProcessor,
+            @NonNull ProcessOutputHandler processOutputHandler) {
         getBuilder().compileAidlFile(
                 sourceFolder,
                 file,
                 getSourceOutputDir(),
                 getAidlParcelableDir(),
                 importFolders,
-                dependencyFileProcessor)
+                dependencyFileProcessor,
+                processOutputHandler)
     }
 
     @Override
@@ -213,6 +212,8 @@ public class AidlCompile extends IncrementalTask {
 
         Map<String,DependencyData> mainFileMap = store.getMainFileMap()
 
+        ProcessOutputHandler processOutputHandler = new LoggedProcessOutputHandler(getILogger())
+
         for (Map.Entry<File, FileStatus> entry : changedInputs.entrySet()) {
             FileStatus status = entry.getValue()
 
@@ -222,7 +223,8 @@ public class AidlCompile extends IncrementalTask {
                         @Override
                         Void call() throws Exception {
                             File file = entry.getKey()
-                            compileSingleFile(getSourceFolder(file), file, importFolders, processor)
+                            compileSingleFile(getSourceFolder(file), file, importFolders,
+                                    processor, processOutputHandler)
                         }
                     })
                     break
@@ -238,7 +240,7 @@ public class AidlCompile extends IncrementalTask {
                                 Void call() throws Exception {
                                     File file = new File(data.getMainFile());
                                     compileSingleFile(getSourceFolder(file), file,
-                                            importFolders, processor)
+                                            importFolders, processor, processOutputHandler)
                                 }
                             })
                         }
