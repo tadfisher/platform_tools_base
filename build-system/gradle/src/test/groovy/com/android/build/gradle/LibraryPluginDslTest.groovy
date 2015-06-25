@@ -20,6 +20,7 @@ import com.android.build.gradle.api.LibraryVariant
 import com.android.build.gradle.api.TestVariant
 import com.android.build.gradle.internal.SdkHandler
 import com.android.build.gradle.internal.test.BaseTest
+import com.android.builder.core.AndroidBuilder
 import com.android.builder.model.SigningConfig
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
@@ -108,7 +109,7 @@ public class LibraryPluginDslTest extends BaseTest {
         assertNotNull(variant.aidlCompile)
         assertNotNull(variant.mergeResources)
         assertNotNull(variant.mergeAssets)
-        assertNotNull(variant.processResources)
+        assertNotNull(AndroidBuilder.processResources)
         assertNotNull(variant.generateBuildConfig)
         assertNotNull(variant.javaCompile)
         assertNotNull(variant.processJavaResources)
@@ -132,7 +133,7 @@ public class LibraryPluginDslTest extends BaseTest {
     private static void checkLibraryTasks(@NonNull LibraryVariant variant) {
         assertNotNull(variant.processManifest)
         assertNotNull(variant.aidlCompile)
-        assertNotNull(variant.processResources)
+        assertNotNull(AndroidBuilder.processResources)
         assertNotNull(variant.generateBuildConfig)
         assertNotNull(variant.javaCompile)
         assertNotNull(variant.processJavaResources)

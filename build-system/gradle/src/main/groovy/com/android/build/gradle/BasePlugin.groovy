@@ -268,8 +268,6 @@ public abstract class BasePlugin {
                 creator,
                 new GradleProcessExecutor(project),
                 new GradleJavaProcessExecutor(project),
-                new BlameAwareLoggedProcessOutputHandler(getLogger(),
-                        extraModelInfo.getErrorFormatMode()),
                 extraModelInfo,
                 logger,
                 verbose)

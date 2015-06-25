@@ -156,7 +156,7 @@ public class ProcessAndroidResources extends IncrementalTask {
 
         getBuilder().processResources(
                 aaptPackageCommandBuilder,
-                getEnforceUniquePackageName())
+                getEnforceUniquePackageName(),)
     }
 
     public static class ConfigAction implements TaskConfigAction<ProcessAndroidResources> {

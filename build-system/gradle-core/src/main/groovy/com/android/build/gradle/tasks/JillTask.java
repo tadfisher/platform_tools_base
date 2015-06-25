@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.tasks.BaseTask;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.internal.LoggedErrorException;
 import com.android.ide.common.internal.WaitableExecutor;
+import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.sdklib.repository.FullRevision;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
@@ -183,7 +184,8 @@ public class JillTask extends BaseTask {
             //noinspection GroovyAssignabilityCheck
             File jackFile = getJackFileName(outFolder, fileToProcess);
             //noinspection GroovyAssignabilityCheck
-            builder.convertLibraryToJack(fileToProcess, jackFile, options);
+            builder.convertLibraryToJack(fileToProcess, jackFile, options,
+                    new LoggedProcessOutputHandler(builder.getLogger()));
 
             return null;
         }
