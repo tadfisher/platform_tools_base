@@ -29,6 +29,7 @@ import com.android.builder.core.VariantConfiguration
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.ApiVersion
 import com.android.builder.model.ProductFlavor
+import com.android.ide.common.process.LoggedProcessOutputHandler
 import com.android.sdklib.SdkVersionInfo
 import com.android.utils.FileUtils
 import org.gradle.api.tasks.Input
@@ -118,7 +119,8 @@ public class RenderscriptCompile extends NdkTask {
                 getOptimLevel(),
                 getNdkMode(),
                 getSupportMode(),
-                getNdkConfig()?.abiFilters)
+                getNdkConfig()?.abiFilters,
+                new LoggedProcessOutputHandler(getILogger()))
     }
 
     // ----- ConfigAction -----
