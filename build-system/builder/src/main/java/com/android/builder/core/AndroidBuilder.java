@@ -65,6 +65,7 @@ import com.android.ide.common.internal.PngCruncher;
 import com.android.ide.common.process.CachedProcessOutputHandler;
 import com.android.ide.common.process.JavaProcessExecutor;
 import com.android.ide.common.process.JavaProcessInfo;
+import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.ide.common.process.ProcessInfo;
@@ -135,15 +136,15 @@ import java.util.zip.ZipFile;
  * build steps.
  *
  * To use:
- * create a builder with {@link #AndroidBuilder(String, CommandLineRunner, ProcessExecutor, JavaProcessExecutor, ProcessOutputHandler, ILogger, boolean)}
+ * create a builder with {@link #AndroidBuilder(String, String, ProcessExecutor, JavaProcessExecutor, EvaluationErrorReporter, ILogger, boolean)}
  *
  * then build steps can be done with
  * {@link #mergeManifests(File, List, List, String, int, String, String, String, Integer, String, String, ManifestMerger2.MergeType, Map, File)}
  * {@link #processTestManifest(String, String, String, String, String, Boolean, Boolean, File, List, Map, File, File)}
- * {@link #processResources(AaptPackageProcessBuilder, boolean)}
- * {@link #compileAllAidlFiles(java.util.List, java.io.File, java.io.File, java.util.List, com.android.builder.compiling.DependencyFileProcessor)}
- * {@link #convertByteCode(Collection, Collection, File, boolean, boolean, File, DexOptions, List, File, boolean, boolean)}
- * {@link #packageApk(String, java.io.File, java.util.Collection, java.util.Collection, String, java.util.Collection, java.util.Set, boolean, com.android.builder.model.SigningConfig, com.android.builder.model.PackagingOptions, String)}
+ * {@link #processResources(AaptPackageProcessBuilder, boolean, ProcessOutputHandler)}
+ * {@link #compileAllAidlFiles(List, File, File, List, DependencyFileProcessor, ProcessOutputHandler)}
+ * {@link #convertByteCode(Collection, Collection, File, boolean, File, DexOptions, List, File, boolean, boolean, ProcessOutputHandler)}
+ * {@link #packageApk(String, File, Collection, Collection, String, Collection, File, Set, boolean, SigningConfig, PackagingOptions, String)}
  *
  * Java compilation is not handled but the builder provides the bootclasspath with
  * {@link #getBootClasspath()}.
@@ -167,8 +168,6 @@ public class AndroidBuilder {
     private final ProcessExecutor mProcessExecutor;
     @NonNull
     private final JavaProcessExecutor mJavaProcessExecutor;
-    @NonNull
-    private final ProcessOutputHandler mProcessOutputHandler;
     @NonNull
     private final EvaluationErrorReporter mErrorHandler;
 
@@ -199,7 +198,6 @@ public class AndroidBuilder {
             @Nullable String createdBy,
             @NonNull ProcessExecutor processExecutor,
             @NonNull JavaProcessExecutor javaProcessExecutor,
-            @NonNull ProcessOutputHandler processOutputHandler,
             @NonNull EvaluationErrorReporter errorHandler,
             @NonNull ILogger logger,
             boolean verboseExec) {
@@ -207,7 +205,6 @@ public class AndroidBuilder {
         mCreatedBy = createdBy;
         mProcessExecutor = checkNotNull(processExecutor);
         mJavaProcessExecutor = checkNotNull(javaProcessExecutor);
-        mProcessOutputHandler = checkNotNull(processOutputHandler);
         mErrorHandler = checkNotNull(errorHandler);
         mLogger = checkNotNull(logger);
         mVerboseExec = verboseExec;
@@ -219,14 +216,12 @@ public class AndroidBuilder {
             @NonNull CommandLineRunner cmdLineRunner,
             @NonNull ProcessExecutor processExecutor,
             @NonNull JavaProcessExecutor javaProcessExecutor,
-            @NonNull ProcessOutputHandler processOutputHandler,
             @NonNull EvaluationErrorReporter errorHandler,
             @NonNull ILogger logger,
             boolean verboseExec) {
         mProjectId = checkNotNull(projectId);
         mProcessExecutor = checkNotNull(processExecutor);
         mJavaProcessExecutor = checkNotNull(javaProcessExecutor);
-        mProcessOutputHandler = checkNotNull(processOutputHandler);
         mErrorHandler = checkNotNull(errorHandler);
         mLogger = checkNotNull(logger);
         mVerboseExec = verboseExec;
@@ -494,23 +489,18 @@ public class AndroidBuilder {
      * @return an PngCruncher object
      */
     @NonNull
-    public PngCruncher getAaptCruncher() {
+    public PngCruncher getAaptCruncher(ProcessOutputHandler processOutputHandler) {
         checkState(mTargetInfo != null,
                 "Cannot call getAaptCruncher() before setTargetInfo() is called.");
         return new AaptCruncher(
                 mTargetInfo.getBuildTools().getPath(BuildToolInfo.PathId.AAPT),
                 mProcessExecutor,
-                mProcessOutputHandler);
+                processOutputHandler);
     }
 
     @NonNull
     public ProcessExecutor getProcessExecutor() {
         return mProcessExecutor;
-    }
-
-    @NonNull
-    public ProcessResult executeProcess(@NonNull ProcessInfo processInfo) {
-        return executeProcess(processInfo, mProcessOutputHandler);
     }
 
     @NonNull
@@ -839,7 +829,8 @@ public class AndroidBuilder {
      */
     public void processResources(
             @NonNull AaptPackageProcessBuilder aaptCommand,
-            boolean enforceUniquePackageName)
+            boolean enforceUniquePackageName,
+            @NonNull ProcessOutputHandler processOutputHandler)
             throws IOException, InterruptedException, ProcessException {
 
         checkState(mTargetInfo != null,
@@ -849,7 +840,7 @@ public class AndroidBuilder {
         ProcessInfo processInfo = aaptCommand.build(
                 mTargetInfo.getBuildTools(), mTargetInfo.getTarget(), mLogger);
 
-        ProcessResult result = mProcessExecutor.execute(processInfo, mProcessOutputHandler);
+        ProcessResult result = mProcessExecutor.execute(processInfo, processOutputHandler);
         result.rethrowFailure().assertNormalExitValue();
 
         // now if the project has libraries, R needs to be created for each libraries,
@@ -1019,7 +1010,8 @@ public class AndroidBuilder {
                                     @NonNull File sourceOutputDir,
                                     @Nullable File parcelableOutputDir,
                                     @NonNull List<File> importFolders,
-                                    @Nullable DependencyFileProcessor dependencyFileProcessor)
+                                    @Nullable DependencyFileProcessor dependencyFileProcessor,
+                                    @NonNull ProcessOutputHandler processOutputHandler)
             throws IOException, InterruptedException, LoggedErrorException, ProcessException {
         checkNotNull(sourceFolders, "sourceFolders cannot be null.");
         checkNotNull(sourceOutputDir, "sourceOutputDir cannot be null.");
@@ -1049,7 +1041,7 @@ public class AndroidBuilder {
                 dependencyFileProcessor != null ?
                         dependencyFileProcessor : sNoOpDependencyFileProcessor,
                 mProcessExecutor,
-                mProcessOutputHandler);
+                processOutputHandler);
 
         SourceSearcher searcher = new SourceSearcher(sourceFolders, "aidl");
         searcher.setUseExecutor(true);
@@ -1073,7 +1065,8 @@ public class AndroidBuilder {
                                 @NonNull File sourceOutputDir,
                                 @Nullable File parcelableOutputDir,
                                 @NonNull List<File> importFolders,
-                                @Nullable DependencyFileProcessor dependencyFileProcessor)
+                                @Nullable DependencyFileProcessor dependencyFileProcessor,
+                                @NonNull ProcessOutputHandler processOutputHandler)
             throws IOException, InterruptedException, LoggedErrorException, ProcessException {
         checkNotNull(aidlFile, "aidlFile cannot be null.");
         checkNotNull(sourceOutputDir, "sourceOutputDir cannot be null.");
@@ -1098,7 +1091,7 @@ public class AndroidBuilder {
                 dependencyFileProcessor != null ?
                         dependencyFileProcessor : sNoOpDependencyFileProcessor,
                 mProcessExecutor,
-                mProcessOutputHandler);
+                processOutputHandler);
 
         processor.processFile(sourceFolder, aidlFile);
     }
@@ -1137,7 +1130,8 @@ public class AndroidBuilder {
                                             int optimLevel,
                                             boolean ndkMode,
                                             boolean supportMode,
-                                            @Nullable Set<String> abiFilters)
+                                            @Nullable Set<String> abiFilters,
+                                            @NonNull ProcessOutputHandler processOutputHandler)
             throws InterruptedException, ProcessException, LoggedErrorException, IOException {
         checkNotNull(sourceFolders, "sourceFolders cannot be null.");
         checkNotNull(importFolders, "importFolders cannot be null.");
@@ -1167,7 +1161,7 @@ public class AndroidBuilder {
                 ndkMode,
                 supportMode,
                 abiFilters);
-        processor.build(mProcessExecutor, mProcessOutputHandler);
+        processor.build(mProcessExecutor, processOutputHandler);
     }
 
     /**
@@ -1236,7 +1230,9 @@ public class AndroidBuilder {
             @Nullable List<String> additionalParameters,
             @NonNull File tmpFolder,
             boolean incremental,
-            boolean optimize) throws IOException, InterruptedException, ProcessException {
+            boolean optimize,
+            @NonNull ProcessOutputHandler processOutputHandler)
+            throws IOException, InterruptedException, ProcessException {
         checkNotNull(inputs, "inputs cannot be null.");
         checkNotNull(preDexedLibraries, "preDexedLibraries cannot be null.");
         checkNotNull(outDexFolder, "outDexFolder cannot be null.");
@@ -1271,7 +1267,7 @@ public class AndroidBuilder {
 
         JavaProcessInfo javaProcessInfo = builder.build(buildToolInfo, dexOptions);
 
-        ProcessResult result = mJavaProcessExecutor.execute(javaProcessInfo, mProcessOutputHandler);
+        ProcessResult result = mJavaProcessExecutor.execute(javaProcessInfo, processOutputHandler);
         result.rethrowFailure().assertNormalExitValue();
     }
 
@@ -1319,7 +1315,8 @@ public class AndroidBuilder {
             @NonNull File inputFile,
             @NonNull File outFile,
                      boolean multiDex,
-            @NonNull DexOptions dexOptions)
+            @NonNull DexOptions dexOptions,
+            @NonNull ProcessOutputHandler processOutputHandler)
             throws IOException, InterruptedException, ProcessException {
         checkState(mTargetInfo != null,
                 "Cannot call preDexLibrary() before setTargetInfo() is called.");
@@ -1334,7 +1331,7 @@ public class AndroidBuilder {
                 buildToolInfo,
                 mVerboseExec,
                 mJavaProcessExecutor,
-                mProcessOutputHandler);
+                processOutputHandler);
     }
 
     /**
@@ -1579,7 +1576,8 @@ public class AndroidBuilder {
             boolean multiDex,
             int minSdkVersion,
             boolean debugLog,
-            String javaMaxHeapSize) throws ProcessException {
+            String javaMaxHeapSize,
+            @NonNull ProcessOutputHandler processOutputHandler) throws ProcessException {
         JackProcessBuilder builder = new JackProcessBuilder();
 
         builder.setDebugLog(debugLog)
@@ -1604,7 +1602,7 @@ public class AndroidBuilder {
         }
 
         mJavaProcessExecutor.execute(
-                builder.build(mTargetInfo.getBuildTools()), mProcessOutputHandler)
+                builder.build(mTargetInfo.getBuildTools()), processOutputHandler)
                 .rethrowFailure().assertNormalExitValue();
     }
 
@@ -1621,7 +1619,8 @@ public class AndroidBuilder {
     public void convertLibraryToJack(
             @NonNull File inputFile,
             @NonNull File outFile,
-            @NonNull DexOptions dexOptions)
+            @NonNull DexOptions dexOptions,
+            @NonNull ProcessOutputHandler processOutputHandler)
             throws ProcessException, IOException, InterruptedException {
         checkState(mTargetInfo != null,
                 "Cannot call preJackLibrary() before setTargetInfo() is called.");
@@ -1635,7 +1634,7 @@ public class AndroidBuilder {
                 buildToolInfo,
                 mVerboseExec,
                 mJavaProcessExecutor,
-                mProcessOutputHandler,
+                processOutputHandler,
                 mLogger);
     }
 

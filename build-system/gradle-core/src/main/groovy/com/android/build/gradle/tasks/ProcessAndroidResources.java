@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.core.AaptPackageProcessBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.dependency.LibraryDependency;
+import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessException;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
@@ -106,6 +107,7 @@ public class ProcessAndroidResources extends IncrementalTask {
         if (resOutBaseNameFile != null) {
             for (File file : packageOutputFolder.listFiles()) {
                 if (!isSplitPackage(file, resOutBaseNameFile)) {
+                    //noinspection ResultOfMethodCallIgnored
                     file.delete();
                 }
             }
@@ -131,7 +133,8 @@ public class ProcessAndroidResources extends IncrementalTask {
         try {
             getBuilder().processResources(
                     aaptPackageCommandBuilder,
-                    getEnforceUniquePackageName());
+                    getEnforceUniquePackageName(),
+                    new LoggedProcessOutputHandler(getILogger()));
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (InterruptedException e) {
@@ -327,12 +330,13 @@ public class ProcessAndroidResources extends IncrementalTask {
         this.manifestFile = manifestFile;
     }
 
+    @NonNull
     @InputDirectory
     public File getResDir() {
         return resDir;
     }
 
-    public void setResDir(File resDir) {
+    public void setResDir(@NonNull File resDir) {
         this.resDir = resDir;
     }
 
