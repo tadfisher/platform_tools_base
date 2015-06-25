@@ -55,7 +55,6 @@ import com.android.builder.profile.ProcessRecorderFactory;
 import com.android.builder.profile.Recorder;
 import com.android.builder.profile.ThreadRecorder;
 import com.android.builder.sdk.TargetInfo;
-import com.android.ide.common.blame.output.BlameAwareLoggedProcessOutputHandler;
 import com.android.ide.common.internal.ExecutorSingleton;
 import com.android.utils.ILogger;
 import com.google.common.base.CharMatcher;
@@ -329,8 +328,6 @@ public abstract class BasePlugin {
                 creator,
                 new GradleProcessExecutor(project),
                 new GradleJavaProcessExecutor(project),
-                new BlameAwareLoggedProcessOutputHandler(getLogger(),
-                        extraModelInfo.getErrorFormatMode()),
                 extraModelInfo,
                 getLogger(),
                 isVerbose());
