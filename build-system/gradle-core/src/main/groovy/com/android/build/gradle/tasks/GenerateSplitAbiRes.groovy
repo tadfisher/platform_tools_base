@@ -101,7 +101,8 @@ class GenerateSplitAbiRes extends BaseTask {
                         .setDebuggable(getDebuggable())
                         .setResPackageOutput(resPackageFileName);
 
-            getBuilder().processResources(aaptPackageCommandBuilder, false /* enforceUniquePackageName */)
+            getBuilder().processResources(aaptPackageCommandBuilder, false,
+                    /* enforceUniquePackageName */)
         }
     }
 
