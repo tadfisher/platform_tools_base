@@ -20,13 +20,10 @@ import com.android.build.gradle.internal.scope.ConventionMappingHelper
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantOutputScope
 import com.android.build.gradle.internal.tasks.BaseTask
-import com.android.build.gradle.internal.variant.ApkVariantOutputData
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.BaseVariantOutputData
 import com.android.builder.core.AaptPackageProcessBuilder
-import com.android.builder.model.AndroidProject
-import com.android.utils.StringHelper
-import org.codehaus.groovy.runtime.StringGroovyMethods
+import com.android.ide.common.process.LoggedProcessOutputHandler
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputFile
@@ -34,8 +31,6 @@ import org.gradle.api.tasks.ParallelizableTask
 import org.gradle.api.tasks.TaskAction
 
 import java.util.concurrent.Callable
-
-import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES
 
 /**
  * Task which strips out unused resources
@@ -133,6 +128,7 @@ public class ShrinkResources extends BaseTask {
                 getBuilder().processResources(
                         aaptPackageCommandBuilder,
                         processResourcesTask.getEnforceUniquePackageName(),
+                        new LoggedProcessOutputHandler(getBuilder().getLogger())
                 )
             } else {
                 // Just rewrite the .ap_ file to strip out the res/ files for unused resources

@@ -20,6 +20,7 @@ import com.android.build.gradle.api.LibraryVariant
 import com.android.build.gradle.api.TestVariant
 import com.android.build.gradle.internal.SdkHandler
 import com.android.build.gradle.internal.test.BaseTest
+import com.android.builder.core.AndroidBuilder
 import com.android.builder.model.SigningConfig
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
