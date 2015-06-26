@@ -33,6 +33,7 @@ import com.android.ide.common.res2.ResourceMerger;
 import com.android.ide.common.res2.ResourceSet;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.repository.FullRevision;
+import com.android.utils.FileUtils;
 import com.google.common.collect.Lists;
 
 import org.gradle.api.tasks.Input;
@@ -43,6 +44,7 @@ import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.OutputFile;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -119,7 +121,11 @@ public class MergeResources extends IncrementalTask {
     protected void doFullTaskAction() {
         // this is full run, clean the previous output
         File destinationDir = getOutputDir();
-        emptyFolder(destinationDir);
+        try {
+            FileUtils.emptyFolder(destinationDir);
+        } catch (IOException e) {
+            throw new RuntimeException("Could not clean destination folder.", e);
+        }
 
         List<ResourceSet> resourceSets = getInputResourceSets();
 

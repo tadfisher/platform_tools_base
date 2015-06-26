@@ -29,6 +29,8 @@ import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.internal.LoggedErrorException;
 import com.android.ide.common.process.ProcessException;
+import com.android.utils.StringHelper;
+import com.android.utils.FileUtils;
 import com.google.common.io.Files;
 
 import org.gradle.api.artifacts.Configuration;
@@ -69,7 +71,7 @@ public class GenerateApkDataTask extends BaseTask {
             InterruptedException {
         // always empty output dir.
         File outDir = getResOutputDir();
-        emptyFolder(outDir);
+        FileUtils.emptyFolder(outDir);
 
         File apk = getApkFile();
         // copy the file into the destination, by sanitizing the name first.
