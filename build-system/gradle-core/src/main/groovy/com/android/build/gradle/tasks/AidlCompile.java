@@ -33,6 +33,7 @@ import com.android.ide.common.internal.LoggedErrorException;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.res2.FileStatus;
+import com.android.utils.FileUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import org.gradle.api.file.FileTree;
@@ -165,12 +166,16 @@ public class AidlCompile extends IncrementalTask {
     protected void doFullTaskAction() {
         // this is full run, clean the previous output
         File destinationDir = getSourceOutputDir();
-        emptyFolder(destinationDir);
-
         File parcelableDir = getAidlParcelableDir();
-        if (parcelableDir != null) {
-            emptyFolder(parcelableDir);
+        try {
+            FileUtils.emptyFolder(destinationDir);
+            if (parcelableDir != null) {
+                FileUtils.emptyFolder(parcelableDir);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+
 
         DepFileProcessor processor = new DepFileProcessor();
 
