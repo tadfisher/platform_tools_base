@@ -18,7 +18,7 @@ package com.android.ide.common.blame.parser;
 import com.android.annotations.NonNull;
 import com.android.ide.common.blame.Message;
 import com.android.ide.common.blame.MessageJsonSerializer;
-import com.android.ide.common.blame.output.GradleMessageRewriter;
+import com.android.ide.common.blame.output.MessageLogger;
 import com.android.ide.common.blame.parser.util.OutputLineReader;
 import com.android.utils.ILogger;
 import com.google.gson.Gson;
@@ -39,7 +39,7 @@ public class JsonEncodedGradleMessageParser implements PatternAwareOutputParser 
      * <pre>AGPBI: {"kind":"ERROR","text":"Nothing"...}</pre>
      */
     private static final Pattern MSG_PATTERN = Pattern.compile("^" + Pattern.quote(
-            GradleMessageRewriter.STDOUT_ERROR_TAG) + "(.*)$");
+            MessageLogger.STDOUT_ERROR_TAG) + "(.*)$");
 
     @Override
     public boolean parse(@NonNull String line,

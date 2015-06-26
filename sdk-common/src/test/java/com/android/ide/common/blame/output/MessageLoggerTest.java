@@ -30,9 +30,9 @@ import junit.framework.TestCase;
 import java.io.File;
 import java.util.List;
 
-public class GradleMessageRewriterTest extends TestCase {
+public class MessageLoggerTest extends TestCase {
 
-    private GradleMessageRewriter mMessageRewriter;
+    private MessageLogger mMessageRewriter;
 
     private ILogger mLogger;
 
@@ -43,9 +43,9 @@ public class GradleMessageRewriterTest extends TestCase {
         mLogger = new RecordingLogger();
         mFakePatternParser = new FakePatternAwareOutputParser();
 
-        mMessageRewriter = new GradleMessageRewriter(
+        mMessageRewriter = new MessageLogger(
                 new ToolOutputParser(mFakePatternParser, mLogger),
-                GradleMessageRewriter.ErrorFormatMode.MACHINE_PARSABLE);
+                MessageLogger.ErrorFormatMode.MACHINE_PARSABLE);
     }
 
     public void testRewriteMessages() {

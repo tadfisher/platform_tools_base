@@ -30,8 +30,14 @@ import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.core.AaptPackageProcessBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.dependency.LibraryDependency;
+import com.android.ide.common.blame.MessageReceiver;
+import com.android.ide.common.blame.ParsingProcessOutputHandler;
+import com.android.ide.common.blame.output.MessageLogger;
+import com.android.ide.common.blame.parser.ToolOutputParser;
+import com.android.ide.common.blame.parser.aapt.AaptOutputParser;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessException;
+import com.android.ide.common.process.ProcessOutputHandler;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 
@@ -48,6 +54,7 @@ import org.gradle.api.tasks.ParallelizableTask;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -90,6 +97,7 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private AaptOptions aaptOptions;
 
+    private File mergeBlameLogFolder;
 
     @Override
     protected void doFullTaskAction() {
@@ -130,11 +138,20 @@ public class ProcessAndroidResources extends IncrementalTask {
                         .setSplits(getSplits())
                         .setPreferredDensity(getPreferredDensity());
 
+        ToolOutputParser aaptOutputParser = new ToolOutputParser(new AaptOutputParser(), getILogger());
+        MessageReceiver messageLogger = new MessageLogger(getILogger(),
+                MessageLogger.ErrorFormatMode.HUMAN_READABLE);
+
+        ProcessOutputHandler outputHandler = new ParsingProcessOutputHandler(
+                aaptOutputParser,
+                aaptOutputParser,
+                Collections.singletonList(messageLogger));
+
         try {
             getBuilder().processResources(
                     aaptPackageCommandBuilder,
                     getEnforceUniquePackageName(),
-                    new LoggedProcessOutputHandler(getILogger()));
+                    outputHandler);
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (InterruptedException e) {
@@ -304,6 +321,8 @@ public class ProcessAndroidResources extends IncrementalTask {
                         }
                     });
 
+            processResources.setMergeBlameLogFolder(
+                    scope.getVariantScope().getResourceBlameLogFolder());
 
         }
 
@@ -489,4 +508,13 @@ public class ProcessAndroidResources extends IncrementalTask {
     public void setAaptOptions(AaptOptions aaptOptions) {
         this.aaptOptions = aaptOptions;
     }
+
+    public File getMergeBlameLogFolder() {
+        return mergeBlameLogFolder;
+    }
+
+    public void setMergeBlameLogFolder(File mergeBlameLogFolder) {
+        this.mergeBlameLogFolder = mergeBlameLogFolder;
+    }
+
 }
