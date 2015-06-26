@@ -19,5 +19,5 @@ package com.android.ide.common.blame;
 import com.android.annotations.NonNull;
 
 public interface MessageReceiver {
-    void receiveMessage(@NonNull Message m);
+    void receiveMessage(@NonNull Message message);
 }
