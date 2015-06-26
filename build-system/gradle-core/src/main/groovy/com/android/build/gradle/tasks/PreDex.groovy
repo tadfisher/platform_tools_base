@@ -28,6 +28,7 @@ import com.android.builder.core.DexOptions
 import com.android.builder.core.VariantConfiguration
 import com.android.builder.core.VariantType
 import com.android.ide.common.internal.WaitableExecutor
+import com.android.utils.FileUtils
 import com.google.common.base.Charsets
 import com.google.common.collect.Lists
 import com.google.common.collect.Sets
@@ -82,7 +83,7 @@ public class PreDex extends BaseTask {
         // if we are not in incremental mode, then outOfDate will contain
         // all the files, but first we need to delete the previous output
         if (!incremental) {
-            emptyFolder(outFolder)
+            FileUtils.emptyFolder(outFolder)
         }
 
         final Set<String> hashs = Sets.newHashSet()

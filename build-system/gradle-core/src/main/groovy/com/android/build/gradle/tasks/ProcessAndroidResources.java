@@ -31,6 +31,7 @@ import com.android.builder.core.AaptPackageProcessBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.dependency.LibraryDependency;
 import com.android.ide.common.process.ProcessException;
+import com.android.utils.FileUtils;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 
@@ -95,7 +96,11 @@ public class ProcessAndroidResources extends IncrementalTask {
         // we have to clean the source folder output in case the package name changed.
         File srcOut = getSourceOutputDir();
         if (srcOut != null) {
-            emptyFolder(srcOut);
+            try {
+                FileUtils.emptyFolder(srcOut);
+            } catch (IOException e) {
+                throw new RuntimeException("Could not clean the source output folder.", e);
+            }
         }
 
         File resOutBaseNameFile = getPackageOutputFile();
