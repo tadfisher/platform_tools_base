@@ -31,6 +31,8 @@ import com.android.builder.core.AaptPackageProcessBuilder;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.dependency.LibraryDependency;
+import com.android.ide.common.blame.MergingLog;
+import com.android.ide.common.blame.MergingLogRewriter;
 import com.android.ide.common.blame.ParsingProcessOutputHandler;
 import com.android.ide.common.blame.parser.ToolOutputParser;
 import com.android.ide.common.blame.parser.aapt.AaptOutputParser;
@@ -52,7 +54,6 @@ import org.gradle.api.tasks.ParallelizableTask;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -95,6 +96,7 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private AaptOptions aaptOptions;
 
+    private File mergeBlameLogFolder;
 
     @Override
     protected void doFullTaskAction() {
@@ -137,9 +139,12 @@ public class ProcessAndroidResources extends IncrementalTask {
 
         @NonNull
         AndroidBuilder builder = getBuilder();
+
+        MergingLog mergingLog = new MergingLog(getMergeBlameLogFolder());
+
         ProcessOutputHandler processOutputHandler = new ParsingProcessOutputHandler(
                 new ToolOutputParser(new AaptOutputParser(), getILogger()),
-                builder.getErrorHandler());
+                new MergingLogRewriter(mergingLog, builder.getErrorHandler()));
         try {
             builder.processResources(
                     aaptPackageCommandBuilder,
@@ -315,6 +320,8 @@ public class ProcessAndroidResources extends IncrementalTask {
                     });
 
 
+            processResources.setMergeBlameLogFolder(
+                    scope.getVariantScope().getResourceBlameLogFolder());
         }
 
         @NonNull
@@ -498,5 +505,14 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     public void setAaptOptions(AaptOptions aaptOptions) {
         this.aaptOptions = aaptOptions;
+    }
+
+    @Input
+    public File getMergeBlameLogFolder() {
+        return mergeBlameLogFolder;
+    }
+
+    public void setMergeBlameLogFolder(File mergeBlameLogFolder) {
+        this.mergeBlameLogFolder = mergeBlameLogFolder;
     }
 }
