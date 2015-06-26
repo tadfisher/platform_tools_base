@@ -70,7 +70,7 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
     }
 
     @Override
-    public void createTasksForVariantData(TaskFactory tasks,
+    public void createTasksForVariantData(@NonNull TaskFactory tasks,
             @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData) {
 
         super.createTasksForVariantData(tasks, variantData);
@@ -128,8 +128,8 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
     @Override
     @Nullable
     public File maybeCreateProguardTasks(
-            final TaskFactory tasks,
-            final VariantScope scope,
+            @NonNull final TaskFactory tasks,
+            @NonNull final VariantScope scope,
             @NonNull final PostCompilationData pcData) {
         BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
 
@@ -158,18 +158,6 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
 
         DependencyHandler dependencyHandler = project.getDependencies();
         TestAndroidConfig testExtension = (TestAndroidConfig) extension;
-
-        // and create the configuration for the project's classes.jar file.
-        Configuration testClassesMapping = project.getConfigurations().create("testTargetClasses");
-
-        dependencyHandler.add("testTargetClasses", dependencyHandler.project(
-                ImmutableMap.of(
-                        "path", testExtension.getTargetProjectPath(),
-                        "configuration", testExtension.getTargetVariant() + "-classes"
-                )));
-
-        // Input the original .class files so the compiler can compile the test code correctly.
-        proguardTask.setClassesConfiguration(testClassesMapping);
 
         // and create the configuration for the project's mapping file.
         Configuration testTargetMapping = project.getConfigurations().create("testTargetMapping");
@@ -267,7 +255,10 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
             proguardTask.doFirst(new Action<Task>() {
                 @Override
                 public void execute(Task task) {
-                    proguardOut.mkdirs();
+                    if (!proguardOut.mkdirs()) {
+                        throw new RuntimeException(
+                                "Cannot create proguard output folder " + proguardOut);
+                    }
                 }
             });
 
