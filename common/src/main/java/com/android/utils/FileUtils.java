@@ -41,6 +41,7 @@ public class FileUtils {
                 if (file.isDirectory()) {
                     deleteFolder(file);
                 } else {
+                    //noinspection ResultOfMethodCallIgnored
                     file.delete();
                 }
             }
@@ -48,11 +49,23 @@ public class FileUtils {
         return folder.delete();
     }
 
+    public static boolean attemptEmptyFolder(final File folder) {
+        return deleteFolder(folder) & folder.mkdirs();
+    }
+
+    public static void emptyFolder(final File folder) throws IOException {
+        if (!attemptEmptyFolder(folder)) {
+            throw new IOException(String.format("Could not empty folder %s", folder));
+        }
+    }
+
     public static void copyFile(File from, File to) throws IOException {
         to = new File(to, from.getName());
         if (from.isDirectory()) {
             if (!to.exists()) {
-                to.mkdirs();
+                if (!to.mkdirs()) {
+                    throw new IOException(String.format("Could not create directory %s", to));
+                }
             }
 
             File[] children = from.listFiles();

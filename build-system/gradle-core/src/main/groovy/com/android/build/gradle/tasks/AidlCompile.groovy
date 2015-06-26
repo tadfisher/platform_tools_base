@@ -37,6 +37,7 @@ import com.android.builder.internal.incremental.DependencyDataStore
 import com.android.builder.model.AndroidProject
 import com.android.ide.common.internal.WaitableExecutor
 import com.android.ide.common.res2.FileStatus
+import com.android.utils.FileUtils
 import com.google.common.collect.Lists
 import com.google.common.collect.Multimap
 import org.gradle.api.file.FileTree
@@ -171,11 +172,11 @@ public class AidlCompile extends IncrementalTask {
     protected void doFullTaskAction() {
         // this is full run, clean the previous output
         File destinationDir = getSourceOutputDir()
-        emptyFolder(destinationDir)
+        FileUtils.emptyFolder(destinationDir);
 
         File parcelableDir = getAidlParcelableDir()
         if (parcelableDir != null) {
-            emptyFolder(parcelableDir)
+            FileUtils.emptyFolder(parcelableDir)
         }
 
         DepFileProcessor processor = new DepFileProcessor()
