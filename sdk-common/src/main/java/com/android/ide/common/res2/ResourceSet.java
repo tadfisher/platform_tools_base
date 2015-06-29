@@ -124,7 +124,9 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
                 return null;
             }
 
-            FileResourceNameValidator.validate(file, type);
+            if (getValidateEnabled()) {
+                FileResourceNameValidator.validate(file, type);
+            }
             ResourceItem item = new ResourceItem(nameAttr.getValue(), type, null);
             return new ResourceFile(file, item, qualifier);
         }
