@@ -282,4 +282,9 @@ public abstract class Instance {
             return mSize;
         }
     }
+
+    public StackTrace getStack() {
+      return mStack;
+    }
+
 }
