@@ -115,7 +115,7 @@ public class DependencyManager {
         PrepareLibraryTask prepareLibTask = prepareTaskMap.get(lib.getNonTransitiveRepresentation());
         if (prepareLibTask != null) {
             prepareDependenciesTask.dependsOn(prepareLibTask);
-            prepareLibTask.dependsOn(variantData.preBuildTask);
+//            prepareLibTask.dependsOn(variantData.preBuildTask);
         }
 
         for (LibraryDependency childLib : lib.getDependencies()) {
@@ -159,7 +159,7 @@ public class DependencyManager {
         Collection<VariantDependencies> configDepList = reverseMap.get(libDependency);
         if (configDepList != null && !configDepList.isEmpty()) {
             for (VariantDependencies configDependencies: configDepList) {
-                task.dependsOn(configDependencies.getCompileConfiguration().getBuildDependencies());
+//                task.dependsOn(configDependencies.getCompileConfiguration().getBuildDependencies());
             }
         }
 
@@ -204,17 +204,30 @@ public class DependencyManager {
         // make the map key that doesn't take into account the dependencies.
         LibraryDependencyImpl key = library.getNonTransitiveRepresentation();
 
-        PrepareLibraryTask prepareLibraryTask = prepareTaskMap.get(key);
+        String bundleName = GUtil.toCamelCase(library.getName().replaceAll("\\:", " "));
+        String taskName = "explode" + bundleName + "Library";
+        Project taskProject = project.getRootProject();
+
+        PrepareLibraryTask prepareLibraryTask =
+                (PrepareLibraryTask)taskProject.getTasks().findByName(taskName);
 
         if (prepareLibraryTask == null) {
-            String bundleName = GUtil.toCamelCase(library.getName().replaceAll("\\:", " "));
-
-            prepareLibraryTask = project.getTasks().create(
-                    "prepare" + bundleName + "Library", PrepareLibraryTask.class);
+            prepareLibraryTask = project.getTasks().create(taskName, PrepareLibraryTask.class);
 
             prepareLibraryTask.setDescription("Prepare " + library.getName());
             prepareLibraryTask.setBundle(library.getBundle());
             prepareLibraryTask.setExplodedDir(library.getBundleFolder());
+
+            String projectPath = library.getProject()
+            if (projectPath != null) {
+                Map<String, String> projectInfo = new HashMap<>(2);
+                projectInfo.put("path", projectPath);
+                String projectVariant = library.getProjectVariant();
+                if (projectVariant != null) {
+                    projectInfo.put("configuration", projectVariant);
+                }
+                prepareLibraryTask.dependsOn(project.getDependencies().getProject(projectInfo));
+            }
 
             prepareTaskMap.put(key, prepareLibraryTask);
         }
@@ -815,8 +828,9 @@ public class DependencyManager {
                             printIndent(indent, "PATH: " + path);
                         }
 
-                        //def explodedDir = project.file("$project.rootProject.buildDir/${FD_INTERMEDIATES}/exploded-aar/$path")
-                        File explodedDir = project.file(project.getBuildDir() + "/" + FD_INTERMEDIATES + "/exploded-aar/" + path);
+                        File explodedDir = project.file(project.rootProject.getBuildDir()
+                                + "/" + FD_INTERMEDIATES + "/exploded-aar/" path);
+                        //File explodedDir = project.file(project.getBuildDir() + "/" + FD_INTERMEDIATES + "/exploded-aar/" + path);
                         @SuppressWarnings("unchecked")
                         LibInfo libInfo = new LibInfo(
                                 artifact.getFile(),
