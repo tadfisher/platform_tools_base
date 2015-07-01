@@ -19,12 +19,14 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.builder.model.AndroidArtifact
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.Variant
+import com.android.utils.FileUtils
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatZip
 import static org.junit.Assert.assertNotNull
@@ -122,5 +124,13 @@ class GenFolderApiTest {
 
             assertTrue("custom generated res folder check", found)
         }
+    }
+
+    @Test
+    public void backwardsCompatible() throws Exception {
+        // ATTENTION Author and Reviewers - please make sure required changes to the build file
+        // are backwards compatible before updating this test.
+        assertThat(FileUtils.sha1(project.file("build.gradle")))
+                .isEqualTo("65bff3547319f2ef02b93b9b14464e1fe2823cb1")
     }
 }

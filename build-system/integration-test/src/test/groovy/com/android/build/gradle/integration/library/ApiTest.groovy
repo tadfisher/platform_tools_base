@@ -18,12 +18,15 @@ package com.android.build.gradle.integration.library
 
 import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.utils.FileUtils
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
 import org.junit.experimental.categories.Category
+
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 
 /**
  * Assemble tests for api.
@@ -54,5 +57,15 @@ class ApiTest {
     @Category(DeviceTests.class)
     void connectedCheck() {
         project.executeConnectedCheck()
+    }
+
+    @Test
+    public void backwardsCompatible() throws Exception {
+        // ATTENTION Author and Reviewers - please make sure required changes to the build file
+        // are backwards compatible before updating this test.
+        assertThat(FileUtils.sha1(project.file("app/build.gradle")))
+                .isEqualTo("61f5af1da4e8ee48360dbe16b50c81995b26e2bb")
+        assertThat(FileUtils.sha1(project.file("lib/build.gradle")))
+                .isEqualTo("f18801205a3f15490ce728c25c226d43db9d5342")
     }
 }
