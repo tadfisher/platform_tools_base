@@ -4,7 +4,6 @@ import static com.android.ide.common.rendering.HardwareConfigHelper.getGenericLa
 import static com.android.ide.common.rendering.HardwareConfigHelper.getNexusLabel;
 import static com.android.ide.common.rendering.HardwareConfigHelper.isGeneric;
 import static com.android.ide.common.rendering.HardwareConfigHelper.isNexus;
-import static com.android.ide.common.rendering.HardwareConfigHelper.isRound;
 import static com.android.ide.common.rendering.HardwareConfigHelper.isTv;
 import static com.android.ide.common.rendering.HardwareConfigHelper.isWear;
 import static com.android.ide.common.rendering.HardwareConfigHelper.nexusRank;
@@ -77,37 +76,31 @@ public class HardwareConfigHelperTest extends TestCase {
         assertNotNull(qvga);
         assertFalse(isWear(qvga));
         assertFalse(isTv(qvga));
-        assertFalse(isRound(qvga));
 
         Device nexus5 = deviceManager.getDevice("Nexus 5", "Google");
         assertNotNull(nexus5);
         assertFalse(isWear(nexus5));
         assertFalse(isTv(nexus5));
-        assertFalse(isRound(nexus5));
 
         Device square = deviceManager.getDevice("wear_square", "Google");
         assertNotNull(square);
         assertTrue(isWear(square));
-        assertFalse(isRound(square));
         assertFalse(isTv(square));
 
         Device round = deviceManager.getDevice("wear_round", "Google");
         assertNotNull(round);
         assertTrue(isWear(round));
-        assertTrue(isRound(round));
         assertFalse(isTv(round));
 
         Device tv1080p = deviceManager.getDevice("tv_1080p", "Google");
         assertNotNull(tv1080p);
         assertTrue(isTv(tv1080p));
         assertFalse(isWear(tv1080p));
-        assertFalse(isRound(tv1080p));
 
         Device tv720p = deviceManager.getDevice("tv_1080p", "Google");
         assertNotNull(tv720p);
         assertFalse(isWear(tv720p));
         assertTrue(isTv(tv720p));
-        assertFalse(isRound(tv720p));
     }
 
     public void testNexusRank() {

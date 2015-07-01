@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.HardwareConfig;
 import com.android.resources.ScreenOrientation;
+import com.android.resources.ScreenRound;
 import com.android.sdklib.devices.ButtonType;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.Screen;
@@ -156,6 +157,8 @@ public class HardwareConfigHelper {
             height = mMaxRenderHeight;
         }
 
+        ScreenRound roundness = mDevice.getDefaultHardware().getScreen().getScreenRound();
+
         return new HardwareConfig(
                 width,
                 height,
@@ -164,6 +167,7 @@ public class HardwareConfigHelper {
                 (float) screen.getYdpi(),
                 screen.getSize(),
                 mScreenOrientation,
+                roundness,
                 mDevice.getDefaultHardware().getButtonType() == ButtonType.SOFT);
     }
 
@@ -199,7 +203,7 @@ public class HardwareConfigHelper {
      * Returns a user-displayable description of the given generic device
      * @param device the device to check
      * @return the label
-     * @see #isGeneric(com.android.sdklib.devices.Device)
+     * @see #isGeneric(Device)
      */
     @NonNull
     public static String getGenericLabel(@NonNull Device device) {
@@ -265,13 +269,6 @@ public class HardwareConfigHelper {
      */
     public static boolean isWear(@Nullable Device device) {
         return device != null && device.getId().startsWith(ID_PREFIX_WEAR);
-    }
-
-    /**
-     * Whether the given device has a round screen
-     */
-    public static boolean isRound(@Nullable Device device) {
-        return device != null && ID_PREFIX_WEAR_ROUND.equals(device.getId());
     }
 
     /**
