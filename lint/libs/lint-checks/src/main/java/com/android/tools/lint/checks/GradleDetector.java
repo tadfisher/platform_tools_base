@@ -851,7 +851,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
 
         // Network check for really up to date libraries? Only done in batch mode
         if (context.getScope().size() > 1 && context.isEnabled(REMOTE_VERSION)) {
-            PreciseRevision latest = getLatestVersion(context, dependency, dependency.isPreview());
+            PreciseRevision latest = getLatestVersion(context.getClient(), dependency, dependency.isPreview());
             if (latest != null && isOlderThan(dependency, latest.getMajor(), latest.getMinor(),
                     latest.getMicro())) {
                 version = latest;
@@ -879,12 +879,12 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
     }
 
     /** TODO: Cache these results somewhere! */
-    private static PreciseRevision getLatestVersion(@NonNull Context context,
+    public static PreciseRevision getLatestVersion(@NonNull LintClient client,
             @NonNull GradleCoordinate dependency, boolean allowPreview) {
-        return getLatestVersion(context, dependency, true, allowPreview);
+        return getLatestVersion(client, dependency, true, allowPreview);
     }
 
-    private static PreciseRevision getLatestVersion(@NonNull Context context,
+    private static PreciseRevision getLatestVersion(@NonNull LintClient client,
             @NonNull GradleCoordinate dependency, boolean firstRowOnly, boolean allowPreview) {
         StringBuilder query = new StringBuilder();
         String encoding = UTF_8.name();
@@ -902,7 +902,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         }
         query.append("&wt=json");
 
-        String response = readUrlData(context, dependency, query.toString());
+        String response = readUrlData(client, dependency, query.toString());
         if (response == null) {
             return null;
         }
@@ -963,7 +963,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         if (!allowPreview && foundPreview && firstRowOnly) {
             // Recurse: search more than the first row this time to see if we can find a
             // non-preview version
-            return getLatestVersion(context, dependency, false, false);
+            return getLatestVersion(client, dependency, false, false);
         }
 
         return null;
@@ -976,7 +976,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
 
     @Nullable
     private static String readUrlData(
-            @NonNull Context context,
+            @NonNull LintClient client,
             @NonNull GradleCoordinate dependency,
             @NonNull String query) {
         // For unit testing: avoid network as well as unexpected new versions
@@ -986,7 +986,6 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             return value;
         }
 
-        LintClient client = context.getClient();
         try {
             URL url = new URL(query);
 
