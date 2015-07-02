@@ -179,10 +179,11 @@ abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>> implements 
             if (sourceFile.equals(file)) {
                 return sourceFile;
             } else if (sourceFile.isDirectory()) {
-                String sourcePath = sourceFile.getAbsolutePath() + File.separator;
-                if (file.getAbsolutePath().startsWith(sourcePath)) {
+                String sourcePath = sourceFile.getAbsolutePath();
+                String absolutePath = file.getAbsolutePath();
+                String filePath = absolutePath.substring(0, absolutePath.lastIndexOf(File.separator));
+                if (filePath.equals(sourcePath)) {
                     return sourceFile;
-                }
             }
         }
 
@@ -359,7 +360,7 @@ abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>> implements 
                 if (pathAttr == null) {
                     continue;
                 }
-                
+
                 F dataFile = createFileAndItems(new File(pathAttr.getValue()), fileNode);
 
                 if (dataFile != null) {

@@ -214,6 +214,24 @@ public class ResourceSetTest extends BaseTestCase {
         assertTrue("ResourceSet processing should have failed, but didn't", gotException);
         assertFalse(logger.getErrorMsgs().isEmpty());
     }
+   
+    public void testNestedResourceSet() throws Exception {
+        ResourceSet resourceSet = getBaseResourceSet(false /*normalize*/);
+
+        File tempDir = Files.createTempDir();
+        File dir1 = new File(tempDir, "ab");
+        File dir2 = new File(tempDir, "ab/ab");
+        dir1.mkdirs();
+        dir2.mkdirs();
+        resourceSet.addSource(dir1);
+        resourceSet.addSource(dir2);
+
+        File mainValuesTouched1 = new File(dir1, "values.xml");
+        File mainValuesTouched2 = new File(dir2, "values.xml");
+
+        assertEquals(resourceSet.findMatchingSourceFile(mainValuesTouched1), dir1);
+        assertEquals(resourceSet.findMatchingSourceFile(mainValuesTouched2), dir2);
+    }
 
     static ResourceSet getBaseResourceSet(boolean normalize) throws MergingException, IOException {
         File root = TestUtils.getRoot("resources", "baseSet");
