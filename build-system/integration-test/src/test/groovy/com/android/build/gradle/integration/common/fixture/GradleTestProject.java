@@ -45,12 +45,16 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
+import junit.framework.AssertionFailedError;
+
 import org.gradle.tooling.BuildAction;
 import org.gradle.tooling.BuildActionExecuter;
 import org.gradle.tooling.BuildLauncher;
+import org.gradle.tooling.GradleConnectionException;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.LongRunningOperation;
 import org.gradle.tooling.ProjectConnection;
+import org.gradle.tooling.ResultHandler;
 import org.gradle.tooling.internal.consumer.DefaultGradleConnector;
 import org.gradle.tooling.model.GradleProject;
 import org.gradle.tooling.model.GradleTask;
@@ -585,11 +589,21 @@ public class GradleTestProject implements TestRule {
      * @param tasks Variadic list of tasks to execute.
      */
     public void execute(String ... tasks) {
-        execute(Collections.<String>emptyList(), false, false, tasks);
+        execute(Collections.<String>emptyList(), false, false, ExpectedBuildResult.SUCCESS, tasks);
     }
 
     public void execute(@NonNull List<String> arguments, String ... tasks) {
-        execute(arguments, false, false, tasks);
+        execute(arguments, false, false, ExpectedBuildResult.SUCCESS, tasks);
+    }
+
+    public void executeExpectingFailure(String... tasks) {
+        execute(
+                Collections.singletonList(
+                        "-P" + AndroidProject.PROPERTY_INVOKED_FROM_IDE + "=true"),
+                false /*returnModel*/,
+                false /*emulateStudio_1_0*/,
+                ExpectedBuildResult.FAILURE,
+                tasks);
     }
 
     public void executeConnectedCheck() {
@@ -623,7 +637,8 @@ public class GradleTestProject implements TestRule {
     @NonNull
     public AndroidProject executeAndReturnModel(boolean emulateStudio_1_0, String ... tasks) {
         //noinspection ConstantConditions
-        return execute(Collections.<String>emptyList(), true, emulateStudio_1_0, tasks);
+        return execute(Collections.<String>emptyList(), true, emulateStudio_1_0,
+                ExpectedBuildResult.SUCCESS, tasks);
     }
 
     /**
@@ -652,7 +667,8 @@ public class GradleTestProject implements TestRule {
     public Map<String, AndroidProject> executeAndReturnMultiModel(boolean emulateStudio_1_0, String ... tasks) {
         ProjectConnection connection = getProjectConnection();
         try {
-            executeBuild(Collections.<String>emptyList(), connection, tasks);
+            executeBuild(Collections.<String>emptyList(), connection, tasks,
+                    ExpectedBuildResult.SUCCESS);
 
             return buildModel(connection, new GetAndroidModelAction(), emulateStudio_1_0);
 
@@ -811,6 +827,8 @@ public class GradleTestProject implements TestRule {
      * @param arguments List of arguments for the gradle command.
      * @param returnModel whether the model should be queried and returned.
      * @param emulateStudio_1_0 whether to emulate an older IDE (studio 1.0) querying the model.
+     * @param expectedBuildResult the expected result. If the build status does not match the
+     *                            expected failure, then an exception will be thrown.
      * @param tasks Variadic list of tasks to execute.
      *
      * @return the model, if <var>returnModel</var> was true, null otherwise
@@ -820,10 +838,11 @@ public class GradleTestProject implements TestRule {
             @NonNull List<String> arguments,
             boolean returnModel,
             boolean emulateStudio_1_0,
+            ExpectedBuildResult expectedBuildResult,
             @NonNull String ... tasks) {
         ProjectConnection connection = getProjectConnection();
         try {
-            executeBuild(arguments, connection, tasks);
+            executeBuild(arguments, connection, tasks, expectedBuildResult);
 
             if (returnModel) {
                 Map<String, AndroidProject> modelMap = buildModel(
@@ -844,8 +863,13 @@ public class GradleTestProject implements TestRule {
         return null;
     }
 
-    private void executeBuild(List<String> arguments, ProjectConnection connection,
-            String[] tasks) {
+    private enum ExpectedBuildResult {
+        SUCCESS,
+        FAILURE
+    }
+
+    private void executeBuild(final List<String> arguments, ProjectConnection connection,
+            final String[] tasks, ExpectedBuildResult expectedBuildResult) {
         List<String> args = Lists.newArrayListWithCapacity(3 + arguments.size());
         args.add("-i");
         args.add("-u");
@@ -867,7 +891,27 @@ public class GradleTestProject implements TestRule {
         } else {
             launcher.setStandardError(System.err);
         }
-        launcher.run();
+        if (expectedBuildResult == ExpectedBuildResult.SUCCESS) {
+            launcher.run();
+        } else {
+            launcher.run(new ResultHandler<Void>() {
+                @Override
+                public void onComplete(Void aVoid) {
+                    throw new AssertionFailedError(
+                            String.format(
+                                    "Expecting build to fail:\n" +
+                                            "    Tasks:     %s\n" +
+                                            "    Arguments: %s",
+                                    Joiner.on(' ').join(tasks),
+                                    Joiner.on(' ').join(arguments)));
+                }
+
+                @Override
+                public void onFailure(GradleConnectionException e) {
+                    // Ignore, the test expects this build to fail.
+                }
+            });
+        }
     }
 
     private void setJvmArguments(LongRunningOperation launcher) {
