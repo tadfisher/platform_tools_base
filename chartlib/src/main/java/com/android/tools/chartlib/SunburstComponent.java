@@ -35,7 +35,7 @@ import java.util.Map;
 
 import javax.swing.tree.TreeNode;
 
-public class SunburstComponent extends AnimatedComponent {
+public final class SunburstComponent extends AnimatedComponent {
 
     private static final Color[] COLORS = {
             new Color(0x6baed6),
