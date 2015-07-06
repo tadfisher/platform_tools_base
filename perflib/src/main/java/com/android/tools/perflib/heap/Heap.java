@@ -33,6 +33,9 @@ public class Heap {
     @NonNull
     private final String mName;
 
+    // The total size of reachable objects on this heap.
+    long mSize;
+
     //  List of individual stack frames
     @NonNull
     TLongObjectHashMap<StackFrame> mFrames = new TLongObjectHashMap<StackFrame>();
@@ -73,6 +76,19 @@ public class Heap {
     @NonNull
     public String getName() {
         return mName;
+    }
+
+    // The total size of reachable objects on this heap.
+    public long getSize() {
+      return mSize;
+    }
+
+    public void resetSize() {
+      mSize = 0;
+    }
+
+    public void addSize(int size) {
+      mSize += size;
     }
 
     public final void addStackFrame(@NonNull StackFrame theFrame) {

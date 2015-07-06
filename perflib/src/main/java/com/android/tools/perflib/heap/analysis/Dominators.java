@@ -107,6 +107,7 @@ public class Dominators {
     public void computeRetainedSizes() {
         // Initialize retained sizes for all classes and objects, including unreachable ones.
         for (Heap heap : mSnapshot.getHeaps()) {
+            heap.resetSize();
             for (Instance instance : Iterables.concat(heap.getClasses(), heap.getInstances())) {
                 instance.resetRetainedSize();
             }
@@ -114,7 +115,10 @@ public class Dominators {
         computeDominators();
         // We only update the retained sizes of objects in the dominator tree (i.e. reachable).
         for (Instance node : mSnapshot.getReachableInstances()) {
-            int heapIndex = mSnapshot.getHeapIndex(node.getHeap());
+            Heap heap = node.getHeap();
+            heap.addSize(node.getSize());
+            int heapIndex = mSnapshot.getHeapIndex(heap);
+
             // Add the size of the current node to the retained size of every dominator up to the
             // root, in the same heap.
             for (Instance dom = node.getImmediateDominator(); dom != Snapshot.SENTINEL_ROOT;
