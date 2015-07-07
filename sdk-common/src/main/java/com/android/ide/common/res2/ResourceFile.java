@@ -16,6 +16,7 @@
 
 package com.android.ide.common.res2;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 
 import org.w3c.dom.Document;
@@ -44,7 +45,7 @@ public class ResourceFile extends DataFile<ResourceItem> {
      *
      * The source file is set on the item with {@link ResourceItem#setSource(DataFile)}
      *
-     * The type of the ResourceFile will be {@link FileType#SINGLE}.
+     * The type of the ResourceFile will be {@link FileType#SINGLE_FILE}.
      *
      * @param file the File
      * @param item the resource item
@@ -52,7 +53,7 @@ public class ResourceFile extends DataFile<ResourceItem> {
      */
     public ResourceFile(@NonNull File file, @NonNull ResourceItem item,
             @NonNull String qualifiers) {
-        super(file, FileType.SINGLE);
+        super(file, FileType.SINGLE_FILE);
         mQualifiers = qualifiers;
         init(item);
     }
@@ -62,7 +63,7 @@ public class ResourceFile extends DataFile<ResourceItem> {
      *
      * The source file is set on the items with {@link ResourceItem#setSource(DataFile)}
      *
-     * The type of the ResourceFile will be {@link FileType#MULTI}.
+     * The type of the ResourceFile will be {@link FileType#XML_VALUES}.
      *
      * @param file the File
      * @param items the resource items
@@ -70,10 +71,24 @@ public class ResourceFile extends DataFile<ResourceItem> {
      */
     public ResourceFile(@NonNull File file, @NonNull List<ResourceItem> items,
             @NonNull String qualifiers) {
-        super(file, FileType.MULTI);
+        this(file, items, qualifiers, FileType.XML_VALUES);
+    }
+
+    private ResourceFile(@NonNull File file, @NonNull List<ResourceItem> items,
+            @NonNull String qualifiers, @NonNull FileType fileType) {
+        super(file, fileType);
         mQualifiers = qualifiers;
         init(items);
     }
+
+    public static ResourceFile generatedFiles(
+            @NonNull File file,
+            @NonNull List<ResourceItem> items,
+            @NonNull String qualifiers) {
+        // TODO: Replace other constructors with named methods.
+        return new ResourceFile(file, items, qualifiers, FileType.GENERATED_FILES);
+    }
+
 
     @NonNull
     public String getQualifiers() {
@@ -89,6 +104,10 @@ public class ResourceFile extends DataFile<ResourceItem> {
     void addExtraAttributes(Document document, Node node, String namespaceUri) {
         NodeUtils.addAttribute(document, node, namespaceUri, ATTR_QUALIFIER,
                 getQualifiers());
+
+        if (getType() == FileType.GENERATED_FILES) {
+            NodeUtils.addAttribute(document, node, namespaceUri, SdkConstants.ATTR_PREPROCESSING, "true");
+        }
     }
 
     @Override

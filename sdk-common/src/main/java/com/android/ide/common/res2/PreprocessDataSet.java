@@ -72,15 +72,16 @@ public class PreprocessDataSet extends DataSet<PreprocessDataItem, PreprocessDat
     }
 
     @Override
-    protected PreprocessDataFile createFileAndItems(@NonNull File file, @NonNull Node fileNode) {
+    protected PreprocessDataFile createFileAndItemsFromXml(@NonNull File file,
+            @NonNull Node fileNode) {
         Node name = fileNode.getAttributes().getNamedItem(DataSet.ATTR_NAME);
         if (name != null) {
-            PreprocessDataFile dataFile = new PreprocessDataFile(file, DataFile.FileType.SINGLE);
+            PreprocessDataFile dataFile = new PreprocessDataFile(file, DataFile.FileType.SINGLE_FILE);
             PreprocessDataItem dataItem = new PreprocessDataItem(((Attr) name).getValue(), file);
             dataFile.addItem(dataItem);
             return dataFile;
         } else {
-            PreprocessDataFile dataFile = new PreprocessDataFile(file, DataFile.FileType.SINGLE);
+            PreprocessDataFile dataFile = new PreprocessDataFile(file, DataFile.FileType.SINGLE_FILE);
             NodeList childNodes = fileNode.getChildNodes();
             for (int i = 0; i < childNodes.getLength(); i++) {
                 Node itemNode = childNodes.item(i);
@@ -102,12 +103,12 @@ public class PreprocessDataSet extends DataSet<PreprocessDataItem, PreprocessDat
             throws MergingException {
         if (mResourcesDirectory == ResourcesDirectory.MERGED) {
             String name = FileUtils.relativePath(file, getMergedResDirectory());
-            PreprocessDataFile dataFile = new PreprocessDataFile(file, DataFile.FileType.SINGLE);
+            PreprocessDataFile dataFile = new PreprocessDataFile(file, DataFile.FileType.SINGLE_FILE);
             PreprocessDataItem dataItem = new PreprocessDataItem(name, file);
             dataFile.addItem(dataItem);
             return dataFile;
         } else {
-            PreprocessDataFile dataFile = new PreprocessDataFile(file, DataFile.FileType.MULTI);
+            PreprocessDataFile dataFile = new PreprocessDataFile(file, DataFile.FileType.XML_VALUES);
             for (File generatedFile : mGeneratedFiles.get(file)) {
                 String name = FileUtils.relativePath(generatedFile, getGeneratedResDirectory());
                 dataFile.addItem(new PreprocessDataItem(name, generatedFile));

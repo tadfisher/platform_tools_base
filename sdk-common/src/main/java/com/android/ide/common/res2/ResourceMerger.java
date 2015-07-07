@@ -87,7 +87,7 @@ public class ResourceMerger extends DataMerger<ResourceItem, ResourceFile, Resou
         @Override
         @NonNull
         public FileType getSourceType() {
-            return FileType.MULTI;
+            return FileType.XML_VALUES;
         }
     }
 
@@ -101,8 +101,26 @@ public class ResourceMerger extends DataMerger<ResourceItem, ResourceFile, Resou
 
     @Override
     protected ResourceSet createFromXml(Node node) throws MergingException {
-        ResourceSet set = new ResourceSet("");
-        return (ResourceSet) set.createFromXml(node);
+        String generated = NodeUtils.getAttribute(node, "generated");
+        ResourceSet set;
+        if ("true".equals(generated)) {
+            set = new GeneratedResourceSet("");
+        } else {
+            set = new ResourceSet("");
+        }
+        ResourceSet newResourceSet = (ResourceSet) set.createFromXml(node);
+
+        String generatedSetName = NodeUtils.getAttribute(node, "generated-set");
+        if (generatedSetName != null) {
+            for (ResourceSet resourceSet : getDataSets()) {
+                if (resourceSet.getConfigName().equals(generatedSetName)) {
+                    newResourceSet.setGeneratedSet(resourceSet);
+                    break;
+                }
+            }
+        }
+
+        return newResourceSet;
     }
 
     @Override
@@ -330,5 +348,11 @@ public class ResourceMerger extends DataMerger<ResourceItem, ResourceFile, Resou
         }
 
         return null;
+    }
+
+    @Override
+    public void addDataSet(ResourceSet resourceSet) {
+
+        super.addDataSet(resourceSet);
     }
 }

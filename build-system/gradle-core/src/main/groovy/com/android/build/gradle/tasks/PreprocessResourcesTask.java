@@ -173,7 +173,8 @@ public class PreprocessResourcesTask extends IncrementalTask {
             PreprocessDataSet mergedSet,
             PreprocessDataSet generatedSet,
             SetMultimap<File, File> generatedFiles) throws IOException, MergingException {
-        VectorDrawableRenderer renderer = new VectorDrawableRenderer(getILogger());
+        // TODO: fix?
+        VectorDrawableRenderer renderer = null;
 
         if (renderer.needsPreprocessing(resourceFile)) {
             Collection<File> newFiles = renderer.createPngFiles(

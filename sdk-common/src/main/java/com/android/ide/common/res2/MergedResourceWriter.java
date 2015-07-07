@@ -25,6 +25,7 @@ import static com.android.SdkConstants.RES_QUALIFIER_SEP;
 import static com.android.SdkConstants.TAG_EAT_COMMENT;
 import static com.android.SdkConstants.TAG_RESOURCES;
 import static com.android.utils.SdkUtils.createPathComment;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -63,6 +64,9 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
     @NonNull
     private final PngCruncher mCruncher;
 
+    @NonNull
+    private final ResourcePreprocessor mPreprocessor;
+
     /**
      * If non-null, points to a File that we should write public.txt to
      */
@@ -94,13 +98,15 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
             @NonNull PngCruncher pngRunner,
             boolean crunchPng,
             boolean process9Patch,
-            @Nullable File publicFile) {
+            @Nullable File publicFile,
+            @NonNull ResourcePreprocessor preprocessor) {
         super(rootFolder);
         mCruncher = pngRunner;
         mCruncherKey = mCruncher.start();
         mCrunchPng = crunchPng;
         mProcess9Patch = process9Patch;
         mPublicFile = publicFile;
+        mPreprocessor = preprocessor;
     }
 
     /**
@@ -131,8 +137,10 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
 
     @Override
     public void end() throws ConsumerException {
+        // Make sure all PNGs are generated first.
         super.end();
         try {
+            // Wait for all PNGs to be crunched.
             mCruncher.end(mCruncherKey);
         } catch (InterruptedException e) {
             throw new ConsumerException(e);
@@ -150,23 +158,23 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
 
     @Override
     public void addItem(@NonNull final ResourceItem item) throws ConsumerException {
-        ResourceFile.FileType type = item.getSourceType();
+        checkState(item.getSource() != null);
+        final ResourceFile.FileType type = item.getSourceType();
 
-        if (type == ResourceFile.FileType.MULTI) {
+        if (type == ResourceFile.FileType.XML_VALUES) {
             // this is a resource for the values files
 
             // just add the node to write to the map based on the qualifier.
             // We'll figure out later if the files needs to be written or (not)
             mValuesResMap.put(item.getQualifiers(), item);
         } else {
-            // This is a single value file.
-            // Only write it if the state is TOUCHED.
+            // This is a single value file or a set of generated files. Only write it if the state
+            // is TOUCHED.
             if (item.isTouched()) {
                 getExecutor().execute(new Callable<Void>() {
                     @Override
                     public Void call() throws Exception {
-                        ResourceFile resourceFile = item.getSource();
-                        File file = resourceFile.getFile();
+                        File file = item.getFile();
 
                         String filename = file.getName();
                         String folderName = getFolderName(item);
@@ -178,6 +186,10 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                         }
 
                         File outFile = new File(typeFolder, filename);
+
+                        if (type == DataFile.FileType.GENERATED_FILES) {
+                            mPreprocessor.generateFile(file, item.getSource().getFile());
+                        }
 
                         try {
                             if (item.getType() == ResourceType.RAW) {
@@ -221,14 +233,14 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
 
         if (removedType == replacedType) {
             // if the type is multi, then we make sure to flag the qualifier as deleted.
-            if (removedType == ResourceFile.FileType.MULTI) {
+            if (removedType == ResourceFile.FileType.XML_VALUES) {
                 mQualifierWithDeletedValues.add(
                         removedItem.getQualifiers());
             } else {
                 // both are single type resources, so we actually don't delete the previous
                 // file as the new one will replace it instead.
             }
-        } else if (removedType == ResourceFile.FileType.SINGLE) {
+        } else if (removedType == ResourceFile.FileType.SINGLE_FILE) {
             // removed type is single.
             // The case of both single type is above, so here either, there is no replacement
             // or the replacement is multi. We always need to remove the old file.
@@ -379,7 +391,7 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
      */
     private boolean removeOutFile(ResourceItem resourceItem) {
         ResourceFile resourceFile = resourceItem.getSource();
-        if (resourceFile.getType() == ResourceFile.FileType.MULTI) {
+        if (resourceFile.getType() == ResourceFile.FileType.XML_VALUES) {
             throw new IllegalArgumentException("SourceFile cannot be a FileType.MULTI");
         }
 
@@ -419,7 +431,7 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
     private static String getFolderName(ResourceItem resourceItem) {
         ResourceType itemType = resourceItem.getType();
         String folderName = itemType.getName();
-        String qualifiers = resourceItem.getSource().getQualifiers();
+        String qualifiers = resourceItem.getQualifiers();
         if (!qualifiers.isEmpty()) {
             folderName = folderName + RES_QUALIFIER_SEP + qualifiers;
         }
