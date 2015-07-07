@@ -16,11 +16,11 @@
 
 package com.android.build.gradle.internal.scope;
 
+import static com.android.builder.core.BuilderConstants.FD_REPORTS;
 import static com.android.builder.model.AndroidProject.FD_GENERATED;
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 import static com.android.builder.model.AndroidProject.PROPERTY_APK_LOCATION;
-import static com.android.builder.core.BuilderConstants.FD_REPORTS;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.AndroidConfig;
