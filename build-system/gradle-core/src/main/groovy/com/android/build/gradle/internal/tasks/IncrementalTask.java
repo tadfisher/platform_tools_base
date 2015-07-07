@@ -45,6 +45,13 @@ public abstract class IncrementalTask extends BaseTask {
     }
 
     /**
+     * File that some tasks keep for testing - it's present only if the last build was incremental.
+     */
+    protected File getIncrementalMarker() {
+        return new File(getIncrementalFolder(), "build_was_incremental");
+    }
+
+    /**
      * Whether this task can support incremental update.
      *
      * @return whether this task can support incremental update.
