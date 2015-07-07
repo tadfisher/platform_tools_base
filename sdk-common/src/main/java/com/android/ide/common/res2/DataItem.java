@@ -18,8 +18,11 @@ package com.android.ide.common.res2;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
+
+import java.io.File;
 
 /**
  * Base item.
@@ -77,6 +80,10 @@ abstract class DataItem<F extends DataFile> {
      */
     public void setSource(F sourceFile) {
         mSource = sourceFile;
+    }
+
+    public File getFile() {
+        return getSource().getFile();
     }
 
     /**

@@ -675,6 +675,4 @@ public class ResourceItem extends DataItem<ResourceFile>
     Node getAdoptedNode(Document document) {
         return NodeUtils.adoptNode(document, mValue);
     }
-
-
 }
