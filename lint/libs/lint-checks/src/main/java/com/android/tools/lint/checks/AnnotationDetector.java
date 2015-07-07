@@ -20,11 +20,15 @@ import static com.android.SdkConstants.ATTR_VALUE;
 import static com.android.SdkConstants.FQCN_SUPPRESS_LINT;
 import static com.android.SdkConstants.INT_DEF_ANNOTATION;
 import static com.android.SdkConstants.SUPPRESS_LINT;
+import static com.android.SdkConstants.TYPE_DEF_FLAG_ATTRIBUTE;
+import static com.android.tools.lint.detector.api.JavaContext.findSurroundingClass;
 import static com.android.tools.lint.detector.api.JavaContext.getParentOfType;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.JavaParser.ResolvedAnnotation;
+import com.android.tools.lint.client.api.JavaParser.ResolvedField;
 import com.android.tools.lint.client.api.JavaParser.ResolvedNode;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
@@ -51,9 +55,11 @@ import lombok.ast.AnnotationValue;
 import lombok.ast.ArrayInitializer;
 import lombok.ast.AstVisitor;
 import lombok.ast.Block;
+import lombok.ast.ClassDeclaration;
 import lombok.ast.ConstructorDeclaration;
 import lombok.ast.Expression;
 import lombok.ast.ForwardingAstVisitor;
+import lombok.ast.IntegralLiteral;
 import lombok.ast.MethodDeclaration;
 import lombok.ast.Modifiers;
 import lombok.ast.Node;
@@ -61,8 +67,11 @@ import lombok.ast.Select;
 import lombok.ast.StrictListAccessor;
 import lombok.ast.StringLiteral;
 import lombok.ast.TypeBody;
+import lombok.ast.TypeMember;
+import lombok.ast.VariableDeclaration;
 import lombok.ast.VariableDefinition;
 import lombok.ast.VariableDefinitionEntry;
+import lombok.ast.VariableReference;
 
 /**
  * Checks annotations to make sure they are valid
@@ -110,6 +119,20 @@ public class AnnotationDetector extends Detector implements Detector.JavaScanner
             Category.CORRECTNESS,
             3,
             Severity.ERROR,
+            IMPLEMENTATION);
+
+    /** Flags should typically be specified as bit shifts */
+    public static final Issue FLAG_STYLE = Issue.create(
+            "ShiftFlags", //$NON-NLS-1$
+            "Dangerous Flag Constant Declaration",
+
+            "When defining multiple constants for use in flags, the recommended style is " +
+            "to use the form `1 << 2`, `1 << 3`, `1 << 4` and so on to ensure that the " +
+            "constants are unique and non-overlapping.",
+
+            Category.CORRECTNESS,
+            3,
+            Severity.WARNING,
             IMPLEMENTATION);
 
     /** Constructs a new {@link AnnotationDetector} check */
@@ -218,8 +241,15 @@ public class AnnotationDetector extends Detector implements Detector.JavaScanner
                         break;
                     }
                 }
-                if (constants != null && constants.size() != allowedValues.length) {
-                    constants = null;
+                if (constants != null) {
+                    if (constants.size() != allowedValues.length) {
+                        constants = null;
+                    } else {
+                        boolean flag = annotation.getValue(TYPE_DEF_FLAG_ATTRIBUTE) == Boolean.TRUE;
+                        if (flag) {
+                            ensureUsingFlagStyle(constants);
+                        }
+                    }
                 }
 
                 for (int index = 0; index < allowedValues.length; index++) {
@@ -259,6 +289,69 @@ public class AnnotationDetector extends Detector implements Detector.JavaScanner
                             break;
                         }
                         valueToIndex.put(number, index);
+                    }
+                }
+            }
+        }
+
+        @Nullable
+        private VariableDefinitionEntry findDeclaration(@NonNull VariableReference reference) {
+            ResolvedNode resolved = mContext.resolve(reference);
+            if (!(resolved instanceof ResolvedField)) {
+                return null;
+            }
+            ClassDeclaration cls = findSurroundingClass(reference);
+            if (cls == null) {
+                return null;
+            }
+            String name = reference.astIdentifier().astValue();
+            for (TypeMember member : cls.astBody().astMembers()) {
+                if (member instanceof VariableDeclaration) {
+                    VariableDeclaration declaration = (VariableDeclaration)member;
+                    VariableDefinitionEntry field = declaration.astDefinition().astVariables()
+                            .first();
+                    if (field.astName().astValue().equals(name)) {
+                        return field;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        private void ensureUsingFlagStyle(@NonNull List<Node> constants) {
+            if (constants.size() < 3) {
+                return;
+            }
+
+            for (Node constant : constants) {
+                if (constant instanceof VariableReference) {
+                    VariableDefinitionEntry d = findDeclaration((VariableReference)constant);
+                    if (d == null) {
+                        continue;
+                    }
+                    Expression declaration = d.astInitializer();
+                    if (declaration == null) {
+                        continue;
+                    }
+                    if (declaration instanceof IntegralLiteral) {
+                        IntegralLiteral literal = (IntegralLiteral) declaration;
+                        // Allow -1, 0 and 1. You can write 1 as "1 << 0" but IntelliJ for
+                        // example warns that that's a redundant shift.
+                        long value = literal.astLongValue();
+                        if (Math.abs(value) <= 1) {
+                            continue;
+                        }
+                        // Only warn if we're setting a specific bit
+                        if (Long.bitCount(value) != 1) {
+                            continue;
+                        }
+                        int shift = Long.numberOfTrailingZeros(value);
+                        String message = String.format(
+                                "Consider declaring this constant using 1 << %1$d instead",
+                                shift);
+                        mContext.report(FLAG_STYLE, declaration, mContext.getLocation(declaration),
+                                message);
                     }
                 }
             }
