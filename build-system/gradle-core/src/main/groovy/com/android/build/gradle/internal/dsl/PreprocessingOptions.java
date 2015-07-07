@@ -29,17 +29,17 @@ import java.util.Set;
  */
 public class PreprocessingOptions {
     private EnumSet<Density> densities;
-    private boolean preprocessResources;
+    private boolean enabled;
 
     public PreprocessingOptions() {
-        // TODO: Enable by default?
-        this.preprocessResources = false;
+        this.enabled = true;
 
-        this.densities = EnumSet.of(
-                Density.MEDIUM,
-                Density.HIGH,
-                Density.XHIGH,
-                Density.XXHIGH);
+        this.densities = EnumSet.noneOf(Density.class);
+        for (Density density : Density.values()) {
+            if (density.isRecommended()) {
+                this.densities.add(density);
+            }
+        }
     }
 
     /**
@@ -49,12 +49,12 @@ public class PreprocessingOptions {
      * resource tree: one with a merged view of resources for a given variant and one with the
      * preprocessed files, ready to be packaged. This may slow down your clean builds.
      */
-    public boolean getPreprocessResources() {
-        return preprocessResources;
+    public boolean getEnabled() {
+        return enabled;
     }
 
-    public void setPreprocessResources(boolean preprocessResources) {
-        this.preprocessResources = preprocessResources;
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 
     /**
