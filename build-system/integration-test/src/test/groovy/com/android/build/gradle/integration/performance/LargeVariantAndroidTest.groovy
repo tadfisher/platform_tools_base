@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.performance
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.fixture.app.VariantBuildScriptGenerator
+import com.google.common.collect.ImmutableList
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.ClassRule
@@ -65,6 +66,6 @@ class LargeVariantAndroidTest {
 
     @Test
     void performanceTest() {
-        project.execute("help")
+        project.execute(ImmutableList.of("-PRECORD_BUCKET_NAME=LargeVariantAndroid"), "help")
     }
 }
