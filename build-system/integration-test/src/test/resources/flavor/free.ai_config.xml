@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ga_trackingId">UA-123456789</string>
+    <string name="ai_ios_target_application">222222222222-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.apps.googleusercontent.com</string>
+    <string name="ai_android_target_application">333333333333-cccccccccccccccccccccccccccccccc.apps.googleusercontent.com</string>
+</resources>

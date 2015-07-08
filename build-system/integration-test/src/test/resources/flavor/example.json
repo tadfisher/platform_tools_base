@@ -15,6 +15,7 @@
   },
 
   "oauth_client": [{
+    "client_id": "333333333333-cccccccccccccccccccccccccccccccc.apps.googleusercontent.com",
     "client_type": 1,
     "android_info": {
       "package_name": "com.example.app.free",
@@ -40,7 +41,15 @@
       "status": 2
     },
     "appinvite_service": {
-      "status": 2
+      "status": 2,
+      "other_platform_oauth_client": [{
+        "client_id": "222222222222-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.apps.googleusercontent.com",
+        "client_type": 2,
+        "ios_info": {
+          "bundle_id": "com.example.app.free",
+          "app_store_id": "appidfree"
+        }
+      }]
     },
     "google_signin_service": {
       "status": 2
@@ -57,6 +66,7 @@
   },
 
   "oauth_client": [{
+    "client_id": "666666666666-ffffffffffffffffffffffffffffffff.apps.googleusercontent.com",
     "client_type": 1,
     "android_info": {
       "package_name": "com.example.app.paid",
@@ -74,7 +84,15 @@
       "status": 2
     },
     "appinvite_service": {
-      "status": 2
+      "status": 2,
+      "other_platform_oauth_client": [{
+        "client_id": "111111111111-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.apps.googleusercontent.com",
+        "client_type": 2,
+        "ios_info": {
+          "bundle_id": "com.example.app.paid",
+          "app_store_id": "appidpaid"
+        }
+      }]
     },
     "google_signin_service": {
       "status": 2

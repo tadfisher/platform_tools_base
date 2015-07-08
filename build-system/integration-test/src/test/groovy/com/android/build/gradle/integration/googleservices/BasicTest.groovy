@@ -105,6 +105,17 @@ android {
     }
 
     @Test
+    public void "test appinvite res file is generated"() {
+        File xmlFolder = new File(generatedResFolder, "xml")
+        File ai_config = new File(xmlFolder, "ai_config.xml")
+        Assert.assertTrue(ai_config.isFile())
+
+        File goldenFile = new File(resDataFolder, "ai_config.xml")
+        Truth.assert_().that(Files.toString(ai_config, Charsets.UTF_8).trim())
+                .isEqualTo(Files.toString(goldenFile, Charsets.UTF_8).trim())
+    }
+
+    @Test
     public void "test generated res folder is in model"() {
         Variant debugVariant = ModelHelper.getVariant(model.getVariants(), "debug");
         Collection<File> generatedResFolders = debugVariant.getMainArtifact().getGeneratedResourceFolders()

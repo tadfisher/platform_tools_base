@@ -127,6 +127,22 @@ android {
     }
 
     @Test
+    public void "test appinvite res file is generated"() {
+        checkAppinviteConfig(generatedFreeResFolder, "free.ai_config.xml")
+        checkAppinviteConfig(generatedPaidResFolder, "paid.ai_config.xml")
+    }
+
+    private static void checkAppinviteConfig(File generatedResFolder, String goldenFileName) {
+        File xmlFolder = new File(generatedResFolder, "xml")
+        File ai_config = new File(xmlFolder, "ai_config.xml")
+        Assert.assertTrue(ai_config.isFile())
+
+        File goldenFile = new File(resDataFolder, goldenFileName)
+        Truth.assert_().that(Files.toString(ai_config, Charsets.UTF_8).trim())
+                .isEqualTo(Files.toString(goldenFile, Charsets.UTF_8).trim())
+    }
+
+    @Test
     public void "test generated res folder is in model"() {
         checkModel("freeDebug", generatedFreeResFolder)
         checkModel("paidDebug", generatedPaidResFolder)

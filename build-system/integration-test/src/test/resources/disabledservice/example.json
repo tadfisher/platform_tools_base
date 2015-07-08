@@ -40,7 +40,15 @@
       "status": 2
     },
     "appinvite_service": {
-      "status": 2
+      "status": 1,
+      "other_platform_oauth_client": [{
+        "client_id": "222222222222-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.apps.googleusercontent.com",
+        "client_type": 2,
+        "ios_info": {
+          "bundle_id": "com.example.app.free",
+          "app_store_id": "appidfree"
+        }
+      }]
     },
     "google_signin_service": {
       "status": 2
@@ -79,7 +87,15 @@
       "status": 2
     },
     "appinvite_service": {
-      "status": 2
+      "status": 1,
+      "other_platform_oauth_client": [{
+        "client_id": "111111111111-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.apps.googleusercontent.com",
+        "client_type": 2,
+        "ios_info": {
+          "bundle_id": "com.example.app.paid",
+          "app_store_id": "appidpaid"
+        }
+      }]
     },
     "google_signin_service": {
       "status": 2

@@ -34,6 +34,8 @@ import org.gradle.api.tasks.TaskAction;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -43,6 +45,17 @@ public class GoogleServicesTask extends DefaultTask {
 
     private static final String STATUS_DISABLED = "1";
     private static final String STATUS_ENABLED = "2";
+
+    private static final String XML_HEADER =
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<resources>\n";
+    private static final String XML_FOOTER = "</resources>\n";
+
+    private static final String OAUTH_CLIENT_TYPE_ANDROID = "1";
+    private static final String OAUTH_CLIENT_TYPE_IOS = "2";
+
+    private static final String APPINVITE_ANDROID_TARGET_APPLICATION =
+            "ai_android_target_application";
+    private static final String APPINVITE_IOS_TARGET_APPLICATION = "ai_ios_target_application";
 
     /**
      * The input is not technically optional but we want to control the error message.
@@ -90,6 +103,7 @@ public class GoogleServicesTask extends DefaultTask {
         if (clientObject != null) {
             handleAnalytics(clientObject, resValues);
             handleAdsService(clientObject, resValues);
+            handleAppinviteService(clientObject, resValues);
         } else {
             getLogger().warn("No matching client found for package name '" + packageName + "'");
         }
@@ -153,7 +167,7 @@ public class GoogleServicesTask extends DefaultTask {
     }
 
     /**
-     * Handle a client object for analytics (@xml/global_tracker)
+     * Handle a client object for Ads Service
      * @param clientObject the client Json object.
      * @throws IOException
      */
@@ -164,6 +178,87 @@ public class GoogleServicesTask extends DefaultTask {
 
         findStringByName(adsService, "test_banner_ad_unit_id", resValues);
         findStringByName(adsService, "test_interstitial_ad_unit_id", resValues);
+    }
+
+    private void addAndroidOauthClientForAppinviteService(
+            JsonObject clientObject, Map<String, String> resValues) {
+        JsonArray oauthClientArray = clientObject.getAsJsonArray("oauth_client");
+        if (oauthClientArray == null || oauthClientArray.size() == 0) {
+            return;
+        }
+
+        final int count = oauthClientArray.size();
+
+        for (int i = 0; i < count; i++) {
+            JsonElement oauthClientElement = oauthClientArray.get(i);
+            if (oauthClientElement == null || !oauthClientElement.isJsonObject()) {
+                continue;
+            }
+
+            JsonObject oauthClientObject = oauthClientElement.getAsJsonObject();
+
+            JsonPrimitive clientId = oauthClientObject.getAsJsonPrimitive("client_id");
+            if (clientId == null) continue;
+
+            resValues.put(APPINVITE_ANDROID_TARGET_APPLICATION, clientId.getAsString());
+            return;
+        }
+    }
+
+    private void handleAppinviteService(JsonObject clientObject, Map<String, String> resValues)
+            throws IOException {
+        JsonObject appinviteService = getServiceByName(clientObject, "appinvite_service");
+        if (appinviteService == null) return;
+
+        addAndroidOauthClientForAppinviteService(clientObject, resValues);
+
+        JsonArray otherPlatformOauthClientArray =
+                appinviteService.getAsJsonArray("other_platform_oauth_client");
+
+        if (otherPlatformOauthClientArray == null || otherPlatformOauthClientArray.size() == 0) {
+            getLogger().warn(
+                    "Appinvite Service is enabled but no other platform oauth client is found.");
+        } else {
+            final int count = otherPlatformOauthClientArray.size();
+
+            for (int i = 0; i < count; i++) {
+                JsonElement otherPlatformOauthClientElement = otherPlatformOauthClientArray.get(i);
+
+                if (otherPlatformOauthClientElement == null ||
+                        !otherPlatformOauthClientElement.isJsonObject()) continue;
+
+                JsonObject otherPlatformOauthClientObject = otherPlatformOauthClientElement
+                        .getAsJsonObject();
+
+                JsonPrimitive clientType =
+                        otherPlatformOauthClientObject.getAsJsonPrimitive("client_type");
+                if (clientType == null) continue;
+                String clientTypeStr = clientType.getAsString();
+
+                JsonPrimitive clientId = otherPlatformOauthClientObject
+                        .getAsJsonPrimitive("client_id");
+                if (clientId == null) continue;
+                String clientIdStr = clientId.getAsString();
+
+                String key = null;
+                if (OAUTH_CLIENT_TYPE_IOS.equals(clientTypeStr)) {
+                    key = APPINVITE_IOS_TARGET_APPLICATION;
+                } else {
+                    continue;
+                }
+
+                resValues.put(key, clientIdStr);
+            }
+        }
+
+        File xml = new File(intermediateDir, "xml");
+        if (!xml.exists() && !xml.mkdirs()) {
+            throw new GradleException("Failed to create folder: " + xml);
+        }
+
+        Files.write(getAppinviteContent(resValues),
+                new File(xml, "ai_config.xml"),
+                Charsets.UTF_8);
     }
 
     private static void findStringByName(JsonObject jsonObject, String stringName,
@@ -240,27 +335,43 @@ public class GoogleServicesTask extends DefaultTask {
         return service;
     }
 
+    private static String getStringEntry(String name, String value) {
+        return "    <string name=\"" + name + "\">" + value + "</string>\n";
+    }
 
     private static String getGlobalTrackerContent(String ga_trackingId) {
-        return "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                "<resources>\n" +
-                "    <string name=\"ga_trackingId\">" + ga_trackingId + "</string>\n" +
-                "</resources>\n";
+        return XML_HEADER + getStringEntry("ga_trackingId", ga_trackingId) + XML_FOOTER;
     }
 
     private static String getValuesContent(Map<String, String> entries) {
         StringBuilder sb = new StringBuilder(256);
 
-        sb.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                "<resources>\n");
+        sb.append(XML_HEADER);
 
         for (Map.Entry<String, String> entry : entries.entrySet()) {
-            sb.append("    <string name=\"").append(entry.getKey()).append("\">")
-                    .append(entry.getValue()).append("</string>\n");
+            sb.append(getStringEntry(entry.getKey(), entry.getValue()));
         }
 
-        sb.append("</resources>\n");
+        sb.append(XML_FOOTER);
 
+        return sb.toString();
+    }
+
+    private static String getAppinviteContent(Map<String, String> entries) {
+        StringBuilder sb = new StringBuilder(256);
+
+        sb.append(XML_HEADER);
+
+        List<String> keys = Arrays.asList("ga_trackingId",
+                APPINVITE_IOS_TARGET_APPLICATION, APPINVITE_ANDROID_TARGET_APPLICATION);
+
+        for (String key : keys) {
+            if (entries.containsKey(key)) {
+                sb.append(getStringEntry(key, entries.get(key)));
+            }
+        }
+
+        sb.append(XML_FOOTER);
         return sb.toString();
     }
 
