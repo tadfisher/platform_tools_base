@@ -64,6 +64,9 @@ public class NdkOptionsHelper {
         if (other.getStl() != null) {
             base.setStl(other.getStl());
         }
+        if (other.getIsDebuggable() != null) {
+            base.setIsDebuggable(other.getIsDebuggable());
+        }
         if (other.getRenderscriptNdkMode() != null) {
             base.setRenderscriptNdkMode(other.getRenderscriptNdkMode());
         }

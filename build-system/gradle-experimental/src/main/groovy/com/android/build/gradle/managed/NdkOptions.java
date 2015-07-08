@@ -87,6 +87,12 @@ public interface NdkOptions {
     String getStl();
     void setStl(@NonNull String stl);
 
+    /**
+     * Returns whether the resulting shared object is debuggable.
+     */
+    Boolean getIsDebuggable();
+    void setIsDebuggable(Boolean isDebuggable);
+
     Boolean getRenderscriptNdkMode();
     void setRenderscriptNdkMode(Boolean renderscriptNdkMode);
 }
