@@ -87,6 +87,14 @@ public interface NdkOptions {
     String getStl();
     void setStl(@NonNull String stl);
 
+    /**
+     * Returns whether the build type is configured to generate an apk with debuggable native code.
+     *
+     * @return true if the apk is debuggable
+     */
+    Boolean getIsDebuggable();
+    void setIsDebuggable(Boolean isDebuggable);
+
     Boolean getRenderscriptNdkMode();
     void setRenderscriptNdkMode(Boolean renderscriptNdkMode);
 }
