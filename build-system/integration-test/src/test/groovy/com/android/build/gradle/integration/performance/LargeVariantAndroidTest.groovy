@@ -68,6 +68,7 @@ class LargeVariantAndroidTest {
 
     @Test
     void performanceTest() {
-        project.executeWithBenchmark("LargeVariantAndroid", EVALUATION, "help")
+//        project.executeWithBenchmark("LargeVariantAndroid", EVALUATION, "assembleRelease")
+        project.executeWithBenchmark("LargeVariantAndroid", EVALUATION, "assembleDebug")
     }
 }
