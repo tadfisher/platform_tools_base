@@ -36,8 +36,9 @@ public class Screen {
     private Multitouch mMultitouch;
     private TouchScreen mMechanism;
     private ScreenType mScreenType;
+    private int mChin;
     @Nullable
-     private ScreenRound mScreenRound;
+    private ScreenRound mScreenRound;
 
     public ScreenSize getSize() {
         return mScreenSize;
@@ -136,6 +137,14 @@ public class Screen {
         mScreenRound = screenRound;
     }
 
+    public int getChin() {
+        return mChin;
+    }
+
+    public void setChin(int chin) {
+        mChin = chin;
+    }
+
     /**
      * Returns a copy of the object that shares no state with it,
      * but is initialized to equivalent values.
@@ -156,6 +165,7 @@ public class Screen {
         s.mMechanism = mMechanism;
         s.mScreenType = mScreenType;
         s.mScreenRound = mScreenRound;
+        s.mChin = mChin;
         return s;
     }
 
