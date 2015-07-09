@@ -833,15 +833,15 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         String versionName = mMergedFlavor.getVersionName();
         String versionSuffix = mBuildType.getVersionNameSuffix();
 
-        if (versionSuffix != null && !versionSuffix.isEmpty()) {
-            if (versionName == null) {
-                if (!mType.isForTesting()) {
-                    versionName = getVersionNameFromManifest();
-                } else {
-                    versionName = "";
-                }
+        if (versionName == null) {
+            if (!mType.isForTesting()) {
+                versionName = getVersionNameFromManifest();
+            } else {
+                versionName = "";
             }
+        }
 
+        if (versionSuffix != null && !versionSuffix.isEmpty()) {
             versionName = versionName + versionSuffix;
         }
 
