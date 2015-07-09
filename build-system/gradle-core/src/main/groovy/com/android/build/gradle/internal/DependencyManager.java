@@ -215,6 +215,7 @@ public class DependencyManager {
             prepareLibraryTask.setDescription("Prepare " + library.getName());
             prepareLibraryTask.setBundle(library.getBundle());
             prepareLibraryTask.setExplodedDir(library.getBundleFolder());
+            prepareLibraryTask.setVariantName("");
 
             prepareTaskMap.put(key, prepareLibraryTask);
         }
