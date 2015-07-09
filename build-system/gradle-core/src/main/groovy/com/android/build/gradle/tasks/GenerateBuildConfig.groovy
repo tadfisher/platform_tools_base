@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 package com.android.build.gradle.tasks
-
 import com.android.annotations.NonNull
 import com.android.build.gradle.internal.scope.ConventionMappingHelper
 import com.android.build.gradle.internal.scope.TaskConfigAction
@@ -25,6 +24,7 @@ import com.android.build.gradle.internal.variant.BaseVariantOutputData
 import com.android.builder.compiling.BuildConfigGenerator
 import com.android.builder.core.VariantConfiguration
 import com.android.builder.model.ClassField
+import com.google.common.base.Strings
 import com.google.common.collect.Lists
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
@@ -99,11 +99,6 @@ public class GenerateBuildConfig extends BaseTask {
                 getSourceOutputDir(),
                 getBuildConfigPackageName());
 
-        String vn = getVersionName()
-        if (vn == null) {
-            vn = ""
-        }
-
         // Hack (see IDEA-100046): We want to avoid reporting "condition is always true"
         // from the data flow inspection, so use a non-constant value. However, that defeats
         // the purpose of this flag (when not in debug mode, if (BuildConfig.DEBUG && ...) will
@@ -117,7 +112,7 @@ public class GenerateBuildConfig extends BaseTask {
                 .addField("String", "BUILD_TYPE", "\"${getBuildTypeName()}\"")
                 .addField("String", "FLAVOR", "\"${getFlavorName()}\"")
                 .addField("int", "VERSION_CODE", Integer.toString(getVersionCode()))
-                .addField("String", "VERSION_NAME", "\"${vn}\"")
+                .addField("String", "VERSION_NAME", "\"${Strings.nullToEmpty(getVersionName())}\"")
                 .addItems(getItems())
 
         List<String> flavors = getFlavorNamesWithDimensionNames()
