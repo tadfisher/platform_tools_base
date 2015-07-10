@@ -144,6 +144,12 @@ public class NdkConfiguration {
             binary.getLinker().args("-L" + sysroot + "/usr/lib/rs");
         }
 
+        StlNativeToolSpecification stlConfig = new StlNativeToolSpecification(
+                ndkHandler,
+                ndkConfig.getStl(),
+                binary.getTargetPlatform());
+        stlConfig.apply(binary);
+
         NativeToolSpecificationFactory.create(
                 ndkHandler,
                 binary.getBuildType(),
@@ -165,12 +171,6 @@ public class NdkConfiguration {
         for (String ldLib : ndkConfig.getLdLibs()) {
             binary.getLinker().args("-l" + ldLib);
         }
-
-        StlNativeToolSpecification stlConfig = new StlNativeToolSpecification(
-                ndkHandler,
-                ndkConfig.getStl(),
-                binary.getTargetPlatform());
-        stlConfig.apply(binary);
     }
 
     public static void createTasks(ModelMap<Task> tasks, SharedLibraryBinarySpec binary,
