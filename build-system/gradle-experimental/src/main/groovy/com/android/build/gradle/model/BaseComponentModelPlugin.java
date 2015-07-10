@@ -44,6 +44,7 @@ import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.managed.AndroidConfig;
 import com.android.build.gradle.managed.BuildType;
 import com.android.build.gradle.managed.ClassField;
+import com.android.build.gradle.managed.DataBindingOptions;
 import com.android.build.gradle.managed.NdkConfig;
 import com.android.build.gradle.managed.NdkOptions;
 import com.android.build.gradle.managed.ProductFlavor;
@@ -97,6 +98,8 @@ import org.gradle.model.internal.registry.ModelRegistry;
 import org.gradle.platform.base.BinaryContainer;
 import org.gradle.platform.base.ComponentSpecContainer;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
+
+import android.databinding.tool.DataBindingBuilder;
 
 import java.io.File;
 import java.io.IOException;
@@ -225,12 +228,23 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
             NdkOptionsHelper.merge(defaultNdkConfig, pluginNdkConfig);
         }
 
+        @Model
+        public void configureDefaultDataBindingOptions(DataBindingOptions dataBindingOptions) {
+            dataBindingOptions.setEnabled(false);
+            dataBindingOptions.setAddDefaultAdapters(false);
+        }
+
        // TODO: Remove code duplicated from BasePlugin.
         @Model(EXTRA_MODEL_INFO)
         public ExtraModelInfo createExtraModelInfo(
                 Project project,
                 @NonNull @Path("isApplication") Boolean isApplication) {
             return new ExtraModelInfo(project, isApplication);
+        }
+
+        @Model
+        public DataBindingBuilder createDataBindingBuilder() {
+            return new DataBindingBuilder();
         }
 
         @Model
@@ -409,6 +423,8 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
             return new AndroidConfigAdaptor(androidExtension, AndroidConfigHelper
                     .createSourceSetsContainer(project, instantiator, !isApplication));
         }
+
+
 
         @Mutate
         public void createAndroidComponents(

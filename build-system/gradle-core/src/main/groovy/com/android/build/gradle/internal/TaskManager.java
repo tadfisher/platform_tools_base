@@ -73,6 +73,9 @@ import com.android.build.gradle.internal.tasks.SigningReportTask;
 import com.android.build.gradle.internal.tasks.SourceSetsTask;
 import com.android.build.gradle.internal.tasks.TestServerTask;
 import com.android.build.gradle.internal.tasks.UninstallTask;
+import com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuildInfoTask;
+import com.android.build.gradle.internal.tasks.databinding.DataBindingExportLayoutInfoTask;
+import com.android.build.gradle.internal.tasks.databinding.DataBindingProcessLayoutsTask;
 import com.android.build.gradle.internal.tasks.multidex.CreateMainDexList;
 import com.android.build.gradle.internal.tasks.multidex.CreateManifestKeepList;
 import com.android.build.gradle.internal.tasks.multidex.JarMergingTask;
@@ -140,6 +143,7 @@ import com.google.common.collect.Sets;
 
 import org.gradle.api.Action;
 import org.gradle.api.GradleException;
+import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
@@ -162,6 +166,8 @@ import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.api.tasks.testing.TestTaskReports;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
+
+import android.databinding.tool.DataBindingBuilder;
 
 import java.io.File;
 import java.io.IOException;
@@ -196,6 +202,8 @@ public abstract class TaskManager {
     protected Project project;
 
     protected AndroidBuilder androidBuilder;
+
+    protected DataBindingBuilder dataBindingBuilder;
 
     private DependencyManager dependencyManager;
 
@@ -239,12 +247,14 @@ public abstract class TaskManager {
     public TaskManager(
             Project project,
             AndroidBuilder androidBuilder,
+            DataBindingBuilder dataBindingBuilder,
             AndroidConfig extension,
             SdkHandler sdkHandler,
             DependencyManager dependencyManager,
             ToolingModelBuilderRegistry toolingRegistry) {
         this.project = project;
         this.androidBuilder = androidBuilder;
+        this.dataBindingBuilder = dataBindingBuilder;
         this.sdkHandler = sdkHandler;
         this.extension = extension;
         this.toolingRegistry = toolingRegistry;
@@ -266,6 +276,10 @@ public abstract class TaskManager {
 
     private boolean isDebugLog() {
         return project.getLogger().isEnabled(LogLevel.DEBUG);
+    }
+
+    public DataBindingBuilder getDataBindingBuilder() {
+        return dataBindingBuilder;
     }
 
     /**
@@ -1224,6 +1238,9 @@ public abstract class TaskManager {
         });
 
         createConnectedTestForVariant(tasks, variantScope);
+        if (extension.getDataBinding().isEnabled()) {
+            createDataBindingTasks(tasks, variantScope);
+        }
     }
 
     // TODO - should compile src/lint/java from src/lint/java and jar it into build/lint/lint.jar
@@ -2011,6 +2028,31 @@ public abstract class TaskManager {
                 scope.getVariantData().getVariantDependency().getCompileConfiguration()
                         .getBuildDependencies());
 
+    }
+
+    protected void createDataBindingTasks(@NonNull TaskFactory tasks, @NonNull VariantScope scope) {
+        dataBindingBuilder.setDebugLogEnabled(getLogger().isDebugEnabled());
+        AndroidTask<DataBindingProcessLayoutsTask> processLayoutsTask = androidTasks
+                .create(tasks, new DataBindingProcessLayoutsTask.ConfigAction(scope));
+        scope.getGenerateRClassTask().dependsOn(tasks, processLayoutsTask);
+        processLayoutsTask.dependsOn(tasks, scope.getMergeResourcesTask());
+
+        AndroidTask<DataBindingExportLayoutInfoTask> exportLayoutInfoTask = androidTasks
+                .create(tasks, new DataBindingExportLayoutInfoTask.ConfigAction(scope));
+        exportLayoutInfoTask.dependsOn(tasks, scope.getGenerateRClassTask());
+
+        AndroidTask<DataBindingExportBuildInfoTask> exportBuildInfo = androidTasks
+                .create(tasks, new DataBindingExportBuildInfoTask.ConfigAction(scope,
+                        dataBindingBuilder.getPrintMachineReadableOutput()));
+        exportBuildInfo.dependsOn(tasks, exportLayoutInfoTask);
+
+        if (scope.getVariantConfiguration().getUseJack()) {
+            throw new InvalidUserDataException("In this version, data binding cannot be used with "
+                    + "Jack.");
+        }
+        AndroidTask<JavaCompile> javaCompilerTask = scope.getJavacTask();
+        javaCompilerTask.dependsOn(tasks, exportBuildInfo);
+        javaCompilerTask.dependsOn(tasks, exportLayoutInfoTask);
     }
 
     /**
