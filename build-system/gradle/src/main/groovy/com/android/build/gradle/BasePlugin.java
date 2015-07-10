@@ -54,18 +54,23 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.internal.compiler.JackConversionCache;
 import com.android.builder.internal.compiler.PreDexCache;
+import com.android.builder.model.DataBindingOptions;
 import com.android.builder.profile.ExecutionType;
 import com.android.builder.profile.ProcessRecorderFactory;
 import com.android.builder.profile.Recorder;
 import com.android.builder.profile.ThreadRecorder;
 import com.android.builder.sdk.TargetInfo;
 import com.android.ide.common.blame.output.BlameAwareLoggedProcessOutputHandler;
+import com.android.ide.common.blame.output.GradleMessageRewriter;
 import com.android.ide.common.internal.ExecutorSingleton;
 import com.android.utils.ILogger;
+import com.google.common.base.Objects;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import android.databinding.tool.DataBindingBuilder;
+import com.android.SdkConstants;
 
 import org.gradle.BuildListener;
 import org.gradle.BuildResult;
@@ -132,6 +137,8 @@ public abstract class BasePlugin {
     private NdkHandler ndkHandler;
 
     protected AndroidBuilder androidBuilder;
+
+    protected DataBindingBuilder dataBindingBuilder;
 
     protected Instantiator instantiator;
 
@@ -240,6 +247,7 @@ public abstract class BasePlugin {
     protected abstract TaskManager createTaskManager(
             Project project,
             AndroidBuilder androidBuilder,
+            DataBindingBuilder dataBindingBuilder,
             AndroidConfig extension,
             SdkHandler sdkHandler,
             DependencyManager dependencyManager,
@@ -335,7 +343,10 @@ public abstract class BasePlugin {
                 extraModelInfo,
                 getLogger(),
                 isVerbose());
-
+        dataBindingBuilder = new DataBindingBuilder();
+        dataBindingBuilder.setPrintMachineReadableOutput(
+                GradleMessageRewriter.ErrorFormatMode.MACHINE_PARSABLE.equals(
+                        extraModelInfo.getErrorFormatMode()));
         project.getPlugins().apply(JavaBasePlugin.class);
 
         jacocoPlugin = project.getPlugins().apply(JacocoPlugin.class);
@@ -436,6 +447,7 @@ public abstract class BasePlugin {
         taskManager = createTaskManager(
                 project,
                 androidBuilder,
+                dataBindingBuilder,
                 extension,
                 sdkHandler,
                 dependencyManager,
@@ -617,7 +629,7 @@ public abstract class BasePlugin {
                 }
             });
         }
-
+        addDataBindingDependenciesIfNecessary(extension);
         taskManager.createMockableJarTask();
         ThreadRecorder.get().record(ExecutionType.VARIANT_MANAGER_CREATE_ANDROID_TASKS,
                 new Recorder.Block<Void>() {
@@ -632,6 +644,23 @@ public abstract class BasePlugin {
                         return null;
                     }
                 }, new Recorder.Property("project", project.getName()));
+    }
+
+    private void addDataBindingDependenciesIfNecessary(BaseExtension baseExtension) {
+        DataBindingOptions options = baseExtension.getDataBinding();
+        if (!options.isEnabled()) {
+            return;
+        }
+        String version = Objects.firstNonNull(options.getVersion(),
+                dataBindingBuilder.getDefaultVersion());
+        project.getDependencies().add("compile", SdkConstants.DATA_BINDING_LIB_ARTIFACT + ":"
+                + version);
+        project.getDependencies().add("provided",
+                SdkConstants.DATA_BINDING_ANNOTATION_PROCESSOR_ARTIFACT + ":" + version);
+        if (options.getAddDefaultAdapters()) {
+            project.getDependencies()
+                    .add("compile", SdkConstants.DATA_BINDING_ADAPTER_LIB_ARTIFACT + ":" + version);
+        }
     }
 
     private boolean isVerbose() {
