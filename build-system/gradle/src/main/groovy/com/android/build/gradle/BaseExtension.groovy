@@ -32,6 +32,7 @@ import com.android.build.gradle.internal.dsl.AdbOptions
 import com.android.build.gradle.internal.dsl.AndroidSourceSetFactory
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.CoreProductFlavor
+import com.android.build.gradle.internal.dsl.DataBindingOptions
 import com.android.build.gradle.internal.dsl.DexOptions
 import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.dsl.PackagingOptions
@@ -104,6 +105,9 @@ public abstract class BaseExtension implements AndroidConfig {
 
     /** JaCoCo options. */
     final JacocoExtension jacoco
+
+    /** Data Binding options */
+    final DataBindingOptions dataBindingOptions
 
     /**
      * APK splits options.
@@ -187,6 +191,7 @@ public abstract class BaseExtension implements AndroidConfig {
         jacoco = instantiator.newInstance(JacocoExtension)
         adbOptions = instantiator.newInstance(AdbOptions)
         splits = instantiator.newInstance(Splits, instantiator)
+        dataBindingOptions = instantiator.newInstance(DataBindingOptions)
 
         sourceSetsContainer = project.container(AndroidSourceSet,
                 new AndroidSourceSetFactory(instantiator, project, isLibrary))
@@ -442,6 +447,14 @@ public abstract class BaseExtension implements AndroidConfig {
     void adbOptions(Action<AdbOptions> action) {
         checkWritability()
         action.execute(adbOptions)
+    }
+
+    /**
+     * Configures data binding options
+     */
+    void dataBinding(Action<DataBindingOptions> action) {
+        checkWritability()
+        action.execute(dataBindingOptions)
     }
 
     /**

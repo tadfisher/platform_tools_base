@@ -58,8 +58,11 @@ import org.gradle.api.tasks.bundling.Jar;
 import org.gradle.api.tasks.compile.AbstractCompile;
 import org.gradle.api.tasks.compile.JavaCompile;
 
+import android.databinding.tool.LayoutXmlProcessor;
+
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -70,6 +73,8 @@ import java.util.Set;
  * Base data about a variant.
  */
 public abstract class BaseVariantData<T extends BaseVariantOutputData> {
+
+
 
     public enum SplitHandlingPolicy {
         /**
@@ -145,11 +150,16 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
     private List<File> extraGeneratedSourceFolders;
     private List<File> extraGeneratedResFolders;
 
+    private List<String> excludeClassListForDataBinding;
+
     private final List<T> outputs = Lists.newArrayListWithExpectedSize(4);
 
     private Set<String> densityFilters;
     private Set<String> languageFilters;
     private Set<String> abiFilters;
+
+    @Nullable
+    private LayoutXmlProcessor layoutXmlProcessor;
 
     /**
      * If true, variant outputs will be considered signed. Only set if you manually set the outputs
@@ -188,9 +198,35 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
         taskManager.configureScopeForNdk(scope);
     }
 
+    @Nullable
+    public LayoutXmlProcessor getLayoutXmlProcessor() {
+        if (layoutXmlProcessor == null) {
+            layoutXmlProcessor = new LayoutXmlProcessor(
+                    getVariantConfiguration().getOriginalApplicationId(),
+                    Arrays.asList(mergeResourcesTask.getOutputDir()),
+                    taskManager.getDataBindingBuilder()
+                            .createJavaFileWriter(scope.getClassOutputForDataBinding()),
+                    getVariantConfiguration().getMinSdkVersion().getApiLevel(),
+                    this instanceof LibraryVariantData
+            )
+        }
+        return layoutXmlProcessor;
+    }
 
     public SplitHandlingPolicy getSplitHandlingPolicy() {
         return mSplitHandlingPolicy;
+    }
+
+    /**
+     * classes to be excluded from packaging
+     * @param excludePatters
+     */
+    public void setExcludeListForDataBinding(List<String> excludePatters) {
+        excludeClassListForDataBinding = excludePatters;
+    }
+
+    public List<String> getExcludeClassListForDataBinding() {
+        return excludeClassListForDataBinding;
     }
 
     @NonNull
