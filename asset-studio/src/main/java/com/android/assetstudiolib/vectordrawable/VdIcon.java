@@ -16,8 +16,11 @@
 
 package com.android.assetstudiolib.vectordrawable;
 
+import com.android.assetstudiolib.Util;
+
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.net.URL;
 
 public class VdIcon implements Icon, Comparable<VdIcon> {
@@ -51,8 +54,20 @@ public class VdIcon implements Icon, Comparable<VdIcon> {
 
     @Override
     public void paintIcon(Component c, Graphics g, int x, int y) {
-        // We will always fill the whole component.
-        mVdTree.draw(g, c.getWidth(), c.getHeight());
+        // We knew all the icons are square shape.
+        int minSize = Math.min(c.getWidth(), c.getHeight());
+
+        final BufferedImage image = Util.newArgbBufferedImage(minSize, minSize);
+        mVdTree.drawIntoImage(image);
+
+        //myIcon.paintIcon(this, gg, 0, 0);
+        /*if (mDrawBoundary) {
+            g.draw3DRect(0, 0, getWidth() - 1, getHeight() - 1, false);
+            // g.draw3DRect(0, 0, image.getWidth(), image.getHeight(), false);
+        }
+        // g.drawImage(image, 0, 0, getWidth(), getHeight(), 0, 0, image.getWidth(), image.getHeight(), this);*/
+        Rectangle rect = new Rectangle(0, 0, c.getWidth(), c.getHeight());
+        Util.drawCenterInside((Graphics2D)g, image, rect);
     }
 
     @Override

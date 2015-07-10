@@ -359,6 +359,58 @@ public class Util {
         }
     }
 
+  /**
+   * Draws the given {@link BufferedImage} to the canvas, centered, wholly contained within the
+   * bounds defined by the destination rectangle, and with preserved aspect ratio.
+   *
+   * @param g       The destination canvas.
+   * @param source  The source image.
+   * @param dstRect The destination rectangle in the destination canvas into which to draw the
+   *                image.
+   */
+  public static void drawCenterInsideWithBound(Graphics2D g, BufferedImage source, Rectangle dstRect) {
+    final int srcWidth = source.getWidth();
+    final int srcHeight = source.getHeight();
+    if (srcWidth * 1.0 / srcHeight > dstRect.width * 1.0 / dstRect.height) {
+      final int scaledWidth = Math.max(1, dstRect.width);
+      final int scaledHeight = Math.max(1, dstRect.width * srcHeight / srcWidth);
+      Image scaledImage = scaledImage(source, scaledWidth, scaledHeight);
+      g.setColor(Color.GREEN);
+      g.drawRect(dstRect.x,
+                 dstRect.y + (dstRect.height - scaledHeight) / 2,
+                 dstRect.width,
+                 scaledHeight);
+      g.drawImage(scaledImage,
+                  dstRect.x,
+                  dstRect.y + (dstRect.height - scaledHeight) / 2,
+                  dstRect.x + dstRect.width,
+                  dstRect.y + (dstRect.height - scaledHeight) / 2 + scaledHeight,
+                  0,
+                  0,
+                  0 + scaledWidth,
+                  0 + scaledHeight,
+                  null);
+    } else {
+      final int scaledWidth = Math.max(1, dstRect.height * srcWidth / srcHeight);
+      final int scaledHeight = Math.max(1, dstRect.height);
+      Image scaledImage = scaledImage(source, scaledWidth, scaledHeight);
+      g.setColor(Color.cyan);
+      g.drawRect(dstRect.x + (dstRect.width - scaledWidth) / 2,
+                 dstRect.y,
+                 scaledWidth,
+                 dstRect.height);
+      g.drawImage(scaledImage,
+                  dstRect.x + (dstRect.width - scaledWidth) / 2,
+                  dstRect.y,
+                  dstRect.x + (dstRect.width - scaledWidth) / 2 + scaledWidth,
+                  dstRect.y + dstRect.height,
+                  0,
+                  0,
+                  0 + scaledWidth,
+                  0 + scaledHeight,
+                  null);
+    }
+  }
     /**
      * Draws the given {@link BufferedImage} to the canvas, centered and cropped to fill the
      * bounds defined by the destination rectangle, and with preserved aspect ratio.
