@@ -1,0 +1,28 @@
+import com.android.build.gradle.internal.dsl.DataBindingOptions
+
+apply from: "../commonHeader.gradle"
+buildscript { apply from: "../commonBuildScript.gradle", to: buildscript }
+apply plugin: 'com.android.application'
+
+apply from: "../commonLocalRepo.gradle"
+
+buildscript {
+    dependencies {
+        repositories {
+            jcenter()
+        }
+    }
+}
+
+dependencies {
+    repositories {
+        jcenter()
+    }
+}
+android {
+    compileSdkVersion 22
+    buildToolsVersion = rootProject.buildToolsVersion
+    dataBinding {
+        enabled
+    }
+}
