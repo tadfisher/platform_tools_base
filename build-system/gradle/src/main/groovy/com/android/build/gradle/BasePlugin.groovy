@@ -16,6 +16,8 @@
 
 package com.android.build.gradle
 
+import android.databinding.tool.DataBindingBuilder
+import com.android.SdkConstants
 import com.android.annotations.Nullable
 import com.android.annotations.VisibleForTesting
 import com.android.build.gradle.internal.ApiObjectFactory
@@ -60,6 +62,7 @@ import com.android.ide.common.blame.output.BlameAwareLoggedProcessOutputHandler
 import com.android.ide.common.internal.ExecutorSingleton
 import com.android.utils.ILogger
 import com.google.common.base.CharMatcher
+import com.google.common.base.Objects
 import com.google.common.collect.Lists
 import groovy.transform.CompileStatic
 import org.gradle.api.GradleException
@@ -113,6 +116,8 @@ public abstract class BasePlugin {
     private NdkHandler ndkHandler
 
     protected AndroidBuilder androidBuilder
+
+    protected DataBindingBuilder dataBindingBuilder;
 
     protected Instantiator instantiator
 
@@ -212,6 +217,7 @@ public abstract class BasePlugin {
     protected abstract TaskManager createTaskManager(
             Project project,
             AndroidBuilder androidBuilder,
+            DataBindingBuilder dataBindingBuilder,
             AndroidConfig extension,
             SdkHandler sdkHandler,
             DependencyManager dependencyManager,
@@ -290,6 +296,7 @@ public abstract class BasePlugin {
                 extraModelInfo,
                 logger,
                 verbose)
+        dataBindingBuilder = new DataBindingBuilder();
 
         project.apply plugin: JavaBasePlugin
 
@@ -358,6 +365,7 @@ public abstract class BasePlugin {
         taskManager = createTaskManager(
                 project,
                 androidBuilder,
+                dataBindingBuilder,
                 extension,
                 sdkHandler,
                 dependencyManager,
@@ -492,7 +500,7 @@ public abstract class BasePlugin {
                 repo.url = file.toURI()
             }
         }
-
+        addDataBindingDependenciesIfNecessary(extension);
         taskManager.createMockableJarTask()
         SpanRecorders.record(project, ExecutionType.VARIANT_MANAGER_CREATE_ANDROID_TASKS) {
             variantManager.createAndroidTasks()
@@ -501,6 +509,23 @@ public abstract class BasePlugin {
             for (BaseVariantData variantData : variantManager.getVariantDataList())  {
                 apiObjectFactory.create(variantData)
             }
+        }
+    }
+
+    private addDataBindingDependenciesIfNecessary(BaseExtension baseExtension) {
+        def options = baseExtension.getDataBindingOptions();
+        if (!options.enabled) {
+            return
+        }
+        String version = Objects.firstNonNull(options.version,
+                dataBindingBuilder.getDefaultVersion());
+        project.getDependencies().add("compile", SdkConstants.DATA_BINDING_LIB_ARTIFACT + ":"
+                + version);
+        project.getDependencies().add("provided",
+                SdkConstants.DATA_BINDING_ANNOTATION_PROCESSOR_ARTIFACT + ":" + version);
+        if (options.addDefaultAdapters) {
+            project.getDependencies()
+                    .add("compile", SdkConstants.DATA_BINDING_ADAPTER_LIB_ARTIFACT + ":" + version);
         }
     }
 

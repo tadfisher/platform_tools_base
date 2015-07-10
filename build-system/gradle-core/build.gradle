@@ -20,6 +20,7 @@ dependencies {
     compile project(':base:builder')
     compile project(':base:lint')
     compile "net.sf.proguard:proguard-gradle:${project.ext.proguardVersion}"
+    compile "com.android.databinding:compilerCommon:1.0-rc1-SNAPSHOT"
 
     // Add gradleApi to classpath for compilation, but use provided configuration so that groovy is
     // not exposed as a runtime dependency.
