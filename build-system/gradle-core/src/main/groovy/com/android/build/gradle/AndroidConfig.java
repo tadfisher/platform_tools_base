@@ -32,6 +32,7 @@ import com.android.build.gradle.internal.dsl.PreprocessingOptions;
 import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.dsl.TestOptions;
 import com.android.builder.core.LibraryRequest;
+import com.android.builder.model.DataBindingOptions;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
@@ -135,4 +136,6 @@ public interface AndroidConfig {
     Boolean getPackageBuildConfig();
 
     Collection<LibraryRequest> getLibraryRequests();
+
+    DataBindingOptions getDataBindingOptions();
 }

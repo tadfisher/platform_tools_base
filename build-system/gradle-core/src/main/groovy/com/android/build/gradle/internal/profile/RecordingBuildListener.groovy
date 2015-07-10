@@ -86,7 +86,9 @@ class RecordingBuildListener implements TaskExecutionListener {
             if (variantName != null) {
                 properties.add(new Recorder.Property("variant", variantName))
             } else {
-                throw new IllegalStateException("Task with type " + task.getClass().getName() + " does not include a variantName");
+                // TODO REMOVE before submit
+                properties.add(new Recorder.Property("variant", ""))
+//                throw new IllegalStateException("Task with type " + task.getClass().getName() + " does not include a variantName");
             }
         }
 

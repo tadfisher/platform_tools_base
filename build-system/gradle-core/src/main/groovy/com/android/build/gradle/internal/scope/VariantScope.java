@@ -22,7 +22,6 @@ import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.coverage.JacocoInstrumentTask;
@@ -30,6 +29,8 @@ import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.MergeJavaResourcesTask;
 import com.android.build.gradle.internal.tasks.FileSupplier;
 import com.android.build.gradle.internal.tasks.PrepareDependenciesTask;
+import com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuildInfoTask;
+import com.android.build.gradle.internal.tasks.databinding.DataBindingProcessLayoutsTask;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
@@ -112,6 +113,7 @@ public class VariantScope {
     @Nullable
     private AndroidTask jacocoIntrumentTask;
 
+
     /**
      * Anchor task for post-processing the merged resources to backport some features to earlier
      * API versions, e.g. generate PNGs from vector drawables (vector drawables were added in 21).
@@ -123,6 +125,11 @@ public class VariantScope {
     private AndroidTask<MergeJavaResourcesTask> mergeJavaResourcesTask;
     private JavaResourcesProvider javaResourcesProvider;
     private AndroidTask<NdkCompile> ndkCompileTask;
+
+    @Nullable
+    private AndroidTask<DataBindingExportBuildInfoTask> dataBindingExportInfoTask;
+    @Nullable
+    private AndroidTask<DataBindingProcessLayoutsTask> dataBindingProcessLayoutsTask;
 
     /** @see BaseVariantData#javaCompilerTask */
     @Nullable
@@ -182,6 +189,26 @@ public class VariantScope {
 
     public void setNdkBuildable(@NonNull Collection<Object> ndkBuildable) {
         this.ndkBuildable = ndkBuildable;
+    }
+
+    @Nullable
+    public AndroidTask<DataBindingExportBuildInfoTask> getDataBindingExportInfoTask() {
+        return dataBindingExportInfoTask;
+    }
+
+    public void setDataBindingExportInfoTask(
+            @Nullable AndroidTask<DataBindingExportBuildInfoTask> dataBindingExportInfoTask) {
+        this.dataBindingExportInfoTask = dataBindingExportInfoTask;
+    }
+
+    @Nullable
+    public AndroidTask<DataBindingProcessLayoutsTask> getDataBindingProcessLayoutsTask() {
+        return dataBindingProcessLayoutsTask;
+    }
+
+    public void setDataBindingProcessLayoutsTask(
+            @Nullable AndroidTask<DataBindingProcessLayoutsTask> dataBindingProcessLayoutsTask) {
+        this.dataBindingProcessLayoutsTask = dataBindingProcessLayoutsTask;
     }
 
     @Nullable
@@ -457,6 +484,23 @@ public class VariantScope {
     public File getJackClassesZip() {
         return new File(globalScope.getIntermediatesDir(),
                 "packaged/" + getVariantConfiguration().getDirName() + "/classes.zip");
+    }
+
+    @NonNull
+    public File getClassOutputForDataBinding() {
+        return new File(globalScope.getIntermediatesDir(),
+                "dataBindingInfo/" + getVariantConfiguration().getDirName());
+    }
+
+    @NonNull
+    public File getLayoutInfoOutputForDataBinding() {
+        return new File(globalScope.getBuildDir() + "/layout-info/" +
+                getVariantConfiguration().getDirName());
+    }
+
+    @NonNull
+    public File getGeneratedClassListOutputFileForDataBinding() {
+        return new File(getLayoutInfoOutputForDataBinding(), "_generated.txt");
     }
 
     @NonNull
