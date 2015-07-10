@@ -72,6 +72,9 @@ import com.android.build.gradle.internal.tasks.SigningReportTask;
 import com.android.build.gradle.internal.tasks.SourceSetsTask;
 import com.android.build.gradle.internal.tasks.TestServerTask;
 import com.android.build.gradle.internal.tasks.UninstallTask;
+import com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuildInfoTask;
+import com.android.build.gradle.internal.tasks.databinding.DataBindingExportLayoutInfoTask;
+import com.android.build.gradle.internal.tasks.databinding.DataBindingProcessLayoutsTask;
 import com.android.build.gradle.internal.tasks.multidex.CreateMainDexList;
 import com.android.build.gradle.internal.tasks.multidex.CreateManifestKeepList;
 import com.android.build.gradle.internal.tasks.multidex.JarMergingTask;
@@ -162,6 +165,8 @@ import org.gradle.api.tasks.testing.Test;
 import org.gradle.api.tasks.testing.TestTaskReports;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
+import android.databinding.tool.DataBindingBuilder;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -200,6 +205,8 @@ public abstract class TaskManager {
     protected Project project;
 
     protected AndroidBuilder androidBuilder;
+
+    protected DataBindingBuilder dataBindingBuilder;
 
     private DependencyManager dependencyManager;
 
@@ -243,12 +250,14 @@ public abstract class TaskManager {
     public TaskManager(
             Project project,
             AndroidBuilder androidBuilder,
+            DataBindingBuilder dataBindingBuilder,
             AndroidConfig extension,
             SdkHandler sdkHandler,
             DependencyManager dependencyManager,
             ToolingModelBuilderRegistry toolingRegistry) {
         this.project = project;
         this.androidBuilder = androidBuilder;
+        this.dataBindingBuilder = dataBindingBuilder;
         this.sdkHandler = sdkHandler;
         this.extension = extension;
         this.toolingRegistry = toolingRegistry;
@@ -270,6 +279,10 @@ public abstract class TaskManager {
 
     private boolean isDebugLog() {
         return project.getLogger().isEnabled(LogLevel.DEBUG);
+    }
+
+    public DataBindingBuilder getDataBindingBuilder() {
+        return dataBindingBuilder;
     }
 
     /**
@@ -2007,6 +2020,34 @@ public abstract class TaskManager {
                 scope.getVariantData().getVariantDependency().getCompileConfiguration()
                         .getBuildDependencies());
 
+    }
+
+    protected void createDataBindingTasks(@NonNull TaskFactory tasks, @NonNull VariantScope scope) {
+        AndroidTask<DataBindingProcessLayoutsTask> processLayoutsTask = androidTasks
+                .create(tasks, new DataBindingProcessLayoutsTask.ConfigAction(scope));
+        scope.getGenerateRClassTask().dependsOn(tasks, processLayoutsTask);
+        processLayoutsTask.dependsOn(tasks, scope.getMergeResourcesTask());
+
+        AndroidTask<DataBindingExportLayoutInfoTask> exportLayoutInfoTask = androidTasks
+                .create(tasks, new DataBindingExportLayoutInfoTask.ConfigAction(scope));
+        exportLayoutInfoTask.dependsOn(tasks, scope.getGenerateRClassTask());
+
+        AndroidTask<DataBindingExportBuildInfoTask> exportBuildInfo = androidTasks
+                .create(tasks, new DataBindingExportBuildInfoTask.ConfigAction(scope,
+                        dataBindingBuilder.getPrintMachineReadableOutput()));
+        exportBuildInfo.dependsOn(tasks, scope.getGenerateRClassTask());
+
+        AndroidTask<? extends AbstractCompile> javaCompilerTask = scope.getJavaCompilerTask();
+        AndroidTask<JavaCompile> javacTask = scope.getJavacTask();
+
+        if (javaCompilerTask != null) {
+            javaCompilerTask.dependsOn(tasks, exportBuildInfo);
+            javaCompilerTask.dependsOn(tasks, exportLayoutInfoTask);
+        }
+        if (javacTask != null) {
+            javacTask.dependsOn(tasks, exportBuildInfo);
+            javacTask.dependsOn(tasks, exportLayoutInfoTask);
+        }
     }
 
     /**
