@@ -47,9 +47,9 @@ import com.android.build.gradle.model.AndroidComponentModelSourceSet;
 import com.android.build.gradle.managed.AndroidConfig;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.LibraryRequest;
+import com.android.builder.model.DataBindingOptions;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
-import com.android.ide.common.rendering.api.ActionBarCallback;
 import com.android.sdklib.repository.FullRevision;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
@@ -66,8 +66,6 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-
-import groovy.lang.Closure;
 
 /**
  * An adaptor to convert a managed.AndroidConfig to an model.AndroidConfig.
@@ -258,6 +256,11 @@ public class AndroidConfigAdaptor implements com.android.build.gradle.AndroidCon
     @Override
     public Splits getSplits() {
         return model.getSplits();
+    }
+
+    @Override
+    public DataBindingOptions getDataBinding() {
+        return new DataBindingOptionsAdapter(model.getDataBinding());
     }
 
     @Override
