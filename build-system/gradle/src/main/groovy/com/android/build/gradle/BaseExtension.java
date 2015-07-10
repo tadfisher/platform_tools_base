@@ -33,6 +33,7 @@ import com.android.build.gradle.internal.dsl.AndroidSourceSetFactory;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
+import com.android.build.gradle.internal.dsl.DataBindingOptions;
 import com.android.build.gradle.internal.dsl.DexOptions;
 import com.android.build.gradle.internal.dsl.LintOptions;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
@@ -157,6 +158,9 @@ public abstract class BaseExtension implements AndroidConfig {
 
     private boolean isWritable = true;
 
+    /** Data Binding options */
+    final DataBindingOptions dataBindingOptions;
+
     /**
      * The source sets container.
      */
@@ -196,6 +200,7 @@ public abstract class BaseExtension implements AndroidConfig {
         jacoco = instantiator.newInstance(JacocoExtension.class);
         adbOptions = instantiator.newInstance(AdbOptions.class);
         splits = instantiator.newInstance(Splits.class, instantiator);
+        dataBindingOptions = instantiator.newInstance(DataBindingOptions.class);
 
         sourceSetsContainer = project.container(AndroidSourceSet.class,
                 new AndroidSourceSetFactory(instantiator, project, isLibrary));
@@ -467,6 +472,14 @@ public abstract class BaseExtension implements AndroidConfig {
         action.execute(splits);
     }
 
+    /**
+     * Configures data binding options
+     */
+    void dataBinding(Action<DataBindingOptions> action) {
+        checkWritability();
+        action.execute(dataBindingOptions);
+    }
+
     public void deviceProvider(DeviceProvider deviceProvider) {
         checkWritability();
         deviceProviderList.add(deviceProvider);
@@ -481,6 +494,11 @@ public abstract class BaseExtension implements AndroidConfig {
     public void testServer(TestServer testServer) {
         checkWritability();
         testServerList.add(testServer);
+    }
+
+    @Override
+    public DataBindingOptions getDataBindingOptions() {
+        return dataBindingOptions;
     }
 
     @Override
