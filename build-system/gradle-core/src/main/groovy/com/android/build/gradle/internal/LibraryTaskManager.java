@@ -53,20 +53,27 @@ import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.FileTreeElement;
 import org.gradle.api.plugins.BasePlugin;
+import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.bundling.Jar;
 import org.gradle.api.tasks.bundling.Zip;
 import org.gradle.api.tasks.compile.JavaCompile;
+import org.gradle.api.tasks.util.PatternSet;
 import org.gradle.tooling.BuildException;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
+
+import android.databinding.tool.DataBindingBuilder;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
+
+import groovy.lang.Closure;
 
 /**
  * TaskManager for creating tasks in an Android library project.
@@ -80,11 +87,13 @@ public class LibraryTaskManager extends TaskManager {
     public LibraryTaskManager (
             Project project,
             AndroidBuilder androidBuilder,
+            DataBindingBuilder dataBindingBuilder,
             AndroidConfig extension,
             SdkHandler sdkHandler,
             DependencyManager dependencyManager,
             ToolingModelBuilderRegistry toolingRegistry) {
-        super(project, androidBuilder, extension, sdkHandler, dependencyManager, toolingRegistry);
+        super(project, androidBuilder, dataBindingBuilder, extension, sdkHandler, dependencyManager,
+                toolingRegistry);
     }
 
     @Override
@@ -417,7 +426,7 @@ public class LibraryTaskManager extends TaskManager {
                                     Collections.singletonList(packageLocalJar));
 
                             // jar the classes.
-                            Jar jar = project.getTasks().create(
+                            final Jar jar = project.getTasks().create(
                                     variantScope.getTaskName("package", "Jar"), Jar.class);
                             jar.dependsOn(variantScope.getMergeJavaResourcesTask().getName());
 
@@ -447,11 +456,37 @@ public class LibraryTaskManager extends TaskManager {
                                 jar.exclude(packageName + "/Manifest$*.class");
                                 jar.exclude(packageName + "/BuildConfig.class");
                             }
+                            if (extension.getDataBindingOptions().isEnabled()) {
+                                jar.exclude(new Spec<FileTreeElement>() {
+                                    Spec spec;
+                                    public Spec getSpec() {
 
+                                        if (spec == null) {
+                                            PatternSet patternSet = new PatternSet();
+                                            List<String> list = dataBindingBuilder.getClassListToExclude(
+                                                    variantData.getLayoutXmlProcessor(),
+                                                    variantConfig.getPackageFromManifest(),
+                                                    true, variantScope
+                                                            .getGeneratedClassListOutputFileForDataBinding());
+                                            for (String ex : list) {
+                                                patternSet.exclude(ex);
+                                            }
+                                            spec = patternSet.getAsExcludeSpec();
+                                        }
+
+                                        return spec;
+                                    }
+                                    @Override
+                                    public boolean isSatisfiedBy(FileTreeElement fileTreeElement) {
+                                        return getSpec().isSatisfiedBy(fileTreeElement);
+                                    }
+                                });
+                            }
                             if (libVariantData.generateAnnotationsTask != null) {
                                 // In case extract annotations strips out private typedef annotation classes
                                 jar.dependsOn(libVariantData.generateAnnotationsTask);
                             }
+
                             return null;
                         }
                     });
@@ -564,6 +599,10 @@ public class LibraryTaskManager extends TaskManager {
                         return null;
                     }
                 });
+
+        if (extension.getDataBindingOptions().isEnabled()) {
+            createDataBindingTasks(tasks, variantScope);
+        }
     }
 
     public ExtractAnnotations createExtractAnnotations(

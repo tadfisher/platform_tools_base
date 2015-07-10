@@ -28,6 +28,15 @@
     <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../../../prebuilts/tools/common/m2/repository/com/android/databinding/compilerCommon/1.0-rc2-SNAPSHOT/compilerCommon-1.0-rc2-20150716.180332-1.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library" exported="">
+      <library>
+        <CLASSES>
           <root url="jar://$MODULE_DIR$/../../../../prebuilts/tools/common/m2/repository/net/sf/proguard/proguard-base/4.11/proguard-base-4.11.jar!/" />
         </CLASSES>
         <JAVADOC />
