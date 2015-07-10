@@ -44,12 +44,14 @@ import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.managed.AndroidConfig;
 import com.android.build.gradle.managed.BuildType;
 import com.android.build.gradle.managed.ClassField;
+import com.android.build.gradle.managed.DataBindingOptions;
 import com.android.build.gradle.managed.NdkConfig;
 import com.android.build.gradle.managed.NdkOptions;
 import com.android.build.gradle.managed.ProductFlavor;
 import com.android.build.gradle.managed.SigningConfig;
 import com.android.build.gradle.managed.adaptor.AndroidConfigAdaptor;
 import com.android.build.gradle.managed.adaptor.BuildTypeAdaptor;
+import com.android.build.gradle.managed.adaptor.DataBindingOptionsAdapter;
 import com.android.build.gradle.managed.adaptor.ProductFlavorAdaptor;
 import com.android.build.gradle.tasks.JillTask;
 import com.android.build.gradle.tasks.PreDex;
@@ -86,6 +88,7 @@ import org.gradle.internal.service.ServiceRegistry;
 import org.gradle.language.base.FunctionalSourceSet;
 import org.gradle.language.base.LanguageSourceSet;
 import org.gradle.model.Defaults;
+import org.gradle.model.Finalize;
 import org.gradle.model.Model;
 import org.gradle.model.ModelMap;
 import org.gradle.model.Mutate;
@@ -97,6 +100,8 @@ import org.gradle.model.internal.registry.ModelRegistry;
 import org.gradle.platform.base.BinaryContainer;
 import org.gradle.platform.base.ComponentSpecContainer;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
+
+import android.databinding.tool.DataBindingBuilder;
 
 import java.io.File;
 import java.io.IOException;
@@ -225,12 +230,24 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
             NdkOptionsHelper.merge(defaultNdkConfig, pluginNdkConfig);
         }
 
+        @Model
+        public void configureDefaultDataBindingOptions(
+                @Path("android.dataBinding") DataBindingOptions dataBindingOptions) {
+            dataBindingOptions.setEnabled(false);
+            dataBindingOptions.setAddDefaultAdapters(false);
+        }
+
        // TODO: Remove code duplicated from BasePlugin.
         @Model(EXTRA_MODEL_INFO)
         public ExtraModelInfo createExtraModelInfo(
                 Project project,
                 @NonNull @Path("isApplication") Boolean isApplication) {
             return new ExtraModelInfo(project, isApplication);
+        }
+
+        @Model
+        public DataBindingBuilder createDataBindingBuilder() {
+            return new DataBindingBuilder();
         }
 
         @Model
@@ -399,6 +416,12 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
             });
         }
 
+        @Mutate
+        public void androidConfigImplicitDependencies(AndroidConfig androidConfig,
+                @Path("android.dataBinding") DataBindingOptions dataBindingOptions) {
+
+        }
+
         @Model(ANDROID_CONFIG_ADAPTOR)
         public com.android.build.gradle.AndroidConfig createModelAdaptor(
                 ServiceRegistry serviceRegistry,
@@ -479,6 +502,14 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
         @Mutate
         public void createLifeCycleTasks(ModelMap<Task> tasks, TaskManager taskManager) {
             taskManager.createTasksBeforeEvaluate(new TaskModelMapAdaptor(tasks));
+        }
+
+        @Mutate
+        public void addDataBindingDependenciesIfNecessary(
+                TaskManager taskManager,
+                @Path("android.dataBinding") DataBindingOptions dataBindingOptions) {
+            taskManager.addDataBindingDependenciesIfNecessary(
+                    new DataBindingOptionsAdapter(dataBindingOptions));
         }
 
         @Mutate

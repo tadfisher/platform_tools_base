@@ -164,4 +164,6 @@ public interface AndroidConfig {
     @Unmanaged
     Collection<LibraryRequest> getLibraryRequests();
     void setLibraryRequests(Collection<LibraryRequest> libraryRequests);
+
+    DataBindingOptions getDataBinding();
 }
