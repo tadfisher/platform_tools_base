@@ -33,6 +33,8 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
+import android.databinding.tool.DataBindingBuilder;
+
 import java.io.File;
 import java.util.List;
 import java.util.Set;
@@ -45,11 +47,13 @@ public class ApplicationTaskManager extends TaskManager {
     public ApplicationTaskManager(
             Project project,
             AndroidBuilder androidBuilder,
+            DataBindingBuilder dataBindingBuilder,
             AndroidConfig extension,
             SdkHandler sdkHandler,
             DependencyManager dependencyManager,
             ToolingModelBuilderRegistry toolingRegistry) {
-        super(project, androidBuilder, extension, sdkHandler, dependencyManager, toolingRegistry);
+        super(project, androidBuilder, dataBindingBuilder, extension, sdkHandler,dependencyManager,
+                toolingRegistry);
     }
 
     @Override
@@ -220,6 +224,9 @@ public class ApplicationTaskManager extends TaskManager {
                         return null;
                     }
                 });
+        if (extension.getDataBinding().isEnabled()) {
+            createDataBindingTasks(tasks, variantScope);
+        }
     }
 
     /**

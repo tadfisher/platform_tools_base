@@ -327,6 +327,10 @@ public class ExtraModelInfo extends ErrorReporter {
         }
     }
 
+    public ErrorFormatMode getErrorFormatMode() {
+        return errorFormatMode;
+    }
+
     public enum ErrorFormatMode {
         MACHINE_PARSABLE, HUMAN_READABLE
     }
