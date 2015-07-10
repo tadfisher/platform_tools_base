@@ -218,7 +218,7 @@ public abstract class GeneratorTest extends TestCase implements GraphicGenerator
     /** Get the location to write missing golden files to */
     protected File getTargetDir() {
         // Set $ANDROID_SRC to point to your git AOSP working tree
-        String sdk = System.getenv("ANDROID_SRC");
+        String sdk = "/usr/local/ssd/src/aosp-studio-1.4-dev/"; //System.getenv("ANDROID_SRC");
         if (sdk != null) {
             File root = new File(sdk);
             if (root.exists()) {
