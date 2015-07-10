@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.dsl.TestOptions;
 import com.android.build.gradle.model.AndroidComponentModelSourceSet;
 import com.android.builder.core.LibraryRequest;
+import com.android.build.gradle.internal.dsl.DataBindingOptions;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
 import com.android.sdklib.repository.FullRevision;
@@ -164,4 +165,8 @@ public interface AndroidConfig {
     @Unmanaged
     Collection<LibraryRequest> getLibraryRequests();
     void setLibraryRequests(Collection<LibraryRequest> libraryRequests);
+
+    @Unmanaged
+    DataBindingOptions getDataBindingOptions();
+    void setDataBindingOptions(DataBindingOptions options);
 }
