@@ -44,6 +44,8 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
+import android.databinding.tool.DataBindingBuilder;
+
 import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -61,11 +63,13 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
 
     public TestApplicationTaskManager(Project project,
             AndroidBuilder androidBuilder,
+            DataBindingBuilder dataBindingBuilder,
             AndroidConfig extension,
             SdkHandler sdkHandler,
             DependencyManager dependencyManager,
             ToolingModelBuilderRegistry toolingRegistry) {
-        super(project, androidBuilder, extension, sdkHandler, dependencyManager, toolingRegistry);
+        super(project, androidBuilder, dataBindingBuilder, extension, sdkHandler, dependencyManager,
+                toolingRegistry);
     }
 
     @Override

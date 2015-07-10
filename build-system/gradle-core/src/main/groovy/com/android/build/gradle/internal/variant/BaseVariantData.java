@@ -57,8 +57,11 @@ import org.gradle.api.tasks.bundling.Jar;
 import org.gradle.api.tasks.compile.AbstractCompile;
 import org.gradle.api.tasks.compile.JavaCompile;
 
+import android.databinding.tool.LayoutXmlProcessor;
+
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -148,6 +151,9 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
     private Set<String> languageFilters;
     private Set<String> abiFilters;
 
+    @Nullable
+    private LayoutXmlProcessor layoutXmlProcessor;
+
     /**
      * If true, variant outputs will be considered signed. Only set if you manually set the outputs
      * to point to signed files built by other tasks.
@@ -185,6 +191,20 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
         taskManager.configureScopeForNdk(scope);
     }
 
+    @NonNull
+    public LayoutXmlProcessor getLayoutXmlProcessor() {
+        if (layoutXmlProcessor == null) {
+            layoutXmlProcessor = new LayoutXmlProcessor(
+                    getVariantConfiguration().getOriginalApplicationId(),
+                    Collections.singletonList(scope.getDefaultMergeResourcesOutputDir()),
+                    taskManager.getDataBindingBuilder()
+                            .createJavaFileWriter(scope.getClassOutputForDataBinding()),
+                    getVariantConfiguration().getMinSdkVersion().getApiLevel(),
+                    getType() == VariantType.LIBRARY
+            );
+        }
+        return layoutXmlProcessor;
+    }
 
     public SplitHandlingPolicy getSplitHandlingPolicy() {
         return mSplitHandlingPolicy;
