@@ -306,17 +306,17 @@ public abstract class BasePlugin {
         project.gradle.buildFinished {
             ExecutorSingleton.shutdown()
             sdkHandler.unload()
-            SpanRecorders.record(project, ExecutionType.BASE_PLUGIN_BUILD_FINISHED) {
-                PreDexCache.getCache().clear(
-                        project.rootProject.file(
-                                "${project.rootProject.buildDir}/${FD_INTERMEDIATES}/dex-cache/cache.xml"),
-                        logger)
-                JackConversionCache.getCache().clear(
-                        project.rootProject.file(
-                                "${project.rootProject.buildDir}/${FD_INTERMEDIATES}/jack-cache/cache.xml"),
-                        logger)
-                LibraryCache.getCache().unload()
-            }
+            // TODO: record BASE_PLUGIN_BUILD_FINISHED here, if we find a way to shut down
+            // ProcessRecorderFactory after all projects have finished building.
+            PreDexCache.getCache().clear(
+                    project.rootProject.file(
+                            "${project.rootProject.buildDir}/${FD_INTERMEDIATES}/dex-cache/cache.xml"),
+                    logger)
+            JackConversionCache.getCache().clear(
+                    project.rootProject.file(
+                            "${project.rootProject.buildDir}/${FD_INTERMEDIATES}/jack-cache/cache.xml"),
+                    logger)
+            LibraryCache.getCache().unload()
             ProcessRecorderFactory.shutdown();
         }
 

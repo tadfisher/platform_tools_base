@@ -71,6 +71,7 @@ public class ProcessRecorderFactory {
                 sINSTANCE.uploadData();
             }
             sINSTANCE.processRecorder = null;
+            sENABLED = false;
         }
     }
 
