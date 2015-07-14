@@ -45,7 +45,8 @@
     "google_signin_service": {
       "status": 2
     }
-  }
+  },
+  "mobilesdk_app_id": "mobilesdk-app-id-free"
 },
 
 {
@@ -79,7 +80,8 @@
     "google_signin_service": {
       "status": 2
     }
-  }
+  },
+  "mobilesdk_app_id": "mobilesdk-app-id-paid"
 }]
 
 }

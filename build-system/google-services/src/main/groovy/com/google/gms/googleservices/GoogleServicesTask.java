@@ -17,6 +17,7 @@
 package com.google.gms.googleservices;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Strings;
 import com.google.common.io.Files;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -90,6 +91,7 @@ public class GoogleServicesTask extends DefaultTask {
         if (clientObject != null) {
             handleAnalytics(clientObject, resValues);
             handleAdsService(clientObject, resValues);
+            handleGoogleAppId(clientObject, resValues);
         } else {
             getLogger().warn("No matching client found for package name '" + packageName + "'");
         }
@@ -164,6 +166,17 @@ public class GoogleServicesTask extends DefaultTask {
 
         findStringByName(adsService, "test_banner_ad_unit_id", resValues);
         findStringByName(adsService, "test_interstitial_ad_unit_id", resValues);
+    }
+
+    private void handleGoogleAppId(JsonObject clientObject, Map<String, String> resValues)
+            throws IOException {
+        JsonPrimitive googleAppId = clientObject.getAsJsonPrimitive("mobilesdk_app_id");
+        if (googleAppId == null) return;
+
+        String googleAppIdStr = googleAppId.getAsString();
+        if (Strings.isNullOrEmpty(googleAppIdStr)) return;
+
+        resValues.put("google_app_id", googleAppIdStr);
     }
 
     private static void findStringByName(JsonObject jsonObject, String stringName,
