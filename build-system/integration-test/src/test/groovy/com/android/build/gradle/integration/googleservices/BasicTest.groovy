@@ -59,15 +59,25 @@ class BasicTest {
 
     @BeforeClass
     public static void setUp() {
-
+        // For now we have to change the $ANDROID_ROOT to the actual ANDROID ROOT directory
         project.getBuildFile() << """
 apply plugin: 'com.android.application'
 apply plugin: 'com.google.gms.google-services'
 
+repositories {
+    maven {
+        url '/usr/local/google/home/xqzhang/android//vendor/unbundled_google/packages/PrebuiltGmsCore/saga/m2repo-3p'
+    }
+}
+
 android {
     compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
     buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-
+    defaultConfig {
+        versionCode 12
+        minSdkVersion 21
+        targetSdkVersion 21
+    }
 }
 """
         model = project.executeAndReturnModel("clean", "assembleDebug")

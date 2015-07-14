@@ -16,6 +16,9 @@
 
 package com.google.gms.googleservices
 
+import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
@@ -23,8 +26,19 @@ class GoogleServicesPlugin implements Plugin<Project> {
 
     public final static String JSON_FILE_NAME = 'google-services.json'
 
+    public final static String MODULE_GROUP = "com.google.android.gms"
+    public final static String MODULE_NAME = "play-services-measurement"
+    public final static String MODULE_VERSION = "8.0-SNAPSHOT"
+
     @Override
     void apply(Project project) {
+        // add a dependency to
+        // 'group': 'com.google.android.gms'
+        // 'name': 'play-services-measurement'
+        // 'version': '8.0-SNAPSHOT'
+        // TODO: change to '8.0.0'
+        project.getLogger().warn("Adding dependency to " + MODULE_GROUP + ':' + MODULE_NAME + ':' + MODULE_VERSION)
+        project.dependencies.add('compile', MODULE_GROUP + ':' + MODULE_NAME + ':' + MODULE_VERSION)
         // setup this plugin no matter the order.
         if (!checkForKnownPlugins(project)) {
             project.plugins.whenPluginAdded {
@@ -54,6 +68,8 @@ class GoogleServicesPlugin implements Plugin<Project> {
         task.quickstartFile = quickstartFile
         task.intermediateDir = outputDir
         task.packageName = variant.applicationId
+        task.moduleGroup = MODULE_GROUP;
+        task.moduleVersion = MODULE_VERSION;
 
         variant.registerResGeneratingTask(task, outputDir)
     }
