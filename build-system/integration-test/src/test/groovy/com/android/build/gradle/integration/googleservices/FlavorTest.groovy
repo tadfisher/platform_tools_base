@@ -78,6 +78,11 @@ android {
         }
     }
 
+    defaultConfig {
+        versionCode 12
+        minSdkVersion 21
+        targetSdkVersion 21
+    }
 }
 """
         model = project.executeAndReturnModel("clean", "assembleDebug")

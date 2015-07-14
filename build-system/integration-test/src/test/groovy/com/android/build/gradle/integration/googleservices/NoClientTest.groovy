@@ -59,7 +59,11 @@ apply plugin: 'com.google.gms.google-services'
 android {
     compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
     buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-
+    defaultConfig {
+        versionCode 12
+        minSdkVersion 21
+        targetSdkVersion 21
+    }
 }
 """
         project.execute("clean", "assembleDebug")
