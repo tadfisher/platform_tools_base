@@ -25,6 +25,13 @@ class GoogleServicesPlugin implements Plugin<Project> {
 
     @Override
     void apply(Project project) {
+        // add a dependency to
+        // 'group': 'com.google.android.gms'
+        // 'name': 'play-service-measurement'
+        // 'version': '8.0-SNAPSHOT'
+        // TODO: change to '8.0.0'
+        project.dependencies.add('compile',
+                'com.google.android.gms:play-services-measurement:8.0-SNAPSHOT')
         // setup this plugin no matter the order.
         if (!checkForKnownPlugins(project)) {
             project.plugins.whenPluginAdded {
