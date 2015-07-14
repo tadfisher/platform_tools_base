@@ -22,7 +22,6 @@ import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.coverage.JacocoInstrumentTask;
@@ -141,6 +140,8 @@ public class VariantScope {
 
     // TODO : why is Jack not registered as the obfuscationTask ???
     private AndroidTask<? extends Task> obfuscationTask;
+
+    private File resourceOutputDir;
 
 
     public VariantScope(
@@ -328,6 +329,25 @@ public class VariantScope {
     public File getSymbolLocation() {
         return new File(globalScope.getIntermediatesDir() + "/symbols/" +
                 variantData.getVariantConfiguration().getDirName());
+    }
+
+    @NonNull
+    public File getFinalResourcesDir() {
+        if (preprocessResourcesTask != null) {
+            return getPreprocessResourceOutputDir();
+        } else {
+            return resourceOutputDir;
+        }
+    }
+
+    public void setResourceOutputDir(@NonNull File resourceOutputDir) {
+        this.resourceOutputDir = resourceOutputDir;
+    }
+
+    @NonNull
+    public File getPreprocessResourceOutputDir() {
+        return new File(getGlobalScope().getIntermediatesDir(),
+                "res/preprocessed/" + getVariantConfiguration().getDirName());
     }
 
     @NonNull
