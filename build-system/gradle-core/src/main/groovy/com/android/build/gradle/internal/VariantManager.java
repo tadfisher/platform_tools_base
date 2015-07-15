@@ -24,11 +24,11 @@ import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_KEY_ALIA
 import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_KEY_PASSWORD;
 import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_STORE_FILE;
 import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_STORE_PASSWORD;
-import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_STORE_TYPE;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
+import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.TestedAndroidConfig;
 import com.android.build.gradle.api.AndroidSourceSet;
@@ -68,8 +68,6 @@ import java.io.File;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import groovy.lang.Closure;
 
 /**
  * Class to create, manage variants.
@@ -818,15 +816,15 @@ public class VariantManager implements VariantModel {
 
             com.android.build.gradle.internal.dsl.SigningConfig signingConfigDsl =
                     new com.android.build.gradle.internal.dsl.SigningConfig("externalOverride");
-            Map<String, ?> props = project.getProperties();
 
-            signingConfigDsl.setStoreFile(new File((String) props.get(PROPERTY_SIGNING_STORE_FILE)));
-            signingConfigDsl.setStorePassword((String) props.get(PROPERTY_SIGNING_STORE_PASSWORD));
-            signingConfigDsl.setKeyAlias((String) props.get(PROPERTY_SIGNING_KEY_ALIAS));
-            signingConfigDsl.setKeyPassword((String) props.get(PROPERTY_SIGNING_KEY_PASSWORD));
+            signingConfigDsl.setStoreFile(new File(AndroidGradleOptions.getSigningStoreFile(project)));
+            signingConfigDsl.setStorePassword(AndroidGradleOptions.getSigningStorePassword(project));
+            signingConfigDsl.setKeyAlias(AndroidGradleOptions.getSigningKeyAlias(project));
+            signingConfigDsl.setKeyPassword(AndroidGradleOptions.getSigningKeyPassword(project));
 
-            if (project.hasProperty(PROPERTY_SIGNING_STORE_TYPE)) {
-                signingConfigDsl.setStoreType((String) props.get(PROPERTY_SIGNING_STORE_TYPE));
+            String storeType = AndroidGradleOptions.getSigningStoreType(project);
+            if (storeType != null) {
+                signingConfigDsl.setStoreType(storeType);
             }
 
             return signingConfigDsl;
