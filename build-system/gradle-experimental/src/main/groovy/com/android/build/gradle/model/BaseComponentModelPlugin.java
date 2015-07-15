@@ -24,6 +24,7 @@ import static com.android.builder.core.BuilderConstants.DEBUG;
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.AndroidConfigHelper;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.LibraryCache;
@@ -128,11 +129,11 @@ public class BaseComponentModelPlugin implements Plugin<Project> {
                     new Recorder.Property("plugin_version", Version.ANDROID_GRADLE_PLUGIN_VERSION),
                     new Recorder.Property("next_gen_plugin", "true")
             );
-            String benchmarkName = (String) project.getProperties().get("com.android.benchmark.name");
+            String benchmarkName = AndroidGradleOptions.getBenchmarkName(project);
             if (benchmarkName != null) {
                 propertyList.add(new Recorder.Property("benchmark_name", benchmarkName));
             }
-            String benchmarkMode = (String) project.getProperties().get("com.android.benchmark.mode");
+            String benchmarkMode = AndroidGradleOptions.getBenchmarkMode(project);
             if (benchmarkMode != null) {
                 propertyList.add(new Recorder.Property("benchmark_mode", benchmarkMode));
             }
