@@ -17,46 +17,71 @@ package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_HOST;
+import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_PATH;
 import static com.android.SdkConstants.ATTR_PATH_PATTERN;
 import static com.android.SdkConstants.ATTR_PATH_PREFIX;
 import static com.android.SdkConstants.ATTR_SCHEME;
-
 import static com.android.xml.AndroidManifest.ATTRIBUTE_MIME_TYPE;
 import static com.android.xml.AndroidManifest.ATTRIBUTE_NAME;
 import static com.android.xml.AndroidManifest.ATTRIBUTE_PORT;
 import static com.android.xml.AndroidManifest.NODE_ACTION;
+import static com.android.xml.AndroidManifest.NODE_ACTIVITY;
+import static com.android.xml.AndroidManifest.NODE_APPLICATION;
 import static com.android.xml.AndroidManifest.NODE_CATEGORY;
 import static com.android.xml.AndroidManifest.NODE_DATA;
 import static com.android.xml.AndroidManifest.NODE_INTENT;
+import static com.android.xml.AndroidManifest.NODE_METADATA;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.tools.lint.client.api.XmlParser;
 import com.android.tools.lint.detector.api.Category;
+import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 
 import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import lombok.ast.AstVisitor;
+import lombok.ast.ClassDeclaration;
+import lombok.ast.Expression;
+import lombok.ast.MethodInvocation;
+import lombok.ast.NormalTypeBody;
+import lombok.ast.TypeMember;
+import lombok.ast.TypeReference;
+import lombok.ast.VariableDeclaration;
 
 
 /**
  * Check if the usage of App Indexing is correct.
  */
-public class AppIndexingApiDetector extends Detector implements Detector.XmlScanner {
+public class AppIndexingApiDetector extends Detector
+        implements Detector.XmlScanner, Detector.JavaScanner {
 
     private static final Implementation IMPLEMENTATION = new Implementation(
             AppIndexingApiDetector.class, Scope.MANIFEST_SCOPE);
+
+    private static final Implementation IMPLEMENTATION_JAVA = new Implementation(
+            AppIndexingApiDetector.class, Scope.MANIFEST_AND_JAVA_SCOPE, Scope.JAVA_FILE_SCOPE);
 
     public static final Issue ISSUE_ERROR = Issue.create("AppIndexingError", //$NON-NLS-1$
             "Wrong Usage of App Indexing",
@@ -72,17 +97,61 @@ public class AppIndexingApiDetector extends Detector implements Detector.XmlScan
             Category.USABILITY, 5, Severity.WARNING, IMPLEMENTATION)
             .addMoreInfo("https://g.co/AppIndexing");
 
+    public static final Issue ISSUE_JAVA_ERROR = Issue.create("AppIndexingJavaError", //$NON-NLS-1$
+            "Wrong Usage of App Indexing Api",
+            "Ensures the app can correctly handle deep links and integrate with " +
+                    "App Indexing for Google search.",
+            Category.USABILITY, 5, Severity.ERROR, IMPLEMENTATION_JAVA)
+            .addMoreInfo("https://g.co/AppIndexing");
+
+    public static final Issue ISSUE_JAVA_WARNING = Issue.create("AppIndexingJavaWARNING", //$NON-NLS-1$
+            "Missing App Indexing Api Code",
+            "Ensures the app can correctly handle deep links and integrate with " +
+                    "App Indexing for Google search.",
+            Category.USABILITY, 5, Severity.WARNING, IMPLEMENTATION_JAVA)
+            .addMoreInfo("https://g.co/AppIndexing");
+
     private static final String[] PATH_ATTR_LIST = new String[]{ATTR_PATH_PREFIX, ATTR_PATH,
             ATTR_PATH_PATTERN};
+
+    private static final String APP_INDEX_START = "start"; //$NON-NLS-1$
+    private static final String APP_INDEX_END = "end"; //$NON-NLS-1$
+    private static final String CLIENT_CONNECT = "connect"; //$NON-NLS-1$
+    private static final String CLIENT_DISCONNECT = "disconnect"; //$NON-NLS-1$
+
+    private Set<String> activitiesCheck = new HashSet<String>();
+    private List<MethodInvocation> startMethod = new ArrayList<MethodInvocation>(),
+            endMethod = new ArrayList<MethodInvocation>(),
+            connectMethod = new ArrayList<MethodInvocation>(),
+            disconnectMethod = new ArrayList<MethodInvocation>();
+
+    /** Constructs a new {@link AppIndexingApiDetector} */
+    public AppIndexingApiDetector() {
+    }
+
+    // ---- Implements XmlScanner ----
 
     @Override
     @Nullable
     public Collection<String> getApplicableElements() {
-        return Collections.singletonList(NODE_INTENT);
+        return Arrays.asList(
+                NODE_APPLICATION,
+                NODE_INTENT
+        );
     }
 
     @Override
     public void visitElement(@NonNull XmlContext context, @NonNull Element intent) {
+        // check GMS
+        if (intent.getNodeName().equals(NODE_APPLICATION)) {
+            boolean hasGMS = hasGMS(intent);
+            if (!hasGMS) {
+                context.report(ISSUE_ERROR, intent, context.getLocation(intent),
+                        "GMS should be added to the app");
+            }
+            return;
+        }
+
         boolean actionView = hasActionView(intent);
         boolean browsable = isBrowsable(intent);
         boolean isHttp = false;
@@ -95,7 +164,8 @@ public class AppIndexingApiDetector extends Detector implements Detector.XmlScan
         NodeList children = intent.getChildNodes();
         for (int i = 0; i < children.getLength(); i++) {
             Node child = children.item(i);
-            if (child.getNodeType() == Node.ELEMENT_NODE && child.getNodeName().equals(NODE_DATA)) {
+            if (child.getNodeType() == Node.ELEMENT_NODE
+                    && child.getNodeName().equals(NODE_DATA)) {
                 Element data = (Element) child;
                 if (firstData == null) {
                     firstData = data;
@@ -162,6 +232,24 @@ public class AppIndexingApiDetector extends Detector implements Detector.XmlScan
             context.report(ISSUE_WARNING, intent, context.getLocation(intent),
                     "Activity supporting ACTION_VIEW is not set as BROWSABLE");
         }
+    }
+
+    private static boolean hasGMS(Element application) {
+        NodeList children = application.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            Node child = children.item(i);
+            if (child.getNodeType() == Node.ELEMENT_NODE
+                    && child.getNodeName().equals(NODE_METADATA)) {
+                Element metadata = (Element) child;
+                if (metadata.hasAttributeNS(ANDROID_URI, ATTR_NAME)) {
+                    Attr attr = metadata.getAttributeNodeNS(ANDROID_URI, ATTRIBUTE_NAME);
+                    if (attr.getValue().equals("com.google.android.gms.version")) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     private static boolean hasActionView(Element intent) {
@@ -245,5 +333,215 @@ public class AppIndexingApiDetector extends Detector implements Detector.XmlScan
                 }
             }
         }
+    }
+
+    // ---- Implements JavaScanner ----
+
+    @Nullable
+    @Override
+    public List<String> getApplicableMethodNames() {
+        return Arrays.asList(
+                APP_INDEX_START,
+                APP_INDEX_END,
+                CLIENT_CONNECT,
+                CLIENT_DISCONNECT
+        );
+    }
+
+    @Override
+    public void visitMethod(@NonNull JavaContext context, @Nullable AstVisitor visitor,
+            @NonNull MethodInvocation node) {
+        if (node.astName().astValue().equals(APP_INDEX_START)
+                && node.astOperand().toString().endsWith("AppIndex.AppIndexApi")) {
+            startMethod.add(node);
+        } else if (node.astName().astValue().equals(APP_INDEX_END)
+                && node.astOperand().toString().endsWith("AppIndex.AppIndexApi")) {
+            endMethod.add(node);
+        } else if (node.astName().astValue().equals(CLIENT_CONNECT)) {
+            connectMethod.add(node);
+        } else if (node.astName().astValue().equals(CLIENT_DISCONNECT)) {
+            disconnectMethod.add(node);
+        }
+    }
+
+    @Override
+    public void afterCheckFile(@NonNull Context context) {
+        if (context instanceof JavaContext) {
+            JavaContext javaContext = (JavaContext) context;
+
+            // find the acitivity classes that need app activity annotation
+            if (activitiesCheck.isEmpty()) {
+                getActivitiesCheck(context);
+            }
+
+            ClassDeclaration classDeclare = getClassDeclaration(javaContext);
+            if (classDeclare != null) {
+
+                // app activity annotated but no intent filters in manifest
+                boolean hasIntent = activitiesCheck.contains(classDeclare.astName().astValue());
+                if (!hasIntent) {
+                    for (MethodInvocation method : startMethod) {
+                        javaContext.report(ISSUE_JAVA_ERROR, method,
+                                javaContext.getLocation(method.astName()),
+                                "Missing app indexing support in manifest");
+                    }
+                    for (MethodInvocation method : endMethod) {
+                        javaContext.report(ISSUE_JAVA_ERROR, method,
+                                javaContext.getLocation(method.astName()),
+                                "Missing app indexing support in manifest");
+                    }
+                    return;
+                }
+
+                // GoogleApiClient should exist
+                boolean hasClient = hasVariable(classDeclare, "GoogleApiClient");
+                if (!hasClient) {
+                    javaContext.report(ISSUE_JAVA_ERROR, classDeclare,
+                            javaContext.getLocation(classDeclare.astName()),
+                            "Missing `GoogleApiClient` or not using the same `GoogleApiClient` "
+                                    + "in `AppIndex.AppIndexApi.start` and `AppIndex.AppIndexApi.end`");
+                }
+
+                // `AppIndex.AppIndexApi.start` and `AppIndex.AppIndexApi.end` should exist
+                if (startMethod.isEmpty() && endMethod.isEmpty()) {
+                    javaContext.report(ISSUE_JAVA_WARNING, classDeclare,
+                            javaContext.getLocation(classDeclare.astName()),
+                            "Missing app indexing api code");
+                    return;
+                }
+
+                for (MethodInvocation startNode : startMethod) {
+                    Expression startClient = startNode.astArguments().first();
+
+                    // GoogleApiClient `connect` should exist
+                    if (!hasOperand(startClient, connectMethod)) {
+                        String message = String.format("GoogleApiClient `%1$s` has not connected",
+                                startClient.toString());
+                        javaContext.report(ISSUE_JAVA_ERROR, startClient,
+                                javaContext.getLocation(startClient), message);
+                    }
+
+                    // `AppIndex.AppIndexApi.end` should pair with `AppIndex.AppIndexApi.start`
+                    if (!hasArgument(startClient, endMethod)) {
+                        javaContext.report(ISSUE_JAVA_ERROR, startNode,
+                                javaContext.getLocation(startNode.astName()),
+                                "Missing corresponding `AppIndex.AppIndexApi.end` method");
+                    }
+                }
+
+                for (MethodInvocation endNode : endMethod) {
+                    Expression endClient = endNode.astArguments().first();
+
+                    // GoogleApiClient `disconnect` should exist
+                    if (!hasOperand(endClient, disconnectMethod)) {
+                        String message = String.format("GoogleApiClient `%1$s` has not connected",
+                                endClient.toString());
+                        javaContext.report(ISSUE_JAVA_ERROR, endClient,
+                                javaContext.getLocation(endClient), message);
+                    }
+
+                    // `AppIndex.AppIndexApi.start` should pair with `AppIndex.AppIndexApi.end`
+                    if (!hasArgument(endClient, startMethod)) {
+                        javaContext.report(ISSUE_JAVA_ERROR, endNode,
+                                javaContext.getLocation(endNode.astName()),
+                                "Missing corresponding `AppIndex.AppIndexApi.start` method");
+                    }
+                }
+
+                // reset
+                startMethod.clear();
+                endMethod.clear();
+                connectMethod.clear();
+                disconnectMethod.clear();
+            }
+        }
+    }
+
+    // get names of activities with intent filters
+    private void getActivitiesCheck(Context context) {
+        List<File> manifestFiles = context.getProject().getManifestFiles();
+        XmlParser xmlParser = context.getDriver().getClient().getXmlParser();
+        if (xmlParser != null) {
+            for (File manifest : manifestFiles) {
+                XmlContext xmlContext = new XmlContext(
+                        context.getDriver(), context.getProject(), null, manifest, null, xmlParser);
+                Document doc = xmlParser.parseXml(xmlContext);
+                try {
+                    NodeList applications = doc.getElementsByTagName(NODE_APPLICATION);
+                    for (int i = 0; i < applications.getLength(); i++) {
+                        NodeList activities = ((Element) applications.item(i))
+                                .getElementsByTagName(NODE_ACTIVITY);
+                        for (int j = 0; j < activities.getLength(); j++) {
+                            Element activity = (Element) activities.item(j);
+                            NodeList intents = activity.getElementsByTagName(NODE_INTENT);
+                            for (int k = 0; k < intents.getLength(); k++) {
+                                NodeList data = ((Element) intents.item(k)).getElementsByTagName(NODE_DATA);
+                                if (data.getLength() != 0 && activity.hasAttributeNS(ANDROID_URI, ATTRIBUTE_NAME)) {
+                                    Attr attr = activity.getAttributeNodeNS(ANDROID_URI, ATTRIBUTE_NAME);
+                                    activitiesCheck.add(attr.getValue().substring(1));
+                                }
+                            }
+                        }
+                    }
+                } catch (NullPointerException e) {
+                }
+            }
+        }
+    }
+
+    // get ClassDeclaration of a java file
+    private static ClassDeclaration getClassDeclaration(JavaContext context) {
+        lombok.ast.Node compilationUnit = context.getCompilationUnit();
+        List<lombok.ast.Node> nodeList;
+        try {
+            nodeList = compilationUnit.getChildren();
+        } catch (NullPointerException e) {
+            nodeList = new ArrayList<lombok.ast.Node>();
+        }
+        for (lombok.ast.Node node : nodeList) {
+            if (node.getClass() == ClassDeclaration.class) {
+                return (ClassDeclaration) node;
+            }
+        }
+        return null;
+    }
+
+    // check whether ClassDeclaration has variables of a certain type
+    private static boolean hasVariable(ClassDeclaration classDeclaration, String type) {
+        NormalTypeBody body = classDeclaration.astBody();
+        if (body != null) {
+            for (TypeMember member : body.astMembers()) {
+                if (member instanceof VariableDeclaration) {
+                    VariableDeclaration variable = (VariableDeclaration) member;
+                    TypeReference typeReference = variable.astDefinition().astTypeReference();
+                    if (typeReference.toString().equals(type)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    // check whether a method with a certain argument exists in the method set
+    private static boolean hasArgument(Expression argument, List<MethodInvocation> set) {
+        for (MethodInvocation method : set) {
+            Expression argument1 = method.astArguments().first();
+            if(argument.toString().equals(argument1.toString())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // check whether a method with a certain operand exists in the method set
+    private static boolean hasOperand(Expression operand, List<MethodInvocation> set) {
+        for (MethodInvocation method : set) {
+            Expression operand1 = method.astOperand();
+            if(operand.toString().equals(operand1.toString())) {
+                return true;
+            }
+        }
+        return false;
     }
 }
