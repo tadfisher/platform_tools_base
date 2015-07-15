@@ -23,7 +23,9 @@ import org.junit.Rule
 import org.junit.Test
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.BenchmarkMode.BUILD_FULL
-import static com.android.build.gradle.integration.common.fixture.GradleTestProject.BenchmarkMode.BUILD_INC_RES
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.BenchmarkMode.BUILD_INC_RES_ADD
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.BenchmarkMode.BUILD_INC_RES_EDIT
+
 /**
  * Performance test for full and incremental build on ioschedule 2014
  */
@@ -46,12 +48,22 @@ class IOScheduleResChangeTest {
     }
 
     @Test
-    void "Incremental Build on Resource Change"() {
+    void "Incremental Build on Resource Edit Change"() {
         project.replaceLine(
                 "src/main/res/values/strings.xml",
                 97,
                 "    <string name=\"app_name\">Google I/O 2015</string>")
 
-        project.executeWithBenchmark("iosched2014", BUILD_INC_RES, "assembleDebug")
+        project.executeWithBenchmark("iosched2014", BUILD_INC_RES_EDIT, "assembleDebug")
+    }
+
+    @Test
+    void "Incremental Build on Resource Add Change"() {
+        project.replaceLine(
+                "src/main/res/values/strings.xml",
+                97,
+                "    <string name=\"app_name\">Google I/O 2015</string><string name=\"aaaa\">aaa</string>")
+
+        project.executeWithBenchmark("iosched2014", BUILD_INC_RES_ADD, "assembleDebug")
     }
 }

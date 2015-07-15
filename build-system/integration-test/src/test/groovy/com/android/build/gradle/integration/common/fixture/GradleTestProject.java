@@ -111,7 +111,7 @@ public class GradleTestProject implements TestRule {
     private static final String RECORD_BENCHMARK_MODE = "com.android.benchmark.mode";
 
     public enum BenchmarkMode {
-        EVALUATION, SYNC, BUILD_FULL, BUILD_INC_JAVA, BUILD_INC_RES
+        EVALUATION, SYNC, BUILD_FULL, BUILD_INC_JAVA, BUILD_INC_RES_EDIT, BUILD_INC_RES_ADD
     }
 
     static {
