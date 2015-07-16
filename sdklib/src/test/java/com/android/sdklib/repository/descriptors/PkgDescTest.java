@@ -21,6 +21,7 @@ import com.android.sdklib.io.FileOp;
 import com.android.sdklib.repository.FullRevision;
 import com.android.sdklib.repository.MajorRevision;
 import com.android.sdklib.repository.NoPreviewRevision;
+import com.android.sdklib.repository.PreciseRevision;
 
 import java.io.File;
 import java.util.Arrays;
@@ -723,7 +724,7 @@ public class PkgDescTest extends TestCase {
         IdDisplay vendor = new IdDisplay("vendor", "The Vendor");
         IdDisplay name   = new IdDisplay("addon_name", "The Add-on");
         IPkgDesc p1 = PkgDesc.Builder
-                .newAddon(new AndroidVersion("19"), new MajorRevision(1), vendor, name)
+                .newAddon(new AndroidVersion("19"), new PreciseRevision(1), vendor, name)
                 .create();
 
         assertEquals(PkgType.PKG_ADDON, p1.getType());
@@ -749,7 +750,7 @@ public class PkgDescTest extends TestCase {
         assertTrue(p1.hasVendor());
         assertEquals(new IdDisplay("vendor", "only the id is compared with"), p1.getVendor());
 
-        assertEquals(new IdDisplay("addon_name", "ignored"), ((IPkgDescAddon) p1).getName());
+        assertEquals(new IdDisplay("addon_name", "ignored"), p1.getName());
 
         assertEquals("addon-addon_name-vendor-19", p1.getInstallId());
         assertEquals(FileOp.append(mRoot, "add-ons", "addon-addon_name-vendor-19"),

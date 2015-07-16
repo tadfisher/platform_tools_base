@@ -19,10 +19,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.sdklib.io.IFileOp;
-import com.android.sdklib.repository.FullRevision;
-import com.android.sdklib.repository.MajorRevision;
-import com.android.sdklib.repository.NoPreviewRevision;
-import com.android.sdklib.repository.PkgProps;
+import com.android.sdklib.repository.*;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -34,6 +31,30 @@ import java.util.Properties;
  * Misc utilities to help extracting elements and attributes out of a repository XML document.
  */
 class PackageParserUtils {
+  /**
+   * Utility method to parse the {@link PkgProps#PKG_REVISION} property as a full
+   * revision (major.minor.micro.preview).
+   *
+   * @param props The properties to parse.
+   * @return A {@link FullRevision} or null if there is no such property or it couldn't be parsed.
+   * @param propKey The name of the property. Must not be null.
+   */
+  @Nullable
+  public static PreciseRevision getPropertyPrecise(
+    @Nullable Properties props,
+    @NonNull String propKey) {
+    String revStr = getProperty(props, propKey, null);
+
+    PreciseRevision rev = null;
+    if (revStr != null) {
+      try {
+        rev = PreciseRevision.parseRevision(revStr);
+      } catch (NumberFormatException ignore) {}
+    }
+
+    return rev;
+  }
+
   /**
    * Utility method to parse the {@link PkgProps#PKG_REVISION} property as a full
    * revision (major.minor.micro.preview).

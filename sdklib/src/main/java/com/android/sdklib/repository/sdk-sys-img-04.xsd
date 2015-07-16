@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (C) 2015 The Android Open Source Project
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<xsd:schema
+        targetNamespace="http://schemas.android.com/sdk/android/sys-img/4"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+        xmlns:sdk="http://schemas.android.com/sdk/android/sys-img/4"
+        xmlns:common="http://schemas.android.com/sdk/android/common/01"
+        xmlns:sysimg3="http://schemas.android.com/sdk/android/sys-img/3"
+        elementFormDefault="unqualified"
+        attributeFormDefault="unqualified"
+        version="1">
+
+    <xsd:import namespace="http://schemas.android.com/sdk/android/common/01"
+                schemaLocation="sdk-common-01.xsd"/>
+    <xsd:import namespace="http://schemas.android.com/sdk/android/repository/10"
+                schemaLocation="sdk-repository-10.xsd"/>
+
+    <!-- The repository contains a collection of downloadable items known as
+         "packages". Each package has a type and various attributes and contains
+         a list of file "archives" that can be downloaded for specific OSes.
+
+         An Android Addon repository is a web site that contains an "addon.xml"
+         file that conforms to this XML Schema.
+
+         History:
+         - v1 is used by the SDK Updater in Tools r20.0. It is split out of the
+           main SDK Repository XML Schema and can only contain <system-image> packages.
+
+         - v2 is used by the SDK Manager in Tools r22.6.
+           It introduces a sub-tag for the <system-image> repository type.
+
+         - v3 is used by the SDK Manager in Tools r22.6.4:
+            - It introduces a <list-display> string for all package types.
+            - it changes <archive os=... arch=...> to sub-elements: <host-os>, <host-bits>,
+              <jvm-bits> and <min-jvm-version>.
+            - Support for new ABIs arm64-v8a, x86_64 and mips64.
+            - Support for new <addon><vendor-id/name></addon> element.
+    -->
+
+    <xsd:element name="sdk-sys-img" type="sdk:repositoryType"/>
+
+    <xsd:complexType name="repositoryType">
+        <xsd:annotation>
+            <xsd:documentation>
+                The repository contains a collection of downloadable system images.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:choice minOccurs="0" maxOccurs="unbounded">
+            <xsd:element name="license" type="common:licenseType"/>
+            <xsd:element name="generic" type="common:genericType"/>
+
+            <!-- these types are deprecated -->
+            <xsd:element name="system-image" type="sysimg3:systemImageType"/>
+        </xsd:choice>
+    </xsd:complexType>
+
+
+    <xsd:complexType name="sysimgDetailsType">
+        <xsd:complexContent>
+            <xsd:extension base="common:typeDetails">
+                <xsd:all>
+                    <!-- The Android API Level for the platform. An int > 0. -->
+                    <xsd:element name="api-level" type="xsd:positiveInteger"/>
+                    <xsd:element name="tag-id" type="xsd:string"/>
+                    <xsd:element name="tag-display" type="xsd:string"/>
+                    <xsd:element name="vendor" type="common:addonType"/>
+                    <xsd:element name="abi" type="sdk:abiType"/>
+                </xsd:all>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+
+    <!-- The definition of the ABI supported by a platform's system image. -->
+
+    <xsd:simpleType name="abiType">
+        <xsd:annotation>
+            <xsd:documentation>The ABI of a platform's system image.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:restriction base="xsd:token">
+            <xsd:enumeration value="armeabi"/>
+            <xsd:enumeration value="armeabi-v7a"/>
+            <xsd:enumeration value="arm64-v8a"/>
+            <xsd:enumeration value="x86"/>
+            <xsd:enumeration value="x86_64"/>
+            <xsd:enumeration value="mips"/>
+            <xsd:enumeration value="mips64"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+
+</xsd:schema>
