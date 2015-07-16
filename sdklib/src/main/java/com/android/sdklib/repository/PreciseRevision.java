@@ -26,6 +26,9 @@ import com.android.annotations.NonNull;
  * since versions x.y.0 and version x.y are not the same.
  */
 public class PreciseRevision extends FullRevision {
+
+    public static final PreciseRevision NOT_SPECIFIED = new PreciseRevision(MISSING_MAJOR_REV);
+
     private final int mPrecision;
 
     /**
@@ -52,6 +55,18 @@ public class PreciseRevision extends FullRevision {
 
     public PreciseRevision(int major, int minor) {
         this(major, minor, IMPLICIT_MICRO_REV, NOT_A_PREVIEW, PRECISION_MINOR, DEFAULT_SEPARATOR);
+    }
+
+    public PreciseRevision(FullRevision revision) {
+        this(revision.getMajor(), revision.getMinor(), revision.getMicro(), revision.getPreview());
+    }
+
+    public PreciseRevision(MajorRevision revision) {
+        this(revision.getMajor());
+    }
+
+    public PreciseRevision(NoPreviewRevision revision) {
+        this(revision.getMajor(), revision.getMinor(), revision.getMicro());
     }
 
     public PreciseRevision(int major, int minor, int micro) {
@@ -149,5 +164,13 @@ public class PreciseRevision extends FullRevision {
             return mPrecision - rhs.mPrecision;
         }
         return delta;
+    }
+
+    public MajorRevision toMajorRevision() {
+        return new MajorRevision(getMajor());
+    }
+
+    public NoPreviewRevision toNoPreviewRevision() {
+        return new NoPreviewRevision(getMajor(), getMinor(), getMicro());
     }
 }

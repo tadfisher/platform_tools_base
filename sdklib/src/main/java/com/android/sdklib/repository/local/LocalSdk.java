@@ -27,10 +27,7 @@ import com.android.sdklib.AndroidVersion.AndroidVersionException;
 import com.android.sdklib.internal.androidTarget.MissingTarget;
 import com.android.sdklib.io.FileOp;
 import com.android.sdklib.io.IFileOp;
-import com.android.sdklib.repository.FullRevision;
-import com.android.sdklib.repository.MajorRevision;
-import com.android.sdklib.repository.NoPreviewRevision;
-import com.android.sdklib.repository.PkgProps;
+import com.android.sdklib.repository.*;
 import com.android.sdklib.repository.descriptors.IPkgDesc;
 import com.android.sdklib.repository.descriptors.IdDisplay;
 import com.android.sdklib.repository.descriptors.PkgDescExtra;
@@ -886,7 +883,7 @@ public class LocalSdk {
     private LocalNdkPkgInfo scanNdk(@NonNull File ndkFolder) {
         // Can we find some properties?
         Properties props = parseProperties(new File(ndkFolder, SdkConstants.FN_SOURCE_PROP));
-        FullRevision rev = PackageParserUtils.getPropertyFull(props, PkgProps.PKG_REVISION);
+        PreciseRevision rev = PackageParserUtils.getPropertyPrecise(props, PkgProps.PKG_REVISION);
         if (rev == null) {
             return null;
         }
@@ -927,7 +924,7 @@ public class LocalSdk {
             }
 
             Properties props = parseProperties(new File(buildToolDir, SdkConstants.FN_SOURCE_PROP));
-            FullRevision rev = PackageParserUtils.getPropertyFull(props, PkgProps.PKG_REVISION);
+            PreciseRevision rev = PackageParserUtils.getPropertyPrecise(props, PkgProps.PKG_REVISION);
             if (rev == null) {
                 continue; // skip, no revision
             }
@@ -946,15 +943,15 @@ public class LocalSdk {
             }
 
             Properties props = parseProperties(new File(platformDir, SdkConstants.FN_SOURCE_PROP));
-            MajorRevision rev = PackageParserUtils.getPropertyMajor(props, PkgProps.PKG_REVISION);
+            PreciseRevision rev = PackageParserUtils.getPropertyPrecise(props, PkgProps.PKG_REVISION);
             if (rev == null) {
                 continue; // skip, no revision
             }
 
-            FullRevision minToolsRev =
-                PackageParserUtils.getPropertyFull(props, PkgProps.MIN_TOOLS_REV);
+            PreciseRevision minToolsRev =
+                PackageParserUtils.getPropertyPrecise(props, PkgProps.MIN_TOOLS_REV);
             if (minToolsRev == null) {
-                minToolsRev = FullRevision.NOT_SPECIFIED;
+                minToolsRev = PreciseRevision.NOT_SPECIFIED;
             }
 
             try {
@@ -977,7 +974,7 @@ public class LocalSdk {
             }
 
             Properties props = parseProperties(new File(addonDir, SdkConstants.FN_SOURCE_PROP));
-            MajorRevision rev = PackageParserUtils.getPropertyMajor(props, PkgProps.PKG_REVISION);
+            PreciseRevision rev = PackageParserUtils.getPropertyPrecise(props, PkgProps.PKG_REVISION);
             if (rev == null) {
                 continue; // skip, no revision
             }
@@ -1075,7 +1072,7 @@ public class LocalSdk {
 
         for (File propFile : propFiles) {
             Properties props = parseProperties(propFile);
-            MajorRevision rev = PackageParserUtils.getPropertyMajor(props, PkgProps.PKG_REVISION);
+            PreciseRevision rev = PackageParserUtils.getPropertyPrecise(props, PkgProps.PKG_REVISION);
             if (rev == null) {
                 continue; // skip, no revision
             }

@@ -78,5 +78,11 @@ public interface IPkgCapabilities {
      * @return True if this package type has a {@code min-platform-tools-rev} attribute.
      */
     boolean hasMinPlatformToolsRev();
+
+    /**
+     * Indicates whether this package type has a {@code name} attribute.
+     * @return True if this package type has a {@code name} attribute.
+     */
+    boolean hasName();
 }
 

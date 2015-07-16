@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ * Copyright (C) 2014 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+-->
+<xsd:schema
+    targetNamespace="http://schemas.android.com/sdk/android/repository/12"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:sdk="http://schemas.android.com/sdk/android/repository/12"
+    xmlns:common="http://schemas.android.com/sdk/android/common/01"
+    xmlns:repo11="http://schemas.android.com/sdk/android/repository/11"
+    elementFormDefault="unqualified"
+    attributeFormDefault="unqualified"
+    version="1">
+
+  <xsd:import namespace="http://schemas.android.com/sdk/android/common/01"
+              schemaLocation="sdk-common-01.xsd"/>
+  <xsd:import namespace="http://schemas.android.com/sdk/android/repository/11"
+              schemaLocation="sdk-repository-11.xsd"/>
+  <!-- The repository contains a collection of downloadable items known as
+       "packages". Each package has a type and various attributes and contains
+       a list of file "archives" that can be downloaded for specific OSes.
+
+       An Android SDK repository is a web site that contains a "repository.xml"
+       file that conforms to this XML Schema.
+
+       History:
+       - v1 is used by the SDK Updater in Tools r3 and r4.
+
+       - v2 is used by the SDK Updater in Tools r5:
+          - It introduces a new <sample> repository type. Previously samples
+            were included in the <platform> packages. Instead this package is used
+            and and the samples are installed in $SDK/samples.
+          - All repository types have a new <obsolete> node. It works as a marker
+            to indicate the package is obsolete and should not be selected by default.
+            The UI also hides these out by default.
+
+       - v3 is used by the SDK Updater in Tools r8:
+          - It introduces a new <platform-tool> repository type. Previously platform-specific
+            tools were included in the <platform> packages. Instead this package is used
+            and platform-specific tools are installed in $SDK/platform-tools
+          - There's a new element <min-platform-tools-rev> in <tool>. The tool package now
+            requires that at least some minimal version of <platform-tool> be installed.
+          - It removes the <addon> repository type, which is now in its own XML Schema.
+
+       - v4 is used by the SDK Updater in Tools r12:
+          - <extra> element now has a <project-files> element that contains 1 or
+            or more <path>, each indicating the relative path of a file that this package
+            can contribute to installed projects.
+          - <platform> element now has a mandatory <layoutlib> that indicates the API
+            and revision of that layout library for this particular platform.
+
+       - v5 is used by the SDK Manager in Tools r14:
+          - <extra> now has an <old-paths> element, a ;-separated list of old paths that
+            should be detected and migrated to the new <path> for that package.
+          - <platform> has a new optional <abi-included> that describes the ABI of the
+            system image included in the platform, if any.
+          - New <system-image> package type, to store system images outside of <platform>s.
+          - New <source> package type.
+
+       - v6 is used by the SDK Manager in Tools r18:
+          - <extra> packages are removed. They are served only by the addon XML.
+          - <platform>, <system-image>, <source>, <tool>, <platform-tool>, <doc>
+            and <sample> get a new optional field <beta-rc> which can be used to indicate
+            the package is a Beta Release Candidate and not a final release.
+
+       - v7 is used by the SDK Manager in Tools r20:
+          - For <tool> and <platform-tool> packages, the <revision> element becomes a
+            a "full revision" element with <major>, <minor>, <micro> and <preview> sub-elements.
+          - The <beta-rc> element is no longer supported, it is replaced by
+            <revision> -> <preview> and is only for <tool> and <platform-tool> packages.
+          - <min-tools-rev> and <min-platform-tools-rev> also become a full revision element.
+
+       - v8 is used by the SDK Manager in Tools r22.0:
+          - It introduces the new <build-tool> repository type, which contains build-specific
+            tools that were before placed in either <tool> or <platform-tool> (e.g. ant,
+            aapt, aidl, etc.)
+          - <tool> has a new "min-build-tool" attribute.
+
+       - v9 is used by the SDK Manager in Tools r22.6:
+          - It introduces a sub-tag for the <system-image> repository type.
+
+       - v10 is used by the SDK Manager in Tools r22.6.4:
+          - It introduces a <list-display> string for all package types.
+          - It removes the <system-image> type (system images are handled by sdk-sys-img-3.xsd)
+          - it changes <archive os=... arch=...> to sub-elements: <host-os>, <host-bits>,
+            <jvm-bits> and <min-jvm-version>.
+       - v11 is no longer completely supported by the Tools SDK manager, instead being primarily
+         targeted to the SDK manager integrated into Studio.
+          - It introduces the NDK package type
+       - v12
+          - refactoring to allow sharing between different xsds
+          - Introduces generic package type. Other package types are only included for backward-
+            compatibility and to ease migration to the new generic type.
+  -->
+
+  <xsd:element name="sdk-repository" type="sdk:repositoryType"/>
+
+  <xsd:complexType name="repositoryType">
+    <xsd:annotation>
+      <xsd:documentation>
+        The repository contains a collection of downloadable packages.
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:choice minOccurs="0" maxOccurs="unbounded">
+      <xsd:element name="generic" type="common:genericType"/>
+      <xsd:element name="license" type="common:licenseType"/>
+      <!-- these types are deprecated -->
+      <xsd:element name="platform" type="repo11:platformType"/>
+      <xsd:element name="source" type="repo11:sourceType"/>
+      <xsd:element name="tool" type="repo11:toolType"/>
+      <xsd:element name="platform-tool" type="repo11:platformToolType"/>
+      <xsd:element name="build-tool" type="repo11:buildToolType"/>
+      <xsd:element name="doc" type="repo11:docType"/>
+      <xsd:element name="sample" type="repo11:sampleType"/>
+      <xsd:element name="ndk" type="repo11:ndkType"/>
+    </xsd:choice>
+  </xsd:complexType>
+
+    <xsd:complexType name="platformDetailsType">
+        <xsd:complexContent>
+            <xsd:extension base="common:typeDetails">
+                <xsd:all>
+                    <!-- The Android API Level for the platform. An int > 0. -->
+                    <xsd:element name="api-level" type="xsd:positiveInteger"/>
+                </xsd:all>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+  <xsd:complexType name="sourceDetailsType">
+    <xsd:complexContent>
+        <xsd:extension base="common:typeDetails">
+            <xsd:all>
+                <!-- The Android API Level for the platform. An int > 0. -->
+                <xsd:element name="api-level" type="xsd:positiveInteger"/>
+            </xsd:all>
+        </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="toolDetailsType">
+    <xsd:complexContent>
+        <xsd:extension base="common:typeDetails">
+            <xsd:all/>
+        </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="platformToolDetailsType">
+    <xsd:complexContent>
+        <xsd:extension base="common:typeDetails">
+            <xsd:all/>
+        </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="buildToolDetailsType">
+    <xsd:complexContent>
+        <xsd:extension base="common:typeDetails">
+            <xsd:all/>
+        </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="docDetailsType">
+    <xsd:complexContent>
+        <xsd:extension base="common:typeDetails">
+            <xsd:all/>
+        </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="ndkDetailsType">
+    <xsd:complexContent>
+      <xsd:extension base="common:typeDetails">
+        <xsd:all/>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+</xsd:schema>
