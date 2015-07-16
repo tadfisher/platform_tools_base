@@ -26,6 +26,7 @@ import com.android.sdklib.io.FileOp;
 import com.android.sdklib.io.IFileOp;
 import com.android.sdklib.repository.MajorRevision;
 import com.android.sdklib.repository.PkgProps;
+import com.android.sdklib.repository.PreciseRevision;
 import com.android.sdklib.repository.descriptors.IPkgDesc;
 import com.android.sdklib.repository.descriptors.IdDisplay;
 import com.android.sdklib.repository.descriptors.PkgDesc;
@@ -51,12 +52,12 @@ public class LocalSysImgPkgInfo extends LocalPkgInfo {
     private final IPkgDesc mDesc;
 
     public LocalSysImgPkgInfo(@NonNull  LocalSdk localSdk,
-      @NonNull  File localDir,
-      @NonNull  Properties sourceProps,
-      @NonNull  AndroidVersion version,
-      @Nullable IdDisplay tag,
-      @NonNull  String abi,
-      @NonNull  MajorRevision revision) {
+                              @NonNull  File localDir,
+                              @NonNull  Properties sourceProps,
+                              @NonNull  AndroidVersion version,
+                              @Nullable IdDisplay tag,
+                              @NonNull  String abi,
+                              @NonNull PreciseRevision revision) {
         super(localSdk, localDir, sourceProps);
         mDesc = PkgDesc.Builder.newSysImg(version, tag, abi, revision).create();
     }

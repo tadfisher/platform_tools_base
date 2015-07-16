@@ -21,18 +21,20 @@ import com.android.annotations.Nullable;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.ISystemImage;
 import com.android.sdklib.repository.MajorRevision;
+import com.android.sdklib.repository.PkgProps;
+import com.android.sdklib.repository.PreciseRevision;
 import com.android.sdklib.repository.descriptors.IPkgDesc;
 import com.android.sdklib.repository.descriptors.IdDisplay;
 import com.android.sdklib.repository.descriptors.PkgDesc;
+import com.android.sdklib.repository.descriptors.PkgType;
 
 import java.io.File;
 import java.util.Properties;
 
 /**
- * Local add-on system-image package, for a given addon's {@link AndroidVersion} and given ABI.
- * The system-image tag is the add-on name.
- * The package itself has a major revision.
- * There should be only one for a given android platform version & ABI.
+ * Local add-on system-image package, for a given addon's {@link AndroidVersion} and given ABI. The
+ * system-image tag is the add-on name. The package itself has a major revision. There should be
+ * only one for a given android platform version & ABI.
  */
 public class LocalAddonSysImgPkgInfo extends LocalPkgInfo {
 
@@ -41,16 +43,25 @@ public class LocalAddonSysImgPkgInfo extends LocalPkgInfo {
     private final IPkgDesc mDesc;
 
     public LocalAddonSysImgPkgInfo(@NonNull LocalSdk localSdk,
-                              @NonNull File localDir,
-                              @NonNull Properties sourceProps,
-                              @NonNull AndroidVersion version,
-                              @Nullable IdDisplay addonVendor,
-                              @Nullable IdDisplay addonName,
-                              @NonNull String abi,
-                              @NonNull MajorRevision revision) {
+            @NonNull File localDir,
+            @NonNull Properties sourceProps,
+            @NonNull AndroidVersion version,
+            @Nullable IdDisplay addonVendor,
+            @Nullable IdDisplay addonName,
+            @NonNull String abi,
+            @NonNull PreciseRevision revision) {
         super(localSdk, localDir, sourceProps);
-        mDesc = PkgDesc.Builder.newAddonSysImg(version, addonVendor, addonName, abi, revision)
-                               .create();
+        if (sourceProps.containsKey(PkgProps.PKG_ID)) {
+            mDesc = PkgDesc.Builder.newGeneric(PkgType.PKG_ADDON_SYS_IMAGE,
+                    sourceProps.getProperty(PkgProps.PKG_ID), null, revision, null)
+                    .setAndroidVersion(version)
+
+                    .create();
+        }
+        else {
+            mDesc = PkgDesc.Builder.newAddonSysImg(version, addonVendor, addonName, abi, revision)
+                    .create();
+        }
     }
 
     @NonNull

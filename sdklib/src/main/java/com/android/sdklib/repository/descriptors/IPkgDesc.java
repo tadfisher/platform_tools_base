@@ -56,6 +56,9 @@ public interface IPkgDesc extends Comparable<IPkgDesc>, IPkgCapabilities, IListD
     String getListDisplay();
 
     @Nullable
+    IdDisplay getName();
+
+    @Nullable
     String getDescriptionShort();
 
     @Nullable

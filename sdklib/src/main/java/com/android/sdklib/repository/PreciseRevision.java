@@ -26,6 +26,9 @@ import com.android.annotations.NonNull;
  * since versions x.y.0 and version x.y are not the same.
  */
 public class PreciseRevision extends FullRevision {
+
+    public static final PreciseRevision NOT_SPECIFIED = new PreciseRevision(MISSING_MAJOR_REV);
+
     private final int mPrecision;
 
     /**
@@ -54,6 +57,18 @@ public class PreciseRevision extends FullRevision {
         this(major, minor, IMPLICIT_MICRO_REV, NOT_A_PREVIEW, PRECISION_MINOR, DEFAULT_SEPARATOR);
     }
 
+    public PreciseRevision(FullRevision revision) {
+        this(revision.getMajor(), revision.getMinor(), revision.getMicro(), revision.getPreview());
+    }
+
+    public PreciseRevision(MajorRevision revision) {
+        this(revision.getMajor());
+    }
+
+    public PreciseRevision(NoPreviewRevision revision) {
+        this(revision.getMajor(), revision.getMinor(), revision.getMicro());
+    }
+
     public PreciseRevision(int major, int minor, int micro) {
         this(major, minor, micro, NOT_A_PREVIEW, PRECISION_MICRO, DEFAULT_SEPARATOR);
     }
@@ -71,6 +86,13 @@ public class PreciseRevision extends FullRevision {
             String separator, FullRevision.PreviewType previewType) {
         super(major, minor, micro, previewType, preview, separator);
         mPrecision = precision;
+    }
+
+    public PreciseRevision(int major, Integer minor, Integer micro, Integer preview) {
+        this(major, minor == null ? 0 : minor, micro == null ? 0 : micro,
+                preview == null ? 0 : preview,
+                preview != null ? PRECISION_PREVIEW : micro != null ? PRECISION_MICRO
+                        : minor != null ? PRECISION_MINOR : PRECISION_MAJOR, DEFAULT_SEPARATOR);
     }
 
     /**
@@ -149,5 +171,13 @@ public class PreciseRevision extends FullRevision {
             return mPrecision - rhs.mPrecision;
         }
         return delta;
+    }
+
+    public MajorRevision toMajorRevision() {
+        return new MajorRevision(getMajor());
+    }
+
+    public NoPreviewRevision toNoPreviewRevision() {
+        return new NoPreviewRevision(getMajor(), getMinor(), getMicro());
     }
 }

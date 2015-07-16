@@ -19,9 +19,11 @@ package com.android.sdklib.repository.local;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.sdklib.BuildToolInfo;
-import com.android.sdklib.repository.FullRevision;
+import com.android.sdklib.repository.PkgProps;
+import com.android.sdklib.repository.PreciseRevision;
 import com.android.sdklib.repository.descriptors.IPkgDesc;
 import com.android.sdklib.repository.descriptors.PkgDesc;
+import com.android.sdklib.repository.descriptors.PkgType;
 
 import java.io.File;
 import java.util.Properties;
@@ -35,12 +37,18 @@ public class LocalBuildToolPkgInfo extends LocalPkgInfo {
     private final IPkgDesc mDesc;
 
     public LocalBuildToolPkgInfo(@NonNull LocalSdk localSdk,
-                                 @NonNull File localDir,
-                                 @NonNull Properties sourceProps,
-                                 @NonNull FullRevision revision,
-                                 @Nullable BuildToolInfo btInfo) {
+            @NonNull File localDir,
+            @NonNull Properties sourceProps,
+            @NonNull PreciseRevision revision,
+            @Nullable BuildToolInfo btInfo) {
         super(localSdk, localDir, sourceProps);
-        mDesc = PkgDesc.Builder.newBuildTool(revision).create();
+        if (sourceProps.containsKey(PkgProps.PKG_ID)) {
+            mDesc = PkgDesc.Builder
+                    .newGeneric(PkgType.PKG_BUILD_TOOLS, sourceProps.getProperty(PkgProps.PKG_ID),
+                            null, revision, null).create();
+        } else {
+            mDesc = PkgDesc.Builder.newBuildTool(revision).create();
+        }
         mBuildToolInfo = btInfo;
     }
 
