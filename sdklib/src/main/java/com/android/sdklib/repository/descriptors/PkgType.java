@@ -47,66 +47,66 @@ public enum PkgType implements IPkgCapabilities {
      *  Has {@link FullRevision}. */
     PKG_TOOLS(0x0001, SdkConstants.FD_TOOLS,
             "Android SDK Tools $FULL",
-            false, true /*full-r*/, false, false, false, false, false, true /*min-pt-r*/),
+            false, true, false, false, false, false, false, true, false),
 
     /** Filter the SDK/platform-tools folder.
      *  Has {@link FullRevision}. */
     PKG_PLATFORM_TOOLS(0x0002, SdkConstants.FD_PLATFORM_TOOLS,
             "Android SDK Platform-Tools $FULL",
-            false, true /*full-r*/, false, false, false, false, false, false),
+            false, true, false, false, false, false, false, false, false),
 
     /** Filter the SDK/build-tools folder.
      *  Has {@link FullRevision}. */
     PKG_BUILD_TOOLS(0x0004, SdkConstants.FD_BUILD_TOOLS,
             "Android SDK Build-Tools $FULL",
-            false, true /*full-r*/, false, false, false, false, false, false),
+            false, true, false, false, false, false, false, false, false),
 
     /** Filter the SDK/docs folder.
      *  Has {@link MajorRevision}. */
     PKG_DOC(0x0010, SdkConstants.FD_DOCS,
             "Documentation for Android SDK",
-            true /*maj-r*/, false, true /*api*/, false, false, false, false, false),
+            true /*maj-r*/, false, true /*api*/, false, false, false, false, false, false),
 
     /** Filter the SDK/platforms.
      *  Has {@link AndroidVersion}. Has {@link MajorRevision}.
      *  Path returns the platform's target hash. */
     PKG_PLATFORM(0x0100, SdkConstants.FD_PLATFORMS,
             "Android SDK Platform $API{?$MAJ>1:, rev $MAJ}",
-            true /*maj-r*/, false, true /*api*/, true /*path*/, false, false, true /*min-t-r*/, false),
+            true, false, true, true, false, false, true, false, false),
 
     /** Filter the SDK/system-images/android.
      * Has {@link AndroidVersion}. Has {@link MajorRevision}. Has tag.
      * Path returns the system image ABI. */
     PKG_SYS_IMAGE(0x0200, SdkConstants.FD_SYSTEM_IMAGES,
             "$PATH System Image, Android $API{?$MAJ>1:, rev $MAJ}",
-            true /*maj-r*/, false, true /*api*/, true /*path*/, true /*tag*/, false /*vend*/, false, false),
+            true, false, true, true, true, false, false, false, false),
 
     /** Filter the SDK/addons.
      *  Has {@link AndroidVersion}. Has {@link MajorRevision}.
      *  Path returns the add-on's target hash. */
     PKG_ADDON(0x0400, SdkConstants.FD_ADDONS,
             "{|$NAME|$VEND $PATH|}, Android $API{?$MAJ>1:, rev $MAJ}",
-            true /*maj-r*/, false, true /*api*/, true /*path*/, false, true /*vend*/, false, false),
+            true, false, true, true, false, true, false, false, true),
 
     /** Filter the SDK/system-images/addons.
      * Has {@link AndroidVersion}. Has {@link MajorRevision}. Has tag.
      * Path returns the system image ABI. */
     PKG_ADDON_SYS_IMAGE(0x0800, SdkConstants.FD_SYSTEM_IMAGES,
             "{|$NAME|$VEND $PATH|} System Image, Android $API{?$MAJ>1:, rev $MAJ}",
-            true /*maj-r*/, false, true /*api*/, true /*path*/, true /*tag*/, true /*vend*/, false, false),
+            true, false, true, true, true, true, false, false, false),
 
     /** Filter the SDK/samples folder.
      *  Note: this will not detect samples located in the SDK/extras packages.
      *  Has {@link AndroidVersion}. Has {@link MajorRevision}. */
     PKG_SAMPLE(0x1000, SdkConstants.FD_SAMPLES,
             "Samples for Android $API{?$MAJ>1:, rev $MAJ}",
-            true /*maj-r*/, false, true /*api*/, false, false, false, true /*min-t-r*/, false),
+            true, false, true, false, false, false, true, false, false),
 
     /** Filter the SDK/sources folder.
      *  Has {@link AndroidVersion}. Has {@link MajorRevision}. */
     PKG_SOURCE(0x2000, SdkConstants.FD_ANDROID_SOURCES,
             "Sources for Android $API{?$MAJ>1:, rev $MAJ}",
-            true /*maj-r*/, false, true /*api*/, false, false, false, false, false),
+            true, false, true, false, false, false, false, false, false),
 
     /** Filter the SDK/extras folder.
      *  Has {@code Path}. Has {@link MajorRevision}.
@@ -114,11 +114,11 @@ public enum PkgType implements IPkgCapabilities {
      *  Cast the descriptor to {@link IPkgDescExtra} to get extra's specific attributes. */
     PKG_EXTRA(0x4000, SdkConstants.FD_EXTRAS,
             "{|$NAME|$VEND $PATH|}{?$FULL>1:, rev $FULL}",
-            false, true /*full-r*/, false, true /*path*/, false, true /*vend*/, false, false),
+            false, true /*full-r*/, false, true /*path*/, false, true /*vend*/, false, false, true),
 
     /** The SDK/ndk folder. */
     PKG_NDK(0x8000, SdkConstants.FD_NDK, "",
-                    false, true, false, false, false, false, false, false);
+                    false, true, false, false, false, false, false, false, false);
 
     /** A collection of all the known PkgTypes. */
     public static final EnumSet<PkgType> PKG_ALL = EnumSet.allOf(PkgType.class);
@@ -138,6 +138,7 @@ public enum PkgType implements IPkgCapabilities {
     private final boolean mHasMinToolsRev;
     private final boolean mHasMinPlatformToolsRev;
     private final String mListDisplayPattern;
+    private final boolean mHasName;
 
     PkgType(int intValue,
             @NonNull String folderName,
@@ -149,7 +150,8 @@ public enum PkgType implements IPkgCapabilities {
             boolean hasTag,
             boolean hasVendor,
             boolean hasMinToolsRev,
-            boolean hasMinPlatformToolsRev) {
+            boolean hasMinPlatformToolsRev,
+            boolean hasName) {
         mIntValue = intValue;
         mFolderName = folderName;
         mListDisplayPattern = listDisplayPattern;
@@ -161,6 +163,7 @@ public enum PkgType implements IPkgCapabilities {
         mHasVendor = hasVendor;
         mHasMinToolsRev = hasMinToolsRev;
         mHasMinPlatformToolsRev = hasMinPlatformToolsRev;
+        mHasName = hasName;
     }
 
     /** Returns the integer value matching the type, compatible with the old LocalSdkParer. */
@@ -202,6 +205,10 @@ public enum PkgType implements IPkgCapabilities {
     @Override
     public boolean hasVendor() {
         return mHasVendor;
+    }
+
+    public boolean hasName() {
+        return mHasName;
     }
 
     @Override

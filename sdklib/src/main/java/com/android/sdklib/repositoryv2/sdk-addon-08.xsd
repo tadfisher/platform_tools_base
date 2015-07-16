@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (C) 2015 The Android Open Source Project
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<!--
+xjc -b com/android/sdklib/repositorycore/api/common.xjb \
+-p com.android.sdklib.repositoryv2.generated.addon.v1 \
+com/android/sdklib/repositoryv2/sdk-addon-08.xsd -extension
+-->
+<xsd:schema
+        targetNamespace="http://schemas.android.com/sdk/android/addon/8"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+        xmlns:sdk="http://schemas.android.com/sdk/android/addon/8"
+        xmlns:common="http://schemas.android.com/sdk/android/common/01"
+        xmlns:addon7="http://schemas.android.com/sdk/android/addon/7"
+        elementFormDefault="unqualified"
+        attributeFormDefault="unqualified"
+        version="1">
+
+    <xsd:import namespace="http://schemas.android.com/sdk/android/common/01"
+                schemaLocation="../repositorycore/api/sdk-common-01.xsd"/>
+
+    <!-- The repository contains a collection of downloadable items known as
+         "packages". Each package has a type and various attributes and contains
+         a list of file "archives" that can be downloaded for specific OSes.
+
+         An Android Addon repository is a web site that contains an "addon.xml"
+         file that conforms to this XML Schema.
+
+         History:
+         - v1 is used by the SDK Updater in Tools r8. It is split out of the
+           main SDK Repository XML Schema and can only contain <addon> and
+           <extra> packages.
+
+         - v2 is used by the SDK Updater in Tools r12.
+            - <extra> element now has a <project-files> element that contains 1 or
+              or more <path>, each indicating the relative path of a file that this package
+              can contribute to installed projects.
+            - <addon> element now has an optional <layoutlib> that indicates the API
+              and revision of the layout library for this particular add-on, if any.
+
+         - v3 is used by the SDK Manager in Tools r14:
+            - <extra> now has an <old-paths> element, a ;-separated list of old paths that
+              should be detected and migrated to the new <path> for that package.
+
+         - v4 is used by the SDK Manager in Tools r18:
+            - <extra> and <addon> are not in the Repository XSD v6 anymore.
+            - <extra> get a new field <name-display>, which is used by the SDK Manager to
+              customize the name of the extra in the list display. The single <vendor>
+              field becomes <vendor-id> and <vendor-display>, the id being used internally
+              and the display in the UI.
+            - <addon> does the same, where <name> is replaced by <name-id> and <name-display>
+              and <vendor> is replaced by <vendor-id> and <vendor-display>.
+
+         - v5 is used by the SDK Manager in Tools r20:
+            - The <beta-rc> element is no longer supported. It was never implemented anyway.
+            - For <tool> and <platform-tool> packages, the <revision> element becomes a
+              a "full revision" element with <major>, <minor>, <micro> and <preview> sub-elements.
+            - <min-tools-rev> for <extra> becomes a full revision element.
+
+         - v6 is used by the SDK Manager in Tools r22.3:
+            - <extra> revision is now a "full revision" element with <major>, <minor>, <micro>.
+              It does not support the <revision><preview> sub-element though.
+
+         - v7 is used by the SDK Manager in Tools r22.6.4:
+            - It introduces a <list-display> string for all package types.
+            - it changes <archive os=... arch=...> to sub-elements: <host-os>, <host-bits>,
+              <jvm-bits> and <min-jvm-version>.
+    -->
+
+
+    <xsd:element name="sdk-addon" type="common:repositoryType"/>
+
+    <xsd:complexType name="addonDetailsType">
+        <xsd:complexContent>
+            <xsd:extension base="common:typeDetails">
+                <xsd:all>
+                    <xsd:element name="vendor" type="common:idDisplayType"/>
+                    <xsd:element name="api-level" type="xsd:int"/>
+                </xsd:all>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="extraDetailsType">
+        <xsd:complexContent>
+            <xsd:extension base="common:typeDetails">
+                <xsd:all>
+                    <xsd:element name="vendor" type="common:idDisplayType"/>
+                </xsd:all>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+</xsd:schema>
