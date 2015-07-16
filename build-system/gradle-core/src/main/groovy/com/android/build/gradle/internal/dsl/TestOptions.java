@@ -14,45 +14,68 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.dsl
+package com.android.build.gradle.internal.dsl;
 
-import groovy.transform.CompileStatic
-import org.gradle.api.DomainObjectSet
-import org.gradle.api.internal.DefaultDomainObjectSet
-import org.gradle.api.tasks.testing.Test
-import org.gradle.util.ConfigureUtil
+import org.gradle.api.Action;
+import org.gradle.api.DomainObjectSet;
+import org.gradle.api.internal.DefaultDomainObjectSet;
+import org.gradle.api.tasks.testing.Test;
+import org.gradle.util.ConfigureUtil;
+
+import groovy.lang.Closure;
+
 /**
  * Options for running tests.
  */
-@CompileStatic
-class TestOptions {
+public class TestOptions {
     /** Name of the results directory. */
-    String resultsDir
+    private String resultsDir;
 
     /** Name of the reports directory. */
-    String reportDir
+    private String reportDir;
 
     /**
      * Options for controlling unit tests execution.
      *
      * @since 1.1
      */
-    UnitTestOptions unitTests = new UnitTestOptions()
+    private final UnitTestOptions unitTests = new UnitTestOptions();
 
     /**
      * Configures unit test options.
      *
      * @since 1.2
      */
-    def unitTests(Closure closure) {
+    public void unitTests(Closure closure) {
         ConfigureUtil.configure(closure, unitTests);
+    }
+
+    public UnitTestOptions getUnitTests() {
+        return unitTests;
+    }
+
+    public String getResultsDir() {
+        return resultsDir;
+    }
+
+    public void setResultsDir(String resultsDir) {
+        this.resultsDir = resultsDir;
+    }
+
+    public String getReportDir() {
+        return reportDir;
+    }
+
+    public void setReportDir(String reportDir) {
+        this.reportDir = reportDir;
     }
 
     /**
      * Options for controlling unit tests execution.
      */
-    static class UnitTestOptions {
-        private DomainObjectSet<Test> testTasks = new DefaultDomainObjectSet<Test>(Test)
+    public static class UnitTestOptions {
+        private DomainObjectSet<Test> testTasks = new DefaultDomainObjectSet<Test>(Test.class);
+        private boolean returnDefaultValues;
 
         /**
          * Whether unmocked methods from android.jar should throw exceptions or return default
@@ -62,7 +85,13 @@ class TestOptions {
          *
          * @since 1.1
          */
-        boolean returnDefaultValues
+        public boolean isReturnDefaultValues() {
+            return returnDefaultValues;
+        }
+
+        public void setReturnDefaultValues(boolean returnDefaultValues) {
+            this.returnDefaultValues = returnDefaultValues;
+        }
 
         /**
          * Configures all unit testing tasks.
@@ -86,11 +115,15 @@ class TestOptions {
          *
          * @since 1.2
          */
-        def all(Closure configClosure) {
-            testTasks.all { Test testTask ->
-                ConfigureUtil.configure(configClosure, testTask)
-            }
+        public void all(final Closure<Test> configClosure) {
+            testTasks.all(new Action<Test>() {
+                @Override
+                public void execute(Test testTask) {
+                    ConfigureUtil.configure(configClosure, testTask);
+                }
+            });
         }
+
 
         /**
          * Configures a given test task. The configuration closures that were passed to
@@ -102,8 +135,8 @@ class TestOptions {
          *
          * @since 1.2
          */
-        public applyConfiguration(Test task) {
-            this.testTasks.add(task)
+        public void applyConfiguration(Test task) {
+            this.testTasks.add(task);
         }
     }
 }
