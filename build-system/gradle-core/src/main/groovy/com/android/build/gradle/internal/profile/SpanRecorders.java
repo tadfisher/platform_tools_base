@@ -14,58 +14,40 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.profile
+package com.android.build.gradle.internal.profile;
 
-import com.android.annotations.NonNull
-import com.android.builder.profile.ExecutionType
-import com.android.builder.profile.Recorder
-import com.android.builder.profile.ThreadRecorder
-import org.gradle.api.Project
+import com.android.annotations.NonNull;
+import com.android.builder.profile.ExecutionType;
+import com.android.builder.profile.Recorder;
+import com.android.builder.profile.ThreadRecorder;
+import org.gradle.api.Project;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
- * Groovy language helper to record execution spans.
+ * Helper to record execution spans.
  */
-class SpanRecorders {
+public class SpanRecorders {
 
-    public final static String PROJECT = "project";
-    public final static String VARIANT = "variant";
+    public static final String PROJECT = "project";
+    public static final String VARIANT = "variant";
 
-    static <T> T record(@NonNull ExecutionType executionType, @NonNull Closure<T> closure) {
-        // have to explicitly cast as groovy does not support inner classes with generics...
-        return (T) ThreadRecorder.get().record(executionType, new Recorder.Block() {
-
-            @Override
-            Object call() throws Exception {
-                return closure.call()
-            }
-        })
-    }
-
-    static <T> T record(@NonNull Project project,
-            @NonNull ExecutionType executionType,
-            @NonNull Closure<T> closure) {
-        // have to explicitly cast as groovy does not support inner classes with generics...
-       return (T) ThreadRecorder.get().record(executionType, new Recorder.Block() {
-
-            @Override
-            Object call() throws Exception {
-                return closure.call()
-            }
-        }, new Recorder.Property(PROJECT, project.getName()))
-    }
 
     /**
      * Records an execution span, using a Java {@link Recorder.Block}
      */
-    static <T> T record(@NonNull Project project,
+    public static <T> T record(@NonNull Project project,
             @NonNull ExecutionType executionType,
             @NonNull Recorder.Block<T> block,
             Recorder.Property... properties) {
-        List<Recorder.Property> mergedProperties = new ArrayList<>(properties.length + 1);
-        mergedProperties.addAll(properties);
-        mergedProperties.add(new Recorder.Property(PROJECT, project.getName()))
+        List<Recorder.Property> mergedProperties =
+                new ArrayList<Recorder.Property>(properties.length + 1);
+        mergedProperties.addAll(Arrays.asList(properties));
+        mergedProperties.add(new Recorder.Property(PROJECT, project.getName()));
         return (T) ThreadRecorder.get().record(
                 executionType, block,
-                mergedProperties.toArray(new Recorder.Property[mergedProperties.size()]))
+                mergedProperties.toArray(new Recorder.Property[mergedProperties.size()]));
     }
 }
