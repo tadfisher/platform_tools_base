@@ -14,26 +14,30 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.scope;
+package com.android.build.gradle.internal.pipeline;
 
 import com.android.annotations.NonNull;
 
-import org.gradle.api.Action;
+import java.io.File;
+import java.util.Collection;
+import java.util.Map;
 
 /**
- * Interface of Task configuration Actions.
+ *
  */
-public interface TaskConfigAction<T> extends Action<T> {
+public interface InputStream {
 
-    /**
-     * Return the name of the task to be configured.
-     */
-    @NonNull
-    String getName();
+    enum FileStatus { ADDED, CHANGED, REMOVED }
 
-    /**
-     * Return the class type of the task to be configured.
-     */
     @NonNull
-    Class<T> getType();
+    StreamType getType();
+
+    @NonNull
+    StreamScope getScope();
+
+    @NonNull
+    Collection<File> getFiles();
+
+    @NonNull
+    Map<File, FileStatus> getChangedFiles();
 }

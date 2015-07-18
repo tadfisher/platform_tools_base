@@ -20,6 +20,7 @@ import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.scope.ConventionMappingHelper
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.scope.VariantScopeImpl
 import com.android.builder.model.SourceProvider
 import org.gradle.api.tasks.Sync
 
