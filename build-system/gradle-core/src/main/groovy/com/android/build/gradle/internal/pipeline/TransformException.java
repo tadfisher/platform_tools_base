@@ -14,26 +14,26 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.scope;
-
-import com.android.annotations.NonNull;
-
-import org.gradle.api.Action;
+package com.android.build.gradle.internal.pipeline;
 
 /**
- * Interface of Task configuration Actions.
+ * Created by xav on 7/31/15.
  */
-public interface TaskConfigAction<T> extends Action<T> {
+public class TransformException extends Exception {
 
-    /**
-     * Return the name of the task to be configured.
-     */
-    @NonNull
-    String getName();
+    public TransformException() {
+        super();
+    }
 
-    /**
-     * Return the class type of the task to be configured.
-     */
-    @NonNull
-    Class<T> getType();
+    public TransformException(String s) {
+        super(s);
+    }
+
+    public TransformException(String s, Throwable throwable) {
+        super(s, throwable);
+    }
+
+    public TransformException(Throwable throwable) {
+        super(throwable);
+    }
 }

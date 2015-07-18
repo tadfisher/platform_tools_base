@@ -14,26 +14,24 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.scope;
+package com.android.build.gradle.internal.pipeline;
 
 import com.android.annotations.NonNull;
 
-import org.gradle.api.Action;
+import java.io.File;
 
 /**
- * Interface of Task configuration Actions.
+ * Created by xav on 7/31/15.
  */
-public interface TaskConfigAction<T> extends Action<T> {
+public interface OutputStream {
 
-    /**
-     * Return the name of the task to be configured.
-     */
     @NonNull
-    String getName();
+    StreamType getType();
 
-    /**
-     * Return the class type of the task to be configured.
-     */
     @NonNull
-    Class<T> getType();
+    StreamScope getScope();
+
+    @NonNull
+    File getFolder();
+
 }
