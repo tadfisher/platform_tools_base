@@ -115,6 +115,7 @@ public abstract class BasePlugin {
             "com.android.build.gradle.overrideVersionCheck";
     private static final String SKIP_PATH_CHECK_PROPERTY =
             "com.android.build.gradle.overridePathCheck";
+    private static final String THREAD_POOL_SIZE_PROPERTY = "com.android.build.threadPoolSize";
     /** default retirement age in days since its inception date for RC or beta versions. */
     private static final int DEFAULT_RETIREMENT_AGE_FOR_NON_RELEASE_IN_DAYS = 40;
 
@@ -336,6 +337,8 @@ public abstract class BasePlugin {
                 getLogger(),
                 isVerbose());
 
+        setThreadPoolSize();
+
         project.getPlugins().apply(JavaBasePlugin.class);
 
         jacocoPlugin = project.getPlugins().apply(JacocoPlugin.class);
@@ -409,6 +412,23 @@ public abstract class BasePlugin {
                 });
     }
 
+    private void setThreadPoolSize() {
+        if (!project.hasProperty(THREAD_POOL_SIZE_PROPERTY)) {
+            return;
+        }
+
+        Object threadPoolSizeProperty = project.property(THREAD_POOL_SIZE_PROPERTY);
+        if (!(threadPoolSizeProperty instanceof String)) {
+            project.getLogger().error("com.android.threadPoolSize should be an integer.");
+            return;
+        }
+
+        try {
+            ExecutorSingleton.setThreadPoolSize(Integer.parseInt((String) threadPoolSizeProperty));
+        } catch (NumberFormatException e) {
+            project.getLogger().error("com.android.threadPoolSize should be an integer.");
+        }
+    }
 
     private void createExtension() {
         final NamedDomainObjectContainer<BuildType> buildTypeContainer = project.container(
