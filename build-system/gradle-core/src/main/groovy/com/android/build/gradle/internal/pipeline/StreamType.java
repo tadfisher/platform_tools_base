@@ -14,26 +14,11 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.scope;
-
-import com.android.annotations.NonNull;
-
-import org.gradle.api.Action;
+package com.android.build.gradle.internal.pipeline;
 
 /**
- * Interface of Task configuration Actions.
+ * The type of data represented by a Stream or manipulated by a Transform.
  */
-public interface TaskConfigAction<T> extends Action<T> {
-
-    /**
-     * Return the name of the task to be configured.
-     */
-    @NonNull
-    String getName();
-
-    /**
-     * Return the class type of the task to be configured.
-     */
-    @NonNull
-    Class<T> getType();
+public enum StreamType {
+    CODE, RESOURCES
 }

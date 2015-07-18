@@ -14,23 +14,24 @@
  * limitations under the License.
  */
 package com.android.build.gradle.tasks
-
 import com.android.SdkConstants
+import com.android.annotations.NonNull
 import com.android.annotations.Nullable
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.dsl.DexOptions
+import com.android.build.gradle.internal.pipeline.StreamBasedTask
+import com.android.build.gradle.internal.pipeline.StreamType
+import com.android.build.gradle.internal.pipeline.TransformPipeline
 import com.android.build.gradle.internal.scope.ConventionMappingHelper
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.BaseTask
 import com.android.build.gradle.internal.variant.ApkVariantData
 import com.android.build.gradle.internal.variant.TestVariantData
 import com.android.ide.common.process.LoggedProcessOutputHandler
 import com.android.utils.FileUtils
+import com.google.common.collect.ImmutableList
 import org.codehaus.groovy.runtime.DefaultGroovyMethods
-import com.android.build.gradle.internal.PostCompilationData
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
@@ -45,7 +46,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import static com.android.builder.core.VariantType.DEFAULT
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES
 
-public class Dex extends BaseTask {
+public class Dex extends StreamBasedTask {
 
     // ----- PUBLIC TASK API -----
 
@@ -63,11 +64,7 @@ public class Dex extends BaseTask {
         getBuildTools().getRevision()
     }
 
-    @InputFiles @Optional
-    Collection<File> inputFiles
-    @InputDirectory @Optional
-    File inputDir
-
+    // pre-dex libraries
     @InputFiles
     Collection<File> libraries
 
@@ -91,20 +88,16 @@ public class Dex extends BaseTask {
      */
     @TaskAction
     void taskAction(IncrementalTaskInputs inputs) {
-        Collection<File> _inputFiles = getInputFiles()
-        File _inputDir = getInputDir()
-        if (_inputFiles == null && _inputDir == null) {
-            throw new RuntimeException("Dex task '${getName()}: inputDir and inputFiles cannot both be null");
-        }
+        Collection<File> inputFiles = getStreamInputs()
 
         if (!dexOptions.incremental || !enableIncremental) {
-            doTaskAction(_inputFiles, _inputDir, false /*incremental*/)
+            doTaskAction(inputFiles, false /*incremental*/)
             return
         }
 
         if (!inputs.isIncremental()) {
             project.logger.info("Unable to do incremental execution: full task run.")
-            doTaskAction(_inputFiles, _inputDir, false /*incremental*/)
+            doTaskAction(inputFiles, false /*incremental*/)
             return
         }
 
@@ -129,29 +122,15 @@ public class Dex extends BaseTask {
             }
         }
 
-        doTaskAction(_inputFiles, _inputDir, !forceFullRun.get())
+        doTaskAction(inputFiles, !forceFullRun.get())
     }
 
     private void doTaskAction(
             @Nullable Collection<File> inputFiles,
-            @Nullable File inputDir,
             boolean incremental) {
         File outFolder = getOutputFolder()
         if (!incremental) {
             FileUtils.emptyFolder(outFolder)
-        }
-
-        File tmpFolder = getTmpFolder()
-        tmpFolder.mkdirs()
-
-        // if some of our .jar input files exist, just reset the inputDir to null
-        for (File inputFile : inputFiles) {
-            if (inputFile.exists()) {
-                inputDir = null;
-            }
-        }
-        if (inputDir != null) {
-            inputFiles = project.files(inputDir).files
         }
 
         getBuilder().convertByteCode(
@@ -162,27 +141,22 @@ public class Dex extends BaseTask {
                 getMainDexListFile(),
                 getDexOptions(),
                 getAdditionalParameters(),
-                tmpFolder,
                 incremental,
                 getOptimize(),
                 new LoggedProcessOutputHandler(getILogger()))
     }
 
-
     public static class ConfigAction implements TaskConfigAction<Dex> {
 
-        private final VariantScope scope;
+        private final TransformPipeline transformPipeline
 
-        private final PostCompilationData pcData;
-
-        public ConfigAction(VariantScope scope, PostCompilationData pcData) {
-            this.scope = scope;
-            this.pcData = pcData;
+        public ConfigAction(@NonNull TransformPipeline transformPipeline) {
+            this.transformPipeline = transformPipeline
         }
 
         @Override
         public String getName() {
-            return scope.getTaskName("dex")
+            return transformPipeline.getVariantScope().getTaskName("dex")
         }
 
         @Override
@@ -192,6 +166,8 @@ public class Dex extends BaseTask {
 
         @Override
         public void execute(Dex dexTask) {
+            VariantScope scope = transformPipeline.getVariantScope()
+
             ApkVariantData variantData = (ApkVariantData) scope.getVariantData();
             final GradleVariantConfiguration config = variantData.getVariantConfiguration();
 
@@ -220,10 +196,8 @@ public class Dex extends BaseTask {
             dexTask.setOptimize(true);//!variantData.variantConfiguration.buildType.debuggable
 
             // inputs
-            if (pcData.getInputDirCallable() != null) {
-                ConventionMappingHelper.map(dexTask, "inputDir", pcData.getInputDirCallable());
-            }
-            ConventionMappingHelper.map(dexTask, "inputFiles", pcData.getInputFilesCallable());
+            dexTask.inputStreams = ImmutableList.copyOf(transformPipeline.getStreamsByType(
+                    StreamType.CODE))
             ConventionMappingHelper.map(dexTask, "libraries", pcData.getInputLibrariesCallable());
 
             if (isMultiDexEnabled && isLegacyMultiDexMode) {
@@ -235,6 +209,9 @@ public class Dex extends BaseTask {
                     }
                 });
             }
+
+            // no output stream for this class.
+            dexTask.outputStreams = ImmutableList.of()
         }
     }
 }
