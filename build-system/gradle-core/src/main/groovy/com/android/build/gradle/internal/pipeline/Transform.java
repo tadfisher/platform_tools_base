@@ -14,26 +14,43 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.scope;
+package com.android.build.gradle.internal.pipeline;
 
 import com.android.annotations.NonNull;
 
-import org.gradle.api.Action;
+import java.io.File;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
- * Interface of Task configuration Actions.
+ * A bytecode transform
  */
-public interface TaskConfigAction<T> extends Action<T> {
+public interface Transform {
 
-    /**
-     * Return the name of the task to be configured.
-     */
     @NonNull
     String getName();
 
-    /**
-     * Return the class type of the task to be configured.
-     */
     @NonNull
-    Class<T> getType();
+    Set<StreamType> getTypes();
+
+    @NonNull
+    StreamScope getScope();
+
+    @NonNull
+    TransformType getTransformType();
+
+    @NonNull
+    Collection<File> getSecondaryFileInputs();
+
+    @NonNull
+    Collection<File> getSecondaryFileOutputs();
+
+    @NonNull
+    Map<String, Object> getParameterInputs();
+
+    void transform(
+            @NonNull List<Stream> inputs,
+            @NonNull List<Stream> outputs);
 }

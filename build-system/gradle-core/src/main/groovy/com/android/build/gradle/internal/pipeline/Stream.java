@@ -14,26 +14,35 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.scope;
+package com.android.build.gradle.internal.pipeline;
 
 import com.android.annotations.NonNull;
 
-import org.gradle.api.Action;
+import java.io.File;
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
- * Interface of Task configuration Actions.
+ * Stream info for the actual processing.
+ * This contains information regarding the input and output of a stream, and its type.
+ *
+ * It's used to pass to Transform the information they need to do their transform.
  */
-public interface TaskConfigAction<T> extends Action<T> {
+public interface Stream {
+
+    @NonNull
+    StreamType getType();
+
+    @NonNull
+    StreamScope getScope();
 
     /**
-     * Return the name of the task to be configured.
+     * Returns the files.
      */
     @NonNull
-    String getName();
+    Callable<Collection<File>> getFiles();
 
-    /**
-     * Return the class type of the task to be configured.
-     */
     @NonNull
-    Class<T> getType();
+    List<Object> getDependencies();
 }

@@ -50,6 +50,9 @@ public interface JavaResourcesProvider {
     }
 
     @NonNull
+    String getName();
+
+    @NonNull
     ImmutableList<JavaResourcesLocation> getJavaResourcesLocations();
 
     /**
@@ -60,6 +63,11 @@ public interface JavaResourcesProvider {
         public static JavaResourcesProvider build(@NonNull final TaskFactory tasks,
                 @NonNull final AndroidTask<? extends JavaResourcesProvider> androidTask) {
             return new JavaResourcesProvider() {
+                @NonNull
+                @Override
+                public String getName() {
+                    return androidTask.getName();
+                }
                 @NonNull
                 @Override
                 public ImmutableList<JavaResourcesLocation> getJavaResourcesLocations() {

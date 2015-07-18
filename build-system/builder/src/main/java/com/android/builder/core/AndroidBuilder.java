@@ -29,7 +29,6 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
 import com.android.builder.compiling.DependencyFileProcessor;
 import com.android.builder.core.BuildToolsServiceLoader.BuildToolServiceLoader;
 import com.android.builder.dependency.ManifestDependency;
@@ -58,7 +57,6 @@ import com.android.builder.sdk.SdkInfo;
 import com.android.builder.sdk.TargetInfo;
 import com.android.builder.signing.SignedJarBuilder;
 import com.android.ide.common.internal.AaptCruncher;
-import com.android.ide.common.internal.CommandLineRunner;
 import com.android.ide.common.internal.LoggedErrorException;
 import com.android.ide.common.internal.PngCruncher;
 import com.android.ide.common.process.CachedProcessOutputHandler;
@@ -139,7 +137,7 @@ import java.util.zip.ZipFile;
  * {@link #processTestManifest(String, String, String, String, String, Boolean, Boolean, File, List, Map, File, File)}
  * {@link #processResources(AaptPackageProcessBuilder, boolean, ProcessOutputHandler)}
  * {@link #compileAllAidlFiles(List, File, File, List, DependencyFileProcessor, ProcessOutputHandler)}
- * {@link #convertByteCode(Collection, Collection, File, boolean, File, DexOptions, List, File, boolean, boolean, ProcessOutputHandler)}
+ * {@link #convertByteCode(Collection, Collection, File, boolean, File, DexOptions, List, boolean, boolean, ProcessOutputHandler)}
  * {@link #packageApk(String, File, Collection, Collection, String, Collection, File, Set, boolean, SigningConfig, PackagingOptions, SignedJarBuilder.IZipEntryFilter, String)}
  *
  * Java compilation is not handled but the builder provides the bootclasspath with
@@ -1160,7 +1158,7 @@ public class AndroidBuilder {
      * @return a list of leaf folder, never null.
      */
     @NonNull
-    public List<File> getLeafFolders(@NonNull String extension, List<File>... importFolders) {
+    public static List<File> getLeafFolders(@NonNull String extension, List<File>... importFolders) {
         List<File> results = Lists.newArrayList();
 
         if (importFolders != null) {
@@ -1212,7 +1210,6 @@ public class AndroidBuilder {
             @Nullable File mainDexList,
             @NonNull DexOptions dexOptions,
             @Nullable List<String> additionalParameters,
-            @NonNull File tmpFolder,
             boolean incremental,
             boolean optimize,
             @NonNull ProcessOutputHandler processOutputHandler)
@@ -1221,9 +1218,7 @@ public class AndroidBuilder {
         checkNotNull(preDexedLibraries, "preDexedLibraries cannot be null.");
         checkNotNull(outDexFolder, "outDexFolder cannot be null.");
         checkNotNull(dexOptions, "dexOptions cannot be null.");
-        checkNotNull(tmpFolder, "tmpFolder cannot be null");
         checkArgument(outDexFolder.isDirectory(), "outDexFolder must be a folder");
-        checkArgument(tmpFolder.isDirectory(), "tmpFolder must be a folder");
         checkState(mTargetInfo != null,
                 "Cannot call convertByteCode() before setTargetInfo() is called.");
 
@@ -1254,6 +1249,87 @@ public class AndroidBuilder {
         ProcessResult result = mJavaProcessExecutor.execute(javaProcessInfo, processOutputHandler);
         result.rethrowFailure().assertNormalExitValue();
     }
+
+    /**
+     * Converts the bytecode to Dalvik format
+     * @param input the input file
+     * @param outFile the location of the output file
+     * @param dexOptions dex options
+     * @param additionalParameters list of additional parameters to give to dx
+     *
+     * @throws IOException
+     * @throws InterruptedException
+     * @throws ProcessException
+     */
+    public void convertByteCode(
+            @NonNull List<File> inputs,
+            @NonNull File outFile,
+            @NonNull DexOptions dexOptions,
+            @Nullable List<String> additionalParameters,
+            @NonNull ProcessOutputHandler processOutputHandler)
+            throws IOException, InterruptedException, ProcessException {
+        checkNotNull(inputs, "input cannot be null.");
+        checkNotNull(dexOptions, "dexOptions cannot be null.");
+        checkState(mTargetInfo != null,
+                "Cannot call convertByteCode() before setTargetInfo() is called.");
+
+        BuildToolInfo buildToolInfo = mTargetInfo.getBuildTools();
+        DexProcessBuilder builder = new DexProcessBuilder(outFile);
+
+        builder.setVerbose(mVerboseExec)
+                .setNoStrict(true)
+                .addInputs(inputs);
+
+        if (additionalParameters != null) {
+            builder.additionalParameters(additionalParameters);
+        }
+
+        JavaProcessInfo javaProcessInfo = builder.build(buildToolInfo, dexOptions);
+
+        ProcessResult result = mJavaProcessExecutor.execute(javaProcessInfo, processOutputHandler);
+        result.rethrowFailure().assertNormalExitValue();
+    }
+
+    /**
+     * Converts the bytecode to Dalvik format
+     * @param inputDir the input directory
+     * @param outDexFolder the location of the output folder
+     * @param dexOptions dex options
+     * @param additionalParameters list of additional parameters to give to dx
+     *
+     * @throws IOException
+     * @throws InterruptedException
+     * @throws ProcessException
+     */
+    public void mergeDexFiles(
+            @NonNull File inputDir,
+            @NonNull File outDexFolder,
+            boolean multidex,
+            @Nullable File mainDexList,
+            @NonNull DexOptions dexOptions,
+            @NonNull ProcessOutputHandler processOutputHandler)
+            throws IOException, InterruptedException, ProcessException {
+        checkNotNull(inputDir, "inputs cannot be null.");
+        checkNotNull(outDexFolder, "outDexFolder cannot be null.");
+        checkNotNull(dexOptions, "dexOptions cannot be null.");
+        checkArgument(outDexFolder.isDirectory(), "outDexFolder must be a folder");
+        checkState(mTargetInfo != null,
+                "Cannot call convertByteCode() before setTargetInfo() is called.");
+
+        BuildToolInfo buildToolInfo = mTargetInfo.getBuildTools();
+        DexProcessBuilder builder = new DexProcessBuilder(outDexFolder);
+
+        builder.setVerbose(mVerboseExec)
+                .setMultiDex(multidex)
+                .setMainDexList(mainDexList)
+                .addInput(inputDir);
+
+        JavaProcessInfo javaProcessInfo = builder.build(buildToolInfo, dexOptions);
+
+        ProcessResult result = mJavaProcessExecutor.execute(javaProcessInfo, processOutputHandler);
+        result.rethrowFailure().assertNormalExitValue();
+    }
+
 
     public Set<String> createMainDexList(
             @NonNull File allClassesJarFile,
