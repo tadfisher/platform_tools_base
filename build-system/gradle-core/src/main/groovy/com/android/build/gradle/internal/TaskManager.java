@@ -47,6 +47,10 @@ import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.CoreNdkOptions;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
+import com.android.build.gradle.internal.pipeline.StreamImpl;
+import com.android.build.gradle.internal.pipeline.StreamScope;
+import com.android.build.gradle.internal.pipeline.StreamType;
+import com.android.build.gradle.internal.pipeline.TransformPipeline;
 import com.android.build.gradle.internal.publishing.ApkPublishArtifact;
 import com.android.build.gradle.internal.publishing.MappingPublishArtifact;
 import com.android.build.gradle.internal.publishing.MetadataPublishArtifact;
@@ -1720,39 +1724,49 @@ public abstract class TaskManager {
         final ApkVariantData variantData = (ApkVariantData) scope.getVariantData();
         final GradleVariantConfiguration config = variantData.getVariantConfiguration();
 
-        // data holding dependencies and input for the dex. This gets updated as new
-        // post-compilation steps are inserted between the compilation and dx.
-        PostCompilationData pcData = new PostCompilationData();
-        pcData.setClassGeneratingTasks(Collections.singletonList(scope.getJavacTask().getName()));
-        pcData.setLibraryGeneratingTasks(ImmutableList.of(variantData.prepareDependenciesTask,
-                variantData.getVariantDependency().getPackageConfiguration()
-                        .getBuildDependencies()));
-        pcData.setInputFilesCallable(new Callable<List<File>>() {
-            @Override
-            public List<File> call() {
-                return new ArrayList<File>(
-                        variantData.javacTask.getOutputs().getFiles().getFiles());
-            }
+        // create the trasnform pipeline.
+        TransformPipeline.Builder builder = TransformPipeline.builder()
+                .setTaskRegistry(androidTasks)
+                .setTaskFactory(tasks)
+                .setVariantScope(scope);
 
-        });
-        pcData.setInputDir(scope.getJavaOutputDir());
+        // create the current streams.
+        builder.addStream(StreamImpl.builder()
+                .setType(StreamType.CODE)
+                .setScope(StreamScope.PROJECT)
+                .setInputs(scope.getJavaOutputDir())
+                .setDependency(scope.getJavacTask().getName()).build());
 
-        pcData.setJavaResourcesInputDir(scope.getJavaResourcesDestinationDir());
+        builder.addStream(StreamImpl.builder()
+                .setType(StreamType.CODE)
+                .setScope(StreamScope.EXTERNAL_LIBRARIES)
+                .setInputs(new Callable<Collection<File>>() {
+                    @Override
+                    public List<File> call() {
+                        return new ArrayList<File>(
+                                scope.getGlobalScope().getAndroidBuilder().getPackagedJars(config));
+                    }
 
-        pcData.setInputLibrariesCallable(new Callable<List<File>>() {
-            @Override
-            public List<File> call() {
-                return new ArrayList<File>(
-                        scope.getGlobalScope().getAndroidBuilder().getPackagedJars(config));
-            }
+                })
+                .setDependencies(ImmutableList.of(variantData.prepareDependenciesTask,
+                        variantData.getVariantDependency().getPackageConfiguration()
+                                .getBuildDependencies()))
+                .build());
 
-        });
+        builder.addStream(StreamImpl.builder()
+                .setType(StreamType.RESOURCES)
+                .setScope(StreamScope.PROJECT)
+                .setInputs(scope.getJavaResourcesDestinationDir())
+                .setDependency(scope.getMergeJavaResourcesTask().getName())
+                .build());
+
+        TransformPipeline pipeline = builder.build();
 
         // ---- Code Coverage first -----
         boolean isTestCoverageEnabled = config.getBuildType().isTestCoverageEnabled() && !config
                 .getType().isForTesting();
         if (isTestCoverageEnabled) {
-            pcData = createJacocoTask(tasks, scope, pcData);
+            createJacocoTask(tasks, scope, pipeline);
         }
 
         boolean isTestForApp = config.getType().isForTesting() &&
@@ -1868,7 +1882,7 @@ public abstract class TaskManager {
     public PostCompilationData createJacocoTask(
             @NonNull TaskFactory tasks,
             @NonNull final VariantScope scope,
-            @NonNull final PostCompilationData pcData) {
+            @NonNull final TransformPipeline pipeline) {
         AndroidTask<JacocoInstrumentTask> jacocoTask =
                 androidTasks.create(tasks, new JacocoInstrumentTask.ConfigAction(scope, pcData));
 
