@@ -44,7 +44,7 @@ public class LocalExtraPkgInfo extends LocalPkgInfo {
         mDesc = (IPkgDescExtra) PkgDesc.Builder.newExtra(
                 vendor,
                 path,
-                displayName,
+                displayName == null ? "Unknown" : displayName,
                 oldPaths,
                 revision).create();
     }
