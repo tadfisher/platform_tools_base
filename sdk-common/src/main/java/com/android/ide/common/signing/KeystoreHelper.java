@@ -200,6 +200,7 @@ public final class KeystoreHelper {
      * @throws KeytoolException
      * @throws FileNotFoundException
      */
+    @NonNull
     public static CertificateInfo getCertificateInfo(@Nullable String storeType, @NonNull File storeFile,
                                                      @NonNull String storePassword, @NonNull String keyPassword,
                                                      @NonNull String keyAlias)
@@ -219,19 +220,22 @@ public final class KeystoreHelper {
             PrivateKeyEntry entry = (KeyStore.PrivateKeyEntry)keyStore.getEntry(
                     keyAlias, new KeyStore.PasswordProtection(keyPasswordArray));
 
-            if (entry != null) {
-                return new CertificateInfo(entry.getPrivateKey(),
-                        (X509Certificate) entry.getCertificate());
+            if (entry == null) {
+                throw new KeytoolException(
+                        String.format(
+                                "No key with alias '%1$s' found in keystore %2$s",
+                                keyAlias,
+                                storeFile.getAbsolutePath()));
             }
-        } catch (FileNotFoundException e) {
-            throw e;
+
+            return new CertificateInfo(
+                    entry.getPrivateKey(),
+                    (X509Certificate) entry.getCertificate());
         } catch (Exception e) {
             throw new KeytoolException(
                     String.format("Failed to read key %1$s from store \"%2$s\": %3$s",
                             keyAlias, storeFile, e.getMessage()),
                     e);
         }
-
-        return null;
     }
 }

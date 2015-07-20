@@ -1769,17 +1769,14 @@ public class AndroidBuilder {
             throws DuplicateFileException, FileNotFoundException,
             KeytoolException, PackagerException, SigningException {
         checkNotNull(androidResPkgLocation, "androidResPkgLocation cannot be null.");
-        checkNotNull(   outApkLocation, "outApkLocation cannot be null.");
+        checkNotNull(outApkLocation, "outApkLocation cannot be null.");
 
         CertificateInfo certificateInfo = null;
         if (signingConfig != null && signingConfig.isSigningReady()) {
-            //noinspection ConstantConditions
+            //noinspection ConstantConditions - isSigningReady() called above.
             certificateInfo = KeystoreHelper.getCertificateInfo(signingConfig.getStoreType(),
                     signingConfig.getStoreFile(), signingConfig.getStorePassword(),
                     signingConfig.getKeyPassword(), signingConfig.getKeyAlias());
-            if (certificateInfo == null) {
-                throw new SigningException("Failed to read key from keystore");
-            }
         }
 
         try {
@@ -1840,12 +1837,10 @@ public class AndroidBuilder {
 
         CertificateInfo certificateInfo = null;
         if (signingConfig != null && signingConfig.isSigningReady()) {
+            //noinspection ConstantConditions - isSigningReady() called above.
             certificateInfo = KeystoreHelper.getCertificateInfo(signingConfig.getStoreType(),
                     signingConfig.getStoreFile(), signingConfig.getStorePassword(),
                     signingConfig.getKeyPassword(), signingConfig.getKeyAlias());
-            if (certificateInfo == null) {
-                throw new SigningException("Failed to read key from keystore");
-            }
         }
 
         SignedJarBuilder signedJarBuilder = new SignedJarBuilder(
