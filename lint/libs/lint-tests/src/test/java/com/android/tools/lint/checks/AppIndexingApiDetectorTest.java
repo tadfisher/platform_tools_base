@@ -27,266 +27,305 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
     }
 
     public void testOk() throws Exception {
-        assertEquals("No warnings.",
-                lintProject(xml("AndroidManifest.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "    package=\"com.example.helloworld\" >\n"
-                        + "\n"
-                        + "    <application\n"
-                        + "        android:allowBackup=\"true\"\n"
-                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
-                        + "        android:label=\"@string/app_name\"\n"
-                        + "        android:theme=\"@style/AppTheme\" >\n"
-                        + "        <activity\n"
-                        + "            android:name=\".FullscreenActivity\"\n"
-                        + "            android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
-                        + "            android:label=\"@string/title_activity_fullscreen\"\n"
-                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
-                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
-                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                        + "                <data android:scheme=\"http\"\n"
-                        + "                    android:host=\"example.com\"\n"
-                        + "                    android:pathPrefix=\"/gizmos\" />\n"
-                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                        + "            </intent-filter>\n"
-                        + "        </activity>\n"
-                        + "    </application>\n"
-                        + "\n"
-                        + "</manifest>\n")));
+        assertEquals(
+                "No warnings.",
+                lintProject(
+                        xml(
+                                "AndroidManifest.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"com.example.helloworld\" >\n"
+                                        + "\n"
+                                        + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
+                                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
+                                        + "        android:label=\"@string/app_name\"\n"
+                                        + "        android:theme=\"@style/AppTheme\" >\n"
+                                        + "        <activity\n"
+                                        + "            android:name=\".FullscreenActivity\"\n"
+                                        + "            android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
+                                        + "            android:label=\"@string/title_activity_fullscreen\"\n"
+                                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
+                                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
+                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
+                                        + "                <data android:scheme=\"http\"\n"
+                                        + "                    android:host=\"example.com\"\n"
+                                        + "                    android:pathPrefix=\"/gizmos\" />\n"
+                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
+                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />"
+                                        + "    </application>\n"
+                                        + "\n"
+                                        + "</manifest>\n")));
     }
 
     public void testDataMissing() throws Exception {
-        assertEquals(""
+        assertEquals(
+                ""
                         + "AndroidManifest.xml:15: Error: Missing data node? [AppIndexingError]\n"
                         + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
                         + "            ^\n"
                         + "1 errors, 0 warnings\n",
-                lintProject(xml("AndroidManifest.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "    package=\"com.example.helloworld\" >\n"
-                        + "\n"
-                        + "    <application\n"
-                        + "        android:allowBackup=\"true\"\n"
-                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
-                        + "        android:label=\"@string/app_name\"\n"
-                        + "        android:theme=\"@style/AppTheme\" >\n"
-                        + "        <activity\n"
-                        + "            android:name=\".FullscreenActivity\"\n"
-                        + "            android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
-                        + "            android:label=\"@string/title_activity_fullscreen\"\n"
-                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
-                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
-                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                        + "            </intent-filter>\n"
-                        + "        </activity>\n"
-                        + "    </application>\n"
-                        + "\n"
-                        + "</manifest>\n")));
+                lintProject(
+                        xml(
+                                "AndroidManifest.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"com.example.helloworld\" >\n"
+                                        + "\n"
+                                        + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
+                                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
+                                        + "        android:label=\"@string/app_name\"\n"
+                                        + "        android:theme=\"@style/AppTheme\" >\n"
+                                        + "        <activity\n"
+                                        + "            android:name=\".FullscreenActivity\"\n"
+                                        + "            android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
+                                        + "            android:label=\"@string/title_activity_fullscreen\"\n"
+                                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
+                                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
+                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
+                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
+                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />"
+                                        + "    </application>\n"
+                                        + "\n"
+                                        + "</manifest>\n")));
     }
 
     public void testNoUrl() throws Exception {
-        assertEquals(""
+        assertEquals(
+                ""
                         + "AndroidManifest.xml:17: Error: Missing URL for the intent filter? [AppIndexingError]\n"
                         + "                <data />\n"
                         + "                ~~~~~~~~\n"
                         + "1 errors, 0 warnings\n",
-                lintProject(xml("AndroidManifest.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "    package=\"com.example.helloworld\" >\n"
-                        + "\n"
-                        + "    <application\n"
-                        + "        android:allowBackup=\"true\"\n"
-                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
-                        + "        android:label=\"@string/app_name\"\n"
-                        + "        android:theme=\"@style/AppTheme\" >\n"
-                        + "        <activity\n"
-                        + "            android:name=\".FullscreenActivity\"\n"
-                        + "            android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
-                        + "            android:label=\"@string/title_activity_fullscreen\"\n"
-                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
-                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
-                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                        + "                <data />\n"
-                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                        + "            </intent-filter>\n"
-                        + "        </activity>\n"
-                        + "    </application>\n"
-                        + "\n"
-                        + "</manifest>\n")));
+                lintProject(
+                        xml(
+                                "AndroidManifest.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"com.example.helloworld\" >\n"
+                                        + "\n"
+                                        + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
+                                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
+                                        + "        android:label=\"@string/app_name\"\n"
+                                        + "        android:theme=\"@style/AppTheme\" >\n"
+                                        + "        <activity\n"
+                                        + "            android:name=\".FullscreenActivity\"\n"
+                                        + "            android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
+                                        + "            android:label=\"@string/title_activity_fullscreen\"\n"
+                                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
+                                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
+                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
+                                        + "                <data />\n"
+                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
+                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />"
+                                        + "    </application>\n"
+                                        + "\n"
+                                        + "</manifest>\n")));
     }
 
     public void testMimeType() throws Exception {
-        assertEquals("No warnings.",
-                lintProject(xml("AndroidManifest.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "    package=\"com.example.helloworld\" >\n"
-                        + "\n"
-                        + "    <application\n"
-                        + "        android:allowBackup=\"true\"\n"
-                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
-                        + "        android:label=\"@string/app_name\"\n"
-                        + "        android:theme=\"@style/AppTheme\" >\n"
-                        + "        <activity\n"
-                        + "            android:name=\".FullscreenActivity\"\n"
-                        + "            android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
-                        + "            android:label=\"@string/title_activity_fullscreen\"\n"
-                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
-                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
-                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                        + "                <data android:mimeType=\"mimetype\" /> "
-                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                        + "            </intent-filter>\n"
-                        + "        </activity>\n"
-                        + "    </application>\n"
-                        + "\n"
-                        + "</manifest>\n")));
+        assertEquals(
+                "No warnings.",
+                lintProject(
+                        xml(
+                                "AndroidManifest.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"com.example.helloworld\" >\n"
+                                        + "\n"
+                                        + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
+                                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
+                                        + "        android:label=\"@string/app_name\"\n"
+                                        + "        android:theme=\"@style/AppTheme\" >\n"
+                                        + "        <activity\n"
+                                        + "            android:name=\".FullscreenActivity\"\n"
+                                        + "            android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
+                                        + "            android:label=\"@string/title_activity_fullscreen\"\n"
+                                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
+                                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
+                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
+                                        + "                <data android:mimeType=\"mimetype\" /> "
+                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
+                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />"
+                                        + "    </application>\n"
+                                        + "\n"
+                                        + "</manifest>\n")));
     }
-
 
     public void testNoActivity() throws Exception {
         assertEquals(
                 "No warnings.",
-                lintProject(xml("AndroidManifest.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "    package=\"com.example.helloworld\" >\n"
-                        + "\n"
-                        + "    <application\n"
-                        + "        android:allowBackup=\"true\"\n"
-                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
-                        + "        android:label=\"@string/app_name\"\n"
-                        + "        android:theme=\"@style/AppTheme\" >\n"
-                        + "    </application>\n"
-                        + "\n"
-                        + "</manifest>\n")));
+                lintProject(
+                        xml(
+                                "AndroidManifest.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"com.example.helloworld\" >\n"
+                                        + "\n"
+                                        + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
+                                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
+                                        + "        android:label=\"@string/app_name\"\n"
+                                        + "        android:theme=\"@style/AppTheme\" >\n"
+                                        + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />"
+                                        + "    </application>\n"
+                                        + "\n"
+                                        + "</manifest>\n")));
     }
 
     public void testNotBrowsable() throws Exception {
-        assertEquals(""
+        assertEquals(
+                ""
                         + "AndroidManifest.xml:25: Warning: Activity supporting ACTION_VIEW is not set as BROWSABLE [AppIndexingWarning]\n"
                         + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
                         + "            ^\n"
                         + "0 errors, 1 warnings\n",
-                lintProject(xml("AndroidManifest.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "    package=\"com.example.helloworld\" >\n"
-                        + "\n"
-                        + "    <application\n"
-                        + "        android:allowBackup=\"true\"\n"
-                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
-                        + "        android:label=\"@string/app_name\"\n"
-                        + "        android:theme=\"@style/AppTheme\" >\n"
-                        + "        <activity\n"
-                        + "            android:name=\".MainActivity\"\n"
-                        + "            android:label=\"@string/app_name\" >\n"
-                        + "            <intent-filter>\n"
-                        + "                <action android:name=\"android.intent.action.MAIN\" />\n"
-                        + "\n"
-                        + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
-                        + "            </intent-filter>\n"
-                        + "        </activity>\n"
-                        + "\n"
-                        + "        <activity\n"
-                        + "            android:name=\".FullscreenActivity\"\n"
-                        + "            android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
-                        + "            android:label=\"@string/title_activity_fullscreen\"\n"
-                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
-                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
-                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                        + "                <data android:scheme=\"http\"\n"
-                        + "                    android:host=\"example.com\"\n"
-                        + "                    android:pathPrefix=\"/gizmos\" />\n"
-                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                        + "            </intent-filter>\n"
-                        + "        </activity>\n"
-                        + "    </application>\n"
-                        + "\n"
-                        + "</manifest>\n")));
+                lintProject(
+                        xml(
+                                "AndroidManifest.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"com.example.helloworld\" >\n"
+                                        + "\n"
+                                        + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
+                                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
+                                        + "        android:label=\"@string/app_name\"\n"
+                                        + "        android:theme=\"@style/AppTheme\" >\n"
+                                        + "        <activity\n"
+                                        + "            android:name=\".MainActivity\"\n"
+                                        + "            android:label=\"@string/app_name\" >\n"
+                                        + "            <intent-filter>\n"
+                                        + "                <action android:name=\"android.intent.action.MAIN\" />\n"
+                                        + "\n"
+                                        + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "\n"
+                                        + "        <activity\n"
+                                        + "            android:name=\".FullscreenActivity\"\n"
+                                        + "            android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
+                                        + "            android:label=\"@string/title_activity_fullscreen\"\n"
+                                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
+                                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
+                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
+                                        + "                <data android:scheme=\"http\"\n"
+                                        + "                    android:host=\"example.com\"\n"
+                                        + "                    android:pathPrefix=\"/gizmos\" />\n"
+                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />"
+                                        + "    </application>\n"
+                                        + "\n"
+                                        + "</manifest>\n")));
     }
 
     public void testWrongPathPrefix() throws Exception {
-        assertEquals(""
+        assertEquals(
+                ""
                         + "AndroidManifest.xml:19: Error: android:pathPrefix attribute should start with '/', but it is : gizmos [AppIndexingError]\n"
                         + "                    android:pathPrefix=\"gizmos\" />\n"
                         + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n",
-                lintProject(xml("AndroidManifest.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "    package=\"com.example.helloworld\" >\n"
-                        + "\n"
-                        + "    <application\n"
-                        + "        android:allowBackup=\"true\"\n"
-                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
-                        + "        android:label=\"@string/app_name\"\n"
-                        + "        android:theme=\"@style/AppTheme\" >\n"
-                        + "        <activity\n"
-                        + "            android:name=\".FullscreenActivity\"\n"
-                        + "            android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
-                        + "            android:label=\"@string/title_activity_fullscreen\"\n"
-                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
-                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
-                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                        + "                <data android:scheme=\"http\"\n"
-                        + "                    android:host=\"example.com\"\n"
-                        + "                    android:pathPrefix=\"gizmos\" />\n"
-                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                        + "            </intent-filter>\n"
-                        + "        </activity>\n"
-                        + "    </application>\n"
-                        + "\n"
-                        + "</manifest>\n")));
+                lintProject(
+                        xml(
+                                "AndroidManifest.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"com.example.helloworld\" >\n"
+                                        + "\n"
+                                        + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
+                                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
+                                        + "        android:label=\"@string/app_name\"\n"
+                                        + "        android:theme=\"@style/AppTheme\" >\n"
+                                        + "        <activity\n"
+                                        + "            android:name=\".FullscreenActivity\"\n"
+                                        + "            android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
+                                        + "            android:label=\"@string/title_activity_fullscreen\"\n"
+                                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
+                                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
+                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
+                                        + "                <data android:scheme=\"http\"\n"
+                                        + "                    android:host=\"example.com\"\n"
+                                        + "                    android:pathPrefix=\"gizmos\" />\n"
+                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
+                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />"
+                                        + "    </application>\n"
+                                        + "\n"
+                                        + "</manifest>\n")));
     }
 
     public void testWrongPort() throws Exception {
-        assertEquals(""
+        assertEquals(
+                ""
                         + "AndroidManifest.xml:19: Error: android:port is not a legal number [AppIndexingError]\n"
                         + "                    android:port=\"ABCD\"\n"
                         + "                    ~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n",
-                lintProject(xml("AndroidManifest.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "    package=\"com.example.helloworld\" >\n"
-                        + "\n"
-                        + "    <application\n"
-                        + "        android:allowBackup=\"true\"\n"
-                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
-                        + "        android:label=\"@string/app_name\"\n"
-                        + "        android:theme=\"@style/AppTheme\" >\n"
-                        + "        <activity\n"
-                        + "            android:name=\".FullscreenActivity\"\n"
-                        + "            android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
-                        + "            android:label=\"@string/title_activity_fullscreen\"\n"
-                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
-                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
-                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                        + "                <data android:scheme=\"http\"\n"
-                        + "                    android:host=\"example.com\"\n"
-                        + "                    android:port=\"ABCD\"\n"
-                        + "                    android:pathPrefix=\"/gizmos\" />\n"
-                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                        + "            </intent-filter>\n"
-                        + "        </activity>\n"
-                        + "    </application>\n"
-                        + "\n"
-                        + "</manifest>\n")));
+                lintProject(
+                        xml(
+                                "AndroidManifest.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"com.example.helloworld\" >\n"
+                                        + "\n"
+                                        + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
+                                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
+                                        + "        android:label=\"@string/app_name\"\n"
+                                        + "        android:theme=\"@style/AppTheme\" >\n"
+                                        + "        <activity\n"
+                                        + "            android:name=\".FullscreenActivity\"\n"
+                                        + "            android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
+                                        + "            android:label=\"@string/title_activity_fullscreen\"\n"
+                                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
+                                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
+                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
+                                        + "                <data android:scheme=\"http\"\n"
+                                        + "                    android:host=\"example.com\"\n"
+                                        + "                    android:port=\"ABCD\"\n"
+                                        + "                    android:pathPrefix=\"/gizmos\" />\n"
+                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
+                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />"
+                                        + "    </application>\n"
+                                        + "\n"
+                                        + "</manifest>\n")));
     }
 
     public void testSchemeAndHostMissing() throws Exception {
-        assertEquals(""
+        assertEquals(
+                ""
                         + "AndroidManifest.xml:17: Error: Missing URL for the intent filter? [AppIndexingError]\n"
                         + "                <data android:pathPrefix=\"/gizmos\" />\n"
                         + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
@@ -297,139 +336,159 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
                         + "                <data android:pathPrefix=\"/gizmos\" />\n"
                         + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "3 errors, 0 warnings\n",
-                lintProject(xml("AndroidManifest.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "    package=\"com.example.helloworld\" >\n"
-                        + "\n"
-                        + "    <application\n"
-                        + "        android:allowBackup=\"true\"\n"
-                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
-                        + "        android:label=\"@string/app_name\"\n"
-                        + "        android:theme=\"@style/AppTheme\" >\n"
-                        + "        <activity\n"
-                        + "            android:name=\".FullscreenActivity\"\n"
-                        + "            android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
-                        + "            android:label=\"@string/title_activity_fullscreen\"\n"
-                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
-                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
-                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                        + "                <data android:pathPrefix=\"/gizmos\" />\n"
-                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                        + "            </intent-filter>\n"
-                        + "        </activity>\n"
-                        + "    </application>\n"
-                        + "\n"
-                        + "</manifest>\n")));
+                lintProject(
+                        xml(
+                                "AndroidManifest.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"com.example.helloworld\" >\n"
+                                        + "\n"
+                                        + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
+                                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
+                                        + "        android:label=\"@string/app_name\"\n"
+                                        + "        android:theme=\"@style/AppTheme\" >\n"
+                                        + "        <activity\n"
+                                        + "            android:name=\".FullscreenActivity\"\n"
+                                        + "            android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
+                                        + "            android:label=\"@string/title_activity_fullscreen\"\n"
+                                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
+                                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
+                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
+                                        + "                <data android:pathPrefix=\"/gizmos\" />\n"
+                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
+                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />"
+                                        + "    </application>\n"
+                                        + "\n"
+                                        + "</manifest>\n")));
     }
 
     public void testMultiData() throws Exception {
-        assertEquals("No warnings.",
-                lintProject(xml("AndroidManifest.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "    package=\"com.example.helloworld\" >\n"
-                        + "\n"
-                        + "    <application\n"
-                        + "        android:allowBackup=\"true\"\n"
-                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
-                        + "        android:label=\"@string/app_name\"\n"
-                        + "        android:theme=\"@style/AppTheme\" >\n"
-                        + "        <activity\n"
-                        + "            android:name=\".FullscreenActivity\"\n"
-                        + "            android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
-                        + "            android:label=\"@string/title_activity_fullscreen\"\n"
-                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
-                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
-                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                        + "                <data android:scheme=\"http\" />\n"
-                        + "                <data android:host=\"example.com\" />\n"
-                        + "                <data android:pathPrefix=\"/gizmos\" />\n"
-                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                        + "            </intent-filter>\n"
-                        + "        </activity>\n"
-                        + "    </application>\n"
-                        + "\n"
-                        + "</manifest>\n")));
+        assertEquals(
+                "No warnings.",
+                lintProject(
+                        xml(
+                                "AndroidManifest.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"com.example.helloworld\" >\n"
+                                        + "\n"
+                                        + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
+                                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
+                                        + "        android:label=\"@string/app_name\"\n"
+                                        + "        android:theme=\"@style/AppTheme\" >\n"
+                                        + "        <activity\n"
+                                        + "            android:name=\".FullscreenActivity\"\n"
+                                        + "            android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
+                                        + "            android:label=\"@string/title_activity_fullscreen\"\n"
+                                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
+                                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
+                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
+                                        + "                <data android:scheme=\"http\" />\n"
+                                        + "                <data android:host=\"example.com\" />\n"
+                                        + "                <data android:pathPrefix=\"/gizmos\" />\n"
+                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
+                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />"
+                                        + "    </application>\n"
+                                        + "\n"
+                                        + "</manifest>\n")));
     }
 
     public void testMultiIntent() throws Exception {
-        assertEquals("No warnings.",
-                lintProject(xml("AndroidManifest.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "    package=\"com.example.helloworld\" >\n"
-                        + "\n"
-                        + "    <application\n"
-                        + "        android:allowBackup=\"true\"\n"
-                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
-                        + "        android:label=\"@string/app_name\"\n"
-                        + "        android:theme=\"@style/AppTheme\" >\n"
-                        + "        <activity\n"
-                        + "            android:name=\".FullscreenActivity\"\n"
-                        + "            android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
-                        + "            android:label=\"@string/title_activity_fullscreen\"\n"
-                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
-                        + "            <intent-filter>\n"
-                        + "                <action android:name=\"android.intent.action.MAIN\" />\n"
-                        + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
-                        + "            </intent-filter>"
-                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
-                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                        + "                <data android:scheme=\"http\"\n"
-                        + "                    android:host=\"example.com\"\n"
-                        + "                    android:pathPrefix=\"/gizmos\" />\n"
-                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                        + "            </intent-filter>\n"
-                        + "        </activity>\n"
-                        + "    </application>\n"
-                        + "\n"
-                        + "</manifest>\n")));
+        assertEquals(
+                "No warnings.",
+                lintProject(
+                        xml(
+                                "AndroidManifest.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"com.example.helloworld\" >\n"
+                                        + "\n"
+                                        + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
+                                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
+                                        + "        android:label=\"@string/app_name\"\n"
+                                        + "        android:theme=\"@style/AppTheme\" >\n"
+                                        + "        <activity\n"
+                                        + "            android:name=\".FullscreenActivity\"\n"
+                                        + "            android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
+                                        + "            android:label=\"@string/title_activity_fullscreen\"\n"
+                                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
+                                        + "            <intent-filter>\n"
+                                        + "                <action android:name=\"android.intent.action.MAIN\" />\n"
+                                        + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
+                                        + "            </intent-filter>"
+                                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
+                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
+                                        + "                <data android:scheme=\"http\"\n"
+                                        + "                    android:host=\"example.com\"\n"
+                                        + "                    android:pathPrefix=\"/gizmos\" />\n"
+                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
+                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />"
+                                        + "    </application>\n"
+                                        + "\n"
+                                        + "</manifest>\n")));
     }
 
     public void testMultiIntentWithError() throws Exception {
-        assertEquals(""
+        assertEquals(
+                ""
                         + "AndroidManifest.xml:20: Error: android:host missing [AppIndexingError]\n"
                         + "                <data android:scheme=\"http\"\n"
                         + "                ^\n"
                         + "1 errors, 0 warnings\n",
-                lintProject(xml("AndroidManifest.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "    package=\"com.example.helloworld\" >\n"
-                        + "\n"
-                        + "    <application\n"
-                        + "        android:allowBackup=\"true\"\n"
-                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
-                        + "        android:label=\"@string/app_name\"\n"
-                        + "        android:theme=\"@style/AppTheme\" >\n"
-                        + "        <activity\n"
-                        + "            android:name=\".FullscreenActivity\"\n"
-                        + "            android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
-                        + "            android:label=\"@string/title_activity_fullscreen\"\n"
-                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
-                        + "            <intent-filter>\n"
-                        + "                <action android:name=\"android.intent.action.MAIN\" />\n"
-                        + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
-                        + "            </intent-filter>"
-                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
-                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                        + "                <data android:scheme=\"http\"\n"
-                        + "                    android:pathPrefix=\"/gizmos\" />\n"
-                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                        + "            </intent-filter>\n"
-                        + "        </activity>\n"
-                        + "    </application>\n"
-                        + "\n"
-                        + "</manifest>\n")));
+                lintProject(
+                        xml(
+                                "AndroidManifest.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"com.example.helloworld\" >\n"
+                                        + "\n"
+                                        + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
+                                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
+                                        + "        android:label=\"@string/app_name\"\n"
+                                        + "        android:theme=\"@style/AppTheme\" >\n"
+                                        + "        <activity\n"
+                                        + "            android:name=\".FullscreenActivity\"\n"
+                                        + "            android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
+                                        + "            android:label=\"@string/title_activity_fullscreen\"\n"
+                                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
+                                        + "            <intent-filter>\n"
+                                        + "                <action android:name=\"android.intent.action.MAIN\" />\n"
+                                        + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
+                                        + "            </intent-filter>"
+                                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
+                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
+                                        + "                <data android:scheme=\"http\"\n"
+                                        + "                    android:pathPrefix=\"/gizmos\" />\n"
+                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
+                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />"
+                                        + "    </application>\n"
+                                        + "\n"
+                                        + "</manifest>\n")));
     }
 
     public void testOkWithResource() throws Exception {
-        assertEquals("No warnings.",
+        assertEquals(
+                "No warnings.",
                 lintProjectIncrementally(
                         "AndroidManifest.xml",
                         "appindexing_manifest.xml=>AndroidManifest.xml",
@@ -437,7 +496,9 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
     }
 
     public void testWrongWithResource() throws Exception {
-        assertEquals("" + "AndroidManifest.xml:18: Error: android:pathPrefix attribute should start with '/', but it is : pathprefix [AppIndexingError]\n"
+        assertEquals(
+                ""
+                        + "AndroidManifest.xml:18: Error: android:pathPrefix attribute should start with '/', but it is : pathprefix [AppIndexingError]\n"
                         + "                      android:pathPrefix=\"@string/path_prefix\"\n"
                         + "                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "AndroidManifest.xml:19: Error: android:port is not a legal number [AppIndexingError]\n"
@@ -448,5 +509,131 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
                         "AndroidManifest.xml",
                         "appindexing_manifest.xml=>AndroidManifest.xml",
                         "res/values/appindexing_wrong_strings.xml"));
+    }
+
+    public void testNoGMS() throws Exception {
+        assertEquals(
+                "AndroidManifest.xml:5: Warning: GMS should be added to the app [AppIndexingWarning]\n"
+                        + "    <application\n"
+                        + "    ^\n"
+                        + "0 errors, 1 warnings\n",
+                lintProject(
+                        xml(
+                                "AndroidManifest.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"com.example.helloworld\" >\n"
+                                        + "\n"
+                                        + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
+                                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
+                                        + "        android:label=\"@string/app_name\"\n"
+                                        + "        android:theme=\"@style/AppTheme\" >\n"
+                                        + "        <activity\n"
+                                        + "            android:name=\".AppIndexingApiTest\"\n"
+                                        + "            android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
+                                        + "            android:label=\"@string/title_activity_fullscreen\"\n"
+                                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
+                                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
+                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
+                                        + "                <!-- Accepts URIs that begin with \"http://example.com/gizmos” -->\n"
+                                        + "                <data android:scheme=\"http\"\n"
+                                        + "                    android:host=\"example.com\"\n"
+                                        + "                    android:pathPrefix=\"/gizmos\" />\n"
+                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
+                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "    </application>\n"
+                                        + "\n"
+                                        + "</manifest>\n")));
+    }
+
+    public void testJavaOk() throws Exception {
+        assertEquals(
+                "No warnings.",
+                lintProjectIncrementally(
+                        "src/com/example/helloworld/AppIndexingApiTest.java",
+                        "app_indexing_api_test.xml=>AndroidManifest.xml",
+                        "src/com/example/helloworld/AppIndexingApiTestOk.java.txt=>src/com/example/helloworld/AppIndexingApiTest.java"));
+    }
+
+    public void testNoManifest() throws Exception {
+        assertEquals(
+                "src/com/example/helloworld/AppIndexingApiTest.java:28: Error: Missing app indexing support in manifest [AppIndexingJavaError]\n"
+                        + "        AppIndex.AppIndexApi.start(mClient, action);\n"
+                        + "                             ~~~~~\n"
+                        + "src/com/example/helloworld/AppIndexingApiTest.java:36: Error: Missing app indexing support in manifest [AppIndexingJavaError]\n"
+                        + "        AppIndex.AppIndexApi.end(mClient, action);\n"
+                        + "                             ~~~\n"
+                        + "2 errors, 0 warnings\n",
+                lintProjectIncrementally(
+                        "src/com/example/helloworld/AppIndexingApiTest.java",
+                        "app_indexing_api_test_no_manifest.xml=>AndroidManifest.xml",
+                        "src/com/example/helloworld/AppIndexingApiTestOk.java.txt=>src/com/example/helloworld/AppIndexingApiTest.java"));
+    }
+
+    public void testNoGoogleApiClient() throws Exception {
+        assertEquals(
+                "src/com/example/helloworld/AppIndexingApiTest.java:11: Error: Missing GoogleApiClient [AppIndexingJavaError]\n"
+                        + "public class AppIndexingApiTest extends Activity {\n"
+                        + "             ~~~~~~~~~~~~~~~~~~\n"
+                        + "1 errors, 0 warnings\n",
+                lintProjectIncrementally(
+                        "src/com/example/helloworld/AppIndexingApiTest.java",
+                        "app_indexing_api_test.xml=>AndroidManifest.xml",
+                        "src/com/example/helloworld/AppIndexingApiTestNoGoogleApiClient.java.txt=>src/com/example/helloworld/AppIndexingApiTest.java"));
+    }
+
+    public void testNoStartEnd() throws Exception {
+        assertEquals(
+                "src/com/example/helloworld/AppIndexingApiTest.java:11: Warning: Missing app indexing api call [AppIndexingJavaWARNING]\n"
+                        + "public class AppIndexingApiTest extends Activity {\n"
+                        + "             ~~~~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 1 warnings\n",
+                lintProjectIncrementally(
+                        "src/com/example/helloworld/AppIndexingApiTest.java",
+                        "app_indexing_api_test.xml=>AndroidManifest.xml",
+                        "src/com/example/helloworld/AppIndexingApiTestNoStartEnd.java.txt=>src/com/example/helloworld/AppIndexingApiTest.java"));
+    }
+
+    public void testStartMatch() throws Exception {
+        assertEquals(
+                "src/com/example/helloworld/AppIndexingApiTest.java:27: Error: GoogleApiClient mClient has not connected [AppIndexingJavaError]\n"
+                        + "        AppIndex.AppIndexApi.start(mClient, action);\n"
+                        + "                                   ~~~~~~~\n"
+                        + "src/com/example/helloworld/AppIndexingApiTest.java:27: Error: Missing corresponding AppIndex.AppIndexApi.end method [AppIndexingJavaError]\n"
+                        + "        AppIndex.AppIndexApi.start(mClient, action);\n"
+                        + "                             ~~~~~\n"
+                        + "2 errors, 0 warnings\n",
+                lintProjectIncrementally(
+                        "src/com/example/helloworld/AppIndexingApiTest.java",
+                        "app_indexing_api_test.xml=>AndroidManifest.xml",
+                        "src/com/example/helloworld/AppIndexingApiTestStartMatch.java.txt=>src/com/example/helloworld/AppIndexingApiTest.java"));
+    }
+
+    public void testEndMatch() throws Exception {
+        assertEquals(
+                "src/com/example/helloworld/AppIndexingApiTest.java:33: Error: GoogleApiClient mClient has not connected [AppIndexingJavaError]\n"
+                        + "        AppIndex.AppIndexApi.end(mClient, action);\n"
+                        + "                                 ~~~~~~~\n"
+                        + "src/com/example/helloworld/AppIndexingApiTest.java:33: Error: Missing corresponding AppIndex.AppIndexApi.start method [AppIndexingJavaError]\n"
+                        + "        AppIndex.AppIndexApi.end(mClient, action);\n"
+                        + "                             ~~~\n"
+                        + "2 errors, 0 warnings\n",
+                lintProjectIncrementally(
+                        "src/com/example/helloworld/AppIndexingApiTest.java",
+                        "app_indexing_api_test.xml=>AndroidManifest.xml",
+                        "src/com/example/helloworld/AppIndexingApiTestEndMatch.java.txt=>src/com/example/helloworld/AppIndexingApiTest.java"));
+    }
+
+    public void testWrongOrder() throws Exception {
+        assertEquals(
+                "No warnings.",
+                lintProjectIncrementally(
+                        "src/com/example/helloworld/AppIndexingApiTest.java",
+                        "app_indexing_api_test.xml=>AndroidManifest.xml",
+                        "src/com/example/helloworld/AppIndexingApiTestWrongOrder.java.txt=>src/com/example/helloworld/AppIndexingApiTest.java"));
     }
 }
