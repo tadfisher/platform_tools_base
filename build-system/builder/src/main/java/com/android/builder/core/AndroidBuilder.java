@@ -45,7 +45,6 @@ import com.android.builder.internal.compiler.PreDexCache;
 import com.android.builder.internal.compiler.RenderScriptProcessor;
 import com.android.builder.internal.compiler.SourceSearcher;
 import com.android.builder.internal.incremental.DependencyData;
-import com.android.builder.internal.packaging.JavaResourceProcessor;
 import com.android.builder.internal.packaging.Packager;
 import com.android.builder.model.ClassField;
 import com.android.builder.model.PackagingOptions;
@@ -107,8 +106,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-import com.google.common.hash.HashCode;
-import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 
 import java.io.ByteArrayOutputStream;
@@ -1639,7 +1636,7 @@ public class AndroidBuilder {
                 mLogger);
     }
 
-    public static List<File> convertLibaryToJackUsingApis(
+    public static List<File> convertLibraryToJackUsingApis(
             @NonNull File inputFile,
             @NonNull File outFile,
             @NonNull DexOptions dexOptions,
