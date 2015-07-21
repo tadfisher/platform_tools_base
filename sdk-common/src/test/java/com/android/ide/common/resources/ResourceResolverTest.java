@@ -84,6 +84,8 @@ public class ResourceResolverTest extends TestCase {
                         + "    </style>"
                         + "    <style name=\"RandomStyle2\" parent=\"RandomStyle\">\n"
                         + "    </style>"
+                        + "    <style name=\"Theme.FakeTheme\" parent=\"\">\n"
+                        + "    </style>"
                         + "</resources>\n",
 
                         "values/strings.xml", ""
@@ -197,6 +199,7 @@ public class ResourceResolverTest extends TestCase {
         // isTheme
         assertFalse(resolver.isTheme(resolver.findResValue("@style/RandomStyle", false), null));
         assertFalse(resolver.isTheme(resolver.findResValue("@style/RandomStyle2", false), null));
+        assertFalse(resolver.isTheme(resolver.findResValue("@style/Theme.FakeTheme", false), null));
         //    check XML escaping in value resources
         StyleResourceValue randomStyle = (StyleResourceValue) resolver.findResValue(
                 "@style/RandomStyle", false);
