@@ -758,7 +758,7 @@ public class ResourceResolver extends RenderResources {
         if (value instanceof StyleResourceValue) {
             StyleResourceValue srv = (StyleResourceValue) value;
             String name = srv.getName();
-            if (name.startsWith(THEME_NAME_DOT) || name.equals(THEME_NAME)) {
+            if (name.equals(THEME_NAME)) {
                 if (cache != null) {
                     cache.put(value, true);
                 }
