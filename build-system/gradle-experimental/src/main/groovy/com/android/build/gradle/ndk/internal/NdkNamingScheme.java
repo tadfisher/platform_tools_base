@@ -88,6 +88,17 @@ public class NdkNamingScheme {
                 abi);
     }
 
+
+    public static String getStandaloneOutputDirectoryName(@NonNull NativeBinarySpec binary) {
+        return Joiner.on(File.separator).join(
+                FD_OUTPUTS,
+                "native",
+                binary.getBuildType().getName(),
+                binary.getFlavor().getName(),
+                "lib",
+                binary.getTargetPlatform().getName());
+    }
+
     public static String getOutputDirectoryName(NativeBinarySpec binary) {
         return getOutputDirectoryName(
                 binary.getBuildType().getName(),
