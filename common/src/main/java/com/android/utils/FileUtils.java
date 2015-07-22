@@ -79,7 +79,13 @@ public class FileUtils {
         checkArgument(file.isFile(), "%s is not a file.", file.getPath());
         checkArgument(dir.isDirectory(), "%s is not a directory.", dir.getPath());
 
-        return dir.toURI().relativize(file.toURI()).getPath();
+        String path = dir.toURI().relativize(file.toURI()).getPath();
+
+        if (File.separatorChar != '/') {
+            path = path.replace('/', File.separatorChar);
+        }
+
+        return path;
     }
 
     public static String sha1(@NonNull File file) throws IOException {
