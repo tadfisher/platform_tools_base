@@ -14,20 +14,22 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
+
+<!--
+xjc -b com/android/sdklib/repositorycore/api/common.xjb -p com.android.sdklib.repositoryv2.generated.addon com/android/sdklib/repositoryv2/sdk-addon-08.xsd -extension
+-->
 <xsd:schema
-    targetNamespace="http://schemas.android.com/sdk/android/addon/8"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-    xmlns:sdk="http://schemas.android.com/sdk/android/addon/8"
-    xmlns:common="http://schemas.android.com/sdk/android/common/01"
-    xmlns:addon7="http://schemas.android.com/sdk/android/addon/7"
-    elementFormDefault="unqualified"
-    attributeFormDefault="unqualified"
-    version="1">
+        targetNamespace="http://schemas.android.com/sdk/android/addon/8"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+        xmlns:sdk="http://schemas.android.com/sdk/android/addon/8"
+        xmlns:common="http://schemas.android.com/sdk/android/common/01"
+        xmlns:addon7="http://schemas.android.com/sdk/android/addon/7"
+        elementFormDefault="unqualified"
+        attributeFormDefault="unqualified"
+        version="1">
 
     <xsd:import namespace="http://schemas.android.com/sdk/android/common/01"
-                schemaLocation="sdk-common-01.xsd"/>
-    <xsd:import namespace="http://schemas.android.com/sdk/android/addon/7"
-                schemaLocation="sdk-addon-07.xsd"/>
+                schemaLocation="../repositorycore/api/sdk-common-01.xsd"/>
 
     <!-- The repository contains a collection of downloadable items known as
          "packages". Each package has a type and various attributes and contains
@@ -78,29 +80,13 @@
     -->
 
 
-    <xsd:element name="sdk-addon" type="sdk:repositoryType" />
-
-    <xsd:complexType name="repositoryType">
-        <xsd:annotation>
-            <xsd:documentation>
-                The repository contains a collection of downloadable packages.
-            </xsd:documentation>
-        </xsd:annotation>
-        <xsd:choice minOccurs="0" maxOccurs="unbounded">
-            <xsd:element name="generic" type="common:genericType"/>
-            <xsd:element name="license"         type="licenseType"      />
-
-            <!-- these types are deprecated -->
-            <xsd:element name="add-on"          type="addon7:addonType"        />
-            <xsd:element name="extra"           type="addon7:extraType"        />
-        </xsd:choice>
-    </xsd:complexType>
+    <xsd:element name="sdk-addon" type="common:repositoryType"/>
 
     <xsd:complexType name="addonDetailsType">
         <xsd:complexContent>
             <xsd:extension base="common:typeDetails">
                 <xsd:all>
-                    <xsd:element name="vendor" type="common:addonType"/>
+                    <xsd:element name="vendor" type="common:idType"/>
                     <xsd:element name="api-level" type="xsd:positiveInteger"/>
                 </xsd:all>
             </xsd:extension>
@@ -110,7 +96,9 @@
     <xsd:complexType name="extraDetailsType">
         <xsd:complexContent>
             <xsd:extension base="common:typeDetails">
-                <xsd:element name="vendor" type="common:addonType"/>
+                <xsd:all>
+                    <xsd:element name="vendor" type="common:idType"/>
+                </xsd:all>
             </xsd:extension>
         </xsd:complexContent>
     </xsd:complexType>
