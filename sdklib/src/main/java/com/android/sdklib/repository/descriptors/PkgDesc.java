@@ -471,7 +471,9 @@ public class PkgDesc implements IPkgDesc {
         if (existingDesc == null || !getType().equals(existingDesc.getType())) {
             return false;
         }
-
+        if (!existingDesc.getBaseInstallId().equals(getBaseInstallId())) {
+            return false;
+        }
         // Packages that have an Android version can generally only be updated
         // for the same Android version (otherwise it's a new artifact.)
         if (hasAndroidVersion() && !getAndroidVersion().equals(existingDesc.getAndroidVersion())) {

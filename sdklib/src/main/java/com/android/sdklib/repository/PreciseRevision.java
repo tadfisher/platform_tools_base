@@ -88,6 +88,13 @@ public class PreciseRevision extends FullRevision {
         mPrecision = precision;
     }
 
+    public PreciseRevision(int major, Integer minor, Integer micro, Integer preview) {
+        this(major, minor == null ? 0 : minor, micro == null ? 0 : micro,
+                preview == null ? 0 : preview,
+                preview != null ? PRECISION_PREVIEW : micro != null ? PRECISION_MICRO
+                        : minor != null ? PRECISION_MINOR : PRECISION_MAJOR, DEFAULT_SEPARATOR);
+    }
+
     /**
      * Returns the version in a fixed format major.minor.micro
      * with an optional "rc preview#". For example it would
