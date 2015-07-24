@@ -14,20 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 -->
+
+<!--
+xjc -b com/android/sdklib/repositorycore/api/common.xjb -p com.android.sdklib.repositoryv2.generated.repository com/android/sdklib/repositoryv2/sdk-repository-12.xsd -extension
+-->
 <xsd:schema
     targetNamespace="http://schemas.android.com/sdk/android/repository/12"
     xmlns:xsd="http://www.w3.org/2001/XMLSchema"
     xmlns:sdk="http://schemas.android.com/sdk/android/repository/12"
     xmlns:common="http://schemas.android.com/sdk/android/common/01"
-    xmlns:repo11="http://schemas.android.com/sdk/android/repository/11"
     elementFormDefault="unqualified"
     attributeFormDefault="unqualified"
     version="1">
 
   <xsd:import namespace="http://schemas.android.com/sdk/android/common/01"
-              schemaLocation="sdk-common-01.xsd"/>
-  <xsd:import namespace="http://schemas.android.com/sdk/android/repository/11"
-              schemaLocation="sdk-repository-11.xsd"/>
+              schemaLocation="../repositorycore/api/sdk-common-01.xsd"/>
   <!-- The repository contains a collection of downloadable items known as
        "packages". Each package has a type and various attributes and contains
        a list of file "archives" that can be downloaded for specific OSes.
@@ -105,46 +106,43 @@
             compatibility and to ease migration to the new generic type.
   -->
 
-  <xsd:element name="sdk-repository" type="sdk:repositoryType"/>
-
-  <xsd:complexType name="repositoryType">
-    <xsd:annotation>
-      <xsd:documentation>
-        The repository contains a collection of downloadable packages.
-      </xsd:documentation>
-    </xsd:annotation>
-    <xsd:choice minOccurs="0" maxOccurs="unbounded">
-      <xsd:element name="generic" type="common:genericType"/>
-      <xsd:element name="license" type="common:licenseType"/>
-      <!-- these types are deprecated -->
-      <xsd:element name="platform" type="repo11:platformType"/>
-      <xsd:element name="source" type="repo11:sourceType"/>
-      <xsd:element name="tool" type="repo11:toolType"/>
-      <xsd:element name="platform-tool" type="repo11:platformToolType"/>
-      <xsd:element name="build-tool" type="repo11:buildToolType"/>
-      <xsd:element name="doc" type="repo11:docType"/>
-      <xsd:element name="sample" type="repo11:sampleType"/>
-      <xsd:element name="ndk" type="repo11:ndkType"/>
-    </xsd:choice>
-  </xsd:complexType>
+  <xsd:element name="sdk-repository" type="common:repositoryType"/>
 
     <xsd:complexType name="platformDetailsType">
         <xsd:complexContent>
             <xsd:extension base="common:typeDetails">
                 <xsd:all>
                     <!-- The Android API Level for the platform. An int > 0. -->
-                    <xsd:element name="api-level" type="xsd:positiveInteger"/>
+                    <xsd:element name="api-level" type="xsd:int"/>
+                    <xsd:element name="layoutlib" type="sdk:layoutlibType"/>
                 </xsd:all>
             </xsd:extension>
         </xsd:complexContent>
     </xsd:complexType>
 
-  <xsd:complexType name="sourceDetailsType">
+    <xsd:complexType name="layoutlibType" >
+        <xsd:annotation>
+            <xsd:documentation>
+                Version information for a layoutlib included in a platform.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:all>
+            <!-- The layoutlib API level, an int > 0,
+                 incremented with each new incompatible lib. -->
+            <xsd:element name="api"          type="xsd:int" />
+            <!-- The incremental minor revision for that API, e.g. in case of bug fixes.
+                 Optional. An int >= 0, assumed to be 0 if the element is missing. -->
+            <xsd:element name="revision"     type="xsd:int" minOccurs="0" />
+        </xsd:all>
+    </xsd:complexType>
+
+
+    <xsd:complexType name="sourceDetailsType">
     <xsd:complexContent>
         <xsd:extension base="common:typeDetails">
             <xsd:all>
                 <!-- The Android API Level for the platform. An int > 0. -->
-                <xsd:element name="api-level" type="xsd:positiveInteger"/>
+                <xsd:element name="api-level" type="xsd:int"/>
             </xsd:all>
         </xsd:extension>
     </xsd:complexContent>
@@ -189,5 +187,6 @@
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
+
 
 </xsd:schema>
