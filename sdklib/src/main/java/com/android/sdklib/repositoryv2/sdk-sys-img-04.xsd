@@ -14,6 +14,10 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
+
+<!--
+xjc -b com/android/sdklib/repositorycore/api/common.xjb -p com.android.sdklib.repositoryv2.generated.sysimg com/android/sdklib/repositoryv2/sdk-sys-img-04.xsd -extension
+-->
 <xsd:schema
         targetNamespace="http://schemas.android.com/sdk/android/sys-img/4"
         xmlns:xsd="http://www.w3.org/2001/XMLSchema"
@@ -25,9 +29,7 @@
         version="1">
 
     <xsd:import namespace="http://schemas.android.com/sdk/android/common/01"
-                schemaLocation="sdk-common-01.xsd"/>
-    <xsd:import namespace="http://schemas.android.com/sdk/android/repository/10"
-                schemaLocation="sdk-repository-10.xsd"/>
+                schemaLocation="../repositorycore/api/sdk-common-01.xsd"/>
 
     <!-- The repository contains a collection of downloadable items known as
          "packages". Each package has a type and various attributes and contains
@@ -51,23 +53,7 @@
             - Support for new <addon><vendor-id/name></addon> element.
     -->
 
-    <xsd:element name="sdk-sys-img" type="sdk:repositoryType"/>
-
-    <xsd:complexType name="repositoryType">
-        <xsd:annotation>
-            <xsd:documentation>
-                The repository contains a collection of downloadable system images.
-            </xsd:documentation>
-        </xsd:annotation>
-        <xsd:choice minOccurs="0" maxOccurs="unbounded">
-            <xsd:element name="license" type="common:licenseType"/>
-            <xsd:element name="generic" type="common:genericType"/>
-
-            <!-- these types are deprecated -->
-            <xsd:element name="system-image" type="sysimg3:systemImageType"/>
-        </xsd:choice>
-    </xsd:complexType>
-
+    <xsd:element name="sdk-sys-img" type="common:repositoryType"/>
 
     <xsd:complexType name="sysimgDetailsType">
         <xsd:complexContent>
@@ -77,7 +63,7 @@
                     <xsd:element name="api-level" type="xsd:positiveInteger"/>
                     <xsd:element name="tag-id" type="xsd:string"/>
                     <xsd:element name="tag-display" type="xsd:string"/>
-                    <xsd:element name="vendor" type="common:addonType"/>
+                    <xsd:element name="vendor" type="sdk:addonType"/>
                     <xsd:element name="abi" type="sdk:abiType"/>
                 </xsd:all>
             </xsd:extension>
@@ -102,5 +88,21 @@
         </xsd:restriction>
     </xsd:simpleType>
 
+    <xsd:complexType name="addonType" >
+        <xsd:annotation>
+            <xsd:documentation>
+                Indicates a system-image is tied to an add-on and which one
+                (the combo tag-id + vendor-id uniquely identifies the add-on.)
+                Mandatory for add-on system-images.
+                Must not be present for platform system-images.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:all>
+            <!-- The vendor id of the add-on. -->
+            <xsd:element name="vendor-id"       type="common:idType" />
+            <!-- The displayed vendor name of the add-on. -->
+            <xsd:element name="vendor-display"  type="xsd:normalizedString" minOccurs="0" />
+        </xsd:all>
+    </xsd:complexType>
 
 </xsd:schema>
