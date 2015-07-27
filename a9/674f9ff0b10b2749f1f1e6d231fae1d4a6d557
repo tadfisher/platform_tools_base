@@ -1,0 +1,8 @@
+Code-Review+1: Raymond Chiu <chiur@google.com>
+Verified+1: Android Devtools Build <android-devtools-build@google.com>
+Code-Review+2: Chris Warrington <cmw@google.com>
+Submitted-by: Chris Warrington <cmw@google.com>
+Submitted-at: Mon, 27 Jul 2015 16:01:57 +0000
+Reviewed-on: https://android-review.googlesource.com/161579
+Project: platform/tools/base
+Branch: refs/heads/studio-1.4-dev
