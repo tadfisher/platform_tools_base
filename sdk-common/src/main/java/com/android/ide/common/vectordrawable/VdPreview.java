@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package com.android.assetstudiolib.vectordrawable;
+package com.android.ide.common.vectordrawable;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.assetstudiolib.Util;
+import com.android.ide.common.util.AssetUtil;
 import com.google.common.base.Charsets;
 import com.sun.org.apache.xml.internal.serialize.OutputFormat;
 import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
@@ -280,7 +280,7 @@ public class VdPreview {
 
         // Create the image according to the vectorDrawable's aspect ratio.
 
-        BufferedImage image = Util.newArgbBufferedImage((int) imageWidth, (int) imageHeight);
+        BufferedImage image = AssetUtil.newArgbBufferedImage((int)imageWidth, (int)imageHeight);
         vdTree.drawIntoImage(image);
         return image;
     }

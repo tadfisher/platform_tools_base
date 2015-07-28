@@ -6,10 +6,10 @@ apply plugin: 'application'
 group = 'com.android.tools'
 archivesBaseName = 'asset-studio'
 version = rootProject.ext.baseVersion
-mainClassName = 'com.android.assetstudiolib.vectordrawable.VdPreview'
 
 dependencies {
     compile project(':base:layoutlib-api')
+    compile project(':base:sdk-common')
 
     testCompile 'junit:junit:4.12'
 }
