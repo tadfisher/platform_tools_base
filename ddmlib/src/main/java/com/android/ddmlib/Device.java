@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Atomics;
+import sun.plugin.dom.exception.InvalidStateException;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -394,17 +395,23 @@ final class Device implements IDevice {
         return mHardwareCharacteristics.contains(feature.getCharacteristic());
     }
 
-    private int getApiLevel() {
+    @Override
+    public int getApiLevel() {
         if (mApiLevel > 0) {
             return mApiLevel;
         }
 
+        String buildApi = getProperty(PROP_BUILD_API_LEVEL);
+        if (buildApi == null) {
+            throw new InvalidStateException("Unexpected error: Device does not have a build API level.");
+        }
+
         try {
-            String buildApi = getProperty(PROP_BUILD_API_LEVEL);
-            mApiLevel = buildApi == null ? -1 : Integer.parseInt(buildApi);
+            mApiLevel = Integer.parseInt(buildApi);
             return mApiLevel;
-        } catch (Exception e) {
-            return -1;
+        }
+        catch (NumberFormatException e) {
+            throw new InvalidStateException("Unexpected error: Build API level is not an integer.");
         }
     }
 
