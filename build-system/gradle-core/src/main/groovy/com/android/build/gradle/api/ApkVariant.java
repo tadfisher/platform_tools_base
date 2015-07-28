@@ -18,7 +18,7 @@ package com.android.build.gradle.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.tasks.Dex;
+import com.android.build.gradle.tasks.IncrementalDex;
 import com.android.builder.model.SigningConfig;
 
 import org.gradle.api.DefaultTask;
@@ -61,7 +61,7 @@ public interface ApkVariant extends BaseVariant {
      * Returns the Dex task.
      */
     @Nullable
-    Dex getDex();
+    IncrementalDex getDex();
 
     /**
      * Returns the list of jar files that are on the compile classpath. This does not include

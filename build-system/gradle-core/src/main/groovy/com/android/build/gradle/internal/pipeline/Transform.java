@@ -18,7 +18,10 @@ package com.android.build.gradle.internal.pipeline;
 
 import com.android.annotations.NonNull;
 
+import java.io.File;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -37,6 +40,15 @@ public interface Transform {
 
     @NonNull
     TransformType getTransformType();
+
+    @NonNull
+    Collection<File> getSecondaryFileInputs();
+
+    @NonNull
+    Collection<File> getSecondaryFileOutputs();
+
+    @NonNull
+    Map<String, Object> getParameterInputs();
 
     void transform(
             @NonNull List<Stream> inputs,

@@ -18,27 +18,23 @@ package com.android.build.gradle.internal.pipeline;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.tasks.DefaultAndroidTask;
-import com.google.common.collect.Lists;
 
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.OutputDirectories;
+import org.gradle.api.tasks.OutputFiles;
 import org.gradle.api.tasks.TaskAction;
-import org.gradle.tooling.BuildException;
 
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.Callable;
+import java.util.Map;
 
 /**
  * A task doing a bytecode transformation
  */
-public class TransformTask extends DefaultAndroidTask {
+public class TransformTask extends StreamBasedTask {
 
     private Transform transform;
-    private List<Stream> inputStreams;
-    private List<Stream> outputStreams;
 
     TransformTask() {
     }
@@ -54,51 +50,18 @@ public class TransformTask extends DefaultAndroidTask {
     }
 
     @InputFiles
-    public List<File> getStreamInputs() {
-        List<File> inputs = Lists.newArrayList();
-        for (Stream s : inputStreams) {
-            Object object = s.getInputs();
-
-            if (object instanceof Callable) {
-                try {
-                    object = ((Callable) object).call();
-                } catch (Exception e) {
-                    throw new BuildException("", e);
-                }
-            }
-
-            if (object instanceof File) {
-                inputs.add((File) object);
-            } else if (object instanceof Collection) {
-                inputs.addAll((Collection<File>) object);
-            }
-        }
-
-        return inputs;
+    public Collection<File> getOtherFileInputs() {
+        return transform.getSecondaryFileInputs();
     }
 
-    @OutputDirectories
-    public List<File> getStreamOutputs() {
-        List<File> inputs = Lists.newArrayList();
-        for (Stream s : outputStreams) {
-            Object object = s.getInputs();
+    @OutputFiles
+    public Collection<File> getOtherFileOutputs() {
+        return transform.getSecondaryFileOutputs();
+    }
 
-            if (object instanceof Callable) {
-                try {
-                    object = ((Callable) object).call();
-                } catch (Exception e) {
-                    throw new BuildException("", e);
-                }
-            }
-
-            if (object instanceof File) {
-                inputs.add((File) object);
-            } else if (object instanceof Collection) {
-                inputs.addAll((Collection<File>) object);
-            }
-        }
-
-        return inputs;
+    @Input
+    Map<String, Object> getOtherInputs() {
+        return transform.getParameterInputs();
     }
 
     public static class ConfigAction implements TaskConfigAction<TransformTask> {
@@ -125,11 +88,13 @@ public class TransformTask extends DefaultAndroidTask {
             this.outputStreams = outputStreams;
         }
 
+        @NonNull
         @Override
         public String getName() {
             return name;
         }
 
+        @NonNull
         @Override
         public Class<TransformTask> getType() {
             return TransformTask.class;

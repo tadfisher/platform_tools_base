@@ -141,9 +141,6 @@ public class Dex extends BaseTask {
             FileUtils.emptyFolder(outFolder)
         }
 
-        File tmpFolder = getTmpFolder()
-        tmpFolder.mkdirs()
-
         // if some of our .jar input files exist, just reset the inputDir to null
         for (File inputFile : inputFiles) {
             if (inputFile.exists()) {
@@ -162,12 +159,10 @@ public class Dex extends BaseTask {
                 getMainDexListFile(),
                 getDexOptions(),
                 getAdditionalParameters(),
-                tmpFolder,
                 incremental,
                 getOptimize(),
                 new LoggedProcessOutputHandler(getILogger()))
     }
-
 
     public static class ConfigAction implements TaskConfigAction<Dex> {
 

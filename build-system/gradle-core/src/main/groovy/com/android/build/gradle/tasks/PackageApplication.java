@@ -306,7 +306,7 @@ public class PackageApplication extends IncrementalTask implements FileSupplier 
             ConventionMappingHelper.map(packageApp, "dexFolder", new Callable<File>() {
                 @Override
                 public File call() {
-                    return scope.getVariantScope().getDexOutputFolder();
+                    return scope.getVariantScope().getMergeDexOutputFolder();
                 }
             });
             ConventionMappingHelper.map(packageApp, "dexedLibraries",

@@ -37,7 +37,6 @@ import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.coverage.JacocoInstrumentTask;
 import com.android.build.gradle.internal.coverage.JacocoPlugin;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
 import com.android.build.gradle.internal.dependency.LibraryDependencyImpl;
@@ -47,6 +46,8 @@ import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.CoreNdkOptions;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
+import com.android.build.gradle.internal.pipeline.JacocoTransform;
+import com.android.build.gradle.internal.pipeline.Stream;
 import com.android.build.gradle.internal.pipeline.StreamImpl;
 import com.android.build.gradle.internal.pipeline.StreamScope;
 import com.android.build.gradle.internal.pipeline.StreamType;
@@ -76,10 +77,6 @@ import com.android.build.gradle.internal.tasks.SigningReportTask;
 import com.android.build.gradle.internal.tasks.SourceSetsTask;
 import com.android.build.gradle.internal.tasks.TestServerTask;
 import com.android.build.gradle.internal.tasks.UninstallTask;
-import com.android.build.gradle.internal.tasks.multidex.CreateMainDexList;
-import com.android.build.gradle.internal.tasks.multidex.CreateManifestKeepList;
-import com.android.build.gradle.internal.tasks.multidex.JarMergingTask;
-import com.android.build.gradle.internal.tasks.multidex.RetraceMainDexList;
 import com.android.build.gradle.internal.test.TestDataImpl;
 import com.android.build.gradle.internal.test.report.ReportType;
 import com.android.build.gradle.internal.variant.ApkVariantData;
@@ -93,22 +90,22 @@ import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.AndroidJarTask;
 import com.android.build.gradle.tasks.AndroidProGuardTask;
 import com.android.build.gradle.tasks.CompatibleScreensManifest;
-import com.android.build.gradle.tasks.Dex;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.GenerateResValues;
 import com.android.build.gradle.tasks.GenerateSplitAbiRes;
+import com.android.build.gradle.tasks.IncrementalDex;
 import com.android.build.gradle.tasks.JackTask;
 import com.android.build.gradle.tasks.JavaResourcesProvider;
 import com.android.build.gradle.tasks.JillTask;
 import com.android.build.gradle.tasks.Lint;
 import com.android.build.gradle.tasks.MergeAssets;
+import com.android.build.gradle.tasks.MergeDex;
 import com.android.build.gradle.tasks.MergeManifests;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.NdkCompile;
 import com.android.build.gradle.tasks.PackageApplication;
 import com.android.build.gradle.tasks.PackageSplitAbi;
 import com.android.build.gradle.tasks.PackageSplitRes;
-import com.android.build.gradle.tasks.PreDex;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.ProcessManifest;
 import com.android.build.gradle.tasks.ProcessTestManifest;
@@ -117,7 +114,6 @@ import com.android.build.gradle.tasks.ShrinkResources;
 import com.android.build.gradle.tasks.SplitZipAlign;
 import com.android.build.gradle.tasks.ZipAlign;
 import com.android.build.gradle.tasks.factory.JavaCompileConfigAction;
-import com.android.build.gradle.tasks.factory.ProGuardTaskConfigAction;
 import com.android.build.gradle.tasks.factory.ProcessJavaResConfigAction;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantConfiguration;
@@ -168,7 +164,6 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -176,7 +171,6 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import groovy.lang.Closure;
-import proguard.gradle.ProGuardTask;
 
 /**
  * Manages tasks creation.
@@ -1724,7 +1718,7 @@ public abstract class TaskManager {
         final ApkVariantData variantData = (ApkVariantData) scope.getVariantData();
         final GradleVariantConfiguration config = variantData.getVariantConfiguration();
 
-        // create the trasnform pipeline.
+        // create the transform pipeline.
         TransformPipeline.Builder builder = TransformPipeline.builder()
                 .setTaskRegistry(androidTasks)
                 .setTaskFactory(tasks)
@@ -1766,7 +1760,7 @@ public abstract class TaskManager {
         boolean isTestCoverageEnabled = config.getBuildType().isTestCoverageEnabled() && !config
                 .getType().isForTesting();
         if (isTestCoverageEnabled) {
-            createJacocoTask(tasks, scope, pipeline);
+            createJacocoTransform(pipeline);
         }
 
         boolean isTestForApp = config.getType().isForTesting() &&
@@ -1777,6 +1771,7 @@ public abstract class TaskManager {
         boolean isLegacyMultiDexMode = config.isLegacyMultiDexMode();
 
         // ----- Minify next ----
+/*
         File outFile = maybeCreateProguardTasks(tasks, scope, pcData);
         if (outFile != null) {
             pcData.setInputFiles(Collections.singletonList(outFile));
@@ -1877,12 +1872,35 @@ public abstract class TaskManager {
                 pcData.getLibraryGeneratingTasks(),
                 createMainDexListTask,
                 retraceTask);
+                */
+
+        // create dex task
+        AndroidTask<IncrementalDex> dexTask = androidTasks.create(tasks, new IncrementalDex.ConfigAction(pipeline));
+
+        for (Stream s : pipeline.getStreamsByType(StreamType.CODE)) {
+            // TODO Optimize to avoid creating too many actions
+            dexTask.dependsOn(tasks, s.getDependencies());
+        }
+
+        // create the merge Dex
+        AndroidTask<MergeDex> mergeDexTask = androidTasks.create(tasks, new MergeDex.ConfigAction(scope));
+        scope.setMergeDexTask(mergeDexTask);
+        mergeDexTask.dependsOn(tasks, dexTask);
+    }
+
+    public void createJacocoTransform(@NonNull final TransformPipeline transformPipeline) {
+        final JacocoTransform transform = new JacocoTransform(transformPipeline.getVariantScope());
+
+        AndroidTask<?> task = transformPipeline.addTransform(transform);
+
+        final Copy agentTask = getJacocoAgentTask();
+        task.dependsOn(transformPipeline.getTaskFactory(), agentTask);
     }
 
     public PostCompilationData createJacocoTask(
             @NonNull TaskFactory tasks,
-            @NonNull final VariantScope scope,
-            @NonNull final TransformPipeline pipeline) {
+            @NonNull final VariantScope scope) {
+        /*
         AndroidTask<JacocoInstrumentTask> jacocoTask =
                 androidTasks.create(tasks, new JacocoInstrumentTask.ConfigAction(scope, pcData));
 
@@ -1890,10 +1908,10 @@ public abstract class TaskManager {
 
         final Copy agentTask = getJacocoAgentTask();
         jacocoTask.dependsOn(tasks, agentTask);
-
+*/
         // update dependency.
         PostCompilationData pcData2 = new PostCompilationData();
-        pcData2.setClassGeneratingTasks(Collections.singletonList(jacocoTask.getName()));
+ /*       pcData2.setClassGeneratingTasks(Collections.singletonList(jacocoTask.getName()));
         pcData2.setLibraryGeneratingTasks(
                 Arrays.asList(pcData.getLibraryGeneratingTasks(), agentTask));
 
@@ -1923,7 +1941,7 @@ public abstract class TaskManager {
                 return files;
             }
 
-        });
+        });*/
 
         return pcData2;
     }
@@ -2011,7 +2029,7 @@ public abstract class TaskManager {
                     tasks,
                     shrinkTask,
                     // TODO: When Jack is converted, add activeDexTask to VariantScope.
-                    variantOutputScope.getVariantScope().getDexTask(),
+                    variantOutputScope.getVariantScope().getMergeDexTask(),
                     variantOutputScope.getVariantScope().getJavaCompilerTask(),
                     variantData.javaCompilerTask, // TODO: Remove when Jack is converted to AndroidTask.
                     variantOutputData.packageSplitResourcesTask,

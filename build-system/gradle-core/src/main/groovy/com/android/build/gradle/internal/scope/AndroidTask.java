@@ -17,13 +17,13 @@
 package com.android.build.gradle.internal.scope;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.TaskFactory;
 
 import org.gradle.api.Action;
 import org.gradle.api.Task;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -111,6 +111,10 @@ public class AndroidTask<T extends Task> {
                 for (Object dependency : dependencies) {
                     if (dependency instanceof AndroidTask) {
                         task.dependsOn(((AndroidTask) dependency).getName());
+                    } else if (dependency instanceof Collection) {
+                        for (Object dep : (Collection) dependency) {
+                            task.dependsOn(dep);
+                        }
                     } else {
                         task.dependsOn(dependency);
                     }

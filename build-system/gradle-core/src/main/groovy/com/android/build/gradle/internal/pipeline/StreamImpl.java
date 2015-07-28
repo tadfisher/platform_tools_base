@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.pipeline;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.concurrency.Immutable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Callables;
 
@@ -27,6 +28,7 @@ import java.util.concurrent.Callable;
 
 /**
  */
+@Immutable
 public class StreamImpl implements Stream {
 
     @NonNull
@@ -55,7 +57,7 @@ public class StreamImpl implements Stream {
         public Builder from(@NonNull Stream stream) {
             type = stream.getType();
             scope = stream.getScope();
-            inputs = stream.getInputs();
+            inputs = stream.getFiles();
             dependencies = stream.getDependencies();
             return this;
         }
@@ -126,7 +128,7 @@ public class StreamImpl implements Stream {
 
     @NonNull
     @Override
-    public Callable<Collection<File>> getInputs() {
+    public Callable<Collection<File>> getFiles() {
         return inputs;
     }
 

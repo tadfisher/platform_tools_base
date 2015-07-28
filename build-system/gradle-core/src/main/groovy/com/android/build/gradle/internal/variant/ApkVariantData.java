@@ -21,7 +21,8 @@ import com.android.build.OutputFile;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.tasks.Dex;
+import com.android.build.gradle.tasks.IncrementalDex;
+import com.android.build.gradle.tasks.MergeDex;
 import com.android.build.gradle.tasks.PreDex;
 
 import org.gradle.api.DefaultTask;
@@ -34,7 +35,8 @@ import java.util.Collection;
 public abstract class ApkVariantData extends BaseVariantData<ApkVariantOutputData> {
 
     public PreDex preDexTask;
-    public Dex dexTask;
+    public IncrementalDex dexTask;
+    public MergeDex mergeDexTask;
     public DefaultTask installTask;
     public DefaultTask uninstallTask;
 

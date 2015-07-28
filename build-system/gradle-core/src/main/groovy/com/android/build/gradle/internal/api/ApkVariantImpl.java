@@ -20,7 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.api.ApkVariant;
 import com.android.build.gradle.internal.variant.ApkVariantData;
-import com.android.build.gradle.tasks.Dex;
+import com.android.build.gradle.tasks.IncrementalDex;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.SigningConfig;
 
@@ -57,7 +57,7 @@ public abstract class ApkVariantImpl extends BaseVariantImpl implements ApkVaria
     }
 
     @Override
-    public Dex getDex() {
+    public IncrementalDex getDex() {
         return getApkVariantData().dexTask;
     }
 

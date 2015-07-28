@@ -36,12 +36,12 @@ import com.android.build.gradle.internal.variant.LibraryVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.BinaryFileProviderTask;
-import com.android.build.gradle.tasks.Dex;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.GenerateResValues;
 import com.android.build.gradle.tasks.JackTask;
 import com.android.build.gradle.tasks.JavaResourcesProvider;
 import com.android.build.gradle.tasks.MergeAssets;
+import com.android.build.gradle.tasks.MergeDex;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.NdkCompile;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
@@ -107,7 +107,7 @@ public class VariantScope {
     private AndroidTask<GenerateResValues> generateResValuesTask;
 
     @Nullable
-    private AndroidTask<Dex> dexTask;
+    private AndroidTask<MergeDex> mergeDexTask;
     @Nullable
     private AndroidTask jacocoIntrumentTask;
 
@@ -242,6 +242,11 @@ public class VariantScope {
     @NonNull
     public File getDexOutputFolder() {
         return new File(globalScope.getIntermediatesDir(), "/dex/" + getVariantConfiguration().getDirName());
+    }
+
+    @NonNull
+    public File getMergeDexOutputFolder() {
+        return new File(globalScope.getIntermediatesDir(), "/merged-dex/" + getVariantConfiguration().getDirName());
     }
 
     @NonNull
@@ -602,12 +607,12 @@ public class VariantScope {
     }
 
     @Nullable
-    public AndroidTask<Dex> getDexTask() {
-        return dexTask;
+    public AndroidTask<MergeDex> getMergeDexTask() {
+        return mergeDexTask;
     }
 
-    public void setDexTask(@Nullable AndroidTask<Dex> dexTask) {
-        this.dexTask = dexTask;
+    public void setMergeDexTask(@Nullable AndroidTask<MergeDex> mergeDexTask) {
+        this.mergeDexTask = mergeDexTask;
     }
 
     public AndroidTask<Sync> getProcessJavaResourcesTask() {

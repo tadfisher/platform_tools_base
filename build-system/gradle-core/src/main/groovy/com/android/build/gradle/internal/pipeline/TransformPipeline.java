@@ -16,22 +16,32 @@
 
 package com.android.build.gradle.internal.pipeline;
 
+import static com.android.utils.StringHelper.capitalize;
+
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.TaskFactory;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.AndroidTaskRegistry;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.utils.StringHelper;
+import com.android.builder.model.AndroidProject;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 /**
- * A pipeline of bytecode transforms
+ * A pipeline of transforms for bytecode and resources.
+ *
+ * This is not a real pipeline as the actual execution is handled by Gradle through the tasks.
+ * Instead it's a mean to more easily configure a series of transforms that consume each other's
+ * inputs when several of these transform are optional.
  */
 public class TransformPipeline {
 
@@ -110,17 +120,34 @@ public class TransformPipeline {
         this.streams = Lists.newArrayList(streams);
     }
 
-    public void addTransform(@NonNull Transform transform) {
-        List<Stream> inputStreams = findStreams(transform);
+    @NonNull
+    public AndroidTaskRegistry getTaskRegistry() {
+        return taskRegistry;
+    }
+
+    @NonNull
+    public TaskFactory getTaskFactory() {
+        return taskFactory;
+    }
+
+    @NonNull
+    public VariantScope getVariantScope() {
+        return variantScope;
+    }
+
+    public AndroidTask<?> addTransform(@NonNull Transform transform) {
+        List<Stream> inputStreams = grabStreams(transform);
         if (inputStreams.isEmpty()) {
-            // didn't find any match. Means there is a misorder somewhere in the streams.
+            // didn't find any match. Means there is a broken order somewhere in the streams.
         }
 
-        String taskName = variantScope.getTaskName("transformWith" + StringHelper
-                .capitalize(transform.getName()));
+        String taskName = variantScope.getTaskName(getTaskNamePrefix(transform));
 
         // create new Stream to match the output of the transform.
-        List<Stream> outputStreams = computeOutputStreams(transform, inputStreams, taskName);
+        List<Stream> outputStreams = computeOutputStreams(
+                transform, inputStreams, taskName,
+                variantScope.getVariantConfiguration().getDirName(),
+                variantScope.getGlobalScope().getBuildDir());
         streams.addAll(outputStreams);
 
         // TODO: we probably need a map from transform to tasks
@@ -128,52 +155,113 @@ public class TransformPipeline {
 
         // create the task...
         // Need to figure out the stream based on the previous transforms... Should probably be dynamic.
-        AndroidTask<TransformTask> task = taskRegistry.create(
+
+        return taskRegistry.create(
                 taskFactory,
                 new TransformTask.ConfigAction(
                         taskName, transform, inputStreams, outputStreams));
     }
 
     @NonNull
+    public List<Stream> getStreams() {
+        return streams;
+    }
+
+    public List<Stream> getStreamsByType(@NonNull StreamType streamType) {
+        ImmutableList.Builder<Stream> streamsByType = ImmutableList.builder();
+        for (Stream s : streams) {
+            if (s.getType() == streamType) {
+                streamsByType.add(s);
+            }
+        }
+
+        return streamsByType.build();
+    }
+
+    @NonNull
+    private static String getTaskNamePrefix(@NonNull Transform transform) {
+        StringBuilder sb = new StringBuilder(100);
+        sb.append("transform");
+
+        Iterator<StreamType> iterator = transform.getTypes().iterator();
+        // there's always at least one
+        sb.append(capitalize(iterator.next().name().toLowerCase(Locale.getDefault())));
+        while (iterator.hasNext()) {
+            sb.append("And").append(capitalize(
+                    iterator.next().name().toLowerCase(Locale.getDefault())));
+        }
+
+        sb.append("With").append(capitalize(transform.getName()));
+
+        return sb.toString();
+    }
+
+    @NonNull
     private static List<Stream> computeOutputStreams(
             @NonNull Transform transform,
             @NonNull List<Stream> inputStreams,
-            @NonNull String taskName) {
-        if (transform.getTransformType() == TransformType.AS_INPUT) {
-            // for each input, create a matching output.
-            List<Stream> outputStreams = Lists.newArrayListWithCapacity(inputStreams.size());
-            for (Stream input : inputStreams) {
-                // copy with new location.
-                outputStreams.add(StreamImpl.builder()
-                        .from(input)
-                        .setInputs(new File("TODO"))
-                        .setDependency(taskName).build());
-            }
+            @NonNull String taskName,
+            @NonNull String variantDirName,
+            @NonNull File buildDir) {
+        List<Stream> outputStreams;
+        switch (transform.getTransformType()) {
+            case AS_INPUT:
+                // for each input, create a matching output.
+                outputStreams = Lists.newArrayListWithCapacity(inputStreams.size());
+                for (Stream input : inputStreams) {
+                    // copy with new location.
+                    outputStreams.add(StreamImpl.builder()
+                            .from(input)
+                            .setInputs(new File(buildDir, Joiner.on(File.separator).join(
+                                    AndroidProject.FD_INTERMEDIATES,
+                                    "transforms",
+                                    input.getType().name().toLowerCase(Locale.getDefault()),
+                                    input.getScope().name().toLowerCase(Locale.getDefault()),
+                                    transform.getName(),
+                                    variantDirName)))
+                            .setDependency(taskName).build());
+                }
 
-            return outputStreams;
+                return outputStreams;
+            case COMBINED:
+                // create single combined output stream for each code, res.
+                Set<StreamType> types = transform.getTypes();
+                outputStreams = Lists.newArrayListWithCapacity(types.size());
+                if (types.contains(StreamType.CODE)) {
+                    // create a ALL/CODE Stream
+                    outputStreams.add(StreamImpl.builder()
+                            .setType(StreamType.CODE)
+                            .setScope(StreamScope.ALL)
+                            .setInputs(new File(buildDir, Joiner.on(File.separator).join(
+                                    AndroidProject.FD_INTERMEDIATES,
+                                    "transforms",
+                                    StreamType.CODE.name().toLowerCase(Locale.getDefault()),
+                                    StreamScope.ALL.name().toLowerCase(Locale.getDefault()),
+                                    transform.getName(),
+                                    variantDirName)))
+                            .setDependency(taskName).build());
+                }
+                if (types.contains(StreamType.CODE)) {
+                    // create a ALL/RESOURCES Stream
+                    outputStreams.add(StreamImpl.builder()
+                            .setType(StreamType.RESOURCES)
+                            .setScope(StreamScope.ALL)
+                            .setInputs(new File(buildDir, Joiner.on(File.separator).join(
+                                    AndroidProject.FD_INTERMEDIATES,
+                                    "transforms",
+                                    StreamType.RESOURCES.name().toLowerCase(Locale.getDefault()),
+                                    StreamScope.ALL.name().toLowerCase(Locale.getDefault()),
+                                    transform.getName(),
+                                    variantDirName)))
+                            .setDependency(taskName).build());
+                }
 
-        } else {
-            // create single combined output stream for each code, res.
-            Set<StreamType> types = transform.getTypes();
-            List<Stream> outputStreams = Lists.newArrayListWithCapacity(types.size());
-            if (types.contains(StreamType.CODE)) {
-                // create a ALL/CODE Stream
-                outputStreams.add(StreamImpl.builder()
-                        .setType(StreamType.CODE)
-                        .setScope(StreamScope.ALL)
-                        .setInputs(new File(""))
-                        .setDependency(taskName).build());
-            }
-            if (types.contains(StreamType.CODE)) {
-                // create a ALL/RESOURCES Stream
-                outputStreams.add(StreamImpl.builder()
-                        .setType(StreamType.RESOURCES)
-                        .setScope(StreamScope.ALL)
-                        .setInputs(new File("TODO"))
-                        .setDependency(taskName).build());
-            }
-
-            return outputStreams;
+                return outputStreams;
+            case NO_OP:
+                // put the input streams back into the pipeline.
+                return Lists.newArrayList(inputStreams);
+            default:
+                throw new UnsupportedOperationException("Unsupported transform type");
         }
     }
 
@@ -187,7 +275,7 @@ public class TransformPipeline {
      * @return the input streams for the transform.
      */
     @NonNull
-    private List<Stream> findStreams(@NonNull Transform transform) {
+    private List<Stream> grabStreams(@NonNull Transform transform) {
         List<Stream> streamMatches = Lists.newArrayListWithExpectedSize(streams.size());
 
         Set<StreamType> types = transform.getTypes();

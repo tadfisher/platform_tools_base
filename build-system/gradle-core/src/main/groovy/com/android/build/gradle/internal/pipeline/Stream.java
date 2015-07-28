@@ -38,10 +38,10 @@ public interface Stream {
     StreamScope getScope();
 
     /**
-     * Returns the inputs.
+     * Returns the files.
      */
     @NonNull
-    Callable<Collection<File>> getInputs();
+    Callable<Collection<File>> getFiles();
 
     @NonNull
     List<Object> getDependencies();
