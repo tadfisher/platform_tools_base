@@ -18,7 +18,10 @@ package com.android.tools.chartlib;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.concurrency.GuardedBy;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  * A group of streams of data sampled over time. This object is thread safe as it can be
@@ -65,6 +68,67 @@ public class TimelineData {
         }
         mMaxTotal = Math.max(mMaxTotal, total);
         mSamples.add(new Sample((time - mStart) / 1000.0f, type, values));
+    }
+
+    /**
+     * Converts stream area values to stream speed values and adds the speeds as samples. The converting may break into multiple sample
+     * time points to ensure the speed multiple time amount is correct. For example, a stream flow is a triangle when not stacked with
+     * other streams, and there are four time points; then the triangle is split into four parts on the time points when stacked,
+     * each part can change shape while keeping the same area size.
+     *
+     * @param timeMills The current time in mills.
+     * @param type Sample data type.
+     * @param areas Value multiple time amounts for all streams.
+     */
+    public synchronized void addFromArea(long timeMills, int type, float... areas) {
+        timeMills -= mStart;
+        Sample lastSample = mSamples.isEmpty() ? null : mSamples.get(mSamples.size() - 1);
+        long lastSampleTime = lastSample != null ? (long)(lastSample.time * 1000) : 0;
+        float[] lastSpeeds = lastSample != null ? lastSample.values : new float[areas.length];
+        int period = (int)(timeMills - lastSampleTime);
+        assert period > 0;
+        int streamSize = areas.length;
+        assert streamSize == lastSpeeds.length;
+
+        List<Integer> timePoints = new ArrayList<Integer>(streamSize);
+        float[] endSpeeds = new float[streamSize];
+        for (int i = 0; i < streamSize; i++) {
+            if (lastSpeeds[i] * period / 2000 <= areas[i]) {
+                timePoints.add(period);
+                endSpeeds[i] = areas[i] * 2000 / period - lastSpeeds[i];
+            }
+            else if (areas[i] == 0) {
+                timePoints.add(period);
+                endSpeeds[i] = 0;
+            }
+            else {
+                timePoints.add((int)(areas[i] * 2000 / lastSpeeds[i]));
+                endSpeeds[i] = 0;
+            }
+        }
+        List<Integer> ascendingTimePoints = new ArrayList<Integer>(timePoints);
+        Collections.sort(ascendingTimePoints);
+        int lastTime = -1;
+        for (int timePoint : ascendingTimePoints) {
+            if (timePoint == lastTime) {
+                continue;
+            }
+            float[] sampleValues = new float[streamSize];
+            for (int j = 0; j < streamSize; j++) {
+                int endTime = timePoints.get(j);
+                if (timePoint < endTime) {
+                    sampleValues[j] = (endSpeeds[j] * endTime - lastSpeeds[j] * timePoint) / (endTime - timePoint);
+                }
+                else if (timePoint > endTime) {
+                    sampleValues[j] = 0;
+                }
+                else {
+                    sampleValues[j] = endSpeeds[j];
+                }
+            }
+            add(timePoint + lastSampleTime + mStart, type, sampleValues);
+            lastTime = timePoint;
+        }
     }
 
     public synchronized void clear() {
