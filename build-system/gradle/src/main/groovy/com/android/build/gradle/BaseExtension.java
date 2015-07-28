@@ -216,7 +216,7 @@ public abstract class BaseExtension implements AndroidConfig {
                             = "Classpath only used when publishing '" + sourceSet.getName() + "}'.";
                 } else {
                     packageConfigDescription
-                            = "Classpath packaged with the compiled '\" + sourceSet.getName() + \"' classes.";
+                            = "Classpath packaged with the compiled '" + sourceSet.getName() + "' classes.";
                 }
                 createConfiguration(
                         configurations,
