@@ -14,14 +14,23 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.coverage
+package com.android.build.gradle.internal.coverage;
 
 /**
  * DSL object for configuring JaCoCo settings.
  */
-class JacocoExtension {
+public class JacocoExtension {
+
+    private String version = "0.7.4.201502262128";
+
     /**
      * The version of jacoco to use.
      */
-    String version = '0.7.4.201502262128'
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
 }
