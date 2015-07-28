@@ -394,7 +394,8 @@ final class Device implements IDevice {
         return mHardwareCharacteristics.contains(feature.getCharacteristic());
     }
 
-    private int getApiLevel() {
+    @Override
+    public int getApiLevel() {
         if (mApiLevel > 0) {
             return mApiLevel;
         }
