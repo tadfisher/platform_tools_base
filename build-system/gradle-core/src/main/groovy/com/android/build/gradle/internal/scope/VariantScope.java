@@ -492,6 +492,12 @@ public class VariantScope {
                 "/mapping/" + getVariantConfiguration().getDirName() + "/mapping.txt");
     }
 
+    @NonNull
+    public File getCoverageInstrumentedClassesFolder() {
+        return new File(globalScope.getIntermediatesDir(),
+                "coverage-instrumented-classes/" + getVariantConfiguration().getDirName());
+    }
+
     // Tasks getters/setters.
 
     public AndroidTask<Task> getPreBuildTask() {
