@@ -1,0 +1,8 @@
+Code-Review+1: Yura . <yura@google.com>
+Verified+1: Android Devtools Build <android-devtools-build@google.com>
+Code-Review+2: Diego Perez <diegoperez@google.com>
+Submitted-by: Jerome Gaillard <jgaillard@google.com>
+Submitted-at: Tue, 28 Jul 2015 23:21:54 +0000
+Reviewed-on: https://android-review.googlesource.com/160784
+Project: platform/tools/base
+Branch: refs/heads/studio-1.4-dev
