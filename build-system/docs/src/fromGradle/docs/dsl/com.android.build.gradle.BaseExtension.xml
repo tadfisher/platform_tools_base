@@ -21,7 +21,6 @@
             <tr><td>dexOptions</td></tr>
             <tr><td>compileOptions</td></tr>
             <tr><td>packagingOptions</td></tr>
-            <tr><td>jacoco</td></tr>
             <tr><td>splits</td></tr>
             <tr><td>resourcePrefix</td></tr>
             <tr><td>variantFilter</td></tr>
@@ -44,7 +43,6 @@
             <tr><td>dexOptions</td></tr>
             <tr><td>compileOptions</td></tr>
             <tr><td>packagingOptions</td></tr>
-            <tr><td>jacoco</td></tr>
             <tr><td>splits</td></tr>
             <tr><td>adbOptions</td></tr>
             <tr><td>useLibrary</td></tr>
