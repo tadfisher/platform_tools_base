@@ -18,7 +18,6 @@ package com.android.build.gradle.managed;
 
 import com.android.build.gradle.api.VariantFilter;
 import com.android.build.gradle.internal.CompileOptions;
-import com.android.build.gradle.internal.coverage.JacocoExtension;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.AdbOptions;
 import com.android.build.gradle.internal.dsl.DexOptions;
@@ -40,8 +39,6 @@ import org.gradle.model.Unmanaged;
 
 import java.util.Collection;
 import java.util.List;
-
-import groovy.lang.Closure;
 
 /**
  * Component model for all Android plugin.
@@ -135,11 +132,6 @@ public interface AndroidConfig {
     @Unmanaged
     DexOptions getDexOptions();
     void setDexOptions(DexOptions dexOptions);
-
-    /** JaCoCo options. */
-    @Unmanaged
-    JacocoExtension getJacoco();
-    void setJacoco(JacocoExtension jacoco);
 
     /** Lint options. */
     @Unmanaged

@@ -67,7 +67,7 @@ public abstract class IncrementalTask extends BaseTask {
      * @param changedInputs the changed input files.
      */
     protected void doIncrementalTaskAction(Map<File, FileStatus> changedInputs) throws IOException {
-        // do nothing.
+        throw new UnsupportedOperationException();
     }
 
     /**
