@@ -278,6 +278,21 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
             Severity.WARNING,
             IMPLEMENTATION);
 
+    /** Using a versionCode that is very high */
+    public static final Issue VERSION_TOO_HIGH = Issue.create(
+            "VersionCodeTooHigh", //$NON-NLS-1$
+            "Version code too high",
+
+            "The declared `android:versionCode` is an Integer. Ensure that the version number is" +
+            "not close to the limit. It is recommended to monotonically increase this number " +
+            "each minor or major release of the app. Note that updating an app with a versionCode over " +
+            "Integer.MAX_VALUE is not possible.",
+
+            Category.CORRECTNESS,
+            8,
+            Severity.ERROR,
+            IMPLEMENTATION);
+
     /** Declaring a uses-feature multiple time */
     public static final Issue DUPLICATE_USES_FEATURE = Issue.create(
             "DuplicateUsesFeature", //$NON-NLS-1$
@@ -384,6 +399,12 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
     /** Permission name of mock location permission */
     public static final String MOCK_LOCATION_PERMISSION =
             "android.permission.ACCESS_MOCK_LOCATION";   //$NON-NLS-1$
+
+    /**
+     * Threshold to consider a versionCode very high and issue a warning.
+     * Set the approx a million (2 pow 20) less than @{Integer.MAX_VALUE}
+     */
+    private static final int VERSION_CODE_HIGH_THRESHOLD = Integer.MAX_VALUE - (1 << 20);
 
     /** Constructs a new {@link ManifestDetector} check */
     public ManifestDetector() {
@@ -493,6 +514,18 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
             context.report(ILLEGAL_REFERENCE, element, context.getLocation(codeNode),
                     "The `android:versionCode` cannot be a resource url, it must be "
                             + "a literal integer");
+        } else if (codeNode != null && context.isEnabled(VERSION_TOO_HIGH)) {
+            // Check if the version number is too high.
+            try {
+                int versionCode = Integer.parseInt(codeNode.getValue());
+                if (versionCode >= VERSION_CODE_HIGH_THRESHOLD) {
+                    context.report(VERSION_TOO_HIGH, element, context.getLocation(codeNode),
+                            "The `android:versionCode` is very high and close to the max allowed "
+                                + "versionCode. Are you sure this was intentional?");
+                }
+            } catch (NumberFormatException ex) {
+                // Ignore: AAPT will enforce this.
+            }
         } else if (codeNode == null && context.isEnabled(SET_VERSION)
                 // Not required in Gradle projects; typically defined in build.gradle instead
                 // and inserted at build time
@@ -553,6 +586,12 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
                     Integer versionCode = flavor.getVersionCode();
                     if (versionCode != null) {
                         gradleValue = versionCode.toString();
+                        if (versionCode >= VERSION_CODE_HIGH_THRESHOLD) {
+                            context.report(VERSION_TOO_HIGH, element,
+                                context.getLocation(attribute),
+                                "The `android:versionCode` is very high and close to the max "
+                                    + "allowed versionCode. Are you sure this was intentional?");
+                        }
                     }
                 } else if (ATTR_VERSION_NAME.equals(attributeName)) {
                     gradleValue = flavor.getVersionName();

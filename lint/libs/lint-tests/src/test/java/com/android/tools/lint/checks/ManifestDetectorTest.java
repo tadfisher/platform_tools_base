@@ -378,6 +378,39 @@ public class ManifestDetectorTest extends AbstractCheckTest {
             lintProject("illegal_version.xml=>AndroidManifest.xml"));
     }
 
+    public void testVersionNoTooHigh() throws Exception {
+        mEnabled = Collections.singleton(ManifestDetector.VERSION_TOO_HIGH);
+        assertEquals("AndroidManifest.xml:4: Error: The android:versionCode is very high and close to the max allowed versionCode. Are you sure this was intentional? [VersionCodeTooHigh]\n"
+                + "    android:versionCode=\"2146435071\" >\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "1 errors, 0 warnings\n",
+
+             lintProject(
+                 xml("AndroidManifest.xml", "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                     + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                     + "    package=\"foo.bar2\"\n"
+                     + "    android:versionCode=\"2146435071\" >\n"
+                     + "\n"
+                     + "    <uses-sdk android:minSdkVersion=\"14\" />\n"
+                     + "\n"
+                     + "    <application\n"
+                     + "        android:icon=\"@drawable/ic_launcher\"\n"
+                     + "        android:label=\"@string/app_name\" >\n"
+                     + "        <activity\n"
+                     + "            android:label=\"@string/app_name\"\n"
+                     + "            android:name=\".FooActivity\" >\n"
+                     + "            <intent-filter >\n"
+                     + "                <action android:name=\"android.intent.action.MAIN\" />\n"
+                     + "\n"
+                     + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
+                     + "            </intent-filter>\n"
+                     + "        </activity>\n"
+                     + "    </application>\n"
+                     + "\n"
+                     + "</manifest>\n")
+             ));
+    }
+
     public void testDuplicateUsesFeature() throws Exception {
         mEnabled = Collections.singleton(ManifestDetector.DUPLICATE_USES_FEATURE);
         assertEquals(
