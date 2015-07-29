@@ -239,6 +239,21 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             Severity.ERROR,
             IMPLEMENTATION);
 
+    /** Using a versionCode that is very high */
+    public static final Issue VERSION_TOO_HIGH = Issue.create(
+            "VersionCodeTooHigh", //$NON-NLS-1$
+            "versionCode too high",
+
+            "The declared `android:versionCode` is an Integer. Ensure that the version number is " +
+            "not close to the limit. It is recommended to monotonically increase this number " +
+            "each minor or major release of the app. Note that updating an app with a " +
+            "versionCode over `Integer.MAX_VALUE` is not possible.",
+
+            Category.CORRECTNESS,
+            8,
+            Severity.ERROR,
+            IMPLEMENTATION);
+
     /** The Gradle plugin ID for Android applications */
     public static final String APP_PLUGIN_ID = "com.android.application";
     /** The Gradle plugin ID for Android libraries */
@@ -251,6 +266,12 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
 
     /** Group ID for GMS */
     public static final String GMS_GROUP_ID = "com.google.android.gms";
+
+    /**
+     * Threshold to consider a versionCode very high and issue a warning.
+     * The value is set to approximately a million (2 pow 20) less than {@code Integer.MAX_VALUE}.
+     */
+    private static final int VERSION_CODE_HIGH_THRESHOLD = Integer.MAX_VALUE - (1 << 20);
 
     private int mMinSdkVersion;
     private int mCompileSdkVersion;
@@ -386,6 +407,15 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                 }
                 String message = "Deprecated: Replace 'packageName' with 'applicationId'";
                 report(context, getPropertyKeyCookie(valueCookie), DEPRECATED, message);
+            }
+            if (property.equals("versionCode") && context.isEnabled(VERSION_TOO_HIGH) &&
+                    isInteger(value)) {
+                int version = getIntLiteralValue(value, -1);
+                if (version >= VERSION_CODE_HIGH_THRESHOLD) {
+                    String message = "The 'versionCode' is very high and close to the max allowed "
+                            + "versionCode. Are you sure this was intentional?";
+                    report(context, getPropertyKeyCookie(valueCookie), VERSION_TOO_HIGH, message);
+                }
             }
         } else if (property.equals("compileSdkVersion") && parent.equals("android")) {
             int version = getIntLiteralValue(value, -1);

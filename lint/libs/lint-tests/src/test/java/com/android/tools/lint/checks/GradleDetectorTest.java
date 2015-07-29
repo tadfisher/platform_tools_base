@@ -28,6 +28,7 @@ import static com.android.tools.lint.checks.GradleDetector.PATH;
 import static com.android.tools.lint.checks.GradleDetector.PLUS;
 import static com.android.tools.lint.checks.GradleDetector.REMOTE_VERSION;
 import static com.android.tools.lint.checks.GradleDetector.STRING_INTEGER;
+import static com.android.tools.lint.checks.GradleDetector.VERSION_TOO_HIGH;
 import static com.android.tools.lint.checks.GradleDetector.getNamedDependency;
 import static com.android.tools.lint.checks.GradleDetector.getNewValue;
 import static com.android.tools.lint.checks.GradleDetector.getOldValue;
@@ -624,6 +625,17 @@ public class GradleDetectorTest extends AbstractCheckTest {
         assertEquals("org.robolectric:robolectric:2.3-SNAPSHOT", getNamedDependency(
                 "group: 'org.robolectric', name: 'robolectric', version: '2.3-SNAPSHOT'"
         ));
+    }
+
+    public void testVersionCodeTooHigh() throws Exception {
+        mEnabled = Collections.singleton(VERSION_TOO_HIGH);
+        assertEquals(""
+                        + "build.gradle:5: Error: The 'versionCode' is very high and close to the max allowed versionCode. Are you sure this was intentional? [VersionCodeTooHigh]\n"
+                        + "        versionCode 2146435071\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "1 errors, 0 warnings\n",
+
+                lintProject("gradle/HighVersionCode.gradle=>build.gradle"));
     }
 
     // -------------------------------------------------------------------------------------------
