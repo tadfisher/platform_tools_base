@@ -73,6 +73,14 @@ model {
             ndk.abiFilters += "mips"
         }
     }
+    abi {
+        create("x86") {
+            CFlags += "-DX86"
+        }
+        create("armeabi-v7a") {
+            CFlags += "-DARMEABI_V7A"
+        }
+    }
 }
 """
     }
