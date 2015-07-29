@@ -1425,7 +1425,7 @@ public abstract class TaskManager {
                             mainProviderTask.setDescription(
                                     "Installs and runs instrumentation tests using all Device Providers.");
                             mainProviderTask.setReportType(ReportType.MULTI_FLAVOR);
-
+                            mainProviderTask.setVariantName("");
                             ConventionMappingHelper.map(mainProviderTask, "resultsDir",
                                     new Callable<File>() {
                                         @Override
