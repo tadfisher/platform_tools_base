@@ -258,7 +258,11 @@ public class LibraryTaskManager extends TaskManager {
             } else {
                 variantScope.getCompileTask().dependsOn(tasks, getNdkBuildable(variantData));
             }
+            packageJniLibs.dependsOn(getNdkBuildable(variantData));
+            packageJniLibs.from(variantScope.getNdkSoFolder())
+                    .include("**/*.so");
         }
+        variantScope.setNdkBuildable(getNdkBuildable(variantData));
 
         Sync packageRenderscript = ThreadRecorder.get().record(
                 ExecutionType.LIB_TASK_MANAGER_CREATE_PACKAGING_TASK,
@@ -274,7 +278,7 @@ public class LibraryTaskManager extends TaskManager {
 
                         // package the renderscript header files files into the bundle folder
                         Sync packageRenderscript = project.getTasks().create(
-                                variantScope.getTaskName("package", "Renderscript"), Sync.class);
+                               variantScope.getTaskName("package", "Renderscript"), Sync.class);
                         // package from 3 sources. the order is important to make sure the override works well.
                         packageRenderscript.from(variantConfig.getRenderscriptSourceList())
                                 .include("**/*.rsh");
@@ -450,6 +454,7 @@ public class LibraryTaskManager extends TaskManager {
 
         bundle.dependsOn(packageRes.getName(), packageRenderscript, lintCopy, packageJniLibs,
                 mergeProGuardFileTask);
+        bundle.dependsOn(variantScope.getNdkBuildable());
         TaskManager.optionalDependsOn(bundle, pcData.getClassGeneratingTasks());
         TaskManager.optionalDependsOn(bundle, pcData.getLibraryGeneratingTasks());
 
