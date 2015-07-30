@@ -13,161 +13,270 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.build.gradle.tasks
+package com.android.build.gradle.tasks;
 
-import com.android.SdkConstants
-import com.android.annotations.Nullable
-import com.android.build.gradle.internal.core.GradleVariantConfiguration
-import com.android.build.gradle.internal.dsl.DexOptions
-import com.android.build.gradle.internal.scope.ConventionMappingHelper
-import com.android.build.gradle.internal.scope.TaskConfigAction
-import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.BaseTask
-import com.android.build.gradle.internal.variant.ApkVariantData
-import com.android.build.gradle.internal.variant.TestVariantData
-import com.android.ide.common.process.LoggedProcessOutputHandler
-import com.android.utils.FileUtils
-import org.codehaus.groovy.runtime.DefaultGroovyMethods
-import com.android.build.gradle.internal.PostCompilationData
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputDirectory
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Nested
-import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.TaskAction
-import org.gradle.api.tasks.incremental.IncrementalTaskInputs
+import com.android.SdkConstants;
+import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.dsl.DexOptions;
+import com.android.build.gradle.internal.scope.ConventionMappingHelper;
+import com.android.build.gradle.internal.scope.TaskConfigAction;
+import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.BaseTask;
+import com.android.build.gradle.internal.variant.ApkVariantData;
+import com.android.build.gradle.internal.variant.TestVariantData;
+import com.android.ide.common.process.LoggedProcessOutputHandler;
+import com.android.ide.common.process.ProcessException;
+import com.android.utils.FileUtils;
+import org.codehaus.groovy.runtime.DefaultGroovyMethods;
+import com.android.build.gradle.internal.PostCompilationData;
+import com.google.common.base.Preconditions;
 
-import java.util.concurrent.Callable
-import java.util.concurrent.atomic.AtomicBoolean
+import org.gradle.api.Action;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputDirectory;
+import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Nested;
+import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
+import org.gradle.api.tasks.incremental.InputFileDetails;
 
-import static com.android.builder.core.VariantType.DEFAULT
-import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static com.android.builder.core.VariantType.DEFAULT;
+import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 
 public class Dex extends BaseTask {
 
     // ----- PUBLIC TASK API -----
 
-    @OutputDirectory
-    File outputFolder
+    private File outputFolder;
 
-    @Input @Optional
-    List<String> additionalParameters
+    private List<String> additionalParameters;
 
-    boolean enableIncremental = true
+    private boolean enableIncremental = true;
 
     // ----- PRIVATE TASK API -----
     @Input
-    String getBuildToolsVersion() {
-        getBuildTools().getRevision()
+    public String getBuildToolsVersion() {
+        return getBuildTools().getRevision().toString();
     }
 
-    @InputFiles @Optional
-    Collection<File> inputFiles
-    @InputDirectory @Optional
-    File inputDir
+    private Collection<File> inputFiles;
 
-    @InputFiles
-    Collection<File> libraries
+    private File inputDir;
 
-    @Nested
-    DexOptions dexOptions
+    private Collection<File> libraries;
 
-    @Input
-    boolean multiDexEnabled = false
+    private DexOptions dexOptions;
 
-    @Input
-    boolean optimize = true
+    private boolean multiDexEnabled = false;
 
-    @InputFile @Optional
-    File mainDexListFile
+    private boolean optimize = true;
 
-    File tmpFolder
+    private File mainDexListFile;
+
+    private File tmpFolder;
 
     /**
      * Actual entry point for the action.
      * Calls out to the doTaskAction as needed.
      */
     @TaskAction
-    void taskAction(IncrementalTaskInputs inputs) {
-        Collection<File> _inputFiles = getInputFiles()
-        File _inputDir = getInputDir()
-        if (_inputFiles == null && _inputDir == null) {
-            throw new RuntimeException("Dex task '${getName()}: inputDir and inputFiles cannot both be null");
-        }
+    public void taskAction(final IncrementalTaskInputs inputs)
+            throws InterruptedException, ProcessException, IOException {
+        final Collection<File> inputFiles = getInputFiles();
+        final File inputDir = getInputDir();
 
-        if (!dexOptions.incremental || !enableIncremental) {
-            doTaskAction(_inputFiles, _inputDir, false /*incremental*/)
-            return
+        if (!dexOptions.getIncremental() || !isEnableIncremental()) {
+            doTaskAction(inputFiles, inputDir, false /*incremental*/);
+            return;
         }
 
         if (!inputs.isIncremental()) {
-            project.logger.info("Unable to do incremental execution: full task run.")
-            doTaskAction(_inputFiles, _inputDir, false /*incremental*/)
-            return
+            getProject().getLogger().info("Unable to do incremental execution: full task run.");
+            doTaskAction(inputFiles, inputDir, false /*incremental*/);
+            return;
         }
 
-        AtomicBoolean forceFullRun = new AtomicBoolean()
+        final AtomicBoolean forceFullRun = new AtomicBoolean();
 
-        //noinspection GroovyAssignabilityCheck
-        inputs.outOfDate { change ->
-            // force full dx run if existing jar file is modified
-            // New jar files are fine.
-            if (change.isModified() && change.file.path.endsWith(SdkConstants.DOT_JAR)) {
-                project.logger.info("Force full dx run: Found updated ${change.file}")
-                forceFullRun.set(true)
+        inputs.outOfDate(new Action<InputFileDetails>() {
+            @Override
+            public void execute(InputFileDetails change) {
+                // force full dx run if existing jar file is modified
+                // New jar files are fine.
+                if (change.isModified() && change.getFile().getPath().endsWith(SdkConstants.DOT_JAR)) {
+                    getProject().getLogger().info("Force full dx run: Found updated ${change.file}");
+                    forceFullRun.set(true);
+                }
             }
-        }
+        });
 
-        //noinspection GroovyAssignabilityCheck
-        inputs.removed { change ->
-            // force full dx run if existing jar file is removed
-            if (change.file.path.endsWith(SdkConstants.DOT_JAR)) {
-                project.logger.info("Force full dx run: Found removed ${change.file}")
-                forceFullRun.set(true)
+        inputs.removed(new Action<InputFileDetails>() {
+            @Override
+            public void execute(InputFileDetails change) {
+                // force full dx run if existing jar file is removed
+                if (change.getFile().getPath().endsWith(SdkConstants.DOT_JAR)) {
+                    getProject().getLogger()
+                            .info("Force full dx run: Found removed ${change.file}");
+                    forceFullRun.set(true);
+                }
             }
-        }
+        });
 
-        doTaskAction(_inputFiles, _inputDir, !forceFullRun.get())
+        doTaskAction(inputFiles, inputDir, !forceFullRun.get());
     }
 
     private void doTaskAction(
             @Nullable Collection<File> inputFiles,
             @Nullable File inputDir,
-            boolean incremental) {
-        File outFolder = getOutputFolder()
-        if (!incremental) {
-            FileUtils.emptyFolder(outFolder)
+            boolean incremental) throws IOException, ProcessException, InterruptedException {
+
+        if (inputFiles == null && inputDir == null) {
+            throw new RuntimeException(String.format(
+                    "Dex task '%s': inputDir and inputFiles cannot both be null", getName()));
         }
 
-        File tmpFolder = getTmpFolder()
-        tmpFolder.mkdirs()
+        File outFolder = getOutputFolder();
+        if (!incremental) {
+            FileUtils.emptyFolder(outFolder);
+        }
+
+        File tmpFolder = getTmpFolder();
+        tmpFolder.mkdirs();
 
         // if some of our .jar input files exist, just reset the inputDir to null
-        for (File inputFile : inputFiles) {
-            if (inputFile.exists()) {
-                inputDir = null;
+        if (inputFiles != null) {
+            for (File inputFile : inputFiles) {
+                if (inputFile.exists()) {
+                    inputDir = null;
+                }
             }
         }
         if (inputDir != null) {
-            inputFiles = project.files(inputDir).files
+            inputFiles = getProject().files(inputDir).getFiles();
         }
+
 
         getBuilder().convertByteCode(
                 inputFiles,
                 getLibraries(),
                 outFolder,
-                getMultiDexEnabled(),
+                isMultiDexEnabled(),
                 getMainDexListFile(),
                 getDexOptions(),
                 getAdditionalParameters(),
                 tmpFolder,
                 incremental,
-                getOptimize(),
-                new LoggedProcessOutputHandler(getILogger()))
+                isOptimize(),
+                new LoggedProcessOutputHandler(getILogger()));
     }
 
+    @OutputDirectory
+    public File getOutputFolder() {
+        return outputFolder;
+    }
+
+    public void setOutputFolder(File outputFolder) {
+        this.outputFolder = outputFolder;
+    }
+
+    @Input @Optional
+    public List<String> getAdditionalParameters() {
+        return additionalParameters;
+    }
+
+    public void setAdditionalParameters(List<String> additionalParameters) {
+        this.additionalParameters = additionalParameters;
+    }
+
+    public boolean isEnableIncremental() {
+        return enableIncremental;
+    }
+
+    public void setEnableIncremental(boolean enableIncremental) {
+        this.enableIncremental = enableIncremental;
+    }
+
+    @InputFiles @Optional
+    public Collection<File> getInputFiles() {
+        return inputFiles;
+    }
+
+    public void setInputFiles(Collection<File> inputFiles) {
+        this.inputFiles = inputFiles;
+    }
+
+    @InputDirectory @Optional
+    public File getInputDir() {
+        return inputDir;
+    }
+
+    public void setInputDir(File inputDir) {
+        this.inputDir = inputDir;
+    }
+
+    @InputFiles
+    public Collection<File> getLibraries() {
+        return libraries;
+    }
+
+    public void setLibraries(Collection<File> libraries) {
+        this.libraries = libraries;
+    }
+
+    @Nested
+    public DexOptions getDexOptions() {
+        return dexOptions;
+    }
+
+    public void setDexOptions(DexOptions dexOptions) {
+        this.dexOptions = dexOptions;
+    }
+
+    @Input
+    public boolean isMultiDexEnabled() {
+        return multiDexEnabled;
+    }
+
+    public void setMultiDexEnabled(boolean multiDexEnabled) {
+        this.multiDexEnabled = multiDexEnabled;
+    }
+
+    @Input
+    public boolean isOptimize() {
+        return optimize;
+    }
+
+    public void setOptimize(boolean optimize) {
+        this.optimize = optimize;
+    }
+
+    @InputFile @Optional
+    public File getMainDexListFile() {
+        return mainDexListFile;
+    }
+
+    public void setMainDexListFile(File mainDexListFile) {
+        this.mainDexListFile = mainDexListFile;
+    }
+
+    public File getTmpFolder() {
+        return tmpFolder;
+    }
+
+    public void setTmpFolder(File tmpFolder) {
+        this.tmpFolder = tmpFolder;
+    }
 
     public static class ConfigAction implements TaskConfigAction<Dex> {
 
@@ -182,7 +291,7 @@ public class Dex extends BaseTask {
 
         @Override
         public String getName() {
-            return scope.getTaskName("dex")
+            return scope.getTaskName("dex");
         }
 
         @Override
@@ -203,8 +312,8 @@ public class Dex extends BaseTask {
             boolean isLegacyMultiDexMode = config.isLegacyMultiDexMode();
 
             variantData.dexTask = dexTask;
-            dexTask.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder())
-            dexTask.setVariantName(config.getFullName())
+            dexTask.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
+            dexTask.setVariantName(config.getFullName());
             ConventionMappingHelper.map(dexTask, "outputFolder", new Callable<File>() {
                 @Override
                 public File call() throws Exception {
