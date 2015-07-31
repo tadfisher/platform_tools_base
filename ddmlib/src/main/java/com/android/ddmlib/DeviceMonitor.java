@@ -202,14 +202,16 @@ final class DeviceMonitor {
             } catch (AsynchronousCloseException ace) {
                 // this happens because of a call to Quit. We do nothing, and the loop will break.
             } catch (TimeoutException ioe) {
-                handleExpectionInMonitorLoop(ioe);
+                handleExceptionInMonitorLoop(ioe);
             } catch (IOException ioe) {
-                handleExpectionInMonitorLoop(ioe);
+                handleExceptionInMonitorLoop(ioe);
+            } catch (InterruptedException e) {
+                handleExceptionInMonitorLoop(e);
             }
         } while (!mQuit);
     }
 
-    private void handleExpectionInMonitorLoop(Exception e) {
+    private void handleExceptionInMonitorLoop(Exception e) {
         if (!mQuit) {
             if (e instanceof TimeoutException) {
                 Log.e("DeviceMonitor", "Adb connection Error: timeout");
@@ -274,14 +276,13 @@ final class DeviceMonitor {
      * @return
      * @throws IOException
      */
-    private boolean sendDeviceListMonitoringRequest() throws TimeoutException, IOException {
+    private boolean sendDeviceListMonitoringRequest() throws TimeoutException, IOException, InterruptedException {
         byte[] request = AdbHelper.formAdbRequest("host:track-devices"); //$NON-NLS-1$
 
         try {
             AdbHelper.write(mMainAdbConnection, request);
 
-            AdbResponse resp = AdbHelper.readAdbResponse(mMainAdbConnection,
-                    false /* readDiagString */);
+            AdbResponse resp = AdbHelper.readAdbResponse(mMainAdbConnection, false /* readDiagString */);
 
             if (!resp.okay) {
                 // request was refused by adb!
@@ -497,8 +498,7 @@ final class DeviceMonitor {
     }
 
     private void queryNewDeviceForMountingPoint(final Device device, final String name)
-            throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
-            IOException {
+            throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException, InterruptedException {
         device.executeShellCommand("echo $" + name, new MultiLineReceiver() { //$NON-NLS-1$
             @Override
             public boolean isCancelled() {
@@ -578,6 +578,16 @@ final class DeviceMonitor {
                 Log.d("DeviceMonitor",
                         "Connection Failure when starting to monitor device '"
                         + device + "' : " + e.getMessage());
+            } catch (InterruptedException e) {
+                try {
+                    // attempt to close the socket if needed.
+                    socketChannel.close();
+                } catch (IOException e1) {
+                    // we can ignore that one. It may already have been closed.
+                }
+                Log.d("DeviceMonitor",
+                      "Connection Failure when starting to monitor device '"
+                      + device + "' : " + e.getMessage());
             }
         }
 
@@ -688,7 +698,7 @@ final class DeviceMonitor {
     }
 
     private boolean sendDeviceMonitoringRequest(SocketChannel socket, Device device)
-            throws TimeoutException, AdbCommandRejectedException, IOException {
+            throws TimeoutException, AdbCommandRejectedException, IOException, InterruptedException {
 
         try {
             AdbHelper.setDevice(socket, device);
@@ -786,11 +796,9 @@ final class DeviceMonitor {
      * @return
      */
     private void openClient(Device device, int pid, int port, MonitorThread monitorThread) {
-
         SocketChannel clientSocket;
         try {
-            clientSocket = AdbHelper.createPassThroughConnection(
-                    AndroidDebugBridge.getSocketAddress(), device, pid);
+            clientSocket = AdbHelper.createPassThroughConnection(AndroidDebugBridge.getSocketAddress(), device, pid);
 
             // required for Selector
             clientSocket.configureBlocking(false);
@@ -809,7 +817,12 @@ final class DeviceMonitor {
         } catch (IOException ioe) {
             Log.w("DeviceMonitor",
                     "Failed to connect to client '" + pid + "': " + ioe.getMessage());
-            return ;
+            return;
+        }
+        catch (InterruptedException e) {
+            Log.w("DeviceMonitor",
+                    "Failed to connect to client '" + pid + "': interrupted");
+            return;
         }
 
         createClient(device, pid, clientSocket, port, monitorThread);

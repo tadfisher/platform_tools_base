@@ -477,8 +477,7 @@ final class Device implements IDevice {
      * @see com.android.ddmlib.IDevice#getSyncService()
      */
     @Override
-    public SyncService getSyncService()
-            throws TimeoutException, AdbCommandRejectedException, IOException {
+    public SyncService getSyncService() throws TimeoutException, AdbCommandRejectedException, IOException, InterruptedException {
         SyncService syncService = new SyncService(AndroidDebugBridge.getSocketAddress(), this);
         if (syncService.openSync()) {
             return syncService;
@@ -497,21 +496,19 @@ final class Device implements IDevice {
     }
 
     @Override
-    public RawImage getScreenshot()
-            throws TimeoutException, AdbCommandRejectedException, IOException {
+    public RawImage getScreenshot() throws TimeoutException, AdbCommandRejectedException, IOException, InterruptedException {
         return getScreenshot(0, TimeUnit.MILLISECONDS);
     }
 
     @Override
     public RawImage getScreenshot(long timeout, TimeUnit unit)
-            throws TimeoutException, AdbCommandRejectedException, IOException {
+            throws TimeoutException, AdbCommandRejectedException, IOException, InterruptedException {
         return AdbHelper.getFrameBuffer(AndroidDebugBridge.getSocketAddress(), this, timeout, unit);
     }
 
     @Override
-    public void startScreenRecorder(String remoteFilePath, ScreenRecorderOptions options,
-            IShellOutputReceiver receiver) throws TimeoutException, AdbCommandRejectedException,
-            IOException, ShellCommandUnresponsiveException {
+    public void startScreenRecorder(String remoteFilePath, ScreenRecorderOptions options, IShellOutputReceiver receiver)
+            throws TimeoutException, AdbCommandRejectedException, IOException, ShellCommandUnresponsiveException, InterruptedException {
         executeShellCommand(getScreenRecorderCommand(remoteFilePath, options), receiver, 0, null);
     }
 
@@ -554,74 +551,61 @@ final class Device implements IDevice {
 
     @Override
     public void executeShellCommand(String command, IShellOutputReceiver receiver)
-            throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
-            IOException {
-        AdbHelper.executeRemoteCommand(AndroidDebugBridge.getSocketAddress(), command, this,
-                receiver, DdmPreferences.getTimeOut());
+            throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException, InterruptedException {
+        AdbHelper.executeRemoteCommand(AndroidDebugBridge.getSocketAddress(), command, this, receiver, DdmPreferences.getTimeOut());
     }
 
     @Override
-    public void executeShellCommand(String command, IShellOutputReceiver receiver,
-            int maxTimeToOutputResponse)
-            throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
-            IOException {
-        AdbHelper.executeRemoteCommand(AndroidDebugBridge.getSocketAddress(), command, this,
-                receiver, maxTimeToOutputResponse);
+    public void executeShellCommand(String command, IShellOutputReceiver receiver, int maxTimeToOutputResponse)
+            throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException, InterruptedException {
+        AdbHelper.executeRemoteCommand(AndroidDebugBridge.getSocketAddress(), command, this, receiver, maxTimeToOutputResponse);
     }
 
     @Override
-    public void executeShellCommand(String command, IShellOutputReceiver receiver,
-            long maxTimeToOutputResponse, TimeUnit maxTimeUnits)
-            throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
-            IOException {
+    public void executeShellCommand(String command, IShellOutputReceiver receiver, long maxTimeToOutputResponse, TimeUnit maxTimeUnits)
+            throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException, InterruptedException {
         AdbHelper.executeRemoteCommand(AndroidDebugBridge.getSocketAddress(), command, this,
                 receiver, maxTimeToOutputResponse, maxTimeUnits);
     }
 
     @Override
     public void runEventLogService(LogReceiver receiver)
-            throws TimeoutException, AdbCommandRejectedException, IOException {
+            throws TimeoutException, AdbCommandRejectedException, IOException, InterruptedException {
         AdbHelper.runEventLogService(AndroidDebugBridge.getSocketAddress(), this, receiver);
     }
 
     @Override
     public void runLogService(String logname, LogReceiver receiver)
-            throws TimeoutException, AdbCommandRejectedException, IOException {
+            throws TimeoutException, AdbCommandRejectedException, IOException, InterruptedException {
         AdbHelper.runLogService(AndroidDebugBridge.getSocketAddress(), this, logname, receiver);
     }
 
     @Override
     public void createForward(int localPort, int remotePort)
-            throws TimeoutException, AdbCommandRejectedException, IOException {
-        AdbHelper.createForward(AndroidDebugBridge.getSocketAddress(), this,
-                String.format("tcp:%d", localPort),     //$NON-NLS-1$
-                String.format("tcp:%d", remotePort));   //$NON-NLS-1$
+            throws TimeoutException, AdbCommandRejectedException, IOException, InterruptedException {
+        AdbHelper.createForward(AndroidDebugBridge.getSocketAddress(), this, String.format("tcp:%d", localPort),     //$NON-NLS-1$
+                                String.format("tcp:%d", remotePort));   //$NON-NLS-1$
     }
 
     @Override
-    public void createForward(int localPort, String remoteSocketName,
-            DeviceUnixSocketNamespace namespace) throws TimeoutException,
-            AdbCommandRejectedException, IOException {
-        AdbHelper.createForward(AndroidDebugBridge.getSocketAddress(), this,
-                String.format("tcp:%d", localPort),     //$NON-NLS-1$
-                String.format("%s:%s", namespace.getType(), remoteSocketName));   //$NON-NLS-1$
+    public void createForward(int localPort, String remoteSocketName, DeviceUnixSocketNamespace namespace)
+            throws TimeoutException, AdbCommandRejectedException, IOException, InterruptedException {
+        AdbHelper.createForward(AndroidDebugBridge.getSocketAddress(), this, String.format("tcp:%d", localPort),     //$NON-NLS-1$
+                                String.format("%s:%s", namespace.getType(), remoteSocketName));   //$NON-NLS-1$
     }
 
     @Override
     public void removeForward(int localPort, int remotePort)
-            throws TimeoutException, AdbCommandRejectedException, IOException {
-        AdbHelper.removeForward(AndroidDebugBridge.getSocketAddress(), this,
-                String.format("tcp:%d", localPort),     //$NON-NLS-1$
-                String.format("tcp:%d", remotePort));   //$NON-NLS-1$
+            throws TimeoutException, AdbCommandRejectedException, IOException, InterruptedException {
+        AdbHelper.removeForward(AndroidDebugBridge.getSocketAddress(), this, String.format("tcp:%d", localPort),     //$NON-NLS-1$
+                                String.format("tcp:%d", remotePort));   //$NON-NLS-1$
     }
 
     @Override
-    public void removeForward(int localPort, String remoteSocketName,
-            DeviceUnixSocketNamespace namespace) throws TimeoutException,
-            AdbCommandRejectedException, IOException {
-        AdbHelper.removeForward(AndroidDebugBridge.getSocketAddress(), this,
-                String.format("tcp:%d", localPort),     //$NON-NLS-1$
-                String.format("%s:%s", namespace.getType(), remoteSocketName));   //$NON-NLS-1$
+    public void removeForward(int localPort, String remoteSocketName, DeviceUnixSocketNamespace namespace)
+            throws TimeoutException, AdbCommandRejectedException, IOException, InterruptedException {
+        AdbHelper.removeForward(AndroidDebugBridge.getSocketAddress(), this, String.format("tcp:%d", localPort),     //$NON-NLS-1$
+                                String.format("%s:%s", namespace.getType(), remoteSocketName));   //$NON-NLS-1$
     }
 
     Device(DeviceMonitor monitor, String serialNumber, DeviceState deviceState) {
@@ -762,7 +746,7 @@ final class Device implements IDevice {
 
     @Override
     public void pushFile(String local, String remote)
-            throws IOException, AdbCommandRejectedException, TimeoutException, SyncException {
+            throws IOException, AdbCommandRejectedException, TimeoutException, SyncException, InterruptedException {
         SyncService sync = null;
         try {
             String targetFileName = getFileName(local);
@@ -791,6 +775,10 @@ final class Device implements IDevice {
             Log.e(LOG_TAG, String.format("Error during Sync: %1$s", e.getMessage()));
             throw e;
 
+        } catch (InterruptedException e) {
+            Log.e(LOG_TAG, String.format("Error during Sync: %1$s", e.getMessage()));
+            throw e;
+
         } finally {
             if (sync != null) {
                 sync.close();
@@ -800,7 +788,7 @@ final class Device implements IDevice {
 
     @Override
     public void pullFile(String remote, String local)
-            throws IOException, AdbCommandRejectedException, TimeoutException, SyncException {
+            throws IOException, AdbCommandRejectedException, TimeoutException, SyncException, InterruptedException {
         SyncService sync = null;
         try {
             String targetFileName = getFileName(remote);
@@ -829,6 +817,10 @@ final class Device implements IDevice {
             Log.e(LOG_TAG, String.format("Error during Sync: %1$s", e.getMessage()));
             throw e;
 
+        } catch (InterruptedException e) {
+            Log.e(LOG_TAG, String.format("Error during Sync: %1$s", e.getMessage()));
+            throw e;
+
         } finally {
             if (sync != null) {
                 sync.close();
@@ -852,6 +844,8 @@ final class Device implements IDevice {
         } catch (TimeoutException e) {
             throw new InstallException(e);
         } catch (SyncException e) {
+            throw new InstallException(e);
+        } catch (InterruptedException e) {
             throw new InstallException(e);
         }
     }
@@ -933,6 +927,10 @@ final class Device implements IDevice {
             Log.e(LOG_TAG, String.format("Error during shell execution: %1$s", e.getMessage()));
             throw new InstallException(e);
         }
+        catch (InterruptedException e) {
+            Log.e(LOG_TAG, String.format("Thread interrupted during shell execution: %1$s", e.getMessage()));
+            throw new InstallException(e);
+        }
     }
 
     /**
@@ -968,10 +966,8 @@ final class Device implements IDevice {
     }
 
     @Nullable
-    private String createMultiInstallSession(List<String> apkFileNames,
-            @NonNull Collection<String> extraArgs, boolean reinstall)
-            throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
-            IOException {
+    private String createMultiInstallSession(List<String> apkFileNames, @NonNull Collection<String> extraArgs, boolean reinstall)
+            throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException, InterruptedException {
 
         List<File> apkFiles = Lists.transform(apkFileNames, new Function<String, File>() {
             @Override
@@ -1052,7 +1048,7 @@ final class Device implements IDevice {
 
     @Override
     public String syncPackageToDevice(String localFilePath)
-            throws IOException, AdbCommandRejectedException, TimeoutException, SyncException {
+            throws IOException, AdbCommandRejectedException, TimeoutException, SyncException, InterruptedException {
         SyncService sync = null;
         try {
             String packageFileName = getFileName(localFilePath);
@@ -1080,6 +1076,10 @@ final class Device implements IDevice {
             throw e;
 
         } catch (IOException e) {
+            Log.e(LOG_TAG, String.format("Error during Sync: %1$s", e.getMessage()));
+            throw e;
+
+        } catch (InterruptedException e) {
             Log.e(LOG_TAG, String.format("Error during Sync: %1$s", e.getMessage()));
             throw e;
 
@@ -1123,6 +1123,8 @@ final class Device implements IDevice {
             throw new InstallException(e);
         } catch (IOException e) {
             throw new InstallException(e);
+        } catch (InterruptedException e) {
+            throw new InstallException(e);
         }
     }
 
@@ -1139,6 +1141,8 @@ final class Device implements IDevice {
             throw new InstallException(e);
         } catch (ShellCommandUnresponsiveException e) {
             throw new InstallException(e);
+        } catch (InterruptedException e) {
+            throw new InstallException(e);
         }
     }
 
@@ -1146,8 +1150,7 @@ final class Device implements IDevice {
     public String uninstallPackage(String packageName) throws InstallException {
         try {
             InstallReceiver receiver = new InstallReceiver();
-            executeShellCommand("pm uninstall " + packageName, receiver, INSTALL_TIMEOUT_MINUTES,
-                    TimeUnit.MINUTES);
+            executeShellCommand("pm uninstall " + packageName, receiver, INSTALL_TIMEOUT_MINUTES, TimeUnit.MINUTES);
             return receiver.getErrorMessage();
         } catch (TimeoutException e) {
             throw new InstallException(e);
@@ -1157,6 +1160,8 @@ final class Device implements IDevice {
             throw new InstallException(e);
         } catch (IOException e) {
             throw new InstallException(e);
+        } catch (InterruptedException e) {
+            throw new InstallException(e);
         }
     }
 
@@ -1165,8 +1170,7 @@ final class Device implements IDevice {
      * @see com.android.ddmlib.IDevice#reboot()
      */
     @Override
-    public void reboot(String into)
-            throws TimeoutException, AdbCommandRejectedException, IOException {
+    public void reboot(String into) throws TimeoutException, AdbCommandRejectedException, IOException, InterruptedException {
         AdbHelper.reboot(into, AndroidDebugBridge.getSocketAddress(), this);
     }
 
