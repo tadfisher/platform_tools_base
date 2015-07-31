@@ -43,6 +43,8 @@ public class LogCatReceiverTask implements Runnable {
             errorMessage("LogCat Connection timed out");
     private static final LogCatMessage sConnectionErrorMsg =
             errorMessage("LogCat Connection error");
+    private static final LogCatMessage sInterruptedMsg =
+            errorMessage("LogCat Connection error");
 
     private final IDevice mDevice;
     private final LogCatOutputReceiver mReceiver;
@@ -81,6 +83,8 @@ public class LogCatReceiverTask implements Runnable {
             // this will not be thrown since the last argument is 0
         } catch (IOException e) {
             notifyListeners(Collections.singletonList(sConnectionErrorMsg));
+        } catch (InterruptedException e) {
+            notifyListeners(Collections.singletonList(sInterruptedMsg));
         }
 
         notifyListeners(Collections.singletonList(sDeviceDisconnectedMsg));

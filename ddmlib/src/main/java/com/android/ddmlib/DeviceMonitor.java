@@ -306,6 +306,16 @@ final class DeviceMonitor {
                 Log.d("DeviceMonitor",
                         "Connection Failure when starting to monitor device '"
                         + device + "' : " + e.getMessage());
+            } catch (InterruptedException e) {
+                try {
+                    // attempt to close the socket if needed.
+                    socketChannel.close();
+                } catch (IOException e1) {
+                    // we can ignore that one. It may already have been closed.
+                }
+                Log.d("DeviceMonitor",
+                        "Connection Failure when starting to monitor device '"
+                        + device + "' : interrupted");
             }
         }
 
@@ -418,10 +428,8 @@ final class DeviceMonitor {
         } while (!mQuit);
     }
 
-    private static boolean sendDeviceMonitoringRequest(@NonNull SocketChannel socket,
-            @NonNull Device device)
-            throws TimeoutException, AdbCommandRejectedException, IOException {
-
+    private static boolean sendDeviceMonitoringRequest(@NonNull SocketChannel socket, @NonNull Device device)
+            throws TimeoutException, AdbCommandRejectedException, IOException, InterruptedException {
         try {
             AdbHelper.setDevice(socket, device);
             AdbHelper.write(socket, AdbHelper.formAdbRequest(ADB_TRACK_JDWP_COMMAND));
@@ -522,8 +530,7 @@ final class DeviceMonitor {
             Log.d("DeviceMonitor", "Unknown Jdwp pid: " + pid);
             return;
         } catch (TimeoutException e) {
-            Log.w("DeviceMonitor",
-                    "Failed to connect to client '" + pid + "': timeout");
+            Log.w("DeviceMonitor", "Failed to connect to client '" + pid + "': timeout");
             return;
         } catch (AdbCommandRejectedException e) {
             Log.w("DeviceMonitor",
@@ -533,6 +540,9 @@ final class DeviceMonitor {
         } catch (IOException ioe) {
             Log.w("DeviceMonitor",
                     "Failed to connect to client '" + pid + "': " + ioe.getMessage());
+            return;
+        } catch (InterruptedException e) {
+            Log.w("DeviceMonitor", "Failed to connect to client '" + pid + "': interrupted");
             return ;
         }
 
@@ -781,11 +791,13 @@ final class DeviceMonitor {
                     handleExceptionInMonitorLoop(ioe);
                 } catch (IOException ioe) {
                     handleExceptionInMonitorLoop(ioe);
+                } catch (InterruptedException e) {
+                    handleExceptionInMonitorLoop(e);
                 }
             } while (!mQuit);
         }
 
-        private boolean sendDeviceListMonitoringRequest() throws TimeoutException, IOException {
+        private boolean sendDeviceListMonitoringRequest() throws TimeoutException, IOException, InterruptedException {
             byte[] request = AdbHelper.formAdbRequest(ADB_TRACK_DEVICES_COMMAND);
 
             try {

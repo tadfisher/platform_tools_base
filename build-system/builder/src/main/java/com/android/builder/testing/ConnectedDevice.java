@@ -131,8 +131,8 @@ public class ConnectedDevice extends DeviceConnector {
     @Override
     public void executeShellCommand(String command, IShellOutputReceiver receiver,
                                     long maxTimeToOutputResponse, TimeUnit maxTimeUnits)
-                                    throws TimeoutException, AdbCommandRejectedException,
-                                    ShellCommandUnresponsiveException, IOException {
+            throws TimeoutException, AdbCommandRejectedException,
+            ShellCommandUnresponsiveException, IOException, InterruptedException {
         iDevice.executeShellCommand(command, receiver, maxTimeToOutputResponse, maxTimeUnits);
     }
 
@@ -152,6 +152,8 @@ public class ConnectedDevice extends DeviceConnector {
         } catch (AdbCommandRejectedException e) {
             throw new IOException(String.format("Failed to pull %s from device", remote), e);
         } catch (SyncException e) {
+            throw new IOException(String.format("Failed to pull %s from device", remote), e);
+        } catch (InterruptedException e) {
             throw new IOException(String.format("Failed to pull %s from device", remote), e);
         }
     }

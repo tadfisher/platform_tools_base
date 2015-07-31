@@ -228,8 +228,7 @@ public interface IRemoteAndroidTestRunner {
      * @see #setMaxtimeToOutputResponse(int)
      */
     void run(ITestRunListener... listeners)
-            throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
-            IOException;
+        throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException, InterruptedException;
 
     /**
      * Execute this test run.
@@ -244,8 +243,7 @@ public interface IRemoteAndroidTestRunner {
      * @see #setMaxtimeToOutputResponse(int)
      */
     void run(Collection<ITestRunListener> listeners)
-            throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
-            IOException;
+        throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException, InterruptedException;
 
     /**
      * Requests cancellation of this test run.
