@@ -39,16 +39,16 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 @SuppressWarnings("javadoc")
 public class XmlPrettyPrinterTest extends TestCase {
-    private void checkFormat(XmlFormatPreferences prefs,
-            String xml,
-            String expected, String delimiter, String startNodeName,
-            String endNodeName) throws Exception {
+    private void checkFormat(XmlFormatPreferences prefs, String xml, String expected,
+            String delimiter, String startNodeName, String endNodeName, boolean endWithNewLine)
+            throws Exception {
 
         Document document = XmlUtils.parseDocumentSilently(xml, true);
         assertNotNull(document);
         XmlFormatStyle style = XmlFormatStyle.get(document);
 
         XmlPrettyPrinter printer = new XmlPrettyPrinter(prefs, style, delimiter);
+        printer.setEndWithNewline(endWithNewLine);
 
         StringBuilder sb = new StringBuilder(1000);
         Node startNode = document;
@@ -68,6 +68,26 @@ public class XmlPrettyPrinterTest extends TestCase {
         assertEquals(expected, formatted);
     }
 
+    private void checkFormat(XmlFormatPreferences prefs, String xml, String expected,
+            String delimiter, String startNodeName, String endNodeName) throws Exception {
+        checkFormat(prefs, xml, expected, delimiter, startNodeName, endNodeName, false);
+    }
+
+    private void checkFormat(XmlFormatPreferences prefs, String xml, String expected,
+            String delimiter) throws Exception {
+        checkFormat(prefs, xml, expected, delimiter, null, null);
+    }
+
+    private void checkFormat(XmlFormatPreferences prefs, String xml, String expected)
+            throws Exception {
+        checkFormat(prefs, xml, expected, "\n"); //$NON-NLS-1$
+    }
+
+    private void checkFormat(String xml, String expected) throws Exception {
+        XmlFormatPreferences prefs = XmlFormatPreferences.defaults();
+        checkFormat(prefs, xml, expected);
+    }
+
     private static Node findNode(Node node, String nodeName) {
         if (node.getNodeName().equals(nodeName)) {
             return node;
@@ -83,21 +103,6 @@ public class XmlPrettyPrinterTest extends TestCase {
         }
 
         return null;
-    }
-
-    private void checkFormat(XmlFormatPreferences prefs, String xml,
-            String expected, String delimiter) throws Exception {
-        checkFormat(prefs, xml, expected, delimiter, null, null);
-    }
-
-    private void checkFormat(XmlFormatPreferences prefs, String xml,
-            String expected) throws Exception {
-        checkFormat(prefs, xml, expected, "\n"); //$NON-NLS-1$
-    }
-    private void checkFormat(String xml, String expected)
-            throws Exception {
-        XmlFormatPreferences prefs = XmlFormatPreferences.defaults();
-        checkFormat(prefs, xml, expected);
     }
 
     public void testLayout1() throws Exception {
@@ -222,7 +227,30 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "    <Button foo=\"bar\" />\r\n" +
                 "\r\n" +
                 "</LinearLayout>",
+
                 "\r\n");
+    }
+
+    public void testEndWithNewLine() throws Exception {
+        checkFormat(
+                XmlFormatPreferences.defaults(),
+                "<Button foo=\"bar\" />",
+                "<Button foo=\"bar\" />\n",
+                "\n",
+                null,
+                null,
+                true/*endWithNewLine*/);
+    }
+
+    public void testEndWithWindowsNewLine() throws Exception {
+        checkFormat(
+                XmlFormatPreferences.defaults(),
+                "<Button foo=\"bar\" />",
+                "<Button foo=\"bar\" />\r\n",
+                "\r\n",
+                null,
+                null,
+                true/*endWithNewLine*/);
     }
 
     public void testRemoveBlanklines() throws Exception {
