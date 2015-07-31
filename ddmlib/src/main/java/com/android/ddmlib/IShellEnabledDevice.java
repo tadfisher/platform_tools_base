@@ -61,10 +61,8 @@ public interface IShellEnabledDevice {
      *
      * @see DdmPreferences#getTimeOut()
      */
-    void executeShellCommand(String command, IShellOutputReceiver receiver,
-            long maxTimeToOutputResponse, TimeUnit maxTimeUnits)
-            throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
-            IOException;
+    void executeShellCommand(String command, IShellOutputReceiver receiver, long maxTimeToOutputResponse, TimeUnit maxTimeUnits)
+        throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException, InterruptedException;
 
     /**
      * Do a potential asynchronous query for a system property.

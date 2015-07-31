@@ -200,6 +200,8 @@ class BatteryFetcher {
                     exception = e;
                 } catch (IOException e) {
                     exception = e;
+                } catch (InterruptedException e) {
+                    exception = e;
                 }
                 handleBatteryLevelFailure(exception);
             }

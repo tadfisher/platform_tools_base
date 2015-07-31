@@ -581,8 +581,7 @@ public final class FileListingService {
          * mark them as such.  This allows us to traverse them properly later on.
          */
         public void finishLinks(IDevice device, ArrayList<FileEntry> entries)
-                throws TimeoutException, AdbCommandRejectedException,
-                ShellCommandUnresponsiveException, IOException {
+                throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException, InterruptedException {
             final int[] nLines = {0};
             MultiLineReceiver receiver = new MultiLineReceiver() {
                 @Override
@@ -799,8 +798,8 @@ public final class FileListingService {
      *            for a period longer than <var>maxTimeToOutputResponse</var>.
      * @throws IOException in case of I/O error on the connection.
      */
-    public FileEntry[] getChildrenSync(final FileEntry entry) throws TimeoutException,
-            AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException {
+    public FileEntry[] getChildrenSync(final FileEntry entry)
+            throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException, InterruptedException {
         doLsAndThrow(entry);
         return entry.getCachedChildren();
     }
@@ -813,8 +812,8 @@ public final class FileListingService {
         }
     }
 
-    private void doLsAndThrow(FileEntry entry) throws TimeoutException,
-            AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException {
+    private void doLsAndThrow(FileEntry entry)
+            throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException, InterruptedException {
         // create a list that will receive the list of the entries
         ArrayList<FileEntry> entryList = new ArrayList<FileEntry>();
 
