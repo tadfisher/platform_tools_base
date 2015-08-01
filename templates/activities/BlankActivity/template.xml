@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <template
     format="3"
-    revision="4"
+    revision="5"
     name="Blank Activity"
     minApi="7"
     minBuildApi="14"
-    description="Creates a new blank activity with an action bar.">
+    description="Creates a new blank activity with an app bar.">
 
     <category value="Activity" />
     <formfactor value="Mobile" />
@@ -45,6 +45,13 @@
         suggest="menu_${classToResource(activityClass)}"
         default="menu_main"
         help="The name of the resource file to create for the menu items" />
+
+    <parameter
+        id="hasAppBar"
+        name="Include App Bar"
+        type="boolean"
+        default="true"
+        help="If true, the layout will include a Material Design App Bar. Otherwise it will include a legacy action bar." />
 
     <parameter
         id="isLauncher"
