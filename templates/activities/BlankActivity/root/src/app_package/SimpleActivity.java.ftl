@@ -15,7 +15,7 @@ public class ${activityClass} extends ${superClass} {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.${layoutName});
     }
-
+<#if addMenu>
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -37,4 +37,5 @@ public class ${activityClass} extends ${superClass} {
 
         return super.onOptionsItemSelected(item);
     }
+</#if>
 }
