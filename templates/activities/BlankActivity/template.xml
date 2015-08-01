@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <template
     format="3"
-    revision="4"
+    revision="5"
     name="Blank Activity"
     minApi="7"
     minBuildApi="14"
-    description="Creates a new blank activity with an action bar.">
+    description="Creates a new blank activity with an app bar.">
 
     <category value="Activity" />
     <formfactor value="Mobile" />
@@ -52,6 +52,14 @@
         type="boolean"
         default="false"
         help="If true, this activity will have a CATEGORY_LAUNCHER intent filter, making it visible in the launcher" />
+
+    <parameter
+        id="hasAppBar"
+        name="Include App Bar"
+        type="boolean"
+        visibility="appCompat"
+        default="true"
+        help="If true, the layout will include a Material Design App Bar." />
 
     <parameter
         id="parentActivityClass"
