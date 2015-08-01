@@ -1,7 +1,13 @@
 package ${packageName};
 
-import ${superClassFqcn};
 import android.os.Bundle;
+<#if hasAppBar && appCompatActivity>
+import android.support.design.widget.CollapsingToolbarLayout;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+<#else>
+import ${superClassFqcn};
+</#if>
 import android.view.Menu;
 import android.view.MenuItem;
 <#if applicationPackage??>
@@ -14,6 +20,12 @@ public class ${activityClass} extends ${superClass} {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.${layoutName});
+<#if hasAppBar && appCompatActivity>
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout) findViewById(R.id.toolbar_layout);
+        appBarLayout.setTitle(getTitle());
+</#if>
     }
 
     @Override
