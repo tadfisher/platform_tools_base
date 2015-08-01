@@ -5,5 +5,5 @@
     <item android:id="@+id/action_settings"
         android:title="@string/action_settings"
         android:orderInCategory="100"
-        ${(appCompat)?string('app','android')}:showAsAction="never" />
+        android:showAsAction="never" />
 </menu>
