@@ -1,6 +1,5 @@
 <?xml version="1.0"?>
 <recipe>
-
     <merge from="AndroidManifest.xml.ftl"
              to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />
 
@@ -20,6 +19,14 @@
 
     <instantiate from="src/app_package/SimpleActivity.java.ftl"
                    to="${escapeXmlAttribute(srcOut)}/${activityClass}.java" />
+
+<#if hasAppBar && appCompatActivity>
+    <instantiate from="res/layout/app_bar.xml.ftl"
+                   to="${escapeXmlAttribute(resOut)}/layout/${layoutName}_app_bar.xml" />
+
+    <dependency mavenUrl="com.android.support:design:${targetApi}.+"/>
+    <dependency mavenUrl="com.android.support:appcompat-v7:${targetApi}.+"/>
+</#if>
 
     <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.java" />
     <open file="${escapeXmlAttribute(resOut)}/layout/${layoutName}.xml" />

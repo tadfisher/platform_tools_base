@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <template
     format="3"
-    revision="4"
+    revision="5"
     name="Blank Activity"
     minApi="7"
     minBuildApi="14"
-    description="Creates a new blank activity with an action bar.">
+    description="Creates a new blank activity with an app bar.">
 
     <category value="Activity" />
     <formfactor value="Mobile" />
@@ -54,6 +54,14 @@
         help="If true, this activity will have a CATEGORY_LAUNCHER intent filter, making it visible in the launcher" />
 
     <parameter
+        id="hasAppBar"
+        name="Include App Bar"
+        type="boolean"
+        visibility="appCompatActivity"
+        default="true"
+        help="If true, the layout will include a Material Design App Bar." />
+
+    <parameter
         id="parentActivityClass"
         name="Hierarchical Parent"
         type="string"
@@ -72,6 +80,8 @@
     <thumbs>
         <!-- default thumbnail is required -->
         <thumb>template_blank_activity.png</thumb>
+        <!-- attributes act as selectors based on chosen parameters -->
+        <thumb hasAppBar="true" appCompatActivity="true">template_blank_activity_app_bar.png</thumb>
     </thumbs>
 
     <globals file="globals.xml.ftl" />
