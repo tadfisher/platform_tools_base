@@ -1,0 +1,28 @@
+package test.pkg;
+
+import android.content.Context;
+import android.widget.Button;
+import android.widget.TextView;
+
+class CustomScreen {
+
+  public CustomScreen(Context context) {
+    TextView view = new TextView(context);
+
+    // Should fail - hardcoded string
+    view.setText("Hardcoded");
+    // Should pass - no letters
+    view.setText("-");
+    // Should fail - concatenation and toString for numbers.
+    view.setText(Integer.toString(50) + "%");
+    view.setText(Double.toString(12.5) + " miles");
+
+    Button btn = new Button(context);
+    btn.setText("User " + getUserName());
+    btn.setText(String.format("%s of %s users", Integer.toString(5), Integer.toString(10)));
+  }
+
+  private String getUserName() {
+    return "stub";
+  }
+}
