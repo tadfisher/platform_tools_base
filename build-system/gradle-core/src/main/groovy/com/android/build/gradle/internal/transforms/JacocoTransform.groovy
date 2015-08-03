@@ -27,6 +27,8 @@ import com.android.build.gradle.internal.pipeline.TransformException
 import com.android.build.gradle.internal.pipeline.TransformType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.scope.VariantScopeImpl
+import com.google.common.collect.ImmutableSet
+import com.google.common.collect.Sets
 import com.google.common.util.concurrent.Callables
 import org.gradle.util.GUtil
 
@@ -58,20 +60,25 @@ public class JacocoTransform implements Transform {
     @NonNull
     @Override
     public Set<StreamType> getInputTypes() {
-        return EnumSet.of(StreamType.CLASSES)
+        return Sets.immutableEnumSet(StreamType.CLASSES)
     }
 
     @NonNull
     @Override
     public Set<StreamType> getOutputTypes() {
-        return EnumSet.of(StreamType.CLASSES)
+        return Sets.immutableEnumSet(StreamType.CLASSES)
     }
 
     @NonNull
     @Override
-    public StreamScope getScope() {
+    public Set<StreamScope> getScopes() {
         // only run on the project classes
-        return StreamScope.PROJECT
+        return Sets.immutableEnumSet(StreamScope.PROJECT)
+    }
+
+    @Override
+    public Set<StreamScope> getReferencedScope() {
+        return ImmutableSet.copyOf(EnumSet.noneOf(StreamScope.class))
     }
 
     @NonNull
@@ -102,6 +109,11 @@ public class JacocoTransform implements Transform {
         return Collections.emptyMap()
     }
 
+    @Override
+    boolean isIncremental() {
+        return false
+    }
+
     public void transform(
             @NonNull List<InputStream> inputs,
             @NonNull List<OutputStream> outputs,
@@ -109,7 +121,7 @@ public class JacocoTransform implements Transform {
         AntBuilder antBuilder = scope.globalScope.project.ant
 
         assert outputs.size() == 1
-        File outputDir = outputs.get(0).folder
+        File outputDir = outputs.get(0).file
         outputDir.deleteDir()
         outputDir.mkdirs()
 

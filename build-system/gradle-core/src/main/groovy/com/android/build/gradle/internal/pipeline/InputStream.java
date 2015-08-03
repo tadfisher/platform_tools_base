@@ -21,6 +21,7 @@ import com.android.annotations.NonNull;
 import java.io.File;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -30,14 +31,16 @@ public interface InputStream {
     enum FileStatus { ADDED, CHANGED, REMOVED }
 
     @NonNull
-    StreamType getType();
+    Set<StreamType> getTypes();
 
     @NonNull
-    StreamScope getScope();
+    Set<StreamScope> getScopes();
 
     @NonNull
     Collection<File> getFiles();
 
     @NonNull
     Map<File, FileStatus> getChangedFiles();
+
+    boolean isReferencedOnly();
 }

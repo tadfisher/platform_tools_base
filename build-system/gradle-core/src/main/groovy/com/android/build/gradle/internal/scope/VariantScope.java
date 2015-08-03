@@ -37,16 +37,6 @@ import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.builder.signing.SignedJarBuilder;
-<<<<<<< HEAD
-import com.android.utils.FileUtils;
-import com.android.utils.StringHelper;
-import com.google.common.base.Objects;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-=======
->>>>>>> Using the Transform API.
 
 import org.gradle.api.Task;
 import org.gradle.api.file.FileCollection;
