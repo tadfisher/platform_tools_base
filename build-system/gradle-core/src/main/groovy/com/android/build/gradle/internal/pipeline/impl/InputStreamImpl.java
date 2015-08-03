@@ -23,10 +23,12 @@ import com.android.build.gradle.internal.pipeline.StreamDeclaration;
 import com.android.build.gradle.internal.pipeline.StreamScope;
 import com.android.build.gradle.internal.pipeline.StreamType;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import java.io.File;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 
 /**
  */
@@ -34,34 +36,40 @@ import java.util.Map;
 public class InputStreamImpl implements InputStream {
 
     @NonNull
-    private final StreamType type;
+    private final Set<StreamType> types;
     @NonNull
-    private final StreamScope scope;
+    private final Set<StreamScope> scopes;
     @NonNull
     private final Collection<File> files;
     @NonNull
     private final Map<File, FileStatus> changedFiles;
+    private final boolean isReferencedOnly;
 
     public static Builder builder() {
         return new Builder();
     }
 
     public static final class Builder {
-        private StreamType type;
-        private StreamScope scope;
+        private Set<StreamType> types;
+        private Set<StreamScope> scopes;
         private Collection<File> files;
         private Map<File, FileStatus> changedFiles;
+        private boolean isReferencedOnly = false;
 
         public InputStream build() {
-            return new InputStreamImpl(type, scope, files,
+            return new InputStreamImpl(
+                    types,
+                    scopes,
+                    files,
                     changedFiles != null ? ImmutableMap.copyOf(changedFiles) :
-                            ImmutableMap.<File, FileStatus>of());
+                            ImmutableMap.<File, FileStatus>of(),
+                    isReferencedOnly);
         }
 
         public Builder from(@NonNull StreamDeclaration stream) {
             try {
-                type = stream.getType();
-                scope = stream.getScope();
+                types = ImmutableSet.copyOf(stream.getTypes());
+                scopes = ImmutableSet.copyOf(stream.getScopes());
                 files = stream.getFiles().call();
                 return this;
             } catch (Exception e) {
@@ -73,29 +81,36 @@ public class InputStreamImpl implements InputStream {
             this.changedFiles = changedFiles;
             return this;
         }
+
+        public Builder setReferencedOnly() {
+            isReferencedOnly = true;
+            return this;
+        }
     }
 
     private InputStreamImpl(
-            @NonNull StreamType type,
-            @NonNull StreamScope scope,
+            @NonNull Set<StreamType> types,
+            @NonNull Set<StreamScope> scopes,
             @NonNull Collection<File> files,
-            @NonNull Map<File, FileStatus> changedFiles) {
-        this.type = type;
-        this.scope = scope;
+            @NonNull Map<File, FileStatus> changedFiles,
+            boolean isReferencedOnly) {
+        this.types = types;
+        this.scopes = scopes;
         this.files = files;
         this.changedFiles = changedFiles;
+        this.isReferencedOnly = isReferencedOnly;
     }
 
     @NonNull
     @Override
-    public StreamType getType() {
-        return type;
+    public Set<StreamType> getTypes() {
+        return types;
     }
 
     @NonNull
     @Override
-    public StreamScope getScope() {
-        return scope;
+    public Set<StreamScope> getScopes() {
+        return scopes;
     }
 
     @NonNull
@@ -108,5 +123,10 @@ public class InputStreamImpl implements InputStream {
     @Override
     public Map<File, FileStatus> getChangedFiles() {
         return changedFiles;
+    }
+
+    @Override
+    public boolean isReferencedOnly() {
+        return isReferencedOnly;
     }
 }

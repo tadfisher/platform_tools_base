@@ -50,7 +50,7 @@ class BuildToolsTest {
     ]
 
     private static final List<String> JAVAC_TASKS = ImmutableList.builder().add(COMMON_TASKS)
-            .add("preDexDebug").add("dexDebug").add("preDexRelease").add("dexRelease").build()
+            .add("transformClassesWithPredexDebug").add("dexDebug").add("transformClassesWithPredexRelease").add("dexRelease").build()
     private static final List<String> JACK_TASKS = ImmutableList.builder().add(COMMON_TASKS)
             .add("jillDebugRuntimeLibraries").add("jillDebugPackagedLibraries")
             .add("jillReleaseRuntimeLibraries").add("jillReleasePackagedLibraries").build()

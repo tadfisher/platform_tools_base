@@ -32,6 +32,7 @@ public interface Transform {
     @NonNull
     String getName();
 
+    /** The consumed input types */
     @NonNull
     Set<StreamType> getInputTypes();
 
@@ -39,7 +40,10 @@ public interface Transform {
     Set<StreamType> getOutputTypes();
 
     @NonNull
-    StreamScope getScope();
+    Set<StreamScope> getScopes();
+
+    @NonNull
+    Set<StreamScope> getReferencedScope();
 
     @NonNull
     TransformType getTransformType();
@@ -52,6 +56,8 @@ public interface Transform {
 
     @NonNull
     Map<String, Object> getParameterInputs();
+
+    boolean isIncremental();
 
     void transform(
             @NonNull List<InputStream> inputs,

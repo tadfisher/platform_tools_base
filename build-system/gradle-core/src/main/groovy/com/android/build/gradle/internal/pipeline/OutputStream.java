@@ -19,19 +19,31 @@ package com.android.build.gradle.internal.pipeline;
 import com.android.annotations.NonNull;
 
 import java.io.File;
+import java.util.Set;
 
 /**
- * Created by xav on 7/31/15.
+ * The output of a transform, as used during the actual Transform.
  */
 public interface OutputStream {
 
+    /**
+     * The types of the output. If the transform combines the streams, then
+     * the output can represent multiple types.
+     */
     @NonNull
-    StreamType getType();
+    Set<StreamType> getTypes();
 
+    /**
+     * The scopes of the output. If the transform combines the streams, then
+     * the output can represent multiple scopes.
+     */
     @NonNull
-    StreamScope getScope();
+    Set<StreamScope> getScopes();
 
+    boolean isFolder();
+    /**
+     * The file or folder to write the output to.
+     */
     @NonNull
-    File getFolder();
-
+    File getFile();
 }
