@@ -356,7 +356,7 @@ public class LibraryTaskManager extends TaskManager {
 
                         // if needed, instrument the code
                         if (instrumented) {
-                            return createJacocoTask(tasks, variantScope, pcDataTemp);
+                        //    return createJacocoTask(tasks, variantScope, pcDataTemp);
                         }
                         return pcDataTemp;
                     }
