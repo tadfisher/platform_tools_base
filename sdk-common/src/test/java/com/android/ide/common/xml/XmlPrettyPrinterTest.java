@@ -18,6 +18,7 @@ package com.android.ide.common.xml;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.utils.SdkUtils;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -950,7 +951,7 @@ public class XmlPrettyPrinterTest extends TestCase {
                 xml);
 
         xml = XmlPrettyPrinter.prettyPrint(doc, false);
-        assertEquals(""
+        assertEquals((""
                 + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                 + "<myroot\n"
                 + "    baz=\"baz\"\n"
@@ -965,7 +966,7 @@ public class XmlPrettyPrinterTest extends TestCase {
                 + "  This is my text  \n"
                 + "    </hasText>\n"
                 + "\n"
-                + "</myroot>",
+                + "</myroot>").replace("\n", SdkUtils.getLineSeparator()),
                 xml);
     }
 
@@ -998,7 +999,7 @@ public class XmlPrettyPrinterTest extends TestCase {
                 formatted);
 
         formatted = XmlPrettyPrinter.prettyPrint(doc, false);
-        assertEquals(""
+        assertEquals((""
                 + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                 + "<resources>\n"
                 + "\n"
@@ -1007,7 +1008,7 @@ public class XmlPrettyPrinterTest extends TestCase {
                 + "    <string name=\"description_refresh\">Refresh</string>\n"
                 + "    <string name=\"description_share\">Share</string>\n"
                 + "\n"
-                + "</resources>",
+                + "</resources>").replace("\n", SdkUtils.getLineSeparator()),
                 formatted);
     }
 
@@ -1026,7 +1027,7 @@ public class XmlPrettyPrinterTest extends TestCase {
         assertEquals(xml, formatted);
 
         xml = XmlPrettyPrinter.prettyPrint(doc, false);
-        assertEquals(""
+        assertEquals((""
                 + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                 + "<root>\n"
                 + "\n"
@@ -1034,7 +1035,7 @@ public class XmlPrettyPrinterTest extends TestCase {
                 + "    <!-- Generic styles -->\n"
                 + "    <!-- ============== -->\n"
                 + "\n"
-                + "</root>",
+                + "</root>").replace("\n", SdkUtils.getLineSeparator()),
                 xml);
     }
 
@@ -1062,7 +1063,7 @@ public class XmlPrettyPrinterTest extends TestCase {
                 formatted);
 
         xml = XmlPrettyPrinter.prettyPrint(doc, false);
-        assertEquals(""
+        assertEquals((""
                 + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                 + "<resources>\n"
                 + "\n"
@@ -1071,7 +1072,7 @@ public class XmlPrettyPrinterTest extends TestCase {
                 + "    <!-- ============== -->\n"
                 + "    <string name=\"test\">test</string>\n"
                 + "\n"
-                + "</resources>",
+                + "</resources>").replace("\n", SdkUtils.getLineSeparator()),
                 xml);
     }
 
@@ -1093,12 +1094,12 @@ public class XmlPrettyPrinterTest extends TestCase {
                 xml);
 
         xml = XmlPrettyPrinter.prettyPrint(doc, false);
-        assertEquals(""
+        assertEquals((""
                 + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                 + "<!-- ============== -->\n"
                 + "<!-- Generic styles -->\n"
                 + "<!-- ============== -->\n"
-                + "<root />\n",
+                + "<root />\n").replace("\n", SdkUtils.getLineSeparator()),
                 xml);
     }
 
@@ -1115,7 +1116,7 @@ public class XmlPrettyPrinterTest extends TestCase {
         assertNotNull(doc);
 
         xml = XmlPrettyPrinter.prettyPrint(doc, false);
-        assertEquals(""
+        assertEquals((""
                 + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                 + "<resources>\n"
                 + "\n"
@@ -1125,7 +1126,7 @@ public class XmlPrettyPrinterTest extends TestCase {
                 + "        <flag name=\"italic\" value=\"2\" />\n"
                 + "    </attr>\n"
                 + "\n"
-                + "</resources>",
+                + "</resources>").replace("\n", SdkUtils.getLineSeparator()),
                 xml);
     }
 
@@ -1148,7 +1149,7 @@ public class XmlPrettyPrinterTest extends TestCase {
         assertNotNull(doc);
 
         xml = XmlPrettyPrinter.prettyPrint(doc, false);
-        assertEquals(""
+        assertEquals((""
                 + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                 + "<resources xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n"
                 + "\n"
@@ -1161,7 +1162,7 @@ public class XmlPrettyPrinterTest extends TestCase {
                 + "        <item quantity=\"one\">test2 <xliff:g id=\"test3\" xmlns=\"urn:oasis:names:tc:xliff:document:1.2\">%s</xliff:g> test4</item>\n"
                 + "    </plurals>\n"
                 + "\n"
-                + "</resources>",
+                + "</resources>").replace("\n", SdkUtils.getLineSeparator()),
 
                 xml);
     }
@@ -1178,14 +1179,14 @@ public class XmlPrettyPrinterTest extends TestCase {
         assertNotNull(doc);
 
         xml = XmlPrettyPrinter.prettyPrint(doc, false);
-        assertEquals(""
+        assertEquals((""
                 + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                 + "<resources xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n"
                 + "\n"
                 + "    <string name=\"xliff\">Text: <xliff:g id=\"firstName\">%1$s</xliff:g></string>\n"
                 + "    <string name=\"xliff2\">Name:<xliff:g id=\"firstName\"> %1$s</xliff:g></string>\n"
                 + "\n"
-                + "</resources>",
+                + "</resources>").replace("\n", SdkUtils.getLineSeparator()),
             xml);
     }
 
@@ -1201,12 +1202,13 @@ public class XmlPrettyPrinterTest extends TestCase {
         assertNotNull(doc);
 
         xml = XmlPrettyPrinter.prettyPrint(doc, false);
-        assertEquals(""
+        assertEquals((""
                 + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                 + "<!-- Comment -->\n"
                 + "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                 + "    android:layout_width=\"match_parent\"\n"
-                + "    android:layout_height=\"match_parent\" />\n",
+                + "    android:layout_height=\"match_parent\" />\n")
+                .replace("\n", SdkUtils.getLineSeparator()),
                 xml);
     }
 
@@ -1228,14 +1230,14 @@ public class XmlPrettyPrinterTest extends TestCase {
     }
 
     public void testDriver1() throws Exception {
-        checkDriver(""
+        checkDriver((""
                 + "Usage: XmlPrettyPrinter <options>... <files or directories...>\n"
                 + "OPTIONS:\n"
                 + "--stdout\n"
                 + "--removeEmptyLines\n"
                 + "--noAttributeOnFirstLine\n"
-                + "--noSpaceBeforeClose\n",
-                "Unknown flag --nonexistentFlag\n",
+                + "--noSpaceBeforeClose\n").replace("\n", SdkUtils.getLineSeparator()),
+                "Unknown flag --nonexistentFlag\n".replace("\n", SdkUtils.getLineSeparator()),
                 1,
                 new String[]{"--nonexistentFlag"},
                 null
@@ -1250,9 +1252,9 @@ public class XmlPrettyPrinterTest extends TestCase {
         Files.write(brokenXml, temp, Charsets.UTF_8);
         checkDriver(
                 "",
-                "[Fatal Error] :3:3: The element type \"notclosed\" must be terminated by "
+                ("[Fatal Error] :3:3: The element type \"notclosed\" must be terminated by "
                         + "the matching end-tag \"</notclosed>\".\n"
-                        + "Could not parse $TESTFILE\n",
+                        + "Could not parse $TESTFILE\n").replace("\n", SdkUtils.getLineSeparator()),
                 1,
                 new String[]{"--stdout", temp.getPath()},
                 temp

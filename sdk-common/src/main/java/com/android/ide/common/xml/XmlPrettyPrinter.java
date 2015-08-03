@@ -204,7 +204,7 @@ public class XmlPrettyPrinter {
         printer.prettyPrint(-1, node, null, null, sb, false /*openTagOnly*/);
         String xml = sb.toString();
         if (node.getNodeType() == Node.DOCUMENT_NODE && !xml.startsWith("<?")) { //$NON-NLS-1$
-            xml = XML_PROLOG + xml;
+            xml = XML_PROLOG + lineSeparator + xml;
         }
         return xml;
     }

@@ -62,7 +62,7 @@ public class XmlUtils {
     public static final String XML_COMMENT_BEGIN = "<!--"; //$NON-NLS-1$
     public static final String XML_COMMENT_END = "-->";    //$NON-NLS-1$
     public static final String XML_PROLOG =
-            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";  //$NON-NLS-1$
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?>";  //$NON-NLS-1$
 
     /**
      * Separator for xml namespace and localname
@@ -503,6 +503,7 @@ public class XmlUtils {
             case Node.DOCUMENT_NODE:
             case Node.DOCUMENT_FRAGMENT_NODE: {
                 sb.append(XML_PROLOG);
+                sb.append('\n');
                 NodeList children = node.getChildNodes();
                 for (int i = 0, n = children.getLength(); i < n; i++) {
                     append(sb, children.item(i), indent);
