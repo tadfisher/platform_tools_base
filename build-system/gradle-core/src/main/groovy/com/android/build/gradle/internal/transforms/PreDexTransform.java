@@ -39,6 +39,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -94,20 +95,26 @@ public class PreDexTransform implements Transform {
     @NonNull
     @Override
     public Set<StreamType> getInputTypes() {
-        return EnumSet.of(StreamType.CLASSES);
+        return Sets.immutableEnumSet(StreamType.CLASSES);
     }
 
     @NonNull
     @Override
     public Set<StreamType> getOutputTypes() {
-        return EnumSet.of(StreamType.DEX);
+        return Sets.immutableEnumSet(StreamType.DEX);
     }
 
     @NonNull
     @Override
-    public StreamScope getScope() {
+    public Set<StreamScope> getScopes() {
         // TODO: parameterize this to possibly only to the external libraries.
-        return StreamScope.ALL_NON_PROJECT;
+        return Sets.immutableEnumSet(StreamScope.SUB_PROJECTS, StreamScope.EXTERNAL_LIBRARIES);
+    }
+
+    @NonNull
+    @Override
+    public Set<StreamScope> getReferencedScope() {
+        return ImmutableSet.copyOf(EnumSet.noneOf(StreamScope.class));
     }
 
     @NonNull
@@ -146,6 +153,11 @@ public class PreDexTransform implements Transform {
     }
 
     @Override
+    public boolean isIncremental() {
+        return true;
+    }
+
+    @Override
     public void transform(
             @NonNull List<InputStream> inputs,
             @NonNull List<OutputStream> outputs,
@@ -155,7 +167,7 @@ public class PreDexTransform implements Transform {
             // there should be a single output.
             assert outputs.size() == 1;
             OutputStream outputStream = Iterables.getOnlyElement(outputs);
-            File outputFolder = outputStream.getFolder();
+            File outputFolder = outputStream.getFile();
 
             final Set<String> hashs = Sets.newHashSet();
             final WaitableExecutor<Void> executor = new WaitableExecutor<Void>();

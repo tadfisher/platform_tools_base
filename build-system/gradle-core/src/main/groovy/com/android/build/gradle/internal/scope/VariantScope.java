@@ -20,10 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-<<<<<<< HEAD
-=======
 import com.android.build.gradle.internal.pipeline.TransformPipeline;
->>>>>>> Using the Transform API.
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.MergeJavaResourcesTask;
 import com.android.build.gradle.internal.tasks.PrepareDependenciesTask;
@@ -40,19 +37,6 @@ import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.builder.signing.SignedJarBuilder;
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-import com.android.utils.FileUtils;
-import com.android.utils.StringHelper;
-import com.google.common.base.Objects;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-=======
->>>>>>> Using the Transform API.
->>>>>>> Using the Transform API.
 
 import org.gradle.api.Task;
 import org.gradle.api.file.FileCollection;

@@ -22,8 +22,10 @@ package com.android.build.gradle.internal.pipeline;
 public enum TransformType {
     /** Writes the input streams in matching output streams */
     AS_INPUT,
-    /** Combines all the input streams into a single output stream */
+    /** Combines all the input streams into a single output stream folder */
     COMBINED,
+    /** Combines all the input streams into a single output stream file */
+    COMBINED_AS_FILE,
     /** Does not rewrite steams into new ones. Read-only (or generate a different content type) */
     NO_OP
 }

@@ -46,17 +46,17 @@ public class TransformTask extends StreamBasedTask {
 
     @TaskAction
     void transform(IncrementalTaskInputs taskInputs) throws Exception {
-        boolean isIncremental = taskInputs.isIncremental();
+        boolean isIncremental = transform.isIncremental() && taskInputs.isIncremental();
 
         //noinspection ConstantConditions
         if (false) { //isIncremental) {
             // ?
         } else {
-            transform.transform(resolveInputStream(), resolveOutputStream(), false);
+            transform.transform(resolveInputStreams(), resolveOutputStreams(), false);
         }
     }
 
-    private List<OutputStream> resolveOutputStream() {
+    private List<OutputStream> resolveOutputStreams() {
         List<OutputStream> results = Lists.newArrayListWithCapacity(outputStreams.size());
 
         for (StreamDeclaration output : outputStreams) {
@@ -66,11 +66,16 @@ public class TransformTask extends StreamBasedTask {
         return results;
     }
 
-    private List<InputStream> resolveInputStream() {
-        List<InputStream> results = Lists.newArrayListWithCapacity(inputStreams.size());
+    private List<InputStream> resolveInputStreams() {
+        List<InputStream> results = Lists.newArrayListWithCapacity(
+                consumedInputStreams.size() + referencedInputStreams.size());
 
-        for (StreamDeclaration input : inputStreams) {
+        for (StreamDeclaration input : consumedInputStreams) {
             results.add(InputStreamImpl.builder().from(input).build());
+        }
+
+        for (StreamDeclaration input : referencedInputStreams) {
+            results.add(InputStreamImpl.builder().from(input).setReferencedOnly().build());
         }
 
         return results;
@@ -100,7 +105,9 @@ public class TransformTask extends StreamBasedTask {
         @NonNull
         private final Transform transform;
         @NonNull
-        private List<StreamDeclaration> inputStreams;
+        private List<StreamDeclaration> consumedInputStreams;
+        @NonNull
+        private List<StreamDeclaration> referencedInputStreams;
         @NonNull
         private List<StreamDeclaration> outputStreams;
 
@@ -108,12 +115,14 @@ public class TransformTask extends StreamBasedTask {
                 @NonNull String variantName,
                 @NonNull String taskName,
                 @NonNull Transform transform,
-                @NonNull List<StreamDeclaration> inputStreams,
+                @NonNull List<StreamDeclaration> consumedInputStreams,
+                @NonNull List<StreamDeclaration> referencedInputStreams,
                 @NonNull List<StreamDeclaration> outputStreams) {
             this.variantName = variantName;
             this.taskName = taskName;
             this.transform = transform;
-            this.inputStreams = inputStreams;
+            this.consumedInputStreams = consumedInputStreams;
+            this.referencedInputStreams = referencedInputStreams;
             this.outputStreams = outputStreams;
         }
 
@@ -132,7 +141,8 @@ public class TransformTask extends StreamBasedTask {
         @Override
         public void execute(TransformTask task) {
             task.transform = transform;
-            task.inputStreams = inputStreams;
+            task.consumedInputStreams = consumedInputStreams;
+            task.referencedInputStreams = referencedInputStreams;
             task.outputStreams = outputStreams;
             task.setVariantName(variantName);
         }

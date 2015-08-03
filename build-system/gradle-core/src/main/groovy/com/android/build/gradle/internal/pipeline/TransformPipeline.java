@@ -32,6 +32,7 @@ import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
@@ -46,6 +47,8 @@ import java.util.Set;
  * inputs when several of these transform are optional.
  */
 public class TransformPipeline {
+
+    private static final boolean DEBUG = false;
 
     @NonNull
     private final AndroidTaskRegistry taskRegistry;
@@ -82,6 +85,9 @@ public class TransformPipeline {
         List<StreamDeclaration> inputStreams = grabStreams(transform);
         if (inputStreams.isEmpty()) {
             // didn't find any match. Means there is a broken order somewhere in the streams.
+            throw new RuntimeException(String.format(
+                    "Unable to add Transform '%s': requested streams not available.",
+                    transform.getName()));
         }
 
         String taskName = variantScope.getTaskName(getTaskNamePrefix(transform));
@@ -97,16 +103,43 @@ public class TransformPipeline {
         transforms.add(transform);
 
         // create the task...
-        // Need to figure out the stream based on the previous transforms... Should probably be dynamic.
+        List<StreamDeclaration> referencedStreams = grabReferencedStreams(transform);
 
-        return taskRegistry.create(
+        if (DEBUG) {
+            System.out.println(
+                    "ADDED TRANSFORM(" + variantScope.getVariantConfiguration().getFullName()
+                            + "):");
+            System.out.println("\tName: " + transform.getName());
+            System.out.println("\tTask: " + taskName);
+            for (StreamDeclaration sd : inputStreams) {
+                System.out.println("\tInputStream: " + sd);
+            }
+            for (StreamDeclaration sd : referencedStreams) {
+                System.out.println("\tRef'edStream: " + sd);
+            }
+            for (StreamDeclaration sd : outputStreams) {
+                System.out.println("\tOutputStream: " + sd);
+            }
+        }
+
+        AndroidTask<TransformTask> task = taskRegistry.create(
                 taskFactory,
                 new TransformTask.ConfigAction(
                         variantScope.getVariantConfiguration().getFullName(),
                         taskName,
                         transform,
                         inputStreams,
+                        referencedStreams,
                         outputStreams));
+
+        for (StreamDeclaration s : inputStreams) {
+            task.dependsOn(taskFactory, s.getDependencies());
+        }
+        for (StreamDeclaration s : referencedStreams) {
+            task.dependsOn(taskFactory, s.getDependencies());
+        }
+
+        return task;
     }
 
     @NonNull
@@ -126,7 +159,7 @@ public class TransformPipeline {
     public ImmutableList<StreamDeclaration> getStreamsByTypes(@NonNull Set<StreamType> streamTypes) {
         ImmutableList.Builder<StreamDeclaration> streamsByType = ImmutableList.builder();
         for (StreamDeclaration s : streams) {
-            if (streamTypes.contains(s.getType())) {
+            if (streamTypes.containsAll(s.getTypes())) {
                 streamsByType.add(s);
             }
         }
@@ -139,7 +172,8 @@ public class TransformPipeline {
             @NonNull Set<StreamScope> allowedScopes) {
         ImmutableList.Builder<StreamDeclaration> streamsByType = ImmutableList.builder();
         for (StreamDeclaration s : streams) {
-            if (s.getType() == streamType && allowedScopes.contains(s.getScope())) {
+            if (s.getTypes().equals(EnumSet.of(streamType)) &&
+                    allowedScopes.containsAll(s.getScopes())) {
                 streamsByType.add(s);
             }
         }
@@ -184,8 +218,8 @@ public class TransformPipeline {
                             .setFiles(new File(buildDir, Joiner.on(File.separator).join(
                                     AndroidProject.FD_INTERMEDIATES,
                                     "transforms",
-                                    input.getType().name().toLowerCase(Locale.getDefault()),
-                                    input.getScope().name().toLowerCase(Locale.getDefault()),
+                                    combineTypeNames(input.getTypes()),
+                                    combineScopeNames(input.getScopes()),
                                     transform.getName(),
                                     variantDirName)))
                             .setDependency(taskName).build());
@@ -193,59 +227,44 @@ public class TransformPipeline {
 
                 return outputStreams;
             case COMBINED:
-                // create single combined output stream for each code, res.
+            case COMBINED_AS_FILE:
+                // create single combined output stream for all types and scopes
                 Set<StreamType> types = transform.getOutputTypes();
-                outputStreams = Lists.newArrayListWithCapacity(types.size());
-                if (types.contains(StreamType.CLASSES)) {
-                    // create a ALL/CLASSES Stream
-                    outputStreams.add(StreamDeclarationImpl.builder()
-                            .setType(StreamType.CLASSES)
-                            .setScope(StreamScope.ALL)
-                            .setFiles(new File(buildDir, Joiner.on(File.separator).join(
-                                    AndroidProject.FD_INTERMEDIATES,
-                                    "transforms",
-                                    StreamType.CLASSES.name().toLowerCase(Locale.getDefault()),
-                                    StreamScope.ALL.name().toLowerCase(Locale.getDefault()),
-                                    transform.getName(),
-                                    variantDirName)))
-                            .setDependency(taskName).build());
-                }
-                if (types.contains(StreamType.RESOURCES)) {
-                    // create a ALL/RESOURCES Stream
-                    outputStreams.add(StreamDeclarationImpl.builder()
-                            .setType(StreamType.RESOURCES)
-                            .setScope(StreamScope.ALL)
-                            .setFiles(new File(buildDir, Joiner.on(File.separator).join(
-                                    AndroidProject.FD_INTERMEDIATES,
-                                    "transforms",
-                                    StreamType.RESOURCES.name().toLowerCase(Locale.getDefault()),
-                                    StreamScope.ALL.name().toLowerCase(Locale.getDefault()),
-                                    transform.getName(),
-                                    variantDirName)))
-                            .setDependency(taskName).build());
-                }
-                if (types.contains(StreamType.DEX)) {
-                    // create a ALL/DEX Stream
-                    outputStreams.add(StreamDeclarationImpl.builder()
-                            .setType(StreamType.DEX)
-                            .setScope(StreamScope.ALL)
-                            .setFiles(new File(buildDir, Joiner.on(File.separator).join(
-                                    AndroidProject.FD_INTERMEDIATES,
-                                    "transforms",
-                                    StreamType.DEX.name().toLowerCase(Locale.getDefault()),
-                                    StreamScope.ALL.name().toLowerCase(Locale.getDefault()),
-                                    transform.getName(),
-                                    variantDirName)))
-                            .setDependency(taskName).build());
+                Set<StreamScope> scopes = transform.getScopes();
+
+                File folder = new File(buildDir, Joiner.on(File.separator).join(
+                        AndroidProject.FD_INTERMEDIATES,
+                        "transforms",
+                        combineTypeNames(types),
+                        combineScopeNames(scopes),
+                        transform.getName(),
+                        variantDirName));
+
+                StreamDeclarationImpl.Builder builder = StreamDeclarationImpl.builder()
+                        .addTypes(types)
+                        .addScopes(scopes)
+                        .setDependency(taskName);
+                if (transform.getTransformType() == TransformType.COMBINED_AS_FILE) {
+                    builder.setFolder(false).setFiles(new File(folder, "classes.jar"));
+                } else {
+                    builder.setFiles(folder);
                 }
 
-                return outputStreams;
+                return Collections.singletonList(builder.build());
             case NO_OP:
                 // put the input streams back into the pipeline.
-                return Lists.newArrayList(inputStreams);
+                return inputStreams;
             default:
                 throw new UnsupportedOperationException("Unsupported transform type");
         }
+    }
+
+    private static String combineTypeNames(Set<StreamType> types) {
+        return Joiner.on("_and_").join(types);
+    }
+
+    private static String combineScopeNames(Set<StreamScope> scopes) {
+        return Joiner.on("_and_").join(scopes);
     }
 
     /**
@@ -261,15 +280,34 @@ public class TransformPipeline {
     private List<StreamDeclaration> grabStreams(@NonNull Transform transform) {
         List<StreamDeclaration> streamMatches = Lists.newArrayListWithExpectedSize(streams.size());
 
-        Set<StreamType> types = transform.getInputTypes();
-        StreamScope scope = transform.getScope();
+        Set<StreamType> requestedTypes = transform.getInputTypes();
+        Set<StreamScope> requestedScopes = transform.getScopes();
         for (int i = 0 ; i < streams.size();) {
-            StreamDeclaration s = streams.get(i);
-            if (types.contains(s.getType()) && s.getScope().match(scope)) {
-                streamMatches.add(s);
+            StreamDeclaration stream = streams.get(i);
+
+            if (requestedScopes.containsAll(stream.getScopes()) &&
+                    requestedTypes.containsAll(stream.getTypes())) {
+                streamMatches.add(stream);
+
                 streams.remove(i);
             } else {
                 i++;
+            }
+        }
+
+        return streamMatches;
+    }
+
+    @NonNull
+    private List<StreamDeclaration> grabReferencedStreams(@NonNull Transform transform) {
+        List<StreamDeclaration> streamMatches = Lists.newArrayListWithExpectedSize(streams.size());
+
+        Set<StreamType> requestedTypes = transform.getInputTypes();
+        Set<StreamScope> requestedScopes = transform.getReferencedScope();
+        for (StreamDeclaration stream : streams) {
+            if (requestedScopes.containsAll(stream.getScopes()) &&
+                    requestedTypes.containsAll(stream.getTypes())) {
+                streamMatches.add(stream);
             }
         }
 

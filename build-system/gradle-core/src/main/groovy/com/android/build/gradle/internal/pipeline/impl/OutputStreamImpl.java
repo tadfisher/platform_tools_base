@@ -22,9 +22,11 @@ import com.android.build.gradle.internal.pipeline.OutputStream;
 import com.android.build.gradle.internal.pipeline.StreamDeclaration;
 import com.android.build.gradle.internal.pipeline.StreamScope;
 import com.android.build.gradle.internal.pipeline.StreamType;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 import java.io.File;
+import java.util.Set;
 
 /**
  */
@@ -32,46 +34,56 @@ import java.io.File;
 public class OutputStreamImpl implements OutputStream {
 
     @NonNull
-    private final StreamType type;
+    private final Set<StreamType> types;
     @NonNull
-    private final StreamScope scope;
+    private final Set<StreamScope> scopes;
+    private final boolean isFolder;
     @NonNull
-    private final File folder;
+    private final File file;
 
     public static OutputStream convert(@NonNull StreamDeclaration streamDeclaration) {
         try {
-            return new OutputStreamImpl(streamDeclaration.getType(),
-                    streamDeclaration.getScope(),
-                    Iterables.getOnlyElement(streamDeclaration.getFiles().call()));
+            return new OutputStreamImpl(
+                    streamDeclaration.getTypes(),
+                    streamDeclaration.getScopes(),
+                    Iterables.getOnlyElement(streamDeclaration.getFiles().call()),
+                    streamDeclaration.isFolder());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
     private OutputStreamImpl(
-            @NonNull StreamType type,
-            @NonNull StreamScope scope,
-            @NonNull File folder) {
-        this.type = type;
-        this.scope = scope;
-        this.folder = folder;
+            @NonNull Set<StreamType> types,
+            @NonNull Set<StreamScope> scopes,
+            @NonNull File file,
+            boolean isFolder) {
+        this.types = ImmutableSet.copyOf(types);
+        this.scopes = ImmutableSet.copyOf(scopes);
+        this.file = file;
+        this.isFolder = isFolder;
     }
 
     @NonNull
     @Override
-    public StreamType getType() {
-        return type;
+    public Set<StreamType> getTypes() {
+        return types;
     }
 
     @NonNull
     @Override
-    public StreamScope getScope() {
-        return scope;
+    public Set<StreamScope> getScopes() {
+        return scopes;
+    }
+
+    @Override
+    public boolean isFolder() {
+        return isFolder;
     }
 
     @NonNull
     @Override
-    public File getFolder() {
-        return folder;
+    public File getFile() {
+        return file;
     }
 }

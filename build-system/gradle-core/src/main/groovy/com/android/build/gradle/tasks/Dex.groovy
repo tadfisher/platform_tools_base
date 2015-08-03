@@ -209,12 +209,10 @@ public class Dex extends StreamBasedTask {
             dexTask.setOptimize(true);//!variantData.variantConfiguration.buildType.debuggable
 
             // inputs
-            dexTask.inputStreams = variantScope.getTransformPipeline().getStreamsByTypes(
-                    StreamType.CLASSES)
+            dexTask.consumedInputStreams = variantScope.getTransformPipeline().getStreamsByTypes(
+                    StreamType.CLASSES, StreamType.RESOURCES)
             dexTask.preDexStreams = variantScope.getTransformPipeline().getStreamsByTypes(StreamType.DEX)
-
-            // TODO
-            //ConventionMappingHelper.map(dexTask, "libraries", pcData.getInputLibrariesCallable());
+            dexTask.referencedInputStreams = ImmutableList.of()
 
             if (isMultiDexEnabled && isLegacyMultiDexMode) {
                 // configure the dex task to receive the generated class list.

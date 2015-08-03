@@ -22,11 +22,14 @@ import com.android.build.gradle.internal.pipeline.StreamDeclaration;
 import com.android.build.gradle.internal.pipeline.StreamScope;
 import com.android.build.gradle.internal.pipeline.StreamType;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Callables;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 /**
@@ -35,43 +38,65 @@ import java.util.concurrent.Callable;
 public class StreamDeclarationImpl implements StreamDeclaration {
 
     @NonNull
-    private final StreamType type;
+    private final Set<StreamType> types;
     @NonNull
-    private final StreamScope scope;
+    private final Set<StreamScope> scopes;
     @NonNull
-    private final Callable<Collection<File>> inputs;
+    private final Callable<Collection<File>> files;
     @NonNull
     private final List<Object> dependencies;
+    private final boolean isFolder;
 
     public static Builder builder() {
         return new Builder();
     }
 
     public static final class Builder {
-        private StreamType type;
-        private StreamScope scope;
+        private Set<StreamType> types = Sets.newHashSet();
+        private Set<StreamScope> scopes = Sets.newHashSet();
         private Callable<Collection<File>> inputs;
         private List<Object> dependencies;
+        private boolean isFolder = true;
 
         public StreamDeclaration build() {
-            return new StreamDeclarationImpl(type, scope, inputs, dependencies);
+            return new StreamDeclarationImpl(
+                    Sets.immutableEnumSet(types),
+                    Sets.immutableEnumSet(scopes),
+                    inputs,
+                    dependencies,
+                    isFolder);
         }
 
         public Builder from(@NonNull StreamDeclaration stream) {
-            type = stream.getType();
-            scope = stream.getScope();
+            types.addAll(stream.getTypes());
+            scopes.addAll(stream.getScopes());
             inputs = stream.getFiles();
             dependencies = stream.getDependencies();
             return this;
         }
 
-        public Builder setType(@NonNull StreamType type) {
-            this.type = type;
+        public Builder addTypes(@NonNull Set<StreamType> types) {
+            this.types.addAll(types);
             return this;
         }
 
-        public Builder setScope(@NonNull StreamScope scope) {
-            this.scope = scope;
+        public Builder addType(@NonNull StreamType type) {
+            this.types.add(type);
+            return this;
+        }
+
+        public Builder addScopes(@NonNull Set<StreamScope> scopes) {
+            this.scopes.addAll(scopes);
+            return this;
+        }
+
+        public Builder addScopes(@NonNull StreamScope... scopes) {
+            this.scopes.addAll(Arrays.asList(scopes));
+            return this;
+        }
+
+        public Builder addScope(@NonNull StreamScope scope) {
+            this.scopes.add(scope);
             return this;
         }
 
@@ -99,40 +124,67 @@ public class StreamDeclarationImpl implements StreamDeclaration {
             this.dependencies = ImmutableList.of(dependency);
             return this;
         }
+
+        public Builder setFolder(boolean isFolder) {
+            this.isFolder = isFolder;
+            return this;
+        }
     }
 
     private StreamDeclarationImpl(
-            @NonNull StreamType type,
-            @NonNull StreamScope scope,
-            @NonNull Callable<Collection<File>> inputs,
-            @NonNull List<Object> dependencies) {
-        this.type = type;
-        this.scope = scope;
-        this.inputs = inputs;
+            @NonNull Set<StreamType> types,
+            @NonNull Set<StreamScope> scopes,
+            @NonNull Callable<Collection<File>> files,
+            @NonNull List<Object> dependencies,
+            boolean isFolder) {
+        this.types = types;
+        this.scopes = scopes;
+        this.files = files;
         this.dependencies = dependencies;
+        this.isFolder = isFolder;
     }
 
     @NonNull
     @Override
-    public StreamType getType() {
-        return type;
+    public Set<StreamType> getTypes() {
+        return types;
     }
 
     @NonNull
     @Override
-    public StreamScope getScope() {
-        return scope;
+    public Set<StreamScope> getScopes() {
+        return scopes;
     }
 
     @NonNull
     @Override
     public Callable<Collection<File>> getFiles() {
-        return inputs;
+        return files;
+    }
+
+    @Override
+    public boolean isFolder() {
+        return isFolder;
     }
 
     @NonNull
     @Override
     public List<Object> getDependencies() {
         return dependencies;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuffer sb = new StringBuffer("StreamDeclarationImpl{");
+        sb.append("types=").append(types);
+        sb.append(", scopes=").append(scopes);
+        try {
+            sb.append(", files=").append(files.call());
+        } catch (Exception e) {
+        }
+        sb.append(", dependencies=").append(dependencies);
+        sb.append(", isFolder=").append(isFolder);
+        sb.append('}');
+        return sb.toString();
     }
 }

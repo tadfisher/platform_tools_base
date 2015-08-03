@@ -21,6 +21,7 @@ import com.android.annotations.NonNull;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 /**
@@ -32,16 +33,18 @@ import java.util.concurrent.Callable;
 public interface StreamDeclaration {
 
     @NonNull
-    StreamType getType();
+    Set<StreamType> getTypes();
 
     @NonNull
-    StreamScope getScope();
+    Set<StreamScope> getScopes();
 
     /**
      * Returns the files.
      */
     @NonNull
     Callable<Collection<File>> getFiles();
+
+    boolean isFolder();
 
     @NonNull
     List<Object> getDependencies();

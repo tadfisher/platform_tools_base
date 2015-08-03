@@ -18,30 +18,15 @@ package com.android.build.gradle.internal.pipeline;
 
 /**
  * The type of inputs handled by a transform.
- * PROJECT: only the project files.
  *
  */
 public enum StreamScope {
     /** Only the project content */
-    PROJECT(0x0001),
+    PROJECT,
     /** Only the sub-projects content (the local dependencies). */
-    SUB_PROJECTS(0x0002),
-    /** All the local projects' content) */
-    ALL_PROJECTS(0x0003),
+    SUB_PROJECTS,
     /** Only the external libraries */
-    EXTERNAL_LIBRARIES(0x0004),
-    /** all but the main project */
-    ALL_NON_PROJECT(0x0006),
-    /** All the content, local and remote. */
-    ALL(0x0007);
-
-    private final byte bitMask;
-
-    StreamScope(int bitMask) {
-        this.bitMask = (byte)bitMask;
-    }
-
-    public boolean match(StreamScope other) {
-        return (bitMask & other.bitMask) != 0;
-    }
+    EXTERNAL_LIBRARIES,
+    /** Code that is being tested by the current variant */
+    TESTED_CODE,
 }
