@@ -25,6 +25,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.coverage.JacocoInstrumentTask;
+import com.android.build.gradle.internal.pipeline.TransformPipeline;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.FileSupplier;
 import com.android.build.gradle.internal.tasks.MergeJavaResourcesTask;
@@ -77,7 +78,8 @@ public class VariantScopeImpl implements VariantScope {
     private GlobalScope globalScope;
     @NonNull
     private BaseVariantData<? extends BaseVariantOutputData> variantData;
-
+    @NonNull
+    private TransformPipeline transformPipeline;
     @Nullable
     private Collection<Object> ndkBuildable;
     @Nullable
@@ -142,8 +144,10 @@ public class VariantScopeImpl implements VariantScope {
 
     public VariantScopeImpl(
             @NonNull GlobalScope globalScope,
+            @NonNull TransformPipeline transformPipeline,
             @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData) {
         this.globalScope = globalScope;
+        this.transformPipeline = transformPipeline;
         this.variantData = variantData;
     }
 
@@ -163,6 +167,12 @@ public class VariantScopeImpl implements VariantScope {
     @NonNull
     public GradleVariantConfiguration getVariantConfiguration() {
         return variantData.getVariantConfiguration();
+    }
+
+    @NonNull
+    @Override
+    public TransformPipeline getTransformPipeline() {
+        return transformPipeline;
     }
 
     @Override
