@@ -39,6 +39,7 @@ import static com.android.SdkConstants.TAG_USES_FEATURE;
 import static com.android.SdkConstants.TAG_USES_LIBRARY;
 import static com.android.SdkConstants.TAG_USES_PERMISSION;
 import static com.android.SdkConstants.TAG_USES_SDK;
+import static com.android.SdkConstants.VALUE_FALSE;
 import static com.android.xml.AndroidManifest.NODE_ACTION;
 import static com.android.xml.AndroidManifest.NODE_DATA;
 import static com.android.xml.AndroidManifest.NODE_METADATA;
@@ -223,8 +224,11 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
             Category.SECURITY,
             3,
             Severity.WARNING,
-            IMPLEMENTATION).addMoreInfo(
-            "http://developer.android.com/reference/android/R.attr.html#allowBackup");
+            IMPLEMENTATION)
+            // TODO: Replace with stable API doc reference once this moves out of preview
+            // (tracked in https://code.google.com/p/android/issues/detail?id=182113)
+            .addMoreInfo("https://developer.android.com/preview/backup/index.html")
+            .addMoreInfo("http://developer.android.com/reference/android/R.attr.html#allowBackup");
 
     /** Conflicting permission names */
     public static final Issue UNIQUE_PERMISSION = Issue.create(
@@ -799,7 +803,8 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
         if (tag.equals(TAG_APPLICATION)) {
             mSeenApplication = true;
             boolean recordLocation = false;
-            if (element.hasAttributeNS(ANDROID_URI, ATTR_ALLOW_BACKUP)
+            String allowBackup = element.getAttributeNS(ANDROID_URI, ATTR_ALLOW_BACKUP);
+            if (allowBackup != null && !allowBackup.isEmpty()
                     || context.getDriver().isSuppressed(context, ALLOW_BACKUP, element)) {
                 mSeenAllowBackup = true;
             } else {
@@ -830,18 +835,21 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
                     context.report(ALLOW_BACKUP, fullBackupNode, location,
                             "Missing `<full-backup-content>` resource");
                 }
-            } else if (fullBackupNode == null && context.getMainProject().getTargetSdk() >= 23) {
-                Location location = context.getLocation(element);
-                context.report(ALLOW_BACKUP, element, location,
+            } else if (fullBackupNode == null && !VALUE_FALSE.equals(allowBackup)
+                    && context.getMainProject().getTargetSdk() >= 23) {
+                if (hasGcmReceiver(element)) {
+                    Location location = context.getLocation(element);
+                    context.report(ALLOW_BACKUP, element, location,
+                    "Should explicitly set `android:fullBackupContent` to avoid backing up "
+                            + "device specific tokens, such as the GCM regId");
+                } else {
+                    Location location = context.getLocation(element);
+                    context.report(ALLOW_BACKUP, element, location,
                         "Should explicitly set `android:fullBackupContent` to `true` or `false` "
                                 + "to opt-in to or out of full app data back-up and restore, or "
                                 + "alternatively to an `@xml` resource which specifies which "
                                 + "files to backup");
-            } else if (fullBackupNode == null && hasGcmReceiver(element)) {
-                Location location = context.getLocation(element);
-                context.report(ALLOW_BACKUP, element, location,
-                        "Should explicitly set `android:fullBackupContent` to avoid backing up "
-                                + "the GCM device specific regId.");
+                }
             }
         } else if (mSeenApplication) {
             if (context.isEnabled(ORDER)) {
