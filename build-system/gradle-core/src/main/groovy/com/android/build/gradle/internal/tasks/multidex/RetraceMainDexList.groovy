@@ -20,7 +20,7 @@ package com.android.build.gradle.internal.tasks.multidex
 import com.android.build.gradle.internal.PostCompilationData
 import com.android.build.gradle.internal.scope.ConventionMappingHelper
 import com.android.build.gradle.internal.scope.TaskConfigAction
-import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.scope.VariantScopeImpl
 import com.android.build.gradle.internal.tasks.DefaultAndroidTask
 import com.google.common.base.Charsets
 import com.google.common.base.Joiner
@@ -124,11 +124,11 @@ class RetraceMainDexList extends DefaultAndroidTask {
 
     public static class ConfigAction implements TaskConfigAction<RetraceMainDexList> {
 
-        VariantScope scope;
+        VariantScopeImpl scope;
 
         PostCompilationData pcData;
 
-        ConfigAction(VariantScope scope, PostCompilationData pcData) {
+        ConfigAction(VariantScopeImpl scope, PostCompilationData pcData) {
             this.scope = scope
             this.pcData = pcData
         }

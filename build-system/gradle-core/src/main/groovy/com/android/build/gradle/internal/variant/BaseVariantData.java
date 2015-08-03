@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.coverage.JacocoInstrumentTask;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.Splits;
+import com.android.build.gradle.internal.pipeline.TransformPipeline;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.scope.VariantScopeImpl;
 import com.android.build.gradle.internal.tasks.CheckManifest;
@@ -182,7 +183,10 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
                             variantConfiguration.getFullName(),
                             variantConfiguration.getMinSdkVersion().getApiLevel()));
         }
-        scope = new VariantScopeImpl(taskManager.getGlobalScope(), this);
+        scope = new VariantScopeImpl(
+                taskManager.getGlobalScope(),
+                new TransformPipeline(taskManager.getAndroidTasks()),
+                this);
         taskManager.configureScopeForNdk(scope);
     }
 
