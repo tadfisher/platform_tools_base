@@ -32,48 +32,58 @@ import java.io.IOException;
  */
 public class MockableAndroidJarTask extends DefaultTask {
 
-   private File mAndroidJar;
+    private File mAndroidJar;
 
-   private File mOutputFile;
+    private File mOutputFile;
 
-   /**
-    * Whether the generated jar should return default values from all methods or throw exceptions.
-    */
-   private boolean mReturnDefaultValues;
+    /**
+     * Whether the generated jar should return default values from all methods or throw exceptions.
+     */
+    private boolean mReturnDefaultValues;
 
-   @TaskAction
-   public void createMockableJar() throws IOException {
-      MockableJarGenerator generator = new MockableJarGenerator(getReturnDefaultValues());
-      getOutputFile().delete();
-      getLogger().info(String.format("Creating %s from $s.", getOutputFile().getAbsolutePath(),
-              getAndroidJar().getAbsolutePath()));
-      generator.createMockableJar(getAndroidJar(), getOutputFile());
-   }
+    @TaskAction
+    public void createMockableJar() throws IOException {
+        File outputFile = getOutputFile();
+        if (outputFile.exists()) {
+            // Modules share the mockable jar, all the "inputs" are reflected in the filename,
+            // e.g. mockable-android-22.default-values.jar. If we ever change the generator logic,
+            // it will be reflected in the name as well.
+            //
+            // This is not how Gradle understands tasks with overlapping outputs - it will run
+            // all instances of this task, because the output was not created by this instance. We
+            // need to return here manually because of that behavior.
+            return;
+        }
+        MockableJarGenerator generator = new MockableJarGenerator(getReturnDefaultValues());
+        getLogger().info(String.format("Creating %s from %s.", outputFile.getAbsolutePath(),
+                getAndroidJar().getAbsolutePath()));
+        generator.createMockableJar(getAndroidJar(), outputFile);
+    }
 
-   @Input
-   public boolean getReturnDefaultValues() {
-      return mReturnDefaultValues;
-   }
+    @Input
+    public boolean getReturnDefaultValues() {
+        return mReturnDefaultValues;
+    }
 
-   public void setReturnDefaultValues(boolean returnDefaultValues) {
-      mReturnDefaultValues = returnDefaultValues;
-   }
+    public void setReturnDefaultValues(boolean returnDefaultValues) {
+        mReturnDefaultValues = returnDefaultValues;
+    }
 
-   @OutputFile
-   public File getOutputFile() {
-      return mOutputFile;
-   }
+    @OutputFile
+    public File getOutputFile() {
+        return mOutputFile;
+    }
 
-   public void setOutputFile(File outputFile) {
-       mOutputFile = outputFile;
-   }
+    public void setOutputFile(File outputFile) {
+        mOutputFile = outputFile;
+    }
 
-   @InputFile
-   public File getAndroidJar() {
-      return mAndroidJar;
-   }
+    @InputFile
+    public File getAndroidJar() {
+        return mAndroidJar;
+    }
 
-   public void setAndroidJar(File androidJar) {
-       mAndroidJar = androidJar;
-   }
+    public void setAndroidJar(File androidJar) {
+        mAndroidJar = androidJar;
+    }
 }
