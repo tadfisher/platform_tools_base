@@ -35,12 +35,12 @@ import com.android.build.gradle.internal.tasks.PrepareDependenciesTask;
 import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.BinaryFileProviderTask;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
-import com.android.build.gradle.tasks.JackTask;
-import com.android.build.gradle.tasks.PreprocessResourcesTask;
 import com.android.build.gradle.tasks.GenerateResValues;
+import com.android.build.gradle.tasks.JackTask;
 import com.android.build.gradle.tasks.MergeAssets;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.NdkCompile;
+import com.android.build.gradle.tasks.PreprocessResourcesTask;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.builder.core.VariantType;
@@ -129,6 +129,7 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
     // empty anchor compile task to set all compilations tasks as dependents.
     public Task compileTask;
     public JacocoInstrumentTask jacocoInstrumentTask;
+    public Task coverageReportTask;
 
     public FileSupplier mappingFileProviderTask;
     public BinaryFileProviderTask binayFileProviderTask;

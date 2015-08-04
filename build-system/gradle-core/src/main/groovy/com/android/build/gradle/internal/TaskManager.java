@@ -1581,6 +1581,9 @@ public abstract class TaskManager {
                 }
             });
 
+            testVariantData.coverageReportTask = reportTask;
+            baseVariantData.coverageReportTask.dependsOn(reportTask);
+
             reportTask.dependsOn(connectedTask.getName());
             tasks.named(connectedRootName, new Action<Task>() {
                 @Override
@@ -2320,6 +2323,12 @@ public abstract class TaskManager {
                         variantData.assetGenTask = task;
                     }
                 }));
+
+        if (!variantData.getType().isForTesting()) {
+            // TODO - use the standard scope machinery.
+            variantData.coverageReportTask = project.getTasks().create(
+                    scope.getTaskName("create", "CoverageReport"));
+        }
 
         // and compile task
         createCompileAnchorTask(tasks, scope);
