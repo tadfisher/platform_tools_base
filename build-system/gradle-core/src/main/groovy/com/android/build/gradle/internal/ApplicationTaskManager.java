@@ -66,6 +66,9 @@ public class ApplicationTaskManager extends TaskManager {
 
         handleMicroApp(tasks, variantScope);
 
+        // Create all current streams (dependencies mostly at this point)
+        createDependencyStreams(variantScope);
+
         // Add a task to process the manifest(s)
         ThreadRecorder.get().record(ExecutionType.APP_TASK_MANAGER_CREATE_MERGE_MANIFEST_TASK,
                 new Recorder.Block<Void>() {

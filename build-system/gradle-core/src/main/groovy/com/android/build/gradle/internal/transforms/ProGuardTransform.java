@@ -27,13 +27,13 @@ import com.android.build.gradle.internal.pipeline.StreamScope;
 import com.android.build.gradle.internal.pipeline.StreamType;
 import com.android.build.gradle.internal.pipeline.Transform;
 import com.android.build.gradle.internal.pipeline.TransformException;
+import com.android.build.gradle.internal.pipeline.TransformPipeline;
 import com.android.build.gradle.internal.pipeline.TransformType;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.LibraryVariantData;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -44,7 +44,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -164,49 +163,45 @@ public class ProGuardTransform implements Transform {
     @NonNull
     @Override
     public Set<StreamType> getInputTypes() {
-        return Sets.immutableEnumSet(StreamType.CLASSES, StreamType.RESOURCES);
+        return TransformPipeline.TYPE_JARS;
     }
 
     @NonNull
     @Override
     public Set<StreamType> getOutputTypes() {
-        return Sets.immutableEnumSet(StreamType.CLASSES, StreamType.RESOURCES);
+        return TransformPipeline.TYPE_JARS;
     }
 
     @NonNull
     @Override
     public Set<StreamScope> getScopes() {
         if (isLibrary) {
-            return Sets.immutableEnumSet(StreamScope.PROJECT);
+            return Sets.immutableEnumSet(StreamScope.PROJECT, StreamScope.PROJECT_LOCAL_DEPS);
         }
 
         return Sets.immutableEnumSet(
                 StreamScope.PROJECT,
+                StreamScope.PROJECT_LOCAL_DEPS,
                 StreamScope.SUB_PROJECTS,
+                StreamScope.SUB_PROJECTS_LOCAL_DEPS,
                 StreamScope.EXTERNAL_LIBRARIES);
     }
 
     @NonNull
     @Override
-    public Set<StreamScope> getReferencedScope() {
+    public Set<StreamScope> getReferencedScopes() {
+        Set<StreamScope> set = Sets.newLinkedHashSetWithExpectedSize(4);
         if (isLibrary) {
-            if (isTest) {
-                return Sets.immutableEnumSet(
-                        StreamScope.SUB_PROJECTS,
-                        StreamScope.EXTERNAL_LIBRARIES,
-                        StreamScope.TESTED_CODE);
-            }
-
-            return Sets.immutableEnumSet(
-                    StreamScope.SUB_PROJECTS,
-                    StreamScope.EXTERNAL_LIBRARIES);
+            set.add(StreamScope.SUB_PROJECTS);
+            set.add(StreamScope.SUB_PROJECTS_LOCAL_DEPS);
+            set.add(StreamScope.EXTERNAL_LIBRARIES);
         }
 
         if (isTest) {
-            return Sets.immutableEnumSet(StreamScope.TESTED_CODE);
+            set.add(StreamScope.TESTED_CODE);
         }
 
-        return ImmutableSet.copyOf(EnumSet.noneOf(StreamScope.class));
+        return Sets.immutableEnumSet(set);
     }
 
     @NonNull
