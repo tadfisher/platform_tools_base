@@ -38,9 +38,20 @@ public class TimelineData {
     @GuardedBy("this")
     private float mMaxTotal;
 
+    @GuardedBy("this")
+    private float mMinTotal;
+
+    @GuardedBy("this")
+    private final byte[] mDataSigns;
+
     public TimelineData(int streams, int capacity) {
+        this(streams, capacity, new byte[streams]);
+    }
+
+    public TimelineData(int streams, int capacity, byte[] dataSigns) {
         myStreams = streams;
         mSamples = new CircularArrayList<Sample>(capacity);
+        mDataSigns = dataSigns;
         clear();
     }
 
@@ -53,23 +64,47 @@ public class TimelineData {
         return myStreams;
     }
 
+    public byte[] getDataSigns() {
+        return mDataSigns;
+    }
+
+    public boolean existsNegativeDataSign() {
+        for (byte sign : mDataSigns) {
+            if (sign < 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public synchronized float getMaxTotal() {
         return mMaxTotal;
     }
 
+    public synchronized float getMinTotal() {
+        return mMinTotal;
+    }
+
     public synchronized void add(long time, int type, float... values) {
         assert values.length == myStreams;
-        float total = 0.0f;
-        for (float value : values) {
-            total += value;
+        float positiveTotal = 0.0f;
+        float negativeTotal = 0.0f;
+        for (int i = 0; i < myStreams; i++) {
+            if (mDataSigns[i] >= 0) {
+                positiveTotal += values[i];
+            } else {
+                negativeTotal -= values[i];
+            }
         }
-        mMaxTotal = Math.max(mMaxTotal, total);
+        mMaxTotal = Math.max(mMaxTotal, positiveTotal);
+        mMinTotal = Math.min(mMinTotal, negativeTotal);
         mSamples.add(new Sample((time - mStart) / 1000.0f, type, values));
     }
 
     public synchronized void clear() {
         mSamples.clear();
         mMaxTotal = 0.0f;
+        mMinTotal = 0.0f;
         mStart = System.currentTimeMillis();
     }
 
