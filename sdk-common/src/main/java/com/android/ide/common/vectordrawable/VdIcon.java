@@ -30,11 +30,11 @@ import java.net.URL;
 public class VdIcon implements Icon, Comparable<VdIcon> {
     private VdTree mVdTree;
     private final String mName;
-    private final URL mUrl;
+    private final String mResourcePath;
 
-    public VdIcon(URL url) {
+    public VdIcon(URL url, String resourcePath) {
         setDynamicIcon(url);
-        mUrl = url;
+        mResourcePath = resourcePath;
         String fileName = url.getFile();
         mName = fileName.substring(fileName.lastIndexOf("/") + 1);
     }
@@ -43,8 +43,8 @@ public class VdIcon implements Icon, Comparable<VdIcon> {
         return mName;
     }
 
-    public URL getURL() {
-        return mUrl;
+    public String getResourcePath() {
+        return mResourcePath;
     }
 
     public void setDynamicIcon(URL url) {
