@@ -63,7 +63,7 @@ public class StreamDeclarationImpl implements StreamDeclaration {
                     Sets.immutableEnumSet(types),
                     Sets.immutableEnumSet(scopes),
                     inputs,
-                    dependencies,
+                    dependencies != null ? dependencies : ImmutableList.of(),
                     isFolder);
         }
 
@@ -75,8 +75,23 @@ public class StreamDeclarationImpl implements StreamDeclaration {
             return this;
         }
 
+        public Builder copyWithRestrictedTypes(
+                @NonNull StreamDeclaration stream,
+                @NonNull Set<StreamType> types) {
+            this.types.addAll(types);
+            scopes.addAll(stream.getScopes());
+            inputs = stream.getFiles();
+            dependencies = stream.getDependencies();
+            return this;
+        }
+
         public Builder addTypes(@NonNull Set<StreamType> types) {
             this.types.addAll(types);
+            return this;
+        }
+
+        public Builder addTypes(@NonNull StreamType... types) {
+            this.types.addAll(Arrays.asList(types));
             return this;
         }
 

@@ -21,7 +21,9 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.dsl.DexOptions
 import com.android.build.gradle.internal.pipeline.StreamBasedTask
 import com.android.build.gradle.internal.pipeline.StreamDeclaration
+import com.android.build.gradle.internal.pipeline.StreamScope
 import com.android.build.gradle.internal.pipeline.StreamType
+import com.android.build.gradle.internal.pipeline.TransformPipeline.StreamFilter
 import com.android.build.gradle.internal.scope.ConventionMappingHelper
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
@@ -160,6 +162,12 @@ public class Dex extends StreamBasedTask {
     }
 
     public static class ConfigAction implements TaskConfigAction<Dex> {
+        public static final StreamFilter sFilter = new StreamFilter() {
+            @Override
+            public boolean accept(@NonNull Set<StreamType> types, @NonNull Set<StreamScope> scopes) {
+                return types.contains(StreamType.CLASSES) && !scopes.contains(StreamScope.TESTED_CODE);
+            }
+        }
 
         @NonNull
         private final VariantScope variantScope
@@ -208,8 +216,7 @@ public class Dex extends StreamBasedTask {
             dexTask.setOptimize(true);//!variantData.variantConfiguration.buildType.debuggable
 
             // inputs
-            dexTask.consumedInputStreams = variantScope.getTransformPipeline().getStreamsByTypes(
-                    StreamType.CLASSES, StreamType.RESOURCES)
+            dexTask.consumedInputStreams = variantScope.getTransformPipeline().getStreams(sFilter);
             dexTask.preDexStreams = variantScope.getTransformPipeline().getStreamsByTypes(StreamType.DEX)
             dexTask.referencedInputStreams = ImmutableList.of()
 

@@ -43,7 +43,7 @@ public interface Transform {
     Set<StreamScope> getScopes();
 
     @NonNull
-    Set<StreamScope> getReferencedScope();
+    Set<StreamScope> getReferencedScopes();
 
     @NonNull
     TransformType getTransformType();

@@ -101,6 +101,9 @@ public class LibraryTaskManager extends TaskManager {
 
         createAnchorTasks(tasks, variantScope);
 
+        // Create all current streams (dependencies mostly at this point)
+        createDependencyStreams(variantScope);
+
         createCheckManifestTask(tasks, variantScope);
 
         // Add a task to create the res values

@@ -23,10 +23,12 @@ package com.android.build.gradle.internal.pipeline;
 public enum StreamScope {
     /** Only the project content */
     PROJECT,
+    PROJECT_LOCAL_DEPS,
     /** Only the sub-projects content (the local dependencies). */
     SUB_PROJECTS,
+    SUB_PROJECTS_LOCAL_DEPS,
     /** Only the external libraries */
     EXTERNAL_LIBRARIES,
-    /** Code that is being tested by the current variant */
+    /** Code that is being tested by the current variant, including dependencies */
     TESTED_CODE,
 }
