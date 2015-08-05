@@ -361,7 +361,7 @@ public class AndroidProGuardTask extends ProGuardTask implements FileSupplier, J
                         @Override
                         public Set<File> call() throws Exception {
                             return scope.getGlobalScope().getAndroidBuilder()
-                                    .getPackagedJars(testedVariantData.getVariantConfiguration());
+                                    .getAllPackagedJars(testedVariantData.getVariantConfiguration());
                         }
                     };
 

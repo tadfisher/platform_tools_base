@@ -37,6 +37,7 @@ import com.android.ide.common.res2.ResourceSet;
 import com.android.utils.StringHelper;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -1405,7 +1406,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      * @return a non null, but possibly empty list.
      */
     @NonNull
-    public Set<File> getPackagedJars() {
+    public Set<File> getAllPackagedJars() {
         Set<File> jars = Sets.newHashSetWithExpectedSize(
                 mExternalJars.size() + mLocalJars.size() + mFlatLibraries.size());
 
@@ -1438,6 +1439,88 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         }
 
         return jars;
+    }
+
+    /**
+     * Returns the list of packaged jars for this config. If the config tests a library, this
+     * will include the jars of the tested config
+     *
+     * @return a non null, but possibly empty list.
+     */
+    @NonNull
+    public ImmutableSet<File> getExternalPackagedJars() {
+        ImmutableSet.Builder<File> jars = ImmutableSet.builder();
+
+        for (JarDependency jar : mExternalJars) {
+            File jarFile = jar.getJarFile();
+            if (jar.isPackaged() && jarFile.exists()) {
+                jars.add(jarFile);
+            }
+        }
+
+        return jars.build();
+    }
+
+    /**
+     * Returns the packaged local Jars
+     *
+     * @return a non null, but possibly empty immutable set.
+     */
+    @NonNull
+    public ImmutableSet<File> getLocalPackagedJars() {
+        ImmutableSet.Builder<File> jars = ImmutableSet.builder();
+
+        for (JarDependency jar : mLocalJars) {
+            File jarFile = jar.getJarFile();
+            if (jar.isPackaged() && jarFile.exists()) {
+                jars.add(jarFile);
+            }
+        }
+
+        return jars.build();
+    }
+
+    /**
+     * Returns the packaged sub-project Jars
+     *
+     * @return a non null, but possibly empty immutable set.
+     */
+    @NonNull
+    public ImmutableSet<File> getSubProjectPackagedJars() {
+        ImmutableSet.Builder<File> jars = ImmutableSet.builder();
+
+        for (LibraryDependency libraryDependency : mFlatLibraries) {
+            if (!libraryDependency.isOptional()) {
+                File libJar = libraryDependency.getJarFile();
+                if (libJar.exists()) {
+                    jars.add(libJar);
+                }
+            }
+        }
+
+        return jars.build();
+    }
+
+    /**
+     * Returns the packaged sub-project local Jars
+     *
+     * @return a non null, but possibly empty immutable set.
+     */
+    @NonNull
+    public ImmutableSet<File> getSubProjectLocalPackagedJars() {
+        ImmutableSet.Builder<File> jars = ImmutableSet.builder();
+
+        for (LibraryDependency libraryDependency : mFlatLibraries) {
+            if (!libraryDependency.isOptional()) {
+                for (File jarFile : libraryDependency.getLocalJars()) {
+                    if (jarFile.isFile()) {
+                        jars.add(jarFile);
+                    }
+                }
+            }
+        }
+
+        return jars.build();
     }
 
     /**

@@ -28,7 +28,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.compiling.DependencyFileProcessor;
@@ -102,6 +101,7 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -435,8 +435,8 @@ public class AndroidBuilder {
      * @return a non null, but possibly empty list.
      */
     @NonNull
-    public Set<File> getPackagedJars(@NonNull VariantConfiguration<?,?,?> variantConfiguration) {
-        Set<File> packagedJars = Sets.newHashSet(variantConfiguration.getPackagedJars());
+    public Set<File> getAllPackagedJars(@NonNull VariantConfiguration<?,?,?> variantConfiguration) {
+        Set<File> packagedJars = Sets.newHashSet(variantConfiguration.getAllPackagedJars());
 
         if (variantConfiguration.getRenderscriptSupportModeEnabled()) {
             File renderScriptSupportJar = getRenderScriptSupportJar();
@@ -447,6 +447,28 @@ public class AndroidBuilder {
         }
 
         return packagedJars;
+    }
+
+    /**
+     * Returns the list of packaged jars for this config. If the config tests a library, this
+     * will include the jars of the tested config
+     *
+     * If the SDK was loaded, this may include the renderscript support jar.
+     *
+     * @return a non null, but possibly empty list.
+     */
+    @NonNull
+    public Set<File> getAdditionalPackagedJars(@NonNull VariantConfiguration<?,?,?> variantConfiguration) {
+
+        if (variantConfiguration.getRenderscriptSupportModeEnabled()) {
+            File renderScriptSupportJar = getRenderScriptSupportJar();
+
+            if (renderScriptSupportJar != null) {
+                return ImmutableSet.of(renderScriptSupportJar);
+            }
+        }
+
+        return ImmutableSet.of();
     }
 
     /**

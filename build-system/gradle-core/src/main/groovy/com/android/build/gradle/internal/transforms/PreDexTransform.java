@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.pipeline.StreamScope;
 import com.android.build.gradle.internal.pipeline.StreamType;
 import com.android.build.gradle.internal.pipeline.Transform;
 import com.android.build.gradle.internal.pipeline.TransformException;
+import com.android.build.gradle.internal.pipeline.TransformPipeline;
 import com.android.build.gradle.internal.pipeline.TransformType;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DexOptions;
@@ -39,7 +40,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -54,7 +54,6 @@ import org.gradle.api.logging.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -67,19 +66,22 @@ import java.util.concurrent.Callable;
 public class PreDexTransform implements Transform {
 
     @NonNull
+    private final Set<StreamScope> preDexedScopes;
+    @NonNull
     private final DexOptions dexOptions;
     private final boolean multiDex;
     @NonNull
     private final AndroidBuilder androidBuilder;
-
     @NonNull
     private final Logger logger;
 
     public PreDexTransform(
+            @NonNull Set<StreamScope> preDexedScopes,
             @NonNull DexOptions dexOptions,
             boolean multiDex,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull Logger logger) {
+        this.preDexedScopes = preDexedScopes;
         this.dexOptions = dexOptions;
         this.multiDex = multiDex;
         this.androidBuilder = androidBuilder;
@@ -95,26 +97,25 @@ public class PreDexTransform implements Transform {
     @NonNull
     @Override
     public Set<StreamType> getInputTypes() {
-        return Sets.immutableEnumSet(StreamType.CLASSES);
+        return TransformPipeline.TYPE_CLASS;
     }
 
     @NonNull
     @Override
     public Set<StreamType> getOutputTypes() {
-        return Sets.immutableEnumSet(StreamType.DEX);
+        return TransformPipeline.TYPE_DEX;
     }
 
     @NonNull
     @Override
     public Set<StreamScope> getScopes() {
-        // TODO: parameterize this to possibly only to the external libraries.
-        return Sets.immutableEnumSet(StreamScope.SUB_PROJECTS, StreamScope.EXTERNAL_LIBRARIES);
+        return preDexedScopes;
     }
 
     @NonNull
     @Override
-    public Set<StreamScope> getReferencedScope() {
-        return ImmutableSet.copyOf(EnumSet.noneOf(StreamScope.class));
+    public Set<StreamScope> getReferencedScopes() {
+        return TransformPipeline.EMPTY_SCOPES;
     }
 
     @NonNull

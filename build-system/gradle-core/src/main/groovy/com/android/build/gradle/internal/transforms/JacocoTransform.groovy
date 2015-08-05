@@ -15,7 +15,6 @@
  */
 
 package com.android.build.gradle.internal.transforms
-
 import com.android.annotations.NonNull
 import com.android.build.gradle.internal.coverage.JacocoPlugin
 import com.android.build.gradle.internal.pipeline.InputStream
@@ -24,16 +23,15 @@ import com.android.build.gradle.internal.pipeline.StreamScope
 import com.android.build.gradle.internal.pipeline.StreamType
 import com.android.build.gradle.internal.pipeline.Transform
 import com.android.build.gradle.internal.pipeline.TransformException
+import com.android.build.gradle.internal.pipeline.TransformPipeline
 import com.android.build.gradle.internal.pipeline.TransformType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.scope.VariantScopeImpl
-import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Sets
 import com.google.common.util.concurrent.Callables
 import org.gradle.util.GUtil
 
 import java.util.concurrent.Callable
-
 /**
  * Jacoco Transform
  */
@@ -60,13 +58,13 @@ public class JacocoTransform implements Transform {
     @NonNull
     @Override
     public Set<StreamType> getInputTypes() {
-        return Sets.immutableEnumSet(StreamType.CLASSES)
+        return TransformPipeline.TYPE_CLASS
     }
 
     @NonNull
     @Override
     public Set<StreamType> getOutputTypes() {
-        return Sets.immutableEnumSet(StreamType.CLASSES)
+        return TransformPipeline.TYPE_CLASS
     }
 
     @NonNull
@@ -77,8 +75,8 @@ public class JacocoTransform implements Transform {
     }
 
     @Override
-    public Set<StreamScope> getReferencedScope() {
-        return ImmutableSet.copyOf(EnumSet.noneOf(StreamScope.class))
+    public Set<StreamScope> getReferencedScopes() {
+        return TransformPipeline.EMPTY_SCOPES
     }
 
     @NonNull
