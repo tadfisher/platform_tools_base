@@ -15,7 +15,7 @@
  *
  * THIS WILL BE REMOVED ONCE THE CODE GENERATOR IS INTEGRATED INTO THE BUILD.
  */
-package com.android.tools.rpclib.rpccore;
+package com.android.tools.rpclib.any;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -28,27 +28,27 @@ import com.android.tools.rpclib.binary.Namespace;
 
 import java.io.IOException;
 
-public final class RpcError implements BinaryObject {
+final class Int32Slice extends Box implements BinaryObject {
     //<<<Start:Java.ClassBody:1>>>
-    String mMessage;
+    int[] mValue;
 
-    // Constructs a default-initialized {@link RpcError}.
-    public RpcError() {}
+    // Constructs a default-initialized {@link Int32Slice}.
+    public Int32Slice() {}
 
 
-    public String getMessage() {
-        return mMessage;
+    public int[] getValue() {
+        return mValue;
     }
 
-    public RpcError setMessage(String v) {
-        mMessage = v;
+    public Int32Slice setValue(int[] v) {
+        mValue = v;
         return this;
     }
 
     @Override @NotNull
     public BinaryClass klass() { return Klass.INSTANCE; }
 
-    public static byte[] IDBytes = {-2, 118, -32, 58, 68, -93, -64, 56, -37, 98, 46, -29, -13, -28, -7, -121, -7, 25, -66, -3, };
+    public static byte[] IDBytes = {74, 13, -67, -70, 41, -39, 17, -80, -11, 108, -97, -29, -39, 100, 103, -33, 91, 43, 46, 121, };
     public static BinaryID ID = new BinaryID(IDBytes);
 
     static {
@@ -64,18 +64,24 @@ public final class RpcError implements BinaryObject {
         public BinaryID id() { return ID; }
 
         @Override @NotNull
-        public BinaryObject create() { return new RpcError(); }
+        public BinaryObject create() { return new Int32Slice(); }
 
         @Override
         public void encode(@NotNull Encoder e, BinaryObject obj) throws IOException {
-            RpcError o = (RpcError)obj;
-            e.string(o.mMessage);
+            Int32Slice o = (Int32Slice)obj;
+            e.uint32(o.mValue.length);
+            for (int i = 0; i < o.mValue.length; i++) {
+                e.int32(o.mValue[i]);
+            }
         }
 
         @Override
         public void decode(@NotNull Decoder d, BinaryObject obj) throws IOException {
-            RpcError o = (RpcError)obj;
-            o.mMessage = d.string();
+            Int32Slice o = (Int32Slice)obj;
+            o.mValue = new int[d.uint32()];
+            for (int i = 0; i <o.mValue.length; i++) {
+                o.mValue[i] = d.int32();
+            }
         }
         //<<<End:Java.KlassBody:2>>>
     }

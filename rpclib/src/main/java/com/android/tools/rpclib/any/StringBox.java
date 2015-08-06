@@ -15,7 +15,7 @@
  *
  * THIS WILL BE REMOVED ONCE THE CODE GENERATOR IS INTEGRATED INTO THE BUILD.
  */
-package com.android.tools.rpclib.rpccore;
+package com.android.tools.rpclib.any;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -28,27 +28,27 @@ import com.android.tools.rpclib.binary.Namespace;
 
 import java.io.IOException;
 
-public final class RpcError implements BinaryObject {
+final class StringBox extends Box implements BinaryObject {
     //<<<Start:Java.ClassBody:1>>>
-    String mMessage;
+    String mValue;
 
-    // Constructs a default-initialized {@link RpcError}.
-    public RpcError() {}
+    // Constructs a default-initialized {@link StringBox}.
+    public StringBox() {}
 
 
-    public String getMessage() {
-        return mMessage;
+    public String getValue() {
+        return mValue;
     }
 
-    public RpcError setMessage(String v) {
-        mMessage = v;
+    public StringBox setValue(String v) {
+        mValue = v;
         return this;
     }
 
     @Override @NotNull
     public BinaryClass klass() { return Klass.INSTANCE; }
 
-    public static byte[] IDBytes = {-2, 118, -32, 58, 68, -93, -64, 56, -37, 98, 46, -29, -13, -28, -7, -121, -7, 25, -66, -3, };
+    public static byte[] IDBytes = {-112, -48, 40, 50, -25, 114, 61, 16, -111, 40, -118, -38, 34, 55, -32, -11, -1, 112, -5, -117, };
     public static BinaryID ID = new BinaryID(IDBytes);
 
     static {
@@ -64,18 +64,18 @@ public final class RpcError implements BinaryObject {
         public BinaryID id() { return ID; }
 
         @Override @NotNull
-        public BinaryObject create() { return new RpcError(); }
+        public BinaryObject create() { return new StringBox(); }
 
         @Override
         public void encode(@NotNull Encoder e, BinaryObject obj) throws IOException {
-            RpcError o = (RpcError)obj;
-            e.string(o.mMessage);
+            StringBox o = (StringBox)obj;
+            e.string(o.mValue);
         }
 
         @Override
         public void decode(@NotNull Decoder d, BinaryObject obj) throws IOException {
-            RpcError o = (RpcError)obj;
-            o.mMessage = d.string();
+            StringBox o = (StringBox)obj;
+            o.mValue = d.string();
         }
         //<<<End:Java.KlassBody:2>>>
     }

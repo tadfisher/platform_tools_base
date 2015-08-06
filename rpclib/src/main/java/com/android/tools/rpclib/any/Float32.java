@@ -15,7 +15,7 @@
  *
  * THIS WILL BE REMOVED ONCE THE CODE GENERATOR IS INTEGRATED INTO THE BUILD.
  */
-package com.android.tools.rpclib.rpccore;
+package com.android.tools.rpclib.any;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -28,27 +28,27 @@ import com.android.tools.rpclib.binary.Namespace;
 
 import java.io.IOException;
 
-public final class RpcError implements BinaryObject {
+final class Float32 extends Box implements BinaryObject {
     //<<<Start:Java.ClassBody:1>>>
-    String mMessage;
+    float mValue;
 
-    // Constructs a default-initialized {@link RpcError}.
-    public RpcError() {}
+    // Constructs a default-initialized {@link Float32}.
+    public Float32() {}
 
 
-    public String getMessage() {
-        return mMessage;
+    public float getValue() {
+        return mValue;
     }
 
-    public RpcError setMessage(String v) {
-        mMessage = v;
+    public Float32 setValue(float v) {
+        mValue = v;
         return this;
     }
 
     @Override @NotNull
     public BinaryClass klass() { return Klass.INSTANCE; }
 
-    public static byte[] IDBytes = {-2, 118, -32, 58, 68, -93, -64, 56, -37, 98, 46, -29, -13, -28, -7, -121, -7, 25, -66, -3, };
+    public static byte[] IDBytes = {-110, -48, 121, -120, -60, 8, -128, -111, 27, -95, 80, -57, 2, 49, 2, 91, -91, 42, -91, 29, };
     public static BinaryID ID = new BinaryID(IDBytes);
 
     static {
@@ -64,18 +64,18 @@ public final class RpcError implements BinaryObject {
         public BinaryID id() { return ID; }
 
         @Override @NotNull
-        public BinaryObject create() { return new RpcError(); }
+        public BinaryObject create() { return new Float32(); }
 
         @Override
         public void encode(@NotNull Encoder e, BinaryObject obj) throws IOException {
-            RpcError o = (RpcError)obj;
-            e.string(o.mMessage);
+            Float32 o = (Float32)obj;
+            e.float32(o.mValue);
         }
 
         @Override
         public void decode(@NotNull Decoder d, BinaryObject obj) throws IOException {
-            RpcError o = (RpcError)obj;
-            o.mMessage = d.string();
+            Float32 o = (Float32)obj;
+            o.mValue = d.float32();
         }
         //<<<End:Java.KlassBody:2>>>
     }
