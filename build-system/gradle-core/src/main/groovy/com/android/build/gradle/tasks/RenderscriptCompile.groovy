@@ -19,7 +19,7 @@ import com.android.annotations.NonNull
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.scope.ConventionMappingHelper
 import com.android.build.gradle.internal.scope.TaskConfigAction
-import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.scope.VariantScopeImpl
 import com.android.build.gradle.internal.tasks.NdkTask
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.BaseVariantOutputData
@@ -123,9 +123,9 @@ public class RenderscriptCompile extends NdkTask {
     public static class ConfigAction implements TaskConfigAction<RenderscriptCompile> {
 
         @NonNull
-        VariantScope scope
+        VariantScopeImpl scope
 
-        ConfigAction(VariantScope scope) {
+        ConfigAction(VariantScopeImpl scope) {
             this.scope = scope
         }
 

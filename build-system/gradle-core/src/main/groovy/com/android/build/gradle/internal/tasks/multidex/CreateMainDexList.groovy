@@ -21,7 +21,7 @@ package com.android.build.gradle.internal.tasks.multidex
 import com.android.build.gradle.internal.PostCompilationData
 import com.android.build.gradle.internal.scope.ConventionMappingHelper
 import com.android.build.gradle.internal.scope.TaskConfigAction
-import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.scope.VariantScopeImpl
 import com.android.build.gradle.internal.tasks.BaseTask
 import com.google.common.base.Charsets
 import com.google.common.base.Joiner
@@ -102,11 +102,11 @@ public class CreateMainDexList extends BaseTask {
 
     public static class ConfigAction implements TaskConfigAction<CreateMainDexList> {
 
-        VariantScope scope;
+        VariantScopeImpl scope;
 
         private Callable<List<File>> inputFiles
 
-        ConfigAction(VariantScope scope, PostCompilationData pcData) {
+        ConfigAction(VariantScopeImpl scope, PostCompilationData pcData) {
             this.scope = scope
             inputFiles = pcData.inputFilesCallable;
         }

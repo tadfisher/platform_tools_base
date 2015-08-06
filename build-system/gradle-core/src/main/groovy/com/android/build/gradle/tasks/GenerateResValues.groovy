@@ -17,7 +17,7 @@ package com.android.build.gradle.tasks
 import com.android.annotations.NonNull
 import com.android.build.gradle.internal.scope.ConventionMappingHelper
 import com.android.build.gradle.internal.scope.TaskConfigAction
-import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.scope.VariantScopeImpl
 import com.android.build.gradle.internal.tasks.BaseTask
 import com.android.builder.compiling.ResValueGenerator
 import com.android.builder.core.VariantConfiguration
@@ -78,9 +78,9 @@ public class GenerateResValues extends BaseTask {
     public static class ConfigAction implements TaskConfigAction<GenerateResValues> {
 
         @NonNull
-        VariantScope scope
+        VariantScopeImpl scope
 
-        ConfigAction(@NonNull VariantScope scope) {
+        ConfigAction(@NonNull VariantScopeImpl scope) {
             this.scope = scope
         }
 

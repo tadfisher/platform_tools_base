@@ -18,7 +18,7 @@ package com.android.build.gradle.tasks
 import com.android.annotations.NonNull
 import com.android.build.gradle.internal.scope.ConventionMappingHelper
 import com.android.build.gradle.internal.scope.TaskConfigAction
-import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.scope.VariantScopeImpl
 import com.android.build.gradle.internal.tasks.BaseTask
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.BaseVariantOutputData
@@ -134,9 +134,9 @@ public class GenerateBuildConfig extends BaseTask {
     public static class ConfigAction implements TaskConfigAction<GenerateBuildConfig> {
 
         @NonNull
-        VariantScope scope
+        VariantScopeImpl scope
 
-        ConfigAction(@NonNull VariantScope scope) {
+        ConfigAction(@NonNull VariantScopeImpl scope) {
             this.scope = scope
         }
 

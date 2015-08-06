@@ -18,7 +18,7 @@ package com.android.build.gradle.tasks
 import com.android.annotations.NonNull
 import com.android.build.gradle.internal.scope.ConventionMappingHelper
 import com.android.build.gradle.internal.scope.TaskConfigAction
-import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.scope.VariantScopeImpl
 import com.android.build.gradle.internal.tasks.IncrementalTask
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.BaseVariantOutputData
@@ -157,9 +157,9 @@ public class MergeAssets extends IncrementalTask {
     public static class ConfigAction implements TaskConfigAction<MergeAssets> {
 
         @NonNull
-        VariantScope scope
+        VariantScopeImpl scope
 
-        ConfigAction(VariantScope scope) {
+        ConfigAction(VariantScopeImpl scope) {
             this.scope = scope
         }
 

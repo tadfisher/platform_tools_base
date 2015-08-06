@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.coverage
 
 import com.android.build.gradle.internal.scope.ConventionMappingHelper
 import com.android.build.gradle.internal.scope.TaskConfigAction
-import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.scope.VariantScopeImpl
 import com.android.build.gradle.internal.PostCompilationData
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileCollection
@@ -62,11 +62,11 @@ public class JacocoInstrumentTask extends DefaultTask {
 
     public static class ConfigAction implements TaskConfigAction<JacocoInstrumentTask> {
 
-        VariantScope scope;
+        VariantScopeImpl scope;
 
         PostCompilationData pcData;
 
-        ConfigAction(VariantScope scope, PostCompilationData pcData) {
+        ConfigAction(VariantScopeImpl scope, PostCompilationData pcData) {
             this.scope = scope
             this.pcData = pcData
         }

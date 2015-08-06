@@ -20,7 +20,7 @@ import com.android.build.gradle.internal.tasks.DefaultAndroidTask
 import com.android.build.gradle.internal.PostCompilationData
 import com.android.build.gradle.internal.scope.ConventionMappingHelper
 import com.android.build.gradle.internal.scope.TaskConfigAction
-import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.scope.VariantScopeImpl
 import com.google.common.collect.Sets
 import com.google.common.hash.Hashing
 import com.google.common.io.Files
@@ -158,13 +158,13 @@ class JarMergingTask extends DefaultAndroidTask {
 
     public static class ConfigAction implements TaskConfigAction<JarMergingTask> {
 
-        private VariantScope scope
+        private VariantScopeImpl scope
 
         private Callable<File> inputDir;
 
         private Callable<List<File>> inputLibraries;
 
-        ConfigAction(VariantScope scope, PostCompilationData pcData) {
+        ConfigAction(VariantScopeImpl scope, PostCompilationData pcData) {
             this.scope = scope
             inputDir = pcData.inputDirCallable
             inputLibraries = pcData.inputLibrariesCallable

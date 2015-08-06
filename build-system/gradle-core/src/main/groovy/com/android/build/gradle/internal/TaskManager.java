@@ -56,6 +56,7 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantOutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.scope.VariantScopeImpl;
 import com.android.build.gradle.internal.tasks.AndroidReportTask;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.DependencyReportTask;
@@ -809,12 +810,12 @@ public abstract class TaskManager {
      * The java processing will happen in three steps :
      * <ul>{@link ExtractJavaResourcesTask} will extract all java resources from packaged jar files
      * dependencies. Each jar file will be extracted in a separate folder. Each folder will be
-     * located under {@link VariantScope#getPackagedJarsJavaResDestinationDir()}</ul>
+     * located under {@link VariantScopeImpl#getPackagedJarsJavaResDestinationDir()}</ul>
      * <ul>{@link ProcessJavaResConfigAction} will sync all source folders into a single folder
-     * identified by {@link VariantScope#getSourceFoldersJavaResDestinationDir()}</ul>
+     * identified by {@link VariantScopeImpl#getSourceFoldersJavaResDestinationDir()}</ul>
      * <ul>{@link MergeJavaResourcesTask} will take all these folders and will create a single
      * merged folder with the {@link PackagingOptions} settings applied. The folder is located at
-     * {@link VariantScope#getJavaResourcesDestinationDir()}</ul>
+     * {@link VariantScopeImpl#getJavaResourcesDestinationDir()}</ul>
      *
      * the result of 3 is the final set of java resources to can be either directly embedded in
      * the resulting APK or fed into the obfuscation tool to produce obfuscated resources.

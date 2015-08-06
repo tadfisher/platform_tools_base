@@ -21,7 +21,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.dsl.DexOptions
 import com.android.build.gradle.internal.scope.ConventionMappingHelper
 import com.android.build.gradle.internal.scope.TaskConfigAction
-import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.scope.VariantScopeImpl
 import com.android.build.gradle.internal.tasks.BaseTask
 import com.android.build.gradle.internal.variant.ApkVariantData
 import com.android.build.gradle.internal.variant.TestVariantData
@@ -171,11 +171,11 @@ public class Dex extends BaseTask {
 
     public static class ConfigAction implements TaskConfigAction<Dex> {
 
-        private final VariantScope scope;
+        private final VariantScopeImpl scope;
 
         private final PostCompilationData pcData;
 
-        public ConfigAction(VariantScope scope, PostCompilationData pcData) {
+        public ConfigAction(VariantScopeImpl scope, PostCompilationData pcData) {
             this.scope = scope;
             this.pcData = pcData;
         }

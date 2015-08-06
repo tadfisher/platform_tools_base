@@ -20,7 +20,7 @@ import com.android.annotations.Nullable
 import com.android.build.gradle.internal.LintGradleClient
 import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.scope.TaskConfigAction
-import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.scope.VariantScopeImpl
 import com.android.build.gradle.internal.tasks.DefaultAndroidTask
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.Variant
@@ -264,9 +264,9 @@ public class Lint extends DefaultAndroidTask {
     public static class ConfigAction implements TaskConfigAction<Lint> {
 
         @NonNull
-        VariantScope scope
+        VariantScopeImpl scope
 
-        ConfigAction(@NonNull VariantScope scope) {
+        ConfigAction(@NonNull VariantScopeImpl scope) {
             this.scope = scope
         }
 

@@ -18,7 +18,7 @@ package com.android.build.gradle.tasks
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.scope.ConventionMappingHelper
 import com.android.build.gradle.internal.scope.TaskConfigAction
-import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.scope.VariantScopeImpl
 import com.android.build.gradle.internal.variant.BaseVariantOutputData
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.VariantConfiguration
@@ -107,9 +107,9 @@ class ProcessManifest extends ManifestProcessorTask {
 
     public static class ConfigAction implements TaskConfigAction<ProcessManifest> {
 
-        VariantScope scope
+        VariantScopeImpl scope
 
-        ConfigAction(VariantScope scope) {
+        ConfigAction(VariantScopeImpl scope) {
             this.scope = scope
         }
 
