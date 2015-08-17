@@ -50,8 +50,6 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(AppCompatResourceDetector.ISSUE);
         issues.add(AppIndexingApiDetector.ISSUE_ERROR);
         issues.add(AppIndexingApiDetector.ISSUE_WARNING);
-        issues.add(AppIndexingApiDetectorV2.ISSUE_APP_INDEXING_ERROR);
-        issues.add(AppIndexingApiDetectorV2.ISSUE_APP_INDEXING_WARNING);
         issues.add(ArraySizeDetector.INCONSISTENT);
         issues.add(AssertDetector.ISSUE);
         issues.add(ButtonDetector.BACK_BUTTON);
