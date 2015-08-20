@@ -30,7 +30,7 @@ import java.util.List;
 /** Registry which provides a list of checks to be performed on an Android project */
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
-    static final int INITIAL_CAPACITY = 222;
+    static final int INITIAL_CAPACITY = 228;
 
     static {
         List<Issue> issues = new ArrayList<Issue>(INITIAL_CAPACITY);
@@ -231,6 +231,12 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(TooManyViewsDetector.TOO_MANY);
         issues.add(TranslationDetector.EXTRA);
         issues.add(TranslationDetector.MISSING);
+        issues.add(TVDetector.DEPRECATED_TV_HARDWARE);
+        issues.add(TVDetector.MISSING_LEANBACK_LAUNCHER);
+        issues.add(TVDetector.MISSING_LEANBACK_SUPPORT);
+        issues.add(TVDetector.PERMISSION_IMPLIES_UNSUPPORTED_HARDWARE);
+        issues.add(TVDetector.UNSUPPORTED_TV_HARDWARE);
+        issues.add(TVDetector.MISSING_BANNER);
         issues.add(TypoDetector.ISSUE);
         issues.add(TypographyDetector.DASHES);
         issues.add(TypographyDetector.ELLIPSIS);
