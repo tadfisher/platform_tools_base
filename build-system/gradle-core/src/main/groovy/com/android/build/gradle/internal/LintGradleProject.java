@@ -34,8 +34,10 @@ import org.w3c.dom.Document;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -46,6 +48,8 @@ import java.util.Set;
 public class LintGradleProject extends Project {
     protected AndroidVersion mMinSdkVersion;
     protected AndroidVersion mTargetSdkVersion;
+    protected final Set<String> mArtifactsUsed;
+    protected final Set<String> mArtifactsChecked;
 
     private LintGradleProject(
             @NonNull LintGradleClient client,
@@ -57,6 +61,8 @@ public class LintGradleProject extends Project {
         mMergeManifests = true;
         mDirectLibraries = Lists.newArrayList();
         readManifest(manifest);
+        mArtifactsUsed = new HashSet<String>();
+        mArtifactsChecked = new HashSet<String>();
     }
 
     /**
@@ -143,6 +149,21 @@ public class LintGradleProject extends Project {
                 return true;
             }
         }
+        // Following code assumes that the artifact can also include the version number
+        // example: "com.foo:lib-name:2.3.0"
+        File folder = library.getFolder();
+        // The folder is the path in build/intermediates/exploded-aar/com.foo/lib-name/version
+        if (artifact.endsWith(folder.getName()) // for an artifact like: foo.com:leanback-v17
+            || artifact.endsWith(folder.getParentFile().getName())) { // example a:lib-v17:2.0
+            String[] artifactIdPaths = artifact.split(":");
+            if (artifactIdPaths.length > 0) {
+                String[] libraryPaths = getLibraryParentPaths(folder, artifactIdPaths.length == 3);
+                if (Arrays.equals(artifactIdPaths, libraryPaths)) {
+                    // Found the artifact
+                    return true;
+                }
+            }
+        }
 
         for (AndroidLibrary dependency : library.getLibraryDependencies()) {
             if (dependsOn(dependency, artifact)) {
@@ -177,6 +198,25 @@ public class LintGradleProject extends Project {
         }
 
         return project;
+    }
+
+    @NonNull
+    private static String[] getLibraryParentPaths(File folder, boolean addVersion) {
+        File current = folder;
+        int len = addVersion ? 3 : 2;
+        int pos = len - 1;
+        String[] paths = new String[len];
+        if (!addVersion) {
+            current = current.getParentFile();
+        }
+        while (pos >= 0) {
+            if (current == null) {
+                break;
+            }
+            paths[pos--] = current.getName();
+            current = current.getParentFile();
+        }
+        return paths;
     }
 
     private static class AppGradleProject extends LintGradleProject {
@@ -506,18 +546,17 @@ public class LintGradleProject extends Project {
         @Nullable
         @Override
         public Boolean dependsOn(@NonNull String artifact) {
-            if (SUPPORT_LIB_ARTIFACT.equals(artifact)) {
-                if (mSupportLib == null) {
-                    Dependencies dependencies = mVariant.getMainArtifact().getDependencies();
-                    mSupportLib = dependsOn(dependencies, artifact);
+            // First check if we have processed this artifact.
+            if (!mArtifactsChecked.contains(artifact)) {
+                Dependencies dependencies = mVariant.getMainArtifact().getDependencies();
+                if (dependsOn(dependencies, artifact) ) {
+                    mArtifactsUsed.add(artifact);
                 }
-                return mSupportLib;
-            } else if (APPCOMPAT_LIB_ARTIFACT.equals(artifact)) {
-                if (mAppCompat == null) {
-                    Dependencies dependencies = mVariant.getMainArtifact().getDependencies();
-                    mAppCompat = dependsOn(dependencies, artifact);
-                }
-                return mAppCompat;
+                mArtifactsChecked.add(artifact);
+            }
+            // Now mArtifactsUsed
+            if (mArtifactsUsed.contains(artifact)) {
+                return true;
             } else {
                 return super.dependsOn(artifact);
             }
@@ -640,16 +679,15 @@ public class LintGradleProject extends Project {
         @Nullable
         @Override
         public Boolean dependsOn(@NonNull String artifact) {
-            if (SUPPORT_LIB_ARTIFACT.equals(artifact)) {
-                if (mSupportLib == null) {
-                    mSupportLib = dependsOn(mLibrary, artifact);
+            if (!mArtifactsChecked.contains(artifact)) {
+                if (dependsOn(mLibrary, artifact) ) {
+                    mArtifactsUsed.add(artifact);
                 }
-                return mSupportLib;
-            } else if (APPCOMPAT_LIB_ARTIFACT.equals(artifact)) {
-                if (mAppCompat == null) {
-                    mAppCompat = dependsOn(mLibrary, artifact);
-                }
-                return mAppCompat;
+                mArtifactsChecked.add(artifact);
+            }
+
+            if (mArtifactsUsed.contains(artifact)) {
+                return true;
             } else {
                 return super.dependsOn(artifact);
             }
