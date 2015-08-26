@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 package com.android.build.gradle.tasks
-
 import com.android.SdkConstants
 import com.android.annotations.Nullable
+import com.android.build.gradle.internal.PostCompilationData
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.dsl.DexOptions
 import com.android.build.gradle.internal.scope.ConventionMappingHelper
@@ -24,9 +24,6 @@ import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.BaseTask
 import com.android.build.gradle.internal.variant.ApkVariantData
-import com.android.build.gradle.internal.variant.TestVariantData
-import org.codehaus.groovy.runtime.DefaultGroovyMethods
-import com.android.build.gradle.internal.PostCompilationData
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
@@ -40,7 +37,6 @@ import org.gradle.api.tasks.incremental.IncrementalTaskInputs
 import java.util.concurrent.Callable
 import java.util.concurrent.atomic.AtomicBoolean
 
-import static com.android.builder.core.VariantType.DEFAULT
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES
 
 public class Dex extends BaseTask {
@@ -193,11 +189,7 @@ public class Dex extends BaseTask {
             ApkVariantData variantData = (ApkVariantData) scope.getVariantData();
             final GradleVariantConfiguration config = variantData.getVariantConfiguration();
 
-            boolean isTestForApp = config.getType().isForTesting() && (DefaultGroovyMethods
-                    .asType(variantData, TestVariantData.class)).getTestedVariantData()
-                    .getVariantConfiguration().getType().equals(DEFAULT);
-
-            boolean isMultiDexEnabled = config.isMultiDexEnabled() && !isTestForApp;
+            boolean isMultiDexEnabled = config.isMultiDexEnabled();
             boolean isLegacyMultiDexMode = config.isLegacyMultiDexMode();
 
             variantData.dexTask = dexTask;

@@ -16,17 +16,15 @@
 package com.android.build.gradle.tasks
 import com.android.SdkConstants
 import com.android.annotations.NonNull
+import com.android.build.gradle.internal.PostCompilationData
 import com.android.build.gradle.internal.scope.ConventionMappingHelper
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.BaseTask
 import com.android.build.gradle.internal.variant.ApkVariantData
-import com.android.build.gradle.internal.variant.TestVariantData
-import com.android.build.gradle.internal.PostCompilationData
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.DexOptions
 import com.android.builder.core.VariantConfiguration
-import com.android.builder.core.VariantType
 import com.android.ide.common.internal.WaitableExecutor
 import com.google.common.base.Charsets
 import com.google.common.collect.Lists
@@ -227,10 +225,7 @@ public class PreDex extends BaseTask {
             ApkVariantData variantData = (ApkVariantData) scope.variantData;
             VariantConfiguration config = variantData.variantConfiguration
 
-            boolean isTestForApp = config.type.isForTesting() &&
-                    (variantData as TestVariantData).testedVariantData.variantConfiguration.type ==
-                    VariantType.DEFAULT
-            boolean isMultiDexEnabled = config.isMultiDexEnabled() && !isTestForApp
+            boolean isMultiDexEnabled = config.isMultiDexEnabled()
 
             variantData.preDexTask = preDexTask
             preDexTask.androidBuilder = scope.globalScope.androidBuilder

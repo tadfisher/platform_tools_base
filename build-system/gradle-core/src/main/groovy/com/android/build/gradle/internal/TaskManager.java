@@ -16,6 +16,18 @@
 
 package com.android.build.gradle.internal;
 
+import static com.android.build.OutputFile.DENSITY;
+import static com.android.builder.core.BuilderConstants.CONNECTED;
+import static com.android.builder.core.BuilderConstants.DEVICE;
+import static com.android.builder.core.BuilderConstants.FD_ANDROID_RESULTS;
+import static com.android.builder.core.BuilderConstants.FD_ANDROID_TESTS;
+import static com.android.builder.core.BuilderConstants.FD_FLAVORS_ALL;
+import static com.android.builder.core.VariantType.ANDROID_TEST;
+import static com.android.builder.core.VariantType.UNIT_TEST;
+import static com.android.sdklib.BuildToolInfo.PathId.ZIP_ALIGN;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -161,19 +173,6 @@ import java.util.concurrent.Callable;
 
 import groovy.lang.Closure;
 import proguard.gradle.ProGuardTask;
-
-import static com.android.build.OutputFile.DENSITY;
-import static com.android.builder.core.BuilderConstants.CONNECTED;
-import static com.android.builder.core.BuilderConstants.DEVICE;
-import static com.android.builder.core.BuilderConstants.FD_ANDROID_RESULTS;
-import static com.android.builder.core.BuilderConstants.FD_ANDROID_TESTS;
-import static com.android.builder.core.BuilderConstants.FD_FLAVORS_ALL;
-import static com.android.builder.core.VariantType.ANDROID_TEST;
-import static com.android.builder.core.VariantType.DEFAULT;
-import static com.android.builder.core.VariantType.UNIT_TEST;
-import static com.android.sdklib.BuildToolInfo.PathId.ZIP_ALIGN;
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
 
 /**
  * Manages tasks creation.
@@ -1736,11 +1735,8 @@ public abstract class TaskManager {
             pcData = createJacocoTask(tasks, scope, pcData);
         }
 
-        boolean isTestForApp = config.getType().isForTesting() &&
-                ((TestVariantData) variantData).getTestedVariantData().getVariantConfiguration()
-                        .getType().equals(DEFAULT);
         boolean isMinifyEnabled = config.isMinifyEnabled();
-        boolean isMultiDexEnabled = config.isMultiDexEnabled() && !isTestForApp;
+        boolean isMultiDexEnabled = config.isMultiDexEnabled();
         boolean isLegacyMultiDexMode = config.isLegacyMultiDexMode();
 
         // ----- Minify next ----
