@@ -30,7 +30,7 @@ import java.util.List;
 /** Registry which provides a list of checks to be performed on an Android project */
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
-    static final int INITIAL_CAPACITY = 226;
+    static final int INITIAL_CAPACITY = 229;
 
     static {
         List<Issue> issues = new ArrayList<Issue>(INITIAL_CAPACITY);
@@ -252,6 +252,9 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(ViewTagDetector.ISSUE);
         issues.add(ViewTypeDetector.ISSUE);
         issues.add(WakelockDetector.ISSUE);
+        issues.add(WearDetector.DEPRECATED_WATCH_FACE_ISSUE);
+        issues.add(WearDetector.MISSING_WATCH_FACE_PERMISSIONS);
+        issues.add(WearDetector.WATCH_FACE_MISSING_SERVICE_ISSUE);
         issues.add(WebViewDetector.ISSUE);
         issues.add(WrongCallDetector.ISSUE);
         issues.add(WrongCaseDetector.WRONG_CASE);
@@ -294,7 +297,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
             } else if (scope.contains(Scope.CLASS_FILE)) {
                 initialSize += 15;
             } else if (scope.contains(Scope.MANIFEST)) {
-                initialSize += 30;
+                initialSize += 31;
             } else if (scope.contains(Scope.GRADLE_FILE)) {
                 initialSize += 5;
             }
