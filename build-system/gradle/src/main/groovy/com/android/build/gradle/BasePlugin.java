@@ -608,13 +608,21 @@ public abstract class BasePlugin {
                         extension.getBuildToolsRevision().toString()));
 
         // setup SDK repositories.
+        List<MavenArtifactRepository> sdkRepositories = new ArrayList<>();
         for (final File file : sdkHandler.getSdkLoader().getRepositories()) {
-            project.getRepositories().maven(new Action<MavenArtifactRepository>() {
+            MavenArtifactRepository mavenRepository = project.getRepositories().maven(new Action<MavenArtifactRepository>() {
                 @Override
                 public void execute(MavenArtifactRepository mavenArtifactRepository) {
                     mavenArtifactRepository.setUrl(file.toURI());
                 }
             });
+            sdkRepositories.add(mavenRepository);
+        }
+
+        //move repositories to top
+        for (MavenArtifactRepository repository : sdkRepositories) {
+            project.getRepositories().remove(repository);
+            project.getRepositories().addFirst(repository);
         }
 
         taskManager.createMockableJarTask();
