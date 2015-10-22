@@ -1,0 +1,11 @@
+package test.pkg;
+
+import android.net.SSLCertificateSocketFactory;
+import javax.net.ssl.HttpsURLConnection;
+
+public class GetInsecure {
+    public void foo() {
+        HttpsURLConnection.setDefaultSSLSocketFactory(
+                SSLCertificateSocketFactory.getInsecure(-1,null));
+    }
+}

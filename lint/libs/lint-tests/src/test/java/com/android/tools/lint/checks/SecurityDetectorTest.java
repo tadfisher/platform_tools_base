@@ -238,6 +238,14 @@ public class SecurityDetectorTest extends AbstractCheckTest {
         assertEquals(
                 "No warnings.",
                 lintProject("exportreceiver8.xml=>AndroidManifest.xml"));
+    }
 
+    public void testGetInsecure() throws Exception {
+        assertEquals(
+                "src/test/pkg/GetInsecure.java:9: Warning: Use of SSLCertificateSocketFactory.getInsecure() can cause insecure network traffic due to trusting arbitrary TLS/SSL certificates presented by peers [InsecureSSLCertificateSocketFactory]\n" +
+                "                SSLCertificateSocketFactory.getInsecure(-1,null));\n" +
+                "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "0 errors, 1 warnings\n",
+                lintProject("src/test/pkg/GetInsecure.java.txt=>src/test/pkg/GetInsecure.java"));
     }
 }

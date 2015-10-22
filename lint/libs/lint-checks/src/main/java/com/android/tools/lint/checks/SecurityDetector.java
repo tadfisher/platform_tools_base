@@ -38,6 +38,9 @@ import static com.android.xml.AndroidManifest.NODE_ACTION;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.tools.lint.client.api.JavaParser.ResolvedClass;
+import com.android.tools.lint.client.api.JavaParser.ResolvedMethod;
+import com.android.tools.lint.client.api.JavaParser.ResolvedNode;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
@@ -161,6 +164,21 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
             4,
             Severity.WARNING,
             IMPLEMENTATION_JAVA);
+
+    public static final Issue GETINSECURE = Issue.create(
+            "InsecureSSLCertificateSocketFactory", //$NON-NLS-1$
+            "Call to `SSLCertificateSocketFactory.getInsecure()`",
+            "The `SSLCertificateSocketFactory.getInstance()` method returns " +
+            "an SSLSocketFactory with all TLS/SSL security checks disabled, which " +
+            "could result in insecure network traffic caused by trusting arbitrary " +
+            "TLS/SSL certificates presented by peers.",
+            Category.SECURITY,
+            6,
+            Severity.WARNING,
+            IMPLEMENTATION_JAVA);
+
+    private static final String SSLCERTIFICATESOCKETFACTORY_CLASS =
+            "android.net.SSLCertificateSocketFactory";
 
     /** Constructs a new {@link SecurityDetector} check */
     public SecurityDetector() {
@@ -367,12 +385,28 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
         values.add("openFileOutput"); //$NON-NLS-1$
         values.add("getSharedPreferences"); //$NON-NLS-1$
         values.add("getDir"); //$NON-NLS-1$
+        // Detect calls to SSLCertificateSocketFactory.getInsecure
+        values.add("getInsecure"); //$NON-NLS-1$
         return values;
     }
 
     @Override
     public void visitMethod(@NonNull JavaContext context, @Nullable AstVisitor visitor,
             @NonNull MethodInvocation node) {
+        ResolvedNode resolved = context.resolve(node);
+        if (resolved instanceof ResolvedMethod) {
+            String methodName = node.astName().astValue();
+            ResolvedClass resolvedClass = ((ResolvedMethod) resolved).getContainingClass();
+            if (resolvedClass.isSubclassOf(SSLCERTIFICATESOCKETFACTORY_CLASS, false)) {
+                if ("getInsecure".equals(methodName)) {
+                    context.report(GETINSECURE, node, context.getLocation(node),
+                            "Use of `SSLCertificateSocketFactory.getInsecure()` can cause " +
+                            "insecure network traffic due to trusting arbitrary TLS/SSL " +
+                            "certificates presented by peers");
+                    return;
+                }
+            }
+        }
         StrictListAccessor<Expression,MethodInvocation> args = node.astArguments();
         for (Expression arg : args) {
             arg.accept(visitor);
