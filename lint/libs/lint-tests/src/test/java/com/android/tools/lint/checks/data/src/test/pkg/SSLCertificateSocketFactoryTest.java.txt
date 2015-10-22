@@ -1,0 +1,31 @@
+package test.pkg;
+
+import android.net.SSLCertificateSocketFactory;
+import java.net.InetAddress;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
+import javax.net.ssl.HttpsURLConnection;
+
+public class SSLCertificateSocketFactoryTest {
+    public void foo() {
+        byte[] ipv4 = new byte[4];
+        byte[] ipv6 = new byte[16];
+        InetAddress inet = Inet4Address.getByAddress(ipv4);
+        Inet4Address inet4 = (Inet4Address) Inet4Address.getByAddress(ipv4);
+        Inet6Address inet6 = Inet6Address.getByAddress(null, ipv6, 0);
+
+        SSLCertificateSocketFactory sf = (SSLCertificateSocketFactory)
+                SSLCertificateSocketFactory.getDefault(0);
+        sf.createSocket("www.google.com", 80); // ok
+        sf.createSocket("www.google.com", 80, inet, 2000); // ok
+        sf.createSocket(inet, 80);
+        sf.createSocket(inet4, 80);
+        sf.createSocket(inet6, 80);
+        sf.createSocket(inet, 80, inet, 2000);
+        sf.createSocket(inet4, 80, inet, 2000);
+        sf.createSocket(inet6, 80, inet, 2000);
+
+        HttpsURLConnection.setDefaultSSLSocketFactory(
+                SSLCertificateSocketFactory.getInsecure(-1,null));
+    }
+}
