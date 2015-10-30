@@ -92,6 +92,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(GradleDetector.STRING_INTEGER);
         issues.add(GradleDetector.REMOTE_VERSION);
         issues.add(GradleDetector.ACCIDENTAL_OCTAL);
+        issues.add(GoogleMapDetector.DEPRECATED_GETMAP);
         issues.add(GridLayoutDetector.ISSUE);
         issues.add(HandlerDetector.ISSUE);
         issues.add(HardcodedDebugModeDetector.ISSUE);

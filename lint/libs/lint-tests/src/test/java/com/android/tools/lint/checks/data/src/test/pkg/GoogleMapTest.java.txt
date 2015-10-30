@@ -1,0 +1,38 @@
+
+package test.pkg;
+
+import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.StreetViewPanoramaFragment;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.SupportStreetViewPanoramaFragment;
+
+import android.app.AlarmManager;
+
+import android.support.v4.app.FragmentActivity;
+
+public class GoogleMapTest extends FragmentActivity {
+
+
+    public void makeDeprecatedCalls() {
+        SupportMapFragment supportMapFragment;
+        SupportStreetViewPanoramaFragment supportStreetViewFragment;
+        MapFragment mapFragment;
+        StreetViewPanoramaFragment streetViewFragment;
+
+        // getMap
+        supportMapFragment.getMap();
+        mapFragment.getMap();
+
+        // getStreetViewPanorama
+        supportStreetViewFragment.getStreetViewPanorama();
+        streetViewFragment.getStreetViewPanorama();
+
+        // Local method that should not get flagged.
+        this.getMap();
+
+    }
+
+    public void getMap(){
+
+    }
+}
