@@ -156,7 +156,19 @@ public class ResValueGenerator {
                 }
 
                 if (!field.getValue().isEmpty()) {
-                    itemNode.appendChild(document.createTextNode(field.getValue()));
+                    if (type == ResourceType.ARRAY) {
+                        String[] arrayItems = field.getValue().replaceAll("\\[", "")
+                                .replaceAll("\\]", "")
+                                .replaceAll("\"", "")
+                                .split(",");
+                        for (String arrayItem : arrayItems) {
+                            Node arrayItemNode = document.createElement(TAG_ITEM);
+                            arrayItemNode.setTextContent(arrayItem.trim());
+                            itemNode.appendChild(arrayItemNode);
+                        }
+                    } else {
+                        itemNode.appendChild(document.createTextNode(field.getValue()));
+                    }
                 }
 
                 rootNode.appendChild(itemNode);
