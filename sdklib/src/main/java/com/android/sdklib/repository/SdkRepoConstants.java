@@ -125,6 +125,7 @@ public class SdkRepoConstants extends RepoConstants {
         NODE_SYSTEM_IMAGE,
         NODE_TOOL,
         NODE_PLATFORM_TOOL,
+        NODE_BUILD_TOOL,
         NODE_DOC,
         NODE_SAMPLE,
         NODE_SOURCE,
