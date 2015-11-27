@@ -27,4 +27,6 @@ public interface DexOptions {
     String getJavaMaxHeapSize();
     @Nullable
     Integer getThreadCount();
+    @Nullable
+    Integer getMaxNumberOfIdxPerDex();
 }

@@ -34,6 +34,8 @@ public class DexOptions implements com.android.builder.core.DexOptions {
 
     private Integer threadCount = null;
 
+    private Integer maxNumberOfIdxPerDex = null;
+
     private String javaMaxHeapSize;
 
     public void setIncremental(boolean isIncremental) {
@@ -107,5 +109,14 @@ public class DexOptions implements com.android.builder.core.DexOptions {
     @Nullable
     public Integer getThreadCount() {
         return threadCount;
+    }
+
+    /**
+     * Maxiumum number of indices per dex file.
+     */
+    @Override
+    @Nullable
+    Integer getMaxNumberOfIdxPerDex() {
+        return maxNumberOfIdxPerDex;
     }
 }
